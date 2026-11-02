@@ -1,6 +1,6 @@
 import { useReducer, useState, type FormEvent } from "react";
 import { creaGiocatori, type Giocatore } from "@gdt/engine";
-import { carta, type Partita } from "../logic/partita";
+import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
 import { categorie, paroleDi, type Categoria } from "../parole";
 import { leggiRecenti, ricordaParola } from "./recenti";
@@ -76,7 +76,7 @@ function Configurazione({
   onAvvia: (nomi: string[], numImpostori: number, categoria: Categoria) => void;
 }) {
   const [testoNomi, setTestoNomi] = useState("");
-  const [numImpostori, setNumImpostori] = useState(1);
+  const [scelta, setScelta] = useState<number | null>(null);
   const [categoria, setCategoria] = useState<Categoria>("cibi");
   const [errore, setErrore] = useState<string | null>(null);
 
@@ -84,6 +84,11 @@ function Configurazione({
     .split("\n")
     .map((riga) => riga.trim())
     .filter((riga) => riga.length > 0);
+
+  // Finché non scegli a mano, vale il consigliato per il numero di nomi inseriti.
+  const consigliati = impostoriConsigliati(nomi.length);
+  const massimi = impostoriMassimi(nomi.length);
+  const numImpostori = scelta !== null && scelta <= massimi ? scelta : consigliati;
 
   function invia(e: FormEvent) {
     e.preventDefault();
@@ -110,13 +115,19 @@ function Configurazione({
 
       <label className="campo">
         Numero di impostori
-        <select value={numImpostori} onChange={(e) => setNumImpostori(Number(e.target.value))}>
-          {[1, 2, 3].map((n) => (
+        <select value={numImpostori} onChange={(e) => setScelta(Number(e.target.value))}>
+          {Array.from({ length: massimi }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
               {n}
+              {n === consigliati ? " (consigliato)" : ""}
             </option>
           ))}
         </select>
+        <span className="suggerimento">
+          {nomi.length < 3
+            ? "Il consiglio compare quando hai inserito almeno 3 giocatori."
+            : `Con ${nomi.length} giocatori si consiglia ${consigliati}. Massimo ${massimi}.`}
+        </span>
       </label>
 
       <label className="campo">

@@ -2,6 +2,8 @@ export {
   carta,
   creaPartita,
   eImpostore,
+  impostoriConsigliati,
+  impostoriMassimi,
   normalizza,
   risultatoVoto,
   verificaTentativo,

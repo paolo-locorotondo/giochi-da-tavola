@@ -143,7 +143,8 @@ Controlla nell'ordine:
 Fai una partita di prova e verifica queste cose. Se una non va come descritto, dimmelo.
 
 - [ ] Se scrivi meno di 3 nomi, compare un messaggio di errore e la partita non parte.
-- [ ] Se metti troppi impostori per il numero di giocatori, compare un messaggio di errore.
+- [ ] Man mano che scrivi i nomi, sotto "Numero di impostori" compare il consiglio (1 fino a 6 giocatori, 2 da 7 a 10, 3 da 11 in su) e la scelta si adegua da sola.
+- [ ] Il menu non permette più impostori della metà dei giocatori meno uno (con 4 giocatori: al massimo 1).
 - [ ] Ogni giocatore vede il proprio nome, tocca per vedere la carta e poi passa il telefono. La carta non resta visibile alla persona dopo.
 - [ ] L'impostore vede "Sei l'impostore" e non vede la parola. Tutti gli altri vedono la stessa parola.
 - [ ] Finite le carte, l'app dice chi deve dare il primo indizio.

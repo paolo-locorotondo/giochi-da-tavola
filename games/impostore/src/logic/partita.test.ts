@@ -4,6 +4,8 @@ import { categorie, paroleDi } from "../parole";
 import {
   carta,
   creaPartita,
+  impostoriConsigliati,
+  impostoriMassimi,
   normalizza,
   risultatoVoto,
   verificaTentativo,
@@ -60,6 +62,37 @@ describe("creaPartita", () => {
     expect(() => creaPartita({ ...config, numImpostori: 0 }, 1)).toThrow(/impostori/);
     expect(() => creaPartita({ ...config, numImpostori: 3 }, 1)).toThrow(/impostori/);
     expect(() => creaPartita({ ...config, parole: [] }, 1)).toThrow(/parole/);
+  });
+});
+
+describe("impostori consigliati", () => {
+  it("segue la tabella per numero di giocatori", () => {
+    const attesi: Record<number, number> = { 3: 1, 4: 1, 5: 1, 6: 1, 7: 2, 8: 2, 10: 2, 11: 3, 14: 3 };
+    for (const [n, atteso] of Object.entries(attesi)) {
+      expect(impostoriConsigliati(Number(n))).toBe(atteso);
+    }
+  });
+
+  it("il consigliato non supera mai il massimo ammesso", () => {
+    for (let n = 3; n <= 20; n++) {
+      expect(impostoriConsigliati(n)).toBeLessThanOrEqual(impostoriMassimi(n));
+    }
+  });
+
+  it("il massimo lascia sempre meno impostori che civili", () => {
+    const massimi: Record<number, number> = { 3: 1, 4: 1, 5: 2, 6: 2, 7: 3, 10: 4 };
+    for (const [n, atteso] of Object.entries(massimi)) {
+      expect(impostoriMassimi(Number(n))).toBe(atteso);
+      const m = impostoriMassimi(Number(n));
+      expect(m * 2).toBeLessThan(Number(n));
+    }
+  });
+
+  it("il massimo è accettato da creaPartita", () => {
+    const nomi = creaGiocatori(["A", "B", "C", "D", "E", "F", "G"]);
+    expect(() =>
+      creaPartita({ giocatori: nomi, numImpostori: impostoriMassimi(7), parole }, 1),
+    ).not.toThrow();
   });
 });
 

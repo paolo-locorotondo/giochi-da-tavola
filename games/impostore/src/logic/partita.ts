@@ -18,7 +18,18 @@ export interface Partita {
   primoDiTurno: number;
 }
 
-export type Carta = { ruolo: "impostore" } | { ruolo: "civile"; parola: string };
+/** Massimo di impostori ammesso: devono restare meno della metà dei giocatori. */
+export function impostoriMassimi(numGiocatori: number): number {
+  return Math.max(1, Math.floor((numGiocatori - 1) / 2));
+}
+
+/** Numero consigliato: 1 fino a 6 giocatori, 2 da 7 a 10, 3 da 11 in su. */
+export function impostoriConsigliati(numGiocatori: number): number {
+  const consigliati = numGiocatori <= 6 ? 1 : numGiocatori <= 10 ? 2 : 3;
+  return Math.min(consigliati, impostoriMassimi(numGiocatori));
+}
+
+export type Carta ={ ruolo: "impostore" } | { ruolo: "civile"; parola: string };
 
 /**
  * Crea la partita in modo deterministico dal seme.
