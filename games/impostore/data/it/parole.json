@@ -1,0 +1,27 @@
+{
+  "cibi": [
+    "pizza", "lasagna", "tiramisù", "gelato", "risotto", "carbonara", "focaccia", "polenta",
+    "gnocchi", "frittata", "panino", "arancino", "cannolo", "minestrone", "bruschetta",
+    "parmigiano", "mozzarella", "prosciutto", "salame", "nutella", "biscotto", "croissant",
+    "pesto", "ragù", "tortellini", "cotoletta", "polpette", "insalata", "pane", "sushi"
+  ],
+  "animali": [
+    "cane", "gatto", "elefante", "giraffa", "leone", "tigre", "zebra", "canguro",
+    "pinguino", "delfino", "squalo", "aquila", "civetta", "pappagallo", "tartaruga",
+    "coccodrillo", "scimmia", "orso", "lupo", "volpe", "cavallo", "mucca", "maiale",
+    "pecora", "coniglio", "riccio", "scoiattolo", "farfalla", "ape", "ragno"
+  ],
+  "luoghi": [
+    "spiaggia", "montagna", "ospedale", "scuola", "supermercato", "cinema", "stazione",
+    "aeroporto", "biblioteca", "museo", "palestra", "piscina", "ristorante", "farmacia",
+    "chiesa", "stadio", "teatro", "parco", "banca", "hotel", "campeggio", "castello",
+    "ufficio postale", "lavanderia", "discoteca", "zoo", "luna park", "fattoria", "faro", "grotta"
+  ],
+  "mestieri": [
+    "medico", "maestro", "pompiere", "poliziotto", "cuoco", "idraulico", "elettricista",
+    "falegname", "pilota", "astronauta", "giornalista", "avvocato", "architetto", "pittore",
+    "musicista", "panettiere", "macellaio", "barista", "parrucchiere", "contadino",
+    "pescatore", "camionista", "postino", "bibliotecario", "dentista", "veterinario",
+    "meccanico", "sarto", "fotografo", "cameriere"
+  ]
+}
