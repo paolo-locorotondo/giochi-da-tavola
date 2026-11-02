@@ -54,9 +54,13 @@ Limiti accettati:
 - Chi vuole barare può inserire il posto di un altro. È come sbirciare le carte: al
   tavolo ci si fida.
 
-Nota di design (da definire in dettaglio): il codice partita deve codificare, oltre al
-seed, i parametri che influenzano l'assegnazione (n. giocatori, n. impostori, categoria,
-versione dati), oppure questi vanno inseriti a mano e verificati.
+**Formato del codice partita (deciso):**
+- **8 caratteri**, alfabeto di 31 simboli senza `0/O` e `1/I/L` (si confondono a voce):
+  `ABCDEFGHJKMNPQRSTUVWXYZ23456789`.
+- Codifica il seed, non i parametri. I parametri (n. giocatori, n. impostori, categoria)
+  si inseriscono a mano e il checksum del codice li include: un telefono con parametri
+  diversi vede un errore invece di una parola sbagliata.
+- Versione dati: da definire insieme al primo gioco.
 
 ## Architettura software
 
@@ -133,6 +137,5 @@ da riusare. Cose da fare diversamente se/quando si farà il server:
 ## Punti aperti
 
 - Parole di Impostore: solo italiano? Quali categorie (cibi, luoghi, animali, ...)?
-- Formato esatto del codice partita (lunghezza, alfabeto, cosa codifica).
 - Conferma dell'hosting (Cloudflare Pages consigliato).
 - Turborepo sì/no (si può decidere più avanti).
