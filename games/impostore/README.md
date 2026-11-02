@@ -142,18 +142,18 @@ Controlla nell'ordine:
 
 Fai una partita di prova e verifica queste cose. Se una non va come descritto, dimmelo.
 
-- [ ] Se scrivi meno di 3 nomi, compare un messaggio di errore e la partita non parte.
-- [ ] Man mano che scrivi i nomi, sotto "Numero di impostori" compare il consiglio (1 fino a 6 giocatori, 2 da 7 a 10, 3 da 11 in su) e la scelta si adegua da sola.
-- [ ] Il menu non permette più impostori della metà dei giocatori meno uno (con 4 giocatori: al massimo 1).
-- [ ] Ogni giocatore vede il proprio nome, tocca per vedere la carta e poi passa il telefono. La carta non resta visibile alla persona dopo.
-- [ ] L'impostore vede "Sei l'impostore" e non vede la parola. Tutti gli altri vedono la stessa parola.
-- [ ] Finite le carte, l'app dice chi deve dare il primo indizio.
-- [ ] Votando una persona **innocente**, la partita finisce e vincono gli impostori.
-- [ ] Votando **l'impostore**, compare un campo dove scrivere la parola.
-- [ ] Scrivendo la parola giusta vincono gli impostori. Scrivendo una parola sbagliata vincono gli altri.
-- [ ] La parola giusta vale anche con le maiuscole, senza accenti o con spazi in più (per esempio "TIRAMISU" per "tiramisù").
-- [ ] A fine partita compaiono la parola e i nomi degli impostori. Toccando **Nuova partita** si torna all'inizio.
-- [ ] Giocando più partite di seguito nella stessa categoria, la parola non si ripete subito.
+- [X] Se scrivi meno di 3 nomi, compare un messaggio di errore e la partita non parte.
+- [X] Man mano che scrivi i nomi, sotto "Numero di impostori" compare il consiglio (1 fino a 6 giocatori, 2 da 7 a 10, 3 da 11 in su) e la scelta si adegua da sola.
+- [X] Il menu non permette più impostori della metà dei giocatori meno uno (con 4 giocatori: al massimo 1).
+- [X] Ogni giocatore vede il proprio nome, tocca per vedere la carta e poi passa il telefono. La carta non resta visibile alla persona dopo.
+- [X] L'impostore vede "Sei l'impostore" e non vede la parola. Tutti gli altri vedono la stessa parola.
+- [X] Finite le carte, l'app dice chi deve dare il primo indizio.
+- [X] Votando una persona **innocente**, la partita finisce e vincono gli impostori.
+- [X] Votando **l'impostore**, compare un campo dove scrivere la parola.
+- [X] Scrivendo la parola giusta vincono gli impostori. Scrivendo una parola sbagliata vincono gli altri.
+- [X] La parola giusta vale anche con le maiuscole, senza accenti o con spazi in più (per esempio "TIRAMISU" per "tiramisù").
+- [X] A fine partita compaiono la parola e i nomi degli impostori. Toccando **Nuova partita** si torna all'inizio.
+- [X] Giocando più partite di seguito nella stessa categoria, la parola non si ripete subito.
 
 ---
 
