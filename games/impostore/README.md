@@ -58,7 +58,46 @@ Questi passi servono per vedere il gioco funzionare mentre lo sviluppiamo.
 
 Il telefono e il computer devono essere collegati **alla stessa rete WiFi**.
 
-1. Nel terminale scrivi e premi **Invio**:
+### Prima volta: autorizza il telefono a collegarsi al computer
+
+**Cosa stiamo facendo.** Quando lanci `pnpm dev:telefono`, il tuo computer diventa
+per qualche minuto un piccolo "sito web" visibile dentro casa: il telefono lo apre
+come aprirebbe un qualunque sito. Ma Windows ha una protezione (il *firewall*) che
+rifiuta di default le connessioni che arrivano da altri dispositivi, perché in generale
+potrebbero essere pericolose.
+
+**Perché serve.** Senza questo passaggio il telefono resta in attesa e alla fine
+dice "impossibile raggiungere il sito", anche se tutto il resto è giusto. Di solito
+Windows chiede da solo il permesso, ma se quella finestra viene chiusa o rifiutata
+il blocco resta e non riappare più.
+
+**Cosa autorizziamo, e cosa no.** Creiamo una regola che permette **solo a
+Node.js** (il programma che fa girare il gioco in sviluppo) di ricevere
+connessioni, e **solo sulle reti "Private"** (il WiFi di casa). Sul WiFi di un bar,
+di un hotel o di un locale la regola non vale, quindi il computer resta protetto.
+Non viene installato nulla e la regola si può togliere in qualsiasi momento.
+
+**Come si fa** (una volta sola, poi non serve più):
+
+1. Premi il tasto **Windows** sulla tastiera e scrivi `PowerShell`.
+2. Clic destro su **Windows PowerShell** → **Esegui come amministratore** → **Sì**.
+   (Servono i permessi di amministratore perché stai cambiando una protezione del
+   computer: per questo Visual Studio Code non può farlo al posto tuo.)
+3. Nella finestra blu che si apre, incolla questo comando, **tutto su una riga**, e
+   premi **Invio**:
+
+   ```
+   New-NetFirewallRule -DisplayName "Node.js sviluppo (rete di casa)" -Direction Inbound -Program "C:\Program Files\nodejs\node.exe" -Action Allow -Profile Private
+   ```
+
+4. Se compare un elenco con `Enabled : True`, la regola è creata. Chiudi la finestra blu.
+
+*Per toglierla in futuro:* apri PowerShell come amministratore e incolla
+`Remove-NetFirewallRule -DisplayName "Node.js sviluppo (rete di casa)"`.
+
+### Ogni volta: apri il gioco sul telefono
+
+1. Nel terminale di Visual Studio Code scrivi e premi **Invio**:
 
    ```
    pnpm dev:telefono
@@ -72,34 +111,30 @@ Il telefono e il computer devono essere collegati **alla stessa rete WiFi**.
    ➜  Network: http://172.20.208.1:5173/
    ```
 
-   Ti serve l'indirizzo `Network` che **inizia con `192.168.`** (qui: `192.168.1.145`).
-   Gli altri `Network` (per esempio quelli che iniziano con `172.`) sono reti interne del
-   computer e il telefono non li raggiunge. Ignorali. L'indirizzo `Local` funziona solo
-   sul computer.
+   Ti serve l'indirizzo `Network` che **inizia con `192.168.`** (qui: `192.168.1.145`):
+   è quello con cui il computer si presenta sul WiFi di casa. Gli altri `Network`
+   (per esempio quelli che iniziano con `172.`) sono reti interne del computer e il
+   telefono non le raggiunge: ignorali. L'indirizzo `Local` funziona solo sul computer.
+   I numeri sul tuo computer saranno diversi: cerca sempre quello che inizia con `192.168.`
 
 3. Scrivi quell'indirizzo, preciso e completo (con `http://` e `:5173`), nel browser del telefono.
 4. Tocca **Impostore**.
 
-**Se sul telefono non si apre nulla**, nell'ordine:
+### Se sul telefono non si apre nulla
+
+Controlla nell'ordine:
 
 1. **Stessa WiFi**: il telefono deve essere sul WiFi di casa, non sui dati mobili.
-2. **Windows blocca il telefono** (è il motivo più comune). La prima volta Windows chiede se
-   permettere a Node.js di usare la rete; se la finestra viene chiusa o rifiutata, il
-   blocco resta. Per sbloccarlo, una volta sola:
-   1. Premi il tasto **Windows**, scrivi `PowerShell`, clic destro su
-      **Windows PowerShell** → **Esegui come amministratore** → **Sì**.
-   2. Incolla questo comando (tutto su una riga) e premi **Invio**:
-
-      ```
-      New-NetFirewallRule -DisplayName "Node.js sviluppo (rete di casa)" -Direction Inbound -Program "C:\Program Files\nodejs\node.exe" -Action Allow -Profile Private
-      ```
-
-   3. Se compare una tabella con `Enabled : True`, è fatto. Chiudi PowerShell, riavvia
-      `pnpm dev:telefono` e riprova dal telefono.
-3. **Rete degli ospiti**: se il WiFi è una rete "ospiti" o di un hotel/locale, i dispositivi
-   spesso non possono vedersi tra loro e questo metodo non funziona.
+2. **Autorizzazione fatta?** Se non hai ancora fatto la parte "Prima volta" qui sopra,
+   falla: è la causa più comune.
+3. **Indirizzo giusto?** Deve iniziare con `192.168.` ed essere scritto per intero.
+4. **Rete degli ospiti**: su un WiFi "ospiti" o di un hotel/locale i dispositivi spesso non
+   possono vedersi tra loro e questo metodo non funziona.
+5. **Il comando è ancora in esecuzione?** Se hai premuto Ctrl + C o chiuso il terminale,
+   il "sito" non esiste più: rilancia `pnpm dev:telefono`.
 
 **Cosa non puoi provare così**: installare l'app sul telefono e usarla senza internet. Queste due cose funzionano solo sul sito pubblicato (vedi in fondo), non con questo metodo.
+
 
 ---
 

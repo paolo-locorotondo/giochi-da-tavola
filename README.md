@@ -32,6 +32,10 @@ In breve, dal terminale di Visual Studio Code:
 
 Per fermare l'app: clicca nel terminale e premi **Ctrl + C**.
 
+Per aprire l'app sul telefono, la prima volta su Windows serve un'autorizzazione del
+firewall (una volta sola). È spiegata, con il motivo di ogni passo, nella sezione
+"Provarlo sul telefono" della [guida di Impostore](games/impostore/README.md#provarlo-sul-telefono).
+
 ## Pubblicare online
 
 L'app è un sito statico (senza server) e si pubblica **una volta sola per tutti i giochi**:
