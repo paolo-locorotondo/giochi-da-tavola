@@ -64,19 +64,40 @@ Il telefono e il computer devono essere collegati **alla stessa rete WiFi**.
    pnpm dev:telefono
    ```
 
-2. Compare un messaggio con due indirizzi. Quello che ti serve è il secondo, che inizia con `Network` e assomiglia a questo:
+2. Compare un messaggio con più indirizzi, per esempio:
 
    ```
-   ➜  Network: http://192.168.1.25:5173/
+   ➜  Local:   http://localhost:5173/
+   ➜  Network: http://192.168.1.145:5173/
+   ➜  Network: http://172.20.208.1:5173/
    ```
 
-3. Scrivi quell'indirizzo, preciso e completo, nel browser del telefono.
+   Ti serve l'indirizzo `Network` che **inizia con `192.168.`** (qui: `192.168.1.145`).
+   Gli altri `Network` (per esempio quelli che iniziano con `172.`) sono reti interne del
+   computer e il telefono non li raggiunge. Ignorali. L'indirizzo `Local` funziona solo
+   sul computer.
+
+3. Scrivi quell'indirizzo, preciso e completo (con `http://` e `:5173`), nel browser del telefono.
 4. Tocca **Impostore**.
 
-**Se sul telefono non si apre nulla**
-- Controlla che i due dispositivi siano sullo stesso WiFi (non uno sui dati mobili).
-- Quando avvii il comando, Windows può chiedere se permettere l'accesso alla rete: rispondi **Consenti** (anche per le reti private).
-- Sul WiFi di hotel o locali la comunicazione tra dispositivi è spesso bloccata: in quel caso non funzionerà.
+**Se sul telefono non si apre nulla**, nell'ordine:
+
+1. **Stessa WiFi**: il telefono deve essere sul WiFi di casa, non sui dati mobili.
+2. **Windows blocca il telefono** (è il motivo più comune). La prima volta Windows chiede se
+   permettere a Node.js di usare la rete; se la finestra viene chiusa o rifiutata, il
+   blocco resta. Per sbloccarlo, una volta sola:
+   1. Premi il tasto **Windows**, scrivi `PowerShell`, clic destro su
+      **Windows PowerShell** → **Esegui come amministratore** → **Sì**.
+   2. Incolla questo comando (tutto su una riga) e premi **Invio**:
+
+      ```
+      New-NetFirewallRule -DisplayName "Node.js sviluppo (rete di casa)" -Direction Inbound -Program "C:\Program Files\nodejs\node.exe" -Action Allow -Profile Private
+      ```
+
+   3. Se compare una tabella con `Enabled : True`, è fatto. Chiudi PowerShell, riavvia
+      `pnpm dev:telefono` e riprova dal telefono.
+3. **Rete degli ospiti**: se il WiFi è una rete "ospiti" o di un hotel/locale, i dispositivi
+   spesso non possono vedersi tra loro e questo metodo non funziona.
 
 **Cosa non puoi provare così**: installare l'app sul telefono e usarla senza internet. Queste due cose funzionano solo sul sito pubblicato (vedi in fondo), non con questo metodo.
 
