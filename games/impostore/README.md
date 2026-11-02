@@ -1,63 +1,125 @@
 # Impostore
 
-Tutti ricevono la stessa parola segreta tranne l'impostore, che non la conosce.
-Si danno indizi a voce, si discute e si vota. Se l'impostore viene scoperto può ancora
-vincere indovinando la parola.
+Un gioco da fare in compagnia, con un solo telefono che passa di mano.
+Servono **almeno 3 persone**.
 
-Modalità disponibili: **un telefono solo** (il telefono passa di mano).
-Codice condiviso tra più telefoni: non ancora implementato.
+## Come si gioca
 
-## Provarlo
+Tutti ricevono la stessa **parola segreta**, tranne uno (o più): **l'impostore**, che non la conosce.
 
-Dalla radice del repo (serve Node 20+ e pnpm 9, vedi il [README principale](../../README.md)):
+1. Il telefono passa di mano. Ognuno guarda la propria carta in segreto: vede la parola, oppure scopre di essere l'impostore.
+2. Si parte da chi indica l'app e si va in cerchio. Ognuno dice a voce **un indizio** sulla parola, senza dirla. L'impostore deve bluffare e fingere di conoscerla.
+3. Si discute e si **vota** chi sembra l'impostore.
+4. Se i giocatori **sbagliano** e votano un innocente, vince l'impostore.
+5. Se **scoprono** l'impostore, lui ha un'ultima occasione: se **indovina la parola** vince lui, altrimenti vincono gli altri.
 
-```bash
-pnpm install
-pnpm dev
-```
+---
 
-Apri nel browser l'indirizzo mostrato nel terminale (di solito http://localhost:5173)
-e tocca **Impostore** nel menu.
+## Provarlo sul computer
 
-### Su un telefono vero
+Questi passi servono per vedere il gioco funzionare mentre lo sviluppiamo.
 
-Il PC e il telefono devono essere sulla stessa rete WiFi.
+### La prima volta
 
-```bash
-pnpm --filter @gdt/web dev --host
-```
+1. Apri **Visual Studio Code** nella cartella `giochi-da-tavola`.
+2. Dal menu in alto scegli **Terminale → Nuovo terminale**. In basso si apre una finestra nera (o scura) dove si scrivono i comandi.
+3. Scrivi questo comando e premi **Invio**. Serve a scaricare ciò che il gioco richiede, e va fatto solo la prima volta (e dopo che ti dico di aver aggiunto qualcosa di nuovo):
 
-Apri sul telefono l'indirizzo `Network` mostrato nel terminale. Così si prova l'interfaccia
-touch, ma non l'installazione come app né l'uso offline: il service worker funziona solo
-su HTTPS o su `localhost`. Per quelle prove usa il sito deployato (vedi sotto).
+   ```
+   pnpm install
+   ```
 
-### Provare l'offline in locale
+   Aspetta che finisca: di solito pochi secondi. Quando riappare la riga dove puoi scrivere, è finito.
 
-```bash
-pnpm build
-pnpm --filter @gdt/web preview
-```
+### Ogni volta che vuoi giocare
 
-Apri l'indirizzo mostrato (`localhost`), ricarica una volta, poi spegni la rete o
-metti il browser offline dagli strumenti per sviluppatori: l'app deve continuare a funzionare.
+1. Nel terminale scrivi e premi **Invio**:
 
-### Cosa controllare
+   ```
+   pnpm dev
+   ```
 
-1. Configurazione: inserisci almeno 3 nomi, un numero di impostori valido e una categoria.
-2. Ogni giocatore vede la propria carta; l'impostore non vede la parola.
-3. Dopo le carte compare chi dà il primo indizio.
-4. Votando un civile la partita finisce con la vittoria degli impostori.
-5. Votando l'impostore compare il campo per indovinare la parola; la risposta ignora
-   maiuscole, accenti e spazi.
-6. Con "Nuova partita" le parole appena uscite non si ripetono subito.
+2. Dopo un attimo compare un messaggio simile a questo:
 
-### Test automatici
+   ```
+   ➜  Local:   http://localhost:5173/
+   ```
 
-```bash
-pnpm --filter @gdt/impostore test
-```
+3. Tieni premuto **Ctrl** e clicca su quell'indirizzo (oppure copialo e incollalo nel browser).
+4. Si apre la pagina **Giochi da tavola**. Tocca **Impostore**: la partita comincia da qui.
 
-## Struttura
+**Per fermare tutto**: clicca nel terminale e premi **Ctrl + C**. Poi puoi chiuderlo.
+
+> Se modifichiamo il gioco mentre la pagina è aperta, si aggiorna da sola. Non serve rifare nulla.
+
+---
+
+## Provarlo sul telefono
+
+Il telefono e il computer devono essere collegati **alla stessa rete WiFi**.
+
+1. Nel terminale scrivi e premi **Invio**:
+
+   ```
+   pnpm dev:telefono
+   ```
+
+2. Compare un messaggio con due indirizzi. Quello che ti serve è il secondo, che inizia con `Network` e assomiglia a questo:
+
+   ```
+   ➜  Network: http://192.168.1.25:5173/
+   ```
+
+3. Scrivi quell'indirizzo, preciso e completo, nel browser del telefono.
+4. Tocca **Impostore**.
+
+**Se sul telefono non si apre nulla**
+- Controlla che i due dispositivi siano sullo stesso WiFi (non uno sui dati mobili).
+- Quando avvii il comando, Windows può chiedere se permettere l'accesso alla rete: rispondi **Consenti** (anche per le reti private).
+- Sul WiFi di hotel o locali la comunicazione tra dispositivi è spesso bloccata: in quel caso non funzionerà.
+
+**Cosa non puoi provare così**: installare l'app sul telefono e usarla senza internet. Queste due cose funzionano solo sul sito pubblicato (vedi in fondo), non con questo metodo.
+
+---
+
+## Cosa controllare quando lo provi
+
+Fai una partita di prova e verifica queste cose. Se una non va come descritto, dimmelo.
+
+- [ ] Se scrivi meno di 3 nomi, compare un messaggio di errore e la partita non parte.
+- [ ] Se metti troppi impostori per il numero di giocatori, compare un messaggio di errore.
+- [ ] Ogni giocatore vede il proprio nome, tocca per vedere la carta e poi passa il telefono. La carta non resta visibile alla persona dopo.
+- [ ] L'impostore vede "Sei l'impostore" e non vede la parola. Tutti gli altri vedono la stessa parola.
+- [ ] Finite le carte, l'app dice chi deve dare il primo indizio.
+- [ ] Votando una persona **innocente**, la partita finisce e vincono gli impostori.
+- [ ] Votando **l'impostore**, compare un campo dove scrivere la parola.
+- [ ] Scrivendo la parola giusta vincono gli impostori. Scrivendo una parola sbagliata vincono gli altri.
+- [ ] La parola giusta vale anche con le maiuscole, senza accenti o con spazi in più (per esempio "TIRAMISU" per "tiramisù").
+- [ ] A fine partita compaiono la parola e i nomi degli impostori. Toccando **Nuova partita** si torna all'inizio.
+- [ ] Giocando più partite di seguito nella stessa categoria, la parola non si ripete subito.
+
+---
+
+## Se qualcosa non funziona
+
+| Cosa vedi | Cosa fare |
+|---|---|
+| `pnpm` non è riconosciuto | Chiudi e riapri Visual Studio Code, poi riprova. Se non basta, scrivimelo. |
+| Il comando `pnpm dev` dà un errore | Prova prima `pnpm install`, poi di nuovo `pnpm dev`. Se l'errore resta, copiami il messaggio. |
+| La pagina non si apre | Controlla che il terminale mostri ancora l'indirizzo e che non l'abbia fermato con Ctrl + C. |
+| "Porta già in uso" | C'è già un altro terminale aperto con `pnpm dev`. Chiudilo con Ctrl + C. |
+
+---
+
+## Pubblicare il gioco online
+
+Impostore non ha un sito suo: è dentro l'app **Giochi da tavola**, che si pubblica **una volta sola per tutti i giochi**. I passi sono nel [README principale](../../README.md#pubblicare-online).
+
+---
+
+## Per chi sviluppa
+
+### Struttura
 
 ```
 src/logic/partita.ts    regole pure: partita dal seme, carta, tentativo, voto
@@ -69,19 +131,14 @@ data/it/parole.json     parole per categoria
 src/manifest.ts         id, nome e descrizione per il menu
 ```
 
-## Aggiungere o cambiare parole
+### Test automatici
 
-Modifica [data/it/parole.json](data/it/parole.json): una lista di parole per categoria,
-senza duplicati e con almeno 20 voci (lo verifica un test). Una nuova categoria va aggiunta
-anche a `NOME_CATEGORIA` in `src/ui/ImpostoreApp.tsx`.
+```
+pnpm --filter @gdt/impostore test
+```
 
-Se cambi l'ordine o il contenuto di categorie già esistenti, incrementa `VERSIONE_DATI`
-in `src/parole.ts`. Serve alla modalità con codice condiviso, dove telefoni con elenchi
-diversi darebbero parole diverse. La modalità a un telefono non ne risente.
+### Aggiungere o cambiare parole
 
-## Deploy
+Modifica [data/it/parole.json](data/it/parole.json): una lista per categoria, senza duplicati e con almeno 20 voci (lo verifica un test). Una nuova categoria va aggiunta anche a `NOME_CATEGORIA` in `src/ui/ImpostoreApp.tsx`.
 
-Impostore non ha un deploy suo: è dentro l'app `apps/web`, che si pubblica una volta sola
-per tutti i giochi. Vedi la sezione [Deploy](../../README.md#deploy) del README principale.
-Dopo ogni push su `main` Vercel pubblica la nuova versione, e i telefoni con l'app installata
-si aggiornano da soli al caricamento successivo.
+Se cambi l'ordine o il contenuto di categorie già esistenti, incrementa `VERSIONE_DATI` in `src/parole.ts`. Serve alla futura modalità con codice condiviso, dove telefoni con elenchi diversi darebbero parole diverse. La modalità a un telefono non ne risente.

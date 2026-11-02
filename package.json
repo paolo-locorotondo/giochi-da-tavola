@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter @gdt/web dev",
+    "dev:telefono": "pnpm --filter @gdt/web dev --host",
+    "anteprima": "pnpm build && pnpm --filter @gdt/web preview",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test"

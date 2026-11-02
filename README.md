@@ -1,81 +1,92 @@
 # Giochi da tavola
 
-Raccolta di giochi da tavola e party game da usare con lo smartphone, seduti allo
-stesso tavolo. L'app distribuisce informazioni segrete (parola, ruolo), guida le fasi
-(turni, timer, notte/giorno) e raccoglie scelte segrete quando serve.
+Raccolta di giochi da tavola e party game da fare con lo smartphone, seduti allo stesso
+tavolo. L'app non sostituisce le chiacchiere dal vivo: distribuisce le informazioni
+segrete (una parola, un ruolo), guida le fasi del gioco e raccoglie le scelte quando serve.
 
-È una PWA: installabile dalla schermata Home e funzionante offline dopo il primo
-caricamento. Non serve un server né una connessione per giocare.
+È un'app web installabile sul telefono ("Aggiungi a schermata Home") che funziona anche
+**senza internet** dopo il primo caricamento.
 
-## Giochi
+## I giochi
 
-- **Impostore** ([README](games/impostore/README.md)): tutti ricevono la stessa parola
-  tranne l'impostore. Disponibile a un telefono solo.
-- **Lupus in fabula** (previsto): ruoli segreti, fasi notte/giorno, voto.
+| Gioco | Stato | Guida |
+|---|---|---|
+| **Impostore**: tutti conoscono la parola segreta tranne uno | Giocabile con un telefono solo | [Leggi la guida](games/impostore/README.md) |
+| **Lupus in fabula**: ruoli segreti, notte e giorno, voto | In arrivo | |
 
-## Stack
+## Provare l'app
 
-- React + TypeScript, build con Vite
-- pnpm workspaces (monorepo)
-- vite-plugin-pwa per il service worker e il manifest
+Ogni gioco ha la sua guida passo passo (come avviarlo, cosa controllare, cosa fare se
+qualcosa non va). Parti da quella del gioco che vuoi provare, per esempio quella di
+[Impostore](games/impostore/README.md).
 
-La logica di gioco è TypeScript puro e deterministico, separata dalla UI, così è
-testabile. Le scelte architetturali sono in [docs/decisioni.md](docs/decisioni.md).
+In breve, dal terminale di Visual Studio Code:
 
-## Struttura
+| Cosa vuoi fare | Comando |
+|---|---|
+| Preparare tutto (solo la prima volta) | `pnpm install` |
+| Aprire l'app sul computer | `pnpm dev` |
+| Aprire l'app anche sul telefono (stesso WiFi) | `pnpm dev:telefono` |
+| Provare l'app come sarà online, anche offline | `pnpm anteprima` |
+| Controllare che tutto sia a posto prima di pubblicare | `pnpm typecheck` poi `pnpm test` poi `pnpm build` |
+
+Per fermare l'app: clicca nel terminale e premi **Ctrl + C**.
+
+## Pubblicare online
+
+L'app è un sito statico (senza server) e si pubblica **una volta sola per tutti i giochi**:
+aggiungere un gioco non richiede un nuovo sito. Il sito è ospitato su **Vercel**, collegato
+al repository GitHub.
+
+**Come funziona di solito**: ogni volta che il codice viene caricato su GitHub nel ramo
+`main`, Vercel pubblica da solo la nuova versione. I telefoni con l'app installata si
+aggiornano al caricamento successivo.
+
+### Prima configurazione (si fa una volta sola)
+
+1. Vai su [vercel.com](https://vercel.com) ed entra con il tuo account GitHub.
+2. Scegli **Add New → Project** e seleziona il repository `giochi-da-tavola`.
+3. Nella schermata di configurazione imposta:
+
+   | Campo | Valore |
+   |---|---|
+   | **Root Directory** | `apps/web` |
+   | **Framework Preset** | Vite |
+   | Build Command | lascia quello proposto |
+   | Output Directory | lascia quello proposto |
+
+4. Controlla che l'opzione **Include source files outside of the Root Directory** sia
+   attiva (di solito lo è già). Serve perché l'app usa i giochi che stanno in `games/`.
+5. Premi **Deploy** e aspetta qualche minuto. Alla fine Vercel mostra l'indirizzo del sito.
+
+### Provare l'app pubblicata sul telefono
+
+Con l'indirizzo di Vercel (che usa HTTPS) puoi provare ciò che in locale non si può fare:
+
+1. Apri l'indirizzo sul telefono.
+2. Dal menu del browser scegli **Aggiungi a schermata Home** (o **Installa app**).
+3. Apri l'app dalla Home, poi spegni il WiFi e i dati: deve continuare a funzionare.
+
+### Se la pubblicazione fallisce
+
+Su Vercel apri il deploy fallito e copia l'ultimo messaggio di errore: me lo mandi e lo
+sistemo. Il caso più probabile è che non trovi le cartelle fuori da `apps/web`: ricontrolla
+il punto 4.
+
+## Per chi sviluppa
+
+- React + TypeScript, Vite, pnpm workspaces, `vite-plugin-pwa` per l'uso offline.
+- La logica dei giochi è TypeScript puro e deterministico, separato dalla UI, così si testa.
+- Scelte e motivazioni: [docs/decisioni.md](docs/decisioni.md).
 
 ```
-apps/web/       PWA contenitore: menu giochi, crea/entra partita
-packages/       motore condiviso (in arrivo)
-games/          un gioco per cartella (in arrivo)
-docs/           decisioni di progetto
+apps/web/        app contenitore: menu dei giochi
+packages/engine/ motore condiviso: numeri casuali con seme, giocatori, codice partita, fasi
+games/           un gioco per cartella, ognuno con la sua guida
+docs/            decisioni di progetto
 ```
-
-## Sviluppo
 
 Requisiti: Node.js 20 o superiore e pnpm 9.
-
-```bash
-pnpm install
-pnpm dev         # server di sviluppo
-pnpm typecheck   # controllo dei tipi
-pnpm build       # build di produzione in apps/web/dist
-```
-
-Ogni gioco ha un suo README con le istruzioni per provarlo, per esempio
-[games/impostore](games/impostore/README.md).
-
-## Deploy
-
-Il sito è statico (nessun server) e si pubblica **una volta sola per tutti i giochi**:
-l'app `apps/web` contiene il menu e importa i giochi da `games/*`. Aggiungere un gioco
-non richiede un nuovo deploy separato.
-
-Hosting: **Vercel**, collegato al repo GitHub.
-
-Impostazioni del progetto su Vercel (da fare una volta):
-
-| Campo | Valore |
-|---|---|
-| Root Directory | `apps/web` |
-| Framework Preset | Vite |
-| Build Command | `pnpm build` (predefinito) |
-| Output Directory | `dist` (predefinito) |
-| Include source files outside of the Root Directory | attivo (predefinito) |
-
-L'ultima opzione serve perché `apps/web` usa i pacchetti in `packages/` e `games/`.
-Vercel usa pnpm in base al campo `packageManager` del `package.json` radice.
-
-Flusso: ogni push su `main` crea un deploy di produzione; ogni altro branch ottiene un
-indirizzo di anteprima. Per provare l'installazione come app e l'uso offline su un telefono
-usa l'indirizzo di anteprima o di produzione, che è in HTTPS.
-
-Controllo prima del push: `pnpm typecheck && pnpm test && pnpm build`.
-
-Se Vercel non trova le dipendenze del workspace, controlla che l'opzione sui file fuori dalla
-Root Directory sia attiva; altrimenti si può imporre `pnpm install` come Install Command.
-
-Alternative equivalenti, se un giorno servisse: Cloudflare Pages, Netlify, GitHub Pages.
 
 ## Licenza
 
