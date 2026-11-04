@@ -7,7 +7,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
-## [Non rilasciato]
+## [0.3.1] - 2026-11-04
 
 ### Aggiunto
 
