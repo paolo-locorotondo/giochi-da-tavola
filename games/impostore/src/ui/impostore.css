@@ -1,0 +1,83 @@
+.schermata {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 60vh;
+  justify-content: center;
+  text-align: center;
+}
+
+.schermata.allineata {
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+  min-height: 0;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--muted);
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  font: inherit;
+  color: var(--fg);
+  background: #1e2130;
+  border: 1px solid #2c3145;
+  border-radius: 0.6rem;
+  padding: 0.7rem 0.8rem;
+}
+
+.btn {
+  font: inherit;
+  color: var(--fg);
+  background: #1e2130;
+  border: 1px solid #2c3145;
+  border-radius: 0.8rem;
+  padding: 0.8rem 1.2rem;
+  cursor: pointer;
+}
+
+.btn.primario {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #14161f;
+  font-weight: 600;
+}
+
+.carta {
+  width: 100%;
+  padding: 2rem 1rem;
+  border: 2px solid var(--accent);
+  border-radius: 1rem;
+  background: #1e2130;
+}
+
+.grande {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0.5rem 0;
+}
+
+.giocatori {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.errore {
+  color: #ff8a8a;
+  margin: 0;
+}
+
+.suggerimento {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
