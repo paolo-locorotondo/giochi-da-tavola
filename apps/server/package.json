@@ -1,0 +1,23 @@
+{
+  "name": "@gdt/server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gdt/engine": "workspace:*",
+    "@gdt/impostore": "workspace:*",
+    "ws": "^8.18.0",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "@types/ws": "^8.5.13",
+    "vitest": "^2.1.8"
+  }
+}

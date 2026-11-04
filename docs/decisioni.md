@@ -1,8 +1,7 @@
 # Decisioni di progetto — giochi-da-tavola
 
-Riepilogo delle decisioni prese prima di iniziare lo sviluppo (2026-11-02) e rivisto lo
-stesso giorno per le partite a più telefoni. Per ogni punto: cosa si è deciso e perché.
-I punti ancora aperti sono in fondo.
+Riepilogo delle decisioni prese (avvio 2026-11-02, architettura di rete rivista il 2026-11-04).
+Per ogni punto: cosa si è deciso e perché. I punti ancora aperti sono in fondo.
 
 ## Obiettivo
 
@@ -11,261 +10,174 @@ si è seduti allo stesso tavolo. L'app non sostituisce l'interazione dal vivo: s
 **distribuire informazioni segrete** (parola, ruolo), **guidare le fasi** (turni, timer,
 notte/giorno, narrazione) e, quando serve, **raccogliere scelte segrete**.
 
-Giochi previsti, in ordine:
-1. **Impostore** — tutti ricevono la stessa parola segreta tranne l'impostore, che non la
-   conosce. Giro di indizi, discussione, voto. Se scoperto, l'impostore può vincere
-   indovinando la parola. È il primo gioco e serve a costruire il motore.
-2. **Lupus in fabula** — ruoli segreti (lupi, veggente, medico, ...), fasi notte/giorno,
-   voto e ballottaggio.
-3. Altri giochi in futuro (si ipotizzano **decine**): l'architettura deve renderli
-   economici da aggiungere.
+Giochi, in ordine:
+1. **Impostore** — tutti ricevono la stessa parola segreta tranne l'impostore. Giro di
+   indizi, discussione, voto. Se scoperto, l'impostore può vincere indovinando la parola.
+   Disponibile a un telefono e ognuno col suo telefono.
+2. **Lupus in fabula** — ruoli segreti, fasi notte/giorno, voto e ballottaggio. Oggi a un
+   telefono con narratore a voce; la versione ognuno col suo telefono è il prossimo passo.
+3. **Tabù** — due squadre, timer, carte con parola vietata. Resta **solo a un telefono**:
+   il telefono deve passare di mano, giocarlo online non avrebbe senso.
+4. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
+   da aggiungere.
 
 ## Piattaforma
 
 - **Web app / PWA** installabile ("Aggiungi a schermata Home"), funzionante **offline**
   dopo il primo caricamento (service worker).
-- Niente app native per ora. Se un giorno servisse la presenza negli store: Capacitor
-  per impacchettare la PWA.
-- **React + TypeScript**, build con **Vite**.
-  - Scelto React (rispetto a Svelte, che era consigliato per semplicità) per
-    competenza spendibile, ecosistema e possibile React Native in futuro.
+- Niente app native per ora. Se un giorno servisse la presenza negli store: Capacitor.
+- **React + TypeScript**, build con **Vite**. Scelto React (rispetto a Svelte) per
+  competenza spendibile, ecosistema e possibile React Native in futuro.
 
-## Rete: due modalità di gioco
-
-Domanda chiave: *i telefoni devono parlarsi?*
+## Rete: due modi di giocare, un solo server
 
 | Modalità | Come funziona | Rete |
 |---|---|---|
 | **A. Un solo telefono** | Il telefono passa di mano, ognuno vede la sua carta | Nessuna, anche offline |
-| **B. Ognuno col suo telefono** | Un server tiene la partita e manda a ogni telefono solo ciò che può vedere | Internet oppure wifi locale |
+| **B. Ognuno col suo telefono** | Un server tiene la partita e manda a ogni telefono solo ciò che può vedere | Internet, WiFi o hotspot |
 
-**Decisione (revisione del 2026-11-02):** l'idea iniziale del "livello 1" (codice condiviso,
-ogni telefono calcola da solo, nessun server) è **abbandonata** per le partite a più
-telefoni. Provata nella pratica ha limiti che non si correggono con le toppe:
+### Modalità B: un nostro server WebSocket in Docker
 
-1. Ogni telefono deve conoscere l'intera partita per calcolare la propria carta, quindi
-   chiunque può vedere quella degli altri. Un segreto vero richiede un server.
-2. I telefoni non si parlano: voto dal proprio telefono, contatori in diretta ed
-   eliminazione automatica sono impossibili.
-3. Chi entra a mano deve ripetere tutti i parametri e scegliere un numero di posto invece
-   del proprio nome.
+**Decisione (2026-11-04):** un unico server Node (`apps/server`) con WebSocket, impacchettato
+in un'immagine Docker. **Lo stesso programma** gira:
+1. sul PC di chi organizza, con `docker compose up`, con i telefoni collegati allo stesso
+   WiFi o all'hotspot di un telefono (nessun internet necessario);
+2. su un servizio di hosting che esegue contenitori Docker, quando il PC non c'è
+   (vedi [guida-deploy-online.md](guida-deploy-online.md)).
 
-Il codice del livello 1 vive solo nel branch `feat/codice-condiviso`, **da non unire a
-`main`**. Restano utili il generatore con seme e il codice a 8 caratteri: la modalità A
-continua a usare il seme, e il server può riusare l'alfabeto senza simboli ambigui.
+Locale e online sono quindi la stessa cosa: cambia solo l'indirizzo. Il server serve anche
+i file dell'app (un comando, un indirizzo) e risponde `/salute` per i controlli.
 
-La modalità A resta com'è, perché funziona offline ed è l'unica che non richiede nulla.
+**Perché non Supabase / funzioni di Vercel** (piano scartato, era nella prima versione di
+questo file):
+- Le funzioni di Vercel non tengono la memoria tra una richiesta e l'altra e i loro
+  WebSocket erano in beta con durata massima limitata: serviva un database esterno e
+  molti pezzi da far parlare tra loro.
+- Supabase in Docker in locale avvia molti contenitori e non ha lo stesso comportamento
+  dell'online, mentre l'obiettivo è che il locale emuli esattamente l'online.
+- Un server nostro: meno dipendenze, stesso codice ovunque, comportamento sotto controllo.
+- Costo: serve un hosting che esegua Docker e che regga i WebSocket. **Vercel da solo non
+  basta** per la modalità B; può restare per la modalità A (sito statico).
 
-### Formato del codice partita (modalità A, deciso)
+**Come funziona**
+- La logica di partita è un modulo **puro** (`nuovoStato`, `applica(azione)`,
+  `vistaPer(giocatore)`), senza rete: lo usa il server e si testa da solo.
+- Il server è **autoritativo**: controlla chi può fare cosa e tiene lo stato **in memoria**.
+  Se il processo si riavvia le partite si perdono (accettato: sono brevi). Le stanze
+  inattive da 6 ore vengono cancellate.
+- Ogni telefono riceve solo la **sua vista**: la carta altrui non viaggia mai sulla rete.
+- Ogni telefono ha un **token** salvato sul dispositivo: dopo refresh, schermo bloccato o
+  caduta di rete rientra da solo nello stesso posto. Il client si riconnette da solo; il
+  server fa un controllo periodico (ping ogni 25 s) per accorgersi dei telefoni caduti.
+- Codice partita: 5 caratteri, alfabeto senza simboli ambigui (`0/O`, `1/I/L`).
+- Un link `…/impostore/CODICE` porta direttamente nella partita.
 
-- **8 caratteri**, alfabeto di 31 simboli senza `0/O` e `1/I/L` (si confondono a voce):
-  `ABCDEFGHJKMNPQRSTUVWXYZ23456789`.
-- Codifica il seed, con un carattere di versione dati e uno di controllo.
-- La versione dati (`VERSIONE_DATI`, ora 2) va incrementata a ogni modifica di
-  `parole.json` che cambi ordine o contenuto.
+**Limiti noti del WiFi locale** (dettagli in [guida-giocare-con-il-pc.md](guida-giocare-con-il-pc.md))
+- Serve una regola del firewall di Windows per la porta 8080.
+- Su `http://192.168.x.x` il browser **non è in contesto sicuro**: non funzionano
+  "Condividi", copia negli appunti e installazione della PWA. L'invito si fa con un **QR code**
+  generato sul telefono dell'organizzatore, oppure a voce con il codice o l'indirizzo.
+- Il container stampa il suo indirizzo interno (`172.x`), non quello del PC: l'indirizzo
+  giusto si legge con `ipconfig` o si fa stampare con la variabile `HOST_IP`.
+- Se il WiFi isola i client (hotel, locali) i telefoni non vedono il PC: hotspot di un
+  telefono oppure modalità A.
+- `docker compose build` richiede internet: farlo prima di partire.
 
-## Modalità B: server
+### Modalità A: codice con seme
 
-### Un solo codice di gioco, due modi di ospitarlo
-
-La logica di partita sta in un modulo **puro** (`init`, `applica(azione)`, `vistaPer(giocatore)`),
-senza rete né archivio. Due adattatori lo usano:
-
-| | Locale (wifi) | Online |
-|---|---|---|
-| Cosa | Server Node in Docker sul PC di chi organizza | Funzioni su Vercel + Supabase |
-| Avvio | `docker compose up` | push su GitHub |
-| Stato delle partite | In memoria del processo | Database Supabase |
-| Telefoni | Aprono `http://<ip-del-pc>:porta` | Aprono l'indirizzo pubblico |
-| Internet | Non serve | Serve |
-
-Il client è lo stesso e parla con il server con un protocollo semplice; cambia solo
-l'indirizzo.
-
-**Vercel: cosa risulta dalla documentazione ufficiale** (guida sui WebSocket nelle Vercel
-Functions, letta il 2026-11-02):
-- I WebSocket sono supportati, ma in **beta**, su tutti i piani.
-- Ogni connessione resta sull'istanza che l'ha accettata: per condividere lo stato tra
-  istanze serve un archivio esterno (la guida consiglia Redis dal Marketplace).
-- Le connessioni si chiudono alla durata massima (300 s sul piano Hobby): il client deve
-  **riconnettersi da solo** e ricevere di nuovo lo stato.
-- Per i flussi solo server → client la guida suggerisce Server-Sent Events (la
-  riconnessione la fa il browser).
-
-**Perché serve un database.** Le funzioni di Vercel non hanno memoria: ogni richiesta può
-essere servita da un'istanza diversa e tra una richiesta e l'altra tutto si dimentica. La
-partita (parola, impostori, voti, fase) deve quindi stare in un posto che resta: un
-database. In locale con Docker non serve, perché il processo Node resta acceso e la tiene
-in memoria.
-
-**Online: Vercel + Supabase (già usati negli altri progetti).**
-- Il database Postgres di Supabase tiene lo stato della partita. I client non possono
-  leggerlo direttamente: lo leggono e scrivono solo le funzioni di Vercel.
-- I giocatori mandano le azioni (scegli nome, vota, ...) con richieste HTTP alle funzioni di
-  Vercel. La funzione controlla le regole, aggiorna il database e invia a ciascun
-  telefono la sua vista.
-- Gli aggiornamenti in diretta (i contatori che salgono) viaggiano su **Supabase Realtime
-  Broadcast**, così non si dipende dai WebSocket in beta di Vercel.
-- Segretezza: ogni giocatore ascolta un **canale privato suo**. Supabase consente di
-  limitare con una regola (RLS su `realtime.messages`) chi può ricevere i messaggi di un
-  canale. La carta di un giocatore passa solo sul suo canale, mai su quello comune.
-- Limiti del piano gratuito Realtime (documentazione ufficiale): 200 connessioni
-  contemporanee, 100 messaggi al secondo, messaggi fino a 256 KB. Una partita da 10
-  giocatori usa circa 10 connessioni: bastano per molte partite insieme.
-
-**Da verificare con una prova prima di costruire il resto** (la documentazione letta non
-lo dice con certezza): come si identifica un telefono senza account (accesso anonimo di
-Supabase?), se la funzione di Vercel può inviare messaggi a un canale privato, e come si
-comporta la riconnessione quando lo schermo si spegne.
-
-**Locale e online restano due adattatori della stessa logica.** In locale: server Node leggero
-con stato in memoria. Online: Vercel + Supabase. Alternativa da valutare: usare anche in
-locale Supabase (`supabase start`), che gira in Docker ma avvia molti contenitori; il
-vantaggio è un solo adattatore, lo svantaggio è la pesantezza.
-
-**Wifi locale con Docker: cose da sapere**
-- Il PC ha bisogno di una regola del firewall per la porta (come già per `pnpm dev:rete`).
-- Su `http://192.168.x.x` il browser **non è in contesto sicuro**: non funzionano il menu
-  "Condividi", la copia negli appunti e l'installazione della PWA. In locale quindi l'invito
-  è un **QR code** più l'indirizzo scritto grande sul telefono dell'organizzatore. Il sito
-  pubblicato su Vercel resta quello installabile.
-- Il server locale serve anche i file dell'app: un comando, un indirizzo.
-- Se il wifi isola i client (hotel, locali) i telefoni non vedono il PC: restano l'hotspot
-  di un telefono oppure la modalità A.
+La modalità A usa un generatore deterministico con seme (`packages/engine`). Il vecchio
+"livello 1" (codice condiviso, ogni telefono calcola da solo) è **abbandonato** per le
+partite a più telefoni: ogni telefono dovrebbe conoscere l'intera partita (la carta altrui
+sarebbe visibile) e non si può votare o contare in diretta. Il codice di quell'esperimento
+vive solo nel branch `feat/codice-condiviso`, **da non unire a `main`**.
 
 ### Impostore, modalità B
 
-**Creare la partita** (telefono dell'organizzatore): nomi dei giocatori (numero senza
-limite fisso), numero di impostori (con consiglio), categoria e le **impostazioni di partita**:
-- *Voti visibili durante la votazione*: sì = contatori che salgono in diretta accanto a
-  ogni giocatore; no = i voti restano nascosti e si rivelano tutti insieme quando hanno
-  votato tutti.
+**Creare la partita** (organizzatore): nomi dei giocatori (nessun limite fisso), numero di
+impostori (con consiglio), categoria e *voti visibili in diretta* (sì = contatori che
+salgono; no = si rivelano quando hanno votato tutti). Il server genera codice e link.
 
-Il server genera un **codice partita breve** e un link `…/impostore/<codice>`.
-
-**Entrare:** si apre il link, oppure si digita il codice nella pagina del gioco. Il server
-manda l'elenco dei nomi e il giocatore tocca il proprio. Un nome già preso non è più
-scegliibile. Il telefono riceve un **token** salvato sul dispositivo: dopo refresh,
-schermo bloccato o caduta di rete rientra da solo nello stesso posto. Solo l'organizzatore
-può liberare un nome occupato (telefono rotto, nome sbagliato).
-
-**Cosa vede ogni telefono**, deciso dal server in `vistaPer(giocatore)`:
+**Entrare:** si apre il link o si scrive il codice; il giocatore tocca il **proprio nome**
+(un nome preso non è più scegliibile). Solo l'organizzatore può liberare un nome occupato.
 
 | Fase | Giocatore | Organizzatore |
 |---|---|---|
 | Sala d'attesa | Nomi liberi e occupati | Chi è entrato, avvio partita |
 | Carta | Solo la propria, da scoprire | Come gli altri |
-| Indizi | Chi parla per primo e l'ordine | Pulsante per passare al voto |
-| Voto | Gli altri giocatori, ne sceglie uno (modificabile finché non si chiude); contatori solo se attivi | Come gli altri, più chi ha già votato |
+| Indizi | Chi parla per primo | Pulsante per passare al voto |
+| Voto | Gli altri giocatori, ne sceglie uno (modificabile finché non votano tutti); contatori solo se attivi | Come gli altri, più chi manca e sollecito |
 | Ballottaggio | Solo i pari merito | Idem |
 | Tentativo | Solo l'impostore scoperto scrive la parola | Vede che sta tentando |
-| Fine | Esito, parola, impostori | Idem |
+| Fine | Esito, parola, impostori | Idem, e può ripartire |
 
-Nessun telefono riceve informazioni che non deve vedere: la carta altrui non viaggia sulla rete.
+**Voto e pareggio** (confermato 2026-11-04): viene eliminato chi ha più voti. In caso di
+pareggio, **ballottaggio solo tra i pari merito**; se pareggiano ancora, **nessuno viene
+eliminato e vincono gli impostori**. Non c'è una regola ufficiale: è una scelta nostra.
 
-**Voto e pareggio:** viene eliminato chi ha più voti. In caso di pareggio, **ballottaggio
-solo tra i pari merito**.
-
-**Tutti devono votare:** è un gioco fatto intorno a un tavolo, quindi il voto si chiude solo
-quando hanno votato tutti. Chi manca non è un astenuto: l'organizzatore vede chi non ha
-ancora votato e può mandargli un sollecito sul telefono. Se un telefono è davvero
-irraggiungibile (batteria, rete), l'organizzatore può votare al posto suo.
+**Tutti devono votare:** il voto si chiude solo quando hanno votato tutti. L'organizzatore
+vede chi manca e può sollecitare; se un telefono non torna può **escludere dal voto** quel giocatore (non si aspetta il suo voto, ma nessuno vota al suo posto; restano almeno 2 votanti; se il giocatore rientra e vota, torna tra i votanti). Il voto per procura è stato scartato: toglierebbe il voto segreto.
 
 ## Architettura software
 
-- **Monorepo unico** con **pnpm workspaces** (Turborepo opzionale quando servirà).
-  Motivo: motore e giochi evolvono insieme in un solo commit, versioni sempre allineate,
-  un'unica app "raccolta".
-- **Ogni gioco è un plugin**: esporta un `manifest` (id, nome, min/max giocatori,
-  modalità supportate), la logica e la UI. L'app carica i giochi in **lazy loading**.
-- **Ogni gioco ha un proprio indirizzo**: `/impostore`, poi `/lupus`. Aprire l'indirizzo
-  porta direttamente al gioco.
-- **La logica di gioco è TypeScript puro, deterministica e senza dipendenze dalla UI.**
-  Così è testabile (importante per Lupus) e gira identica nel browser (modalità A) e sul
-  server (modalità B) senza riscriverla.
-- **Fasi come macchina a stati** nel motore.
-- **Interfaccia di gioco per il server:** `init`, `applica(azione)`, `vistaPer(giocatore)`.
-  Il client riceve solo la sua vista, mai lo stato completo.
-- **Interfaccia `Narratore`** nel motore, con due implementazioni (richieste per Lupus,
-  riusabili dagli altri giochi):
-  - **Narratore automatico**: un telefono al centro del tavolo narra a voce (Web Speech
-    API, funziona offline). Di notte i ruoli agiscono toccando quel telefono.
-  - **Pannello narratore umano**: il telefono del master mostra tutti i ruoli, il copione
-    da leggere, i pulsanti per avanzare di fase e il registro degli eventi.
+- **Monorepo** con **pnpm workspaces**. Motivo: motore, giochi e server evolvono insieme,
+  versioni sempre allineate, un'unica app "raccolta".
+- **Ogni gioco è un plugin** (`games/*`): esporta un `manifest`, la logica e la UI; l'app
+  li carica in lazy loading.
+- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`.
+- **Logica di gioco in TypeScript puro e deterministica**, separata dalla UI: testabile e
+  identica nel browser (modalità A) e sul server (modalità B).
+- **Fasi come macchina a stati.**
+- **Narratore** (Lupus): oggi un narratore automatico a voce (Web Speech API, funziona
+  offline). Previsto anche un pannello per un narratore umano.
 
-Struttura cartelle prevista:
+Struttura attuale:
 
 ```
 giochi-da-tavola/
 ├── apps/
-│   ├── web/                    → PWA contenitore: menu giochi, percorsi per gioco, impostazioni
-│   └── server/                 → server partite: adattatore Node (Docker) e adattatore Vercel
+│   ├── web/        → PWA: menu giochi, indirizzi per gioco
+│   └── server/     → server partite WebSocket (Node), serve anche l'app
 ├── packages/
-│   ├── engine/                 → RNG con seed, giocatori, fasi, timer, Narratore
-│   ├── ui/                     → componenti condivisi: carta segreta, "passa il telefono", timer, voto
-│   └── tts/                    → sintesi vocale per il narratore
+│   └── engine/     → RNG con seme, codice partita, utilità comuni
 ├── games/
-│   ├── impostore/
-│   │   ├── src/logic/          → regole pure + test
-│   │   ├── src/ui/             → schermate del gioco
-│   │   ├── data/it/parole.json → parole per categoria (predisposto per altre lingue)
-│   │   └── manifest.ts
-│   └── lupus/                  → stessa struttura
-└── docs/
-    ├── decisioni.md            → questo file
-    └── regole/                 → regolamenti in markdown
+│   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
+│   ├── lupus/      → regole e UI a un telefono
+│   └── tabu/       → regole, carte e UI
+├── Dockerfile, docker-compose.yml
+└── docs/           → questo file e le guide
 ```
 
-Git: branch `main` + un branch per gioco/funzione (`feat/lupus`), commit con prefisso
-(`feat(impostore): ...`, `fix(engine): ...`).
+Git: branch `main` + un branch per gioco/funzione, commit con prefisso
+(`feat(impostore): ...`, `fix(...)`). Il push lo fa sempre l'utente.
 
 ## Deploy
 
-- Il client e la modalità A producono file statici (`pnpm build` → `dist/`).
-- Hosting attuale: **Vercel** (Root Directory `apps/web`). Resta la scelta anche per la
-  modalità B online, vedi sopra.
-- Un indirizzo per gioco è una scelta di React e non crea problemi nell'app: cliccare un
-  gioco porta a `/impostore` senza ricaricare la pagina. Il problema è solo **aprire o
-  ricaricare direttamente** `/impostore`: il browser lo chiede a Vercel, che cerca un file
-  con quel nome, non lo trova e risponde 404. (Oggi funziona perché l'unico indirizzo è `/`.)
-  Si risolve con poche righe in `vercel.json` che dicono "per qualsiasi indirizzo servi
-  `index.html`", e poi React mostra il gioco giusto. Il server di sviluppo e quello
-  locale lo fanno già da soli. Va documentata nel README.
-- In locale: `docker compose up` avvia il server con i file dell'app (vedi sopra).
+- **Server di gioco (modalità B):** immagine Docker. In locale `docker compose up`; online su
+  un hosting che esegue contenitori e supporta i WebSocket
+  ([guida](guida-deploy-online.md)).
+- **Modalità A:** l'app è statica (`pnpm build` → `dist/`) e può stare anche su Vercel
+  (Root Directory `apps/web`). Gli host statici rispondono 404 se si ricarica direttamente
+  `/impostore`: per questo c'è `apps/web/vercel.json` con una regola "per qualsiasi
+  indirizzo servi `index.html`" (provata su Vercel il 2026-11-04). Il server di sviluppo e
+  il nostro server lo fanno già da soli.
+- La modalità B funziona solo dall'indirizzo del server di gioco, perché è lì che c'è il
+  WebSocket.
 
 ## Lezioni dal progetto precedente (`../tic-tac-toe`)
 
-Il tris (Node + `ws`, server autoritativo, stanze con codice a 4 cifre, heartbeat, test
-e2e, deploy su Render free) è un buon riferimento per il server, non come codice da
-riusare. Cose da fare diversamente:
-- Interfaccia di gioco generica (`init`, `applica`, `vistaPer`) invece di logica dentro gli
-  handler e duplicata nel client.
-- **Viste private per giocatore** (non uno stato pubblico uguale per tutti).
-- Stanze con N giocatori, organizzatore e narratore.
-- **Riconnessione con token + timer di grazia**: sui telefoni la connessione cade spesso
-  (schermo bloccato, cambio app); un'uscita non deve distruggere la stanza.
-- Evitare hosting che va in sleep (Render free dopo ~15 min: avvio lento).
-
-## Piano di partenza
-
-1. Inizializzare git e il monorepo (pnpm + Vite + React + TypeScript + PWA). ✔
-2. Motore base: codice partita, RNG con seed, giocatori, fasi. ✔
-3. Impostore, modalità A (un telefono), con parole ampliate. ✔
-4. Indirizzo per gioco (`/impostore`) e lazy loading dei giochi.
-5. Server partite: modulo puro + adattatore Node + `docker compose up`, prova con 2 telefoni.
-6. Adattatore Vercel, a partire dalla prova di collegamento.
-7. Impostore, modalità B (sala, nomi, carte, indizi, voto con ballottaggio, fine).
-8. Poi Lupus, con entrambi i narratori.
+Server Node + `ws`, autoritativo, stanze con codice, heartbeat, deploy su Render free.
+Fatto diversamente qui: logica di gioco separata dagli handler, **viste private per
+giocatore**, N giocatori con organizzatore, **riconnessione con token**, e attenzione
+all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-- Secondo pareggio nel ballottaggio. Non ho trovato una regola ufficiale (la pagina del
-  Camaleonte, gioco gemello, non parla dei pareggi). Proposta da confermare: ballottaggio
-  ripetuto una volta; se pareggiano ancora, **nessuno viene eliminato e vince l'impostore**.
-- Per quanto tempo restano salvate le partite nel database (proposta: si cancellano dopo 24 ore).
-- Prova di collegamento Vercel + Supabase Realtime (accesso anonimo, canali privati,
-  riconnessione) prima di fissare l'adattatore online.
-- Locale: server Node leggero o `supabase start`.
-- Codice partita della modalità B: lunghezza (4–6 caratteri) e durata di validità.
+- Prova su telefoni veri: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro.
+- Lupus ognuno col suo telefono (ruoli segreti, notte, voto).
+- Prova del server online su Render (condizioni del piano gratuito da verificare).
+- Sul sito statico (Vercel) il pulsante online non ha un server: dopo 8 s avvisa e propone un solo telefono.
+- Tabù: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da
+  discutere.
+- Regole e carte di Tabù e Lupus da verificare dall'utente; originalità delle carte.
 - Licenza del repository (README: "Da definire").
 - Turborepo sì/no (si può decidere più avanti).

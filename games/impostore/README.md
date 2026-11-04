@@ -1,6 +1,6 @@
 # Impostore
 
-Un gioco da fare in compagnia, con un solo telefono che passa di mano.
+Un gioco da fare in compagnia: con un solo telefono che passa di mano, oppure ognuno col suo telefono.
 Servono **almeno 3 persone**.
 
 ## Come si gioca
@@ -12,6 +12,27 @@ Tutti ricevono la stessa **parola segreta**, tranne uno (o più): **l'impostore*
 3. Si discute e si **vota** chi sembra l'impostore.
 4. Se i giocatori **sbagliano** e votano un innocente, vince l'impostore.
 5. Se **scoprono** l'impostore, lui ha un'ultima occasione: se **indovina la parola** vince lui, altrimenti vincono gli altri.
+
+## Ognuno col suo telefono
+
+Oltre alla modalità a un telefono, Impostore si gioca con un telefono a testa. Serve il **server di gioco**
+(stesso programma sul PC con `docker compose up` e online): vedi
+[docs/guida-giocare-con-il-pc.md](../../docs/guida-giocare-con-il-pc.md) e
+[docs/guida-deploy-online.md](../../docs/guida-deploy-online.md).
+
+- L'organizzatore scrive i nomi, sceglie categoria, impostori e se i **voti sono visibili in diretta** o rivelati a voto chiuso.
+- Ottiene un **codice** e un link `…/impostore/CODICE` da condividere. Ognuno tocca il **proprio nome**.
+- Ognuno vede solo la propria carta; il voto si fa dal proprio telefono e **devono votare tutti** (l'organizzatore vede chi manca, può sollecitare o, se un telefono non torna, **escluderlo dal voto**).
+- Pareggio: ballottaggio tra i pari merito; se pareggiano ancora vince l'impostore.
+- Il refresh o lo schermo bloccato non fanno perdere il posto.
+- L'invito è un **QR code** (generato sul telefono dell'organizzatore) oltre a codice e link.
+- Se il server non risponde entro 8 secondi l'app avvisa e propone la modalità a un telefono.
+
+Dettagli su stanze, dati salvati sul browser e limiti di sicurezza: [docs/architettura-tecnica.md](../../docs/architettura-tecnica.md).
+
+Per provarlo in sviluppo: `pnpm dev:server` in un terminale e `pnpm dev` in un altro, poi apri `http://localhost:5173/impostore`.
+
+Cosa controllare: nome già scelto non selezionabile; nessun telefono mostra la carta altrui; refresh a metà partita rientra nello stesso posto; voti in diretta/nascosti secondo l'impostazione.
 
 ---
 
@@ -182,7 +203,9 @@ Impostore non ha un sito suo: è dentro l'app **Giochi da tavola**, che si pubbl
 src/logic/partita.ts    regole pure: partita dal seme, carta, tentativo, voto
 src/logic/fasi.ts       fasi (distribuzione, indizi, voto, tentativo, fine) e vincitore
 src/logic/sessione.ts   stato della partita a un telefono, riduttore testato
+src/online/gioco.ts     logica pura della partita online (usata dal server): azioni, voto, vista per giocatore
 src/ui/                 schermate React e memoria delle parole recenti
+src/ui/online/          schermate e collegamento WebSocket della partita online
 src/parole.ts           accesso alle parole e VERSIONE_DATI
 data/it/parole.json     parole per categoria
 src/manifest.ts         id, nome e descrizione per il menu

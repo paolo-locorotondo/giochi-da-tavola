@@ -34,4 +34,4 @@ Ruoli: 1 lupo ogni 4 giocatori (arrotondato), veggente da 5 giocatori, medico da
 
 ## Deploy
 
-Insieme al resto dell'app su Vercel (Root Directory `apps/web`); `apps/web/vercel.json` fa aprire direttamente `/lupus`.
+Insieme al resto dell'app: sito statico (es. Vercel, Root Directory `apps/web`; `apps/web/vercel.json` fa aprire direttamente `/lupus`) oppure dal server Docker ([guida](../../docs/guida-deploy-online.md)). La versione ognuno col suo telefono non c'è ancora.

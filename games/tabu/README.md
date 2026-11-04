@@ -35,4 +35,4 @@ Le carte sono **originali** (circa 150 parole): non sono quelle del gioco commer
 
 ## Deploy
 
-Si pubblica insieme al resto dell'app su Vercel (Root Directory `apps/web`): nessuna impostazione specifica. Il file `apps/web/vercel.json` fa aprire direttamente `/tabu`.
+Si pubblica insieme al resto dell'app: sito statico (es. Vercel, Root Directory `apps/web`; `apps/web/vercel.json` fa aprire direttamente `/tabu`) oppure dal server Docker ([guida](../../docs/guida-deploy-online.md)). Resta solo a un telefono.

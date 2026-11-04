@@ -1,0 +1,9 @@
+services:
+  giochi:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Facoltativo: l'IP del PC (da ipconfig), solo per stamparlo comodo nei messaggi di avvio.
+      HOST_IP: ${HOST_IP:-}
+    restart: unless-stopped

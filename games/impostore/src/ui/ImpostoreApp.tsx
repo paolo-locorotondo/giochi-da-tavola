@@ -16,7 +16,7 @@ const NOME_CATEGORIA: Record<Categoria, string> = {
   trasporti: "Mezzi di trasporto",
 };
 
-export function ImpostoreApp() {
+export function ImpostoreLocale() {
   const [sessione, dispatch] = useReducer(riduci, undefined, sessioneIniziale);
   const [categoriaPartita, setCategoriaPartita] = useState<Categoria>("cibi");
   const { partita } = sessione;

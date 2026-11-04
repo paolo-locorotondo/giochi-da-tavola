@@ -5,8 +5,9 @@ Requisiti: Node.js 20 o superiore e pnpm 9. Dal terminale di Visual Studio Code:
 | Comando | Cosa fa |
 |---|---|
 | `pnpm install` | Prepara tutto (solo la prima volta, o dopo un aggiornamento delle dipendenze) |
-| `pnpm dev` | Apre l'app sul computer, su `http://localhost:5173`. Si aggiorna da sola quando salvi un file. |
+| `pnpm dev` | Apre l'app sul computer, su `http://localhost:5173`. Si aggiorna da sola quando salvi un file. Vanno solo i giochi a un telefono |
 | `pnpm dev:rete` | Come `pnpm dev`, ma raggiungibile anche dagli altri dispositivi della stessa rete (telefono, tablet): Vite stampa un indirizzo "Network" tipo `http://192.168.1.20:5173`. Su Windows serve la regola del firewall |
+| `pnpm dev:server` | Avvia il server di gioco (porta 8080). Insieme a `pnpm dev` in un altro terminale permette di provare "ognuno col suo telefono" mentre si modifica il codice, da `http://localhost:5173/impostore`. Per giocare e basta usa `docker compose up` |
 | `pnpm anteprima` | Fa la build vera e la serve. È l'unico modo per provare in locale l'installazione e l'uso offline, che in `pnpm dev` non ci sono. Funziona su `localhost`, non dal telefono in `http://192.168…` (manca l'HTTPS) |
 | `pnpm typecheck`, `pnpm test`, `pnpm build` | Controlli prima di pubblicare, in quest'ordine |
 
@@ -21,6 +22,7 @@ Ogni gioco ha la sua guida con cosa controllare e come provarlo: vedi la cartell
 
 ```
 apps/web/        app contenitore: menu dei giochi
+apps/server/     server di gioco WebSocket (serve anche l'app)
 packages/engine/ motore condiviso: numeri casuali con seme, giocatori, codice partita, fasi
 games/           un gioco per cartella, ognuno con la sua guida
 docs/            guide e decisioni di progetto

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @gdt/web dev",
+    "dev:server": "pnpm --filter @gdt/server dev",
     "dev:rete": "pnpm --filter @gdt/web dev --host",
     "anteprima": "pnpm build && pnpm --filter @gdt/web preview",
     "build": "pnpm -r build",

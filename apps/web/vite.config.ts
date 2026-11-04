@@ -5,6 +5,8 @@ import pkg from "./package.json";
 
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  // In sviluppo il WebSocket passa al server di gioco (pnpm dev:server).
+  server: { proxy: { "/ws": { target: "ws://localhost:8080", ws: true } } },
   plugins: [
     react(),
     VitePWA({
@@ -25,6 +27,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,json,woff2}"],
         navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/ws/, /^\/salute/],
       },
     }),
   ],

@@ -10,14 +10,20 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gdt/engine": "workspace:*"
+    "@gdt/engine": "workspace:*",
+    "qrcode": "1.5.4"
   },
   "peerDependencies": {
     "react": "^18.3.1"
   },
   "devDependencies": {
+    "@types/qrcode": "1.5.5",
     "@types/react": "^18.3.12",
     "react": "^18.3.1",
     "vitest": "^2.1.8"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./online": "./src/online/index.ts"
   }
 }
