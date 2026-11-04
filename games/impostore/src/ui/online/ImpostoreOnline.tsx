@@ -83,7 +83,7 @@ export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: 
       ) : (
         stato
       )}
-      {c.sollecitato && <p className="avviso">Tocca a te: vota!</p>}
+      {c.sollecitato && <p className="avviso">Tocca a te!</p>}
       {err}
       <Testata c={c} v={c.vista} />
       <Partita c={c} v={c.vista} />
@@ -195,6 +195,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
   const [scelta, setScelta] = useState<number | null>(null);
   const [categoria, setCategoria] = useState<Categoria>("cibi");
   const [votiVisibili, setVotiVisibili] = useState(true);
+  const [indiziScritti, setIndiziScritti] = useState(false);
 
   const nomi = testo
     .split("\n")
@@ -209,7 +210,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       className="schermata allineata"
       onSubmit={(e) => {
         e.preventDefault();
-        c.invia({ t: "crea", nomi, config: { numImpostori, categoria, votiVisibili } });
+        c.invia({ t: "crea", nomi, config: { numImpostori, categoria, votiVisibili, indiziScritti } });
       }}
     >
       <label className="campo">
@@ -241,6 +242,10 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       <label className="spunta">
         <input type="checkbox" checked={votiVisibili} onChange={(e) => setVotiVisibili(e.target.checked)} />
         Mostra i voti in diretta durante la votazione
+      </label>
+      <label className="spunta">
+        <input type="checkbox" checked={indiziScritti} onChange={(e) => setIndiziScritti(e.target.checked)} />
+        Indizi scritti nell'app, uno alla volta (per giocare da case diverse)
       </label>
       {c.errore && <p className="errore">{c.errore}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso}>
@@ -287,7 +292,9 @@ function Partita({ c, v }: { c: Collegamento; v: Vista }) {
     case "carte":
       return <Carta c={c} v={v} />;
     case "indizi":
-      return (
+      return v.indizi ? (
+        <IndiziScritti c={c} v={v} nome={nome} />
+      ) : (
         <section className="schermata">
           <h2>Indizi</h2>
           <p>
@@ -465,6 +472,75 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
   );
 }
 
+function ElencoIndizi({ v, nome }: { v: Vista; nome: (p: number | null) => string }) {
+  if (!v.indizi) return null;
+  return (
+    <ol className="elenco">
+      {v.indizi.scritti.map((i, n) => (
+        <li key={n}>
+          <span>
+            <strong>{nome(i.posto)}</strong>: {i.testo ?? <em>(saltato)</em>}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
+  const [testo, setTesto] = useState("");
+  const ind = v.indizi;
+  if (!ind) return null;
+  const mioTurno = ind.turno !== null && ind.turno === v.io;
+  const giocatore = v.nomi.find((n) => n.posto === ind.turno);
+  return (
+    <section className="schermata allineata">
+      <h2>Indizi</h2>
+      <ElencoIndizi v={v} nome={nome} />
+      {mioTurno ? (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            c.azione({ tipo: "indizio", testo });
+            setTesto("");
+          }}
+        >
+          <p>Tocca a te: scrivi il tuo indizio.</p>
+          <input autoFocus autoComplete="off" maxLength={60} value={testo} onChange={(e) => setTesto(e.target.value)} />
+          <button className="btn primario" type="submit" disabled={!testo.trim()}>
+            Invia
+          </button>
+        </form>
+      ) : ind.turno !== null ? (
+        <p className="muted">
+          Tocca a <strong>{nome(ind.turno)}</strong>
+          {giocatore && !giocatore.collegato ? " · scollegato" : ""}…
+        </p>
+      ) : (
+        <p className="muted">Hanno scritto tutti.</p>
+      )}
+      {c.errore && <p className="errore">{c.errore}</p>}
+      {v.host && (
+        <div className="mancanti">
+          {ind.turno !== null && !mioTurno && (
+            <>
+              <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
+                Sollecita {nome(ind.turno)}
+              </button>
+              <button className="btn" onClick={() => c.azione({ tipo: "salta" })}>
+                Salta il turno di {nome(ind.turno)}
+              </button>
+            </>
+          )}
+          <button className="btn primario" onClick={() => c.azione({ tipo: "avanti" })}>
+            Si passa al voto
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
   const voto = v.voto;
   if (!voto) return null;
@@ -473,6 +549,12 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
     <section className="schermata allineata">
       <h2>{voto.ballottaggio ? "Ballottaggio" : "Votazione"}</h2>
       {voto.ballottaggio && v.ultimoEsito && <p className="muted">Pareggio: si rivota solo tra i pari merito.</p>}
+      {v.indizi && (
+        <details>
+          <summary>Indizi dati</summary>
+          <ElencoIndizi v={v} nome={nome} />
+        </details>
+      )}
       <p className="muted">
         Hanno votato {voto.hannoVotato} su {voto.totale}. Votare è obbligatorio per tutti.
       </p>

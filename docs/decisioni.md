@@ -95,7 +95,7 @@ vive solo nel branch `feat/codice-condiviso`, **da non unire a `main`**.
 
 **Creare la partita** (organizzatore): nomi dei giocatori (nessun limite fisso), numero di
 impostori (con consiglio), categoria e *voti visibili in diretta* (sì = contatori che
-salgono; no = si rivelano quando hanno votato tutti). Il server genera codice e link.
+salgono; no = si rivelano quando hanno votato tutti) e *indizi scritti* (sì = si scrivono nell'app uno alla volta, nell'ordine che parte dal primo di turno casuale, per giocare da case diverse; no = a voce). Il server genera codice e link.
 
 **Entrare:** si apre il link o si scrive il codice; il giocatore tocca il **proprio nome**
 (un nome preso non è più scegliibile). Solo l'organizzatore può liberare un nome occupato.
@@ -104,7 +104,7 @@ salgono; no = si rivelano quando hanno votato tutti). Il server genera codice e 
 |---|---|---|
 | Sala d'attesa | Nomi liberi e occupati | Chi è entrato, avvio partita |
 | Carta | Solo la propria, da scoprire | Come gli altri |
-| Indizi | Chi parla per primo | Pulsante per passare al voto |
+| Indizi | A voce: chi parla per primo. Con *indizi scritti*: chi è di turno scrive e invia, gli altri leggono | Pulsante per passare al voto; con indizi scritti anche sollecito e "salta turno" |
 | Voto | Gli altri giocatori, ne sceglie uno (modificabile finché non votano tutti); contatori solo se attivi | Come gli altri, più chi manca e sollecito |
 | Ballottaggio | Solo i pari merito | Idem |
 | Tentativo | Solo l'impostore scoperto scrive la parola | Vede che sta tentando |

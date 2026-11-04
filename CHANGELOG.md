@@ -7,6 +7,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
+## [0.4.0] - 2026-11-04
+
+### Aggiunto
+
+- Impostore online: opzione "Indizi scritti nell'app" alla creazione della partita. Nella fase indizi chi è di turno scrive il suo indizio e lo invia; gli altri lo vedono subito, e si procede in ordine (dal primo di turno) fino a chi chiude il giro. L'organizzatore può sollecitare, saltare il turno di chi non risponde e passare al voto. Gli indizi restano consultabili durante la votazione. Senza l'opzione gli indizi si dicono a voce come prima.
+
 ## [0.3.1] - 2026-11-04
 
 ### Aggiunto

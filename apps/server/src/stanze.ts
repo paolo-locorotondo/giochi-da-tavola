@@ -42,6 +42,10 @@ export type AzioneClient =
   | { tipo: "avvia" }
   | { tipo: "avanti" }
   | { tipo: "visto" }
+  /** Indizi scritti: il giocatore di turno invia il suo. */
+  | { tipo: "indizio"; testo: string }
+  /** Solo organizzatore: salta il turno di chi non risponde. */
+  | { tipo: "salta" }
   | { tipo: "vota"; posto: number }
   /** Solo organizzatore: non aspettare il voto di un giocatore irraggiungibile. */
   | { tipo: "escludi"; posto: number }
@@ -159,6 +163,14 @@ export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, con
     case "visto":
       if (mio === null) return;
       azione = { tipo: "visto", posto: mio };
+      break;
+    case "indizio":
+      if (mio === null) throw new Error("Scegli prima il tuo nome");
+      azione = { tipo: "indizio", chi: mio, testo: String(a.testo ?? "") };
+      break;
+    case "salta":
+      soloHost();
+      azione = { tipo: "salta" };
       break;
     case "vota": {
       // Si vota solo dal proprio telefono: nessuno vota per un altro.

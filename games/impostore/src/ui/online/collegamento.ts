@@ -3,7 +3,7 @@ import type { Vista } from "../../online";
 
 /** Messaggi verso il server (specchio di apps/server/src/stanze.ts). */
 export type Messaggio =
-  | { t: "crea"; nomi: string[]; config: { numImpostori: number; categoria: string; votiVisibili: boolean }; token?: string }
+  | { t: "crea"; nomi: string[]; config: { numImpostori: number; categoria: string; votiVisibili: boolean; indiziScritti: boolean }; token?: string }
   | { t: "entra"; codice: string; token?: string }
   | { t: "azione"; azione: Record<string, unknown> }
   | { t: "sollecita" }

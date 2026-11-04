@@ -84,3 +84,23 @@ describe("rientro e chiusura", () => {
   });
 });
 
+describe("indizi scritti", () => {
+  it("scrive solo il giocatore di turno; salta solo l'organizzatore", () => {
+    const s = creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, indiziScritti: true }, "host");
+    const tel = ["host", "t2", "t3"];
+    s.telefoni.set("t2", null);
+    s.telefoni.set("t3", null);
+    tel.forEach((t, i) => eseguiAzione(s, t, { tipo: "occupa", posto: i + 1 }));
+    eseguiAzione(s, "host", { tipo: "avvia" });
+    eseguiAzione(s, "host", { tipo: "avanti" });
+    const turno = vistaDi(s, "host").indizi!.turno!;
+    const di = tel[turno - 1]!;
+    const altro = tel.find((t) => t !== di && t !== "host") ?? "t2";
+    expect(() => eseguiAzione(s, altro, { tipo: "indizio", testo: "no" })).toThrow();
+    expect(() => eseguiAzione(s, altro, { tipo: "salta" })).toThrow();
+    eseguiAzione(s, di, { tipo: "indizio", testo: "ok" });
+    expect(s.stato.indizi).toEqual([{ posto: turno, testo: "ok" }]);
+    eseguiAzione(s, "host", { tipo: "salta" });
+    expect(s.stato.indizi).toHaveLength(2);
+  });
+});
