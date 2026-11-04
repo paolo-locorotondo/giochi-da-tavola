@@ -7,6 +7,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
+## [0.4.2] - 2026-11-05
+
+### Aggiunto
+
+- Impostore online: "Rivedi la mia carta" durante indizi, voto e tentativo. La carta resta nascosta finché non la tocchi e la vedi solo tu.
+
 ## [0.4.1] - 2026-11-05
 
 ### Cambiato

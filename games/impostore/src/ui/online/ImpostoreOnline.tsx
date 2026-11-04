@@ -258,7 +258,41 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
   );
 }
 
+/** Rivedere la propria carta dopo la fase "carte": nascosta finché non la tocchi, la vedi solo tu. */
+function RivediCarta({ v }: { v: Vista }) {
+  const [aperta, setAperta] = useState(false);
+  if (!v.carta || !["indizi", "voto", "tentativo"].includes(v.fase)) return null;
+  return (
+    <div className="rivedi">
+      <button className="btn piccolo" onClick={() => setAperta(!aperta)}>
+        {aperta ? "Nascondi la mia carta" : "Rivedi la mia carta"}
+      </button>
+      {aperta && (
+        <div className="carta">
+          {v.carta.ruolo === "impostore" ? (
+            <p className="grande">Sei l'impostore: non conosci la parola</p>
+          ) : (
+            <>
+              <p>La parola è</p>
+              <p className="grande">{v.carta.parola}</p>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Partita({ c, v }: { c: Collegamento; v: Vista }) {
+  return (
+    <>
+      <Fase c={c} v={v} />
+      <RivediCarta v={v} />
+    </>
+  );
+}
+
+function Fase({ c, v }: { c: Collegamento; v: Vista }) {
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
 
   if (v.io === null && v.fase !== "sala") {
