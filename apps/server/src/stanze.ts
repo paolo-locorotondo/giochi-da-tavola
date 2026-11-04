@@ -44,11 +44,7 @@ export type AzioneClient =
   | { tipo: "visto" }
   /** Indizi scritti: il giocatore di turno invia il suo. */
   | { tipo: "indizio"; testo: string }
-  /** Solo organizzatore: salta il turno di chi non risponde. */
-  | { tipo: "salta" }
   | { tipo: "vota"; posto: number }
-  /** Solo organizzatore: non aspettare il voto di un giocatore irraggiungibile. */
-  | { tipo: "escludi"; posto: number }
   | { tipo: "tenta"; testo: string }
   | { tipo: "nuova" };
 
@@ -168,20 +164,12 @@ export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, con
       if (mio === null) throw new Error("Scegli prima il tuo nome");
       azione = { tipo: "indizio", chi: mio, testo: String(a.testo ?? "") };
       break;
-    case "salta":
-      soloHost();
-      azione = { tipo: "salta" };
-      break;
     case "vota": {
       // Si vota solo dal proprio telefono: nessuno vota per un altro.
       if (mio === null) throw new Error("Scegli prima il tuo nome");
       azione = { tipo: "vota", chi: mio, posto: a.posto };
       break;
     }
-    case "escludi":
-      soloHost();
-      azione = { tipo: "escludi", posto: a.posto };
-      break;
     case "tenta":
       if (mio === null || mio !== s.eliminato) throw new Error("Solo l'impostore scoperto può tentare");
       azione = { tipo: "tenta", testo: a.testo };

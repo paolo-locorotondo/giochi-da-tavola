@@ -7,11 +7,18 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
+## [0.4.1] - 2026-11-05
+
+### Cambiato
+
+- Impostore online: tolti "Escludi dal voto" e "Salta il turno". Se un giocatore sparisce la partita si chiude e se ne crea un'altra (il rientro automatico copre le cadute di rete). Escluderlo falsava il ballottaggio e l'esito.
+- Impostore online: "Tutti hanno visto: via agli indizi" si attiva solo quando hanno visto la carta tutti; con gli indizi scritti "Si passa al voto" solo quando hanno scritto tutti. Il server rifiuta comunque l'avanzamento anticipato.
+
 ## [0.4.0] - 2026-11-04
 
 ### Aggiunto
 
-- Impostore online: opzione "Indizi scritti nell'app" alla creazione della partita. Nella fase indizi chi è di turno scrive il suo indizio e lo invia; gli altri lo vedono subito, e si procede in ordine (dal primo di turno) fino a chi chiude il giro. L'organizzatore può sollecitare, saltare il turno di chi non risponde e passare al voto. Gli indizi restano consultabili durante la votazione. Senza l'opzione gli indizi si dicono a voce come prima.
+- Impostore online: opzione "Indizi scritti nell'app" alla creazione della partita. Nella fase indizi chi è di turno scrive il suo indizio e lo invia; gli altri lo vedono subito, e si procede in ordine (dal primo di turno) fino a chi chiude il giro. L'organizzatore può sollecitare e passare al voto. Gli indizi restano consultabili durante la votazione. Senza l'opzione gli indizi si dicono a voce come prima.
 
 ## [0.3.1] - 2026-11-04
 

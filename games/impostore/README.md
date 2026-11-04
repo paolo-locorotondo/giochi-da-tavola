@@ -22,7 +22,7 @@ Oltre alla modalità a un telefono, Impostore si gioca con un telefono a testa. 
 
 - L'organizzatore scrive i nomi, sceglie categoria, impostori e se i **voti sono visibili in diretta** o rivelati a voto chiuso.
 - Ottiene un **codice** e un link `…/impostore/CODICE` da condividere. Ognuno tocca il **proprio nome**.
-- Ognuno vede solo la propria carta; il voto si fa dal proprio telefono e **devono votare tutti** (l'organizzatore vede chi manca, può sollecitare o, se un telefono non torna, **escluderlo dal voto**).
+- Ognuno vede solo la propria carta; il voto si fa dal proprio telefono e **devono votare tutti** (l'organizzatore vede chi manca e può sollecitare).
 - Pareggio: ballottaggio tra i pari merito; se pareggiano ancora vince l'impostore.
 - Il refresh o lo schermo bloccato non fanno perdere il posto.
 - L'invito è un **QR code** (generato sul telefono dell'organizzatore) oltre a codice e link.

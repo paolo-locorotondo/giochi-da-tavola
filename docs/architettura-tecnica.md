@@ -64,7 +64,7 @@ La parola e i ruoli altrui non viaggiano mai sulla rete verso chi non deve veder
 strumenti del browser. L'organizzatore vede in più chi non ha ancora votato; non vede le carte degli altri.
 
 Controlli lato server (il telefono non è mai considerato affidabile): solo l'organizzatore avvia, avanza, ripete o chiude;
-ognuno vota solo per sé (nessuno vota per un altro; l'organizzatore può solo **escludere dal voto** chi non ha ancora votato, così il voto non resta bloccato); solo
+ognuno vota solo per sé (nessuno vota per un altro; il voto si chiude solo quando hanno votato tutti); solo
 l'impostore scoperto può tentare la parola; non si vota se stessi né chi non è candidato.
 
 ## Limiti di sicurezza (da sapere)

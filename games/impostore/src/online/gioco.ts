@@ -19,10 +19,10 @@ export interface ConfigOnline {
   indiziScritti?: boolean;
 }
 
-/** Un indizio scritto; `testo` null = turno saltato dall'organizzatore. */
+/** Un indizio scritto. */
 export interface Indizio {
   posto: number;
-  testo: string | null;
+  testo: string;
 }
 
 const MAX_INDIZIO = 60;
@@ -47,8 +47,6 @@ export interface StatoOnline {
   voti: Record<number, number>;
   /** Indizi scritti finora, nell'ordine di turno (solo se `config.indiziScritti`). */
   indizi: Indizio[];
-  /** Esclusi dal voto dall'organizzatore (telefono irraggiungibile): non si aspetta il loro voto. */
-  esclusi: number[];
   /** Candidati del ballottaggio; null = primo round. */
   candidati: number[] | null;
   ultimoEsito: EsitoRound | null;
@@ -66,9 +64,7 @@ export type AzioneOnline =
   | { tipo: "avanti" }
   | { tipo: "visto"; posto: number }
   | { tipo: "indizio"; chi: number; testo: string }
-  | { tipo: "salta" }
   | { tipo: "vota"; chi: number; posto: number }
-  | { tipo: "escludi"; posto: number }
   | { tipo: "tenta"; testo: string }
   | { tipo: "nuova" };
 
@@ -92,7 +88,6 @@ export function nuovoStato(nomi: string[], config: ConfigOnline): StatoOnline {
     viste: [],
     voti: {},
     indizi: [],
-    esclusi: [],
     candidati: null,
     ultimoEsito: null,
     eliminato: null,
@@ -172,7 +167,6 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
         viste: [],
         voti: {},
         indizi: [],
-        esclusi: [],
         candidati: null,
         ultimoEsito: null,
         eliminato: null,
@@ -194,15 +188,15 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
       return { ...s, indizi: [...s.indizi, { posto: a.chi, testo }] };
     }
 
-    case "salta": {
-      const chi = turnoIndizio(s);
-      if (s.fase !== "indizi" || chi === null) throw new Error("Nessun turno da saltare");
-      return { ...s, indizi: [...s.indizi, { posto: chi, testo: null }] };
-    }
-
     case "avanti":
-      if (s.fase === "carte") return { ...s, fase: "indizi" };
-      if (s.fase === "indizi") return { ...s, fase: "voto", voti: {}, esclusi: [], candidati: null, ultimoEsito: null };
+      if (s.fase === "carte") {
+        if (s.viste.length < s.inGioco.length) throw new Error("Non tutti hanno visto la carta");
+        return { ...s, fase: "indizi" };
+      }
+      if (s.fase === "indizi") {
+        if (s.config.indiziScritti && turnoIndizio(s) !== null) throw new Error("Non tutti hanno scritto l'indizio");
+        return { ...s, fase: "voto", voti: {}, candidati: null, ultimoEsito: null };
+      }
       throw new Error("Non si può avanzare adesso");
 
     case "vota": {
@@ -212,18 +206,7 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
       if (!candidati.includes(a.posto)) throw new Error("Non puoi votare questo giocatore");
       if (a.chi === a.posto) throw new Error("Non puoi votare te stesso");
       const voti = { ...s.voti, [a.chi]: a.posto };
-      // Chi era stato escluso e poi rientra a votare torna tra i votanti.
-      const next = { ...s, voti, esclusi: s.esclusi.filter((p) => p !== a.chi) };
-      return mancanti(next).length === 0 ? chiudiRound(next) : next;
-    }
-
-    case "escludi": {
-      if (s.fase !== "voto") throw new Error("Non si sta votando");
-      if (!s.inGioco.includes(a.posto)) throw new Error("Questo giocatore non partecipa");
-      if (a.posto in s.voti) throw new Error("Ha già votato");
-      if (s.esclusi.includes(a.posto)) return s;
-      if (votanti(s).length <= 2) throw new Error("Devono restare almeno 2 votanti");
-      const next = { ...s, esclusi: [...s.esclusi, a.posto] };
+      const next = { ...s, voti };
       return mancanti(next).length === 0 ? chiudiRound(next) : next;
     }
 
@@ -234,7 +217,7 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
 
     case "nuova":
       if (s.fase !== "fine") throw new Error("La partita non è finita");
-      return { ...s, fase: "sala", partita: null, inGioco: [], viste: [], voti: {}, indizi: [], esclusi: [], candidati: null, ultimoEsito: null, eliminato: null, indovinato: false };
+      return { ...s, fase: "sala", partita: null, inGioco: [], viste: [], voti: {}, indizi: [], candidati: null, ultimoEsito: null, eliminato: null, indovinato: false };
   }
 }
 
@@ -255,19 +238,14 @@ export function turnoIndizio(s: StatoOnline): number | null {
   return ordineIndizi(s)[s.indizi.length] ?? null;
 }
 
-/** Chi deve votare in questo round: i giocatori meno gli esclusi. */
-export function votanti(s: StatoOnline): number[] {
-  return s.inGioco.filter((p) => !s.esclusi.includes(p));
-}
-
-/** Chi non ha ancora votato nel round in corso (esclusi non inclusi). */
+/** Chi non ha ancora votato nel round in corso. */
 export function mancanti(s: StatoOnline): number[] {
   if (s.fase === "indizi") {
     const t = turnoIndizio(s);
     return t === null ? [] : [t];
   }
   if (s.fase !== "voto") return [];
-  return votanti(s).filter((p) => !(p in s.voti));
+  return s.inGioco.filter((p) => !(p in s.voti));
 }
 
 export interface Fine {
@@ -310,8 +288,6 @@ export interface Vista {
     /** Solo per l'organizzatore. */
     mancanti: number[] | null;
     ballottaggio: boolean;
-    /** Giocatori esclusi dal voto dall'organizzatore. */
-    esclusi: number[];
   } | null;
   /** Esito dell'ultimo round chiuso (voti rivelati). */
   ultimoEsito: EsitoRound | null;
@@ -329,11 +305,10 @@ export function vistaPer(s: StatoOnline, posto: number | null, host: boolean): V
           candidati: s.candidati ?? s.inGioco,
           mioVoto: posto !== null ? (s.voti[posto] ?? null) : null,
           hannoVotato: Object.keys(s.voti).length,
-          totale: votanti(s).length,
+          totale: s.inGioco.length,
           conteggi: s.config.votiVisibili ? conta(s.voti) : null,
           mancanti: host ? mancanti(s) : null,
           ballottaggio: s.candidati !== null,
-          esclusi: s.esclusi,
         }
       : null;
 

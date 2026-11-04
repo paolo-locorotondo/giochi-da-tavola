@@ -14,14 +14,12 @@ describe("permessi", () => {
     expect(() => eseguiAzione(s, "t2", { tipo: "avvia" })).toThrow();
     eseguiAzione(s, "host", { tipo: "avvia" });
     expect(vistaDi(s, "t2").carta).not.toBeNull();
+    for (const t of ["host", "t2", "t3"]) eseguiAzione(s, t, { tipo: "visto" });
     eseguiAzione(s, "host", { tipo: "avanti" });
     eseguiAzione(s, "host", { tipo: "avanti" });
     // Si vota solo per sé: un eventuale campo "per" viene ignorato.
     eseguiAzione(s, "t2", { tipo: "vota", posto: 3, per: 1 } as never);
     expect(s.stato.voti).toEqual({ 2: 3 });
-    expect(() => eseguiAzione(s, "t2", { tipo: "escludi", posto: 3 })).toThrow();
-    eseguiAzione(s, "host", { tipo: "escludi", posto: 3 });
-    expect(s.stato.esclusi).toEqual([3]);
     expect(() => eseguiAzione(s, "t2", { tipo: "occupa", posto: 1 })).toThrow();
   });
 });
@@ -35,6 +33,7 @@ describe("rientro e chiusura", () => {
     eseguiAzione(s, "t2", { tipo: "occupa", posto: 2 });
     eseguiAzione(s, "t3", { tipo: "occupa", posto: 3 });
     eseguiAzione(s, "host", { tipo: "avvia" });
+    for (const t of ["host", "t2", "t3"]) eseguiAzione(s, t, { tipo: "visto" });
     return s;
   }
 
@@ -85,22 +84,21 @@ describe("rientro e chiusura", () => {
 });
 
 describe("indizi scritti", () => {
-  it("scrive solo il giocatore di turno; salta solo l'organizzatore", () => {
+  it("scrive solo il giocatore di turno; ognuno scrive il proprio", () => {
     const s = creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, indiziScritti: true }, "host");
     const tel = ["host", "t2", "t3"];
     s.telefoni.set("t2", null);
     s.telefoni.set("t3", null);
     tel.forEach((t, i) => eseguiAzione(s, t, { tipo: "occupa", posto: i + 1 }));
     eseguiAzione(s, "host", { tipo: "avvia" });
+    for (const t of tel) eseguiAzione(s, t, { tipo: "visto" });
     eseguiAzione(s, "host", { tipo: "avanti" });
     const turno = vistaDi(s, "host").indizi!.turno!;
     const di = tel[turno - 1]!;
     const altro = tel.find((t) => t !== di && t !== "host") ?? "t2";
     expect(() => eseguiAzione(s, altro, { tipo: "indizio", testo: "no" })).toThrow();
-    expect(() => eseguiAzione(s, altro, { tipo: "salta" })).toThrow();
     eseguiAzione(s, di, { tipo: "indizio", testo: "ok" });
     expect(s.stato.indizi).toEqual([{ posto: turno, testo: "ok" }]);
-    eseguiAzione(s, "host", { tipo: "salta" });
-    expect(s.stato.indizi).toHaveLength(2);
+    expect(() => eseguiAzione(s, "host", { tipo: "avanti" })).toThrow(); // mancano gli altri
   });
 });

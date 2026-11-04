@@ -464,7 +464,11 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
         Hanno visto la carta: {v.viste} su {v.nomi.filter((n) => n.inGioco).length}
       </p>
       {v.host && (
-        <button className="btn primario" onClick={() => c.azione({ tipo: "avanti" })}>
+        <button
+          className="btn primario"
+          disabled={v.viste < v.nomi.filter((n) => n.inGioco).length}
+          onClick={() => c.azione({ tipo: "avanti" })}
+        >
           Tutti hanno visto: via agli indizi
         </button>
       )}
@@ -479,7 +483,7 @@ function ElencoIndizi({ v, nome }: { v: Vista; nome: (p: number | null) => strin
       {v.indizi.scritti.map((i, n) => (
         <li key={n}>
           <span>
-            <strong>{nome(i.posto)}</strong>: {i.testo ?? <em>(saltato)</em>}
+            <strong>{nome(i.posto)}</strong>: {i.testo}
           </span>
         </li>
       ))}
@@ -523,16 +527,11 @@ function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: nu
       {v.host && (
         <div className="mancanti">
           {ind.turno !== null && !mioTurno && (
-            <>
-              <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
-                Sollecita {nome(ind.turno)}
-              </button>
-              <button className="btn" onClick={() => c.azione({ tipo: "salta" })}>
-                Salta il turno di {nome(ind.turno)}
-              </button>
-            </>
+            <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
+              Sollecita {nome(ind.turno)}
+            </button>
           )}
-          <button className="btn primario" onClick={() => c.azione({ tipo: "avanti" })}>
+          <button className="btn primario" disabled={ind.turno !== null} onClick={() => c.azione({ tipo: "avanti" })}>
             Si passa al voto
           </button>
         </div>
@@ -558,9 +557,6 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
       <p className="muted">
         Hanno votato {voto.hannoVotato} su {voto.totale}. Votare è obbligatorio per tutti.
       </p>
-      {voto.esclusi.length > 0 && (
-        <p className="muted">Esclusi dal voto dall'organizzatore: {voto.esclusi.map(nome).join(", ")}.</p>
-      )}
       {sonoInGioco ? (
         <div className="giocatori">
           {voto.candidati
@@ -589,19 +585,12 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
                 <span>
                   {nome(p)} {v.nomi.find((n) => n.posto === p)?.collegato ? "" : "· scollegato"}
                 </span>
-                <button className="btn piccolo" onClick={() => c.azione({ tipo: "escludi", posto: p })}>
-                  Escludi dal voto
-                </button>
               </li>
             ))}
           </ul>
           <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
             Sollecita
           </button>
-          <p className="suggerimento">
-            "Escludi" serve se un telefono non torna: non si aspetta più il suo voto, ma nessuno vota al suo posto.
-            Se rientra e vota, torna tra i votanti.
-          </p>
         </div>
       )}
     </section>

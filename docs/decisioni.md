@@ -103,8 +103,8 @@ salgono; no = si rivelano quando hanno votato tutti) e *indizi scritti* (sì = s
 | Fase | Giocatore | Organizzatore |
 |---|---|---|
 | Sala d'attesa | Nomi liberi e occupati | Chi è entrato, avvio partita |
-| Carta | Solo la propria, da scoprire | Come gli altri |
-| Indizi | A voce: chi parla per primo. Con *indizi scritti*: chi è di turno scrive e invia, gli altri leggono | Pulsante per passare al voto; con indizi scritti anche sollecito e "salta turno" |
+| Carta | Solo la propria, da scoprire | Come gli altri; il pulsante per andare agli indizi si attiva quando l'hanno vista tutti |
+| Indizi | A voce: chi parla per primo. Con *indizi scritti*: chi è di turno scrive e invia, gli altri leggono | Pulsante per passare al voto (attivo solo quando hanno scritto tutti, se gli indizi sono scritti); con indizi scritti anche sollecito |
 | Voto | Gli altri giocatori, ne sceglie uno (modificabile finché non votano tutti); contatori solo se attivi | Come gli altri, più chi manca e sollecito |
 | Ballottaggio | Solo i pari merito | Idem |
 | Tentativo | Solo l'impostore scoperto scrive la parola | Vede che sta tentando |
@@ -115,7 +115,7 @@ pareggio, **ballottaggio solo tra i pari merito**; se pareggiano ancora, **nessu
 eliminato e vincono gli impostori**. Non c'è una regola ufficiale: è una scelta nostra.
 
 **Tutti devono votare:** il voto si chiude solo quando hanno votato tutti. L'organizzatore
-vede chi manca e può sollecitare; se un telefono non torna può **escludere dal voto** quel giocatore (non si aspetta il suo voto, ma nessuno vota al suo posto; restano almeno 2 votanti; se il giocatore rientra e vota, torna tra i votanti). Il voto per procura è stato scartato: toglierebbe il voto segreto.
+vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 2026-11-05): provando con tre telefoni, escludere un giocatore caduto ha falsato il ballottaggio e l'esito. Con il rientro automatico, se qualcuno smette davvero di giocare si chiude la partita e se ne crea un'altra. Il voto per procura è scartato: toglierebbe il voto segreto. Stessa logica per carte e indizi: si avanza solo quando hanno agito tutti.
 
 ## Architettura software
 
@@ -172,6 +172,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
+- Piano di test (da fare): provare uno per uno i comandi pnpm della tabella in docs/sviluppo.md e la prova in locale; sospetto che qualcosa non funzioni.
 - Prova su telefoni veri: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro.
 - Lupus ognuno col suo telefono (ruoli segreti, notte, voto).
 - Prova del server online su Render (condizioni del piano gratuito da verificare).
