@@ -129,11 +129,13 @@ function Testata({ c, v }: { c: Collegamento; v: Vista }) {
               <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" />
               <span>
                 {n.nome}
+                {n.organizzatore ? " *" : ""}
                 {n.posto === v.io ? " (tu)" : ""} · {stato(n)}
               </span>
             </li>
           ))}
         </ul>
+        <p className="muted">* organizzatore</p>
       </details>
     </div>
   );
@@ -395,7 +397,8 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
         {v.nomi.map((n) => (
           <li key={n.posto} className={n.occupato ? "" : "assente"}>
             <span>
-              {n.nome} {n.occupato ? "✓" : "…"}
+              {n.nome}
+              {n.organizzatore ? " *" : ""} {n.occupato ? "✓" : "…"}
             </span>
             {v.host && n.occupato && n.posto !== v.io && (
               <button className="btn piccolo" onClick={() => c.azione({ tipo: "libera", posto: n.posto })}>

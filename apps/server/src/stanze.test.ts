@@ -60,6 +60,8 @@ describe("rientro e chiusura", () => {
     eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 1 }, connesso);
     expect(s.tokenHost).toBe("nuovo");
     expect(vistaDi(s, "nuovo", connesso).host).toBe(true);
+    // Gli altri vedono chi è l'organizzatore.
+    expect(vistaDi(s, "t2", connesso).nomi.filter((n) => n.organizzatore).map((n) => n.posto)).toEqual([1]);
     eseguiAzione(s, "nuovo", { tipo: "avanti" }, connesso);
     expect(s.stato.fase).toBe("indizi");
     // Il vecchio token non è più organizzatore.

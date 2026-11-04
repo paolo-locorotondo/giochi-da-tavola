@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Aggiunto
+
+- Impostore online: un asterisco accanto al nome dell'organizzatore nell'elenco della stanza e nella sala d'attesa
+
 ### Corretto
 
 - Impostore online: se l'organizzatore perde il collegamento e rientra come "nuovo" telefono, riprendendo il proprio nome torna organizzatore (prima nessuno poteva più far avanzare la partita)

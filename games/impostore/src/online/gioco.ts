@@ -240,6 +240,8 @@ export interface Vista {
     inGioco: boolean;
     /** Un telefono di questo giocatore è collegato adesso (lo riempie il server, che conosce le connessioni). */
     collegato: boolean;
+    /** Questo giocatore è l'organizzatore (lo riempie il server, che sa chi ha creato la partita). */
+    organizzatore: boolean;
   }[];
   /** La mia carta: solo la mia. */
   carta: Carta | null;
@@ -305,6 +307,7 @@ export function vistaPer(s: StatoOnline, posto: number | null, host: boolean): V
       occupato: s.occupati.includes(i + 1),
       inGioco: s.inGioco.includes(i + 1),
       collegato: false,
+      organizzatore: false,
     })),
     carta: p && inPartita && s.fase !== "sala" ? carta(p, posto as number) : null,
     viste: s.viste.length,

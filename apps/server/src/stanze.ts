@@ -92,7 +92,11 @@ export function vistaDi(stanza: Stanza, token: string, connesso: Connesso = () =
   const vista = vistaPer(stanza.stato, stanza.telefoni.get(token) ?? null, token === stanza.tokenHost);
   const collegati = new Set<number>();
   for (const [t, p] of stanza.telefoni) if (p !== null && connesso(t)) collegati.add(p);
-  return { ...vista, nomi: vista.nomi.map((n) => ({ ...n, collegato: collegati.has(n.posto) })) };
+  const organizzatore = stanza.telefoni.get(stanza.tokenHost) ?? null;
+  return {
+    ...vista,
+    nomi: vista.nomi.map((n) => ({ ...n, collegato: collegati.has(n.posto), organizzatore: n.posto === organizzatore })),
+  };
 }
 
 /**
