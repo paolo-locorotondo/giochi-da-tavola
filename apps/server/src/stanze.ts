@@ -135,6 +135,8 @@ export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, con
       }
       for (const t of titolari) stanza.telefoni.set(t, null);
       stanza.telefoni.set(token, a.posto);
+      // Se il posto era dell'organizzatore (telefono caduto e perso), chi lo riprende lo diventa.
+      if (titolari.includes(stanza.tokenHost)) stanza.tokenHost = token;
       stanza.ultimaAttivita = Date.now();
       return;
     }

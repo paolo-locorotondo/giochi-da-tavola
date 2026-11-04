@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
 import { categorie, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
-import { useCollegamento, type Collegamento } from "./collegamento";
+import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 import "./online.css";
 
 const NOME_CATEGORIA: Record<Categoria, string> = {
@@ -166,7 +166,10 @@ function EntraConCodice({ c, onIndietro }: { c: Collegamento; onIndietro: () => 
   const [codice, setCodice] = useState("");
   function invia(e: FormEvent) {
     e.preventDefault();
-    c.invia({ t: "entra", codice: codice.trim().toUpperCase() });
+    const c5 = codice.trim().toUpperCase();
+    // Se questo telefono era già nella partita, si presenta con il suo token: così rientra nel suo posto
+    // (e, per l'organizzatore, resta organizzatore).
+    c.invia({ t: "entra", codice: c5, token: leggiToken(c5) });
   }
   return (
     <form className="schermata allineata" onSubmit={invia}>

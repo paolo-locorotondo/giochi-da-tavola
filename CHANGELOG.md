@@ -7,6 +7,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
+## [Non rilasciato]
+
+### Corretto
+
+- Impostore online: se l'organizzatore perde il collegamento e rientra come "nuovo" telefono, riprendendo il proprio nome torna organizzatore (prima nessuno poteva più far avanzare la partita)
+- Entrando con il codice scritto a mano, il telefono ora si presenta con il proprio token se la partita lo conosce già
+
 ## [0.3.0] - 2026-11-04
 
 Impostore ognuno col suo telefono.

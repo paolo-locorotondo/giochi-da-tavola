@@ -51,6 +51,21 @@ describe("rientro e chiusura", () => {
     expect(s.telefoni.get("t2")).toBeNull();
   });
 
+  it("chi riprende il posto dell'organizzatore scollegato ne diventa l'organizzatore", () => {
+    const s = partitaAvviata();
+    s.telefoni.set("nuovo", null);
+    const connessi = new Set(["t2", "t3", "nuovo"]); // l'organizzatore è caduto
+    const connesso = (t: string) => connessi.has(t);
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "avanti" }, connesso)).toThrow();
+    eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 1 }, connesso);
+    expect(s.tokenHost).toBe("nuovo");
+    expect(vistaDi(s, "nuovo", connesso).host).toBe(true);
+    eseguiAzione(s, "nuovo", { tipo: "avanti" }, connesso);
+    expect(s.stato.fase).toBe("indizi");
+    // Il vecchio token non è più organizzatore.
+    expect(() => eseguiAzione(s, "host", { tipo: "avanti" }, connesso)).toThrow();
+  });
+
   it("non si può prendere il posto di chi è ancora collegato", () => {
     const s = partitaAvviata();
     s.telefoni.set("nuovo", null);
