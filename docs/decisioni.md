@@ -186,4 +186,9 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 - Grafica: la sistemazione dell'interfaccia (UI/UX) è il prossimo passo, con skill dedicate e test grafici (Playwright, con screenshot su un solo sistema operativo).
 - Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
 - Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
-- Push e tag v0.4.0, v0.4.1 e v0.4.2: da fare dall'utente.
+- TODO Lupus, nuovi ruoli: quando i test coprono tutti i casi, sessione dedicata.
+  Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo
+  notturno ha una sua fase (come veggente e medico) e `risolviNotte` applica gli effetti.
+  Per aggiungerne molti conviene trasformare le fasi in una lista di ruoli notturni ordinati,
+  invece di scriverle a mano. Da decidere insieme: quali ruoli, a partire da quanti giocatori,
+  e come cambiano le condizioni di vittoria.
