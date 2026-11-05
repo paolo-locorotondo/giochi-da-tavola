@@ -182,3 +182,8 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 - Regole e carte di Tabù e Lupus da verificare dall'utente; originalità delle carte.
 - Licenza del repository (README: "Da definire").
 - Turborepo sì/no (si può decidere più avanti).
+- Vercel: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). Da scollegare anche dalla dashboard di Vercel.
+- Grafica: la sistemazione dell'interfaccia (UI/UX) è il prossimo passo, con skill dedicate e test grafici (Playwright, con screenshot su un solo sistema operativo).
+- Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
+- Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
+- Push e tag v0.4.0, v0.4.1 e v0.4.2: da fare dall'utente.
