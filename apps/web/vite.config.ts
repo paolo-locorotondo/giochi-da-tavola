@@ -18,8 +18,8 @@ export default defineConfig({
         lang: "it",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#14161f",
-        theme_color: "#14161f",
+        background_color: "#0e1a16",
+        theme_color: "#0e1a16",
         icons: [
           { src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any maskable" },
         ],
