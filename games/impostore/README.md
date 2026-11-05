@@ -128,11 +128,11 @@ Non viene installato nulla e la regola si può togliere in qualsiasi momento.
 
    ```
    ➜  Local:   http://localhost:5173/
-   ➜  Network: http://192.168.1.145:5173/
-   ➜  Network: http://172.20.208.1:5173/
+   ➜  Network: http://192.168.1.20:5173/
+   ➜  Network: http://172.20.0.1:5173/
    ```
 
-   Ti serve l'indirizzo `Network` che **inizia con `192.168.`** (qui: `192.168.1.145`):
+   Ti serve l'indirizzo `Network` che **inizia con `192.168.`** (qui: `192.168.1.20`):
    è quello con cui il computer si presenta sul WiFi di casa. Gli altri `Network`
    (per esempio quelli che iniziano con `172.`) sono reti interne del computer e il
    telefono non le raggiunge: ignorali. L'indirizzo `Local` funziona solo sul computer.

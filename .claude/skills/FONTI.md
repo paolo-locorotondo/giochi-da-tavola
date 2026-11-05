@@ -6,7 +6,7 @@ Scaricate il 2026-11-05 in cartelle temporanee fuori dal repo con `git clone --d
 |---|---|---|
 | `frontend-design` | `anthropics/skills`, `skills/frontend-design` (`SKILL.md` e `LICENSE.txt`) | Nessuna |
 | `verification-before-completion` | `obra/superpowers`, `skills/verification-before-completion` | Nessuna |
-| `web-design-guidelines` | `vercel-labs/agent-skills` e `vercel-labs/web-interface-guidelines` (`command.md`, salvato come `guidelines.md`) | `SKILL.md` riscritto: usa `guidelines.md` locale, non scarica nulla, aggiunge le note per questo progetto. `guidelines.md` identico a quello di agri-desk |
+| `web-design-guidelines` | `vercel-labs/agent-skills` e `vercel-labs/web-interface-guidelines` (`command.md`, salvato come `guidelines.md`) | `SKILL.md` riscritto: usa `guidelines.md` locale, non scarica nulla, aggiunge le note per questo progetto |
 | `ui-mobile-checklist` | Sintesi dalle `references/` di `nextlevelbuilder/ui-ux-pro-max-skill` (MIT) | Rielaborata in italiano per una PWA web; non copia script né dati |
 
 Scritta da noi, non esterna: `ui-giochi-da-tavola` (token e regole dello stile scelto).

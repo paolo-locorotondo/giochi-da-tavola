@@ -33,7 +33,7 @@ Per fermare: Ctrl+C nel terminale.
 
   Si fa una volta sola. `-Profile Private` vale solo per le reti che Windows considera private (il WiFi di casa di solito lo è): se dagli amici la rete risulta "Pubblica" non funzionerà. Per vedere come Windows classifica la rete: `Get-NetConnectionProfile`; per cambiarla, sempre da amministratore: `Set-NetConnectionProfile -InterfaceAlias "Wi-Fi" -NetworkCategory Private`.
   Per togliere la regola: `Remove-NetFirewallRule -DisplayName "Giochi da tavola 8080"`.
-  Per controllare che il problema sia davvero il firewall, dal PC apri `http://192.168.1.145:8080` (con il tuo IP): se qui funziona e dal telefono no, è il firewall o la rete.
+  Per controllare che il problema sia davvero il firewall, dal PC apri `http://192.168.1.20:8080` (con il tuo IP): se qui funziona e dal telefono no, è il firewall o la rete.
 - **Router che isola i dispositivi** (hotel, locali pubblici, alcune reti ospiti): i telefoni non vedono il PC. In casa di solito va bene. Alternativa: hotspot.
 - **Hotspot di un telefono**: non consuma dati (il traffico resta tra i dispositivi). Regge circa 8–10 dispositivi; su alcuni telefoni serve la SIM inserita.
 - **Niente HTTPS** su `http://192.168...`: il tasto "Condividi" e l'installazione dell'app non funzionano. L'invito si fa con il **QR code** che l'organizzatore trova nella stanza (apre il link, senza bisogno di "Condividi"), oppure leggendo il codice o l'indirizzo a voce.
