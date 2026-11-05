@@ -3,6 +3,9 @@ import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
 import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
 
+import { Icona, type NomeIcona } from "./Icona";
+import { impostaTema, temaAttuale, type Tema } from "./tema";
+
 interface VoceGioco {
   id: string;
   nome: string;
@@ -36,6 +39,31 @@ function usaPercorso(): [string, (a: string) => void] {
   return [percorso, vai];
 }
 
+const ICONE_GIOCHI: Record<string, NomeIcona> = {
+  impostore: "occhio-barrato",
+  lupus: "luna",
+  tabu: "divieto",
+};
+
+function InterruttoreTema() {
+  const [tema, setTema] = useState<Tema>(temaAttuale);
+  const scuro = tema === "dark";
+  return (
+    <button
+      type="button"
+      className="tema-btn"
+      aria-label={scuro ? "Passa al tema chiaro" : "Passa al tema scuro"}
+      onClick={() => {
+        const nuovo: Tema = scuro ? "light" : "dark";
+        impostaTema(nuovo);
+        setTema(nuovo);
+      }}
+    >
+      <Icona nome={scuro ? "sole" : "luna"} />
+    </button>
+  );
+}
+
 function Versione() {
   return <p className="versione">Giochi da tavola · v{__APP_VERSION__}</p>;
 }
@@ -53,9 +81,13 @@ export function App() {
     const { Componente } = gioco;
     return (
       <main className="app">
-        <a className="link" href="/" onClick={naviga("/")}>
-          ← Giochi
-        </a>
+        <header className="barra-gioco">
+          <a className="tema-btn" href="/" onClick={naviga("/")} aria-label="Torna ai giochi">
+            <Icona nome="indietro" />
+          </a>
+          <span className="barra-titolo">{gioco.nome}</span>
+          <InterruttoreTema />
+        </header>
         <Componente />
         <Versione />
       </main>
@@ -64,13 +96,21 @@ export function App() {
 
   return (
     <main className="app">
-      <h1>Giochi da tavola</h1>
+      <header className="app-testata">
+        <h1>Giochi da tavola</h1>
+        <InterruttoreTema />
+      </header>
       <ul className="lista-giochi">
         {giochi.map((g) => (
           <li key={g.id}>
             <a className="gioco" href={`/${g.id}`} onClick={naviga(`/${g.id}`)}>
-              <span className="gioco-nome">{g.nome}</span>
-              <span className="muted">{g.descrizione}</span>
+              <span className="gioco-icona">
+                <Icona nome={ICONE_GIOCHI[g.id] ?? "divieto"} dimensione={28} />
+              </span>
+              <span className="gioco-testo">
+                <span className="gioco-nome">{g.nome}</span>
+                <span className="muted">{g.descrizione}</span>
+              </span>
             </a>
           </li>
         ))}

@@ -25,12 +25,39 @@ const DESCRIZIONE_RUOLO: Record<Ruolo, string> = {
   medico: "Ogni notte proteggi un giocatore dai lupi (non lo stesso due notti di fila).",
 };
 
+const CHIAVE = "gdt-lupus-partita";
+
+function caricaStato(): Stato {
+  try {
+    const raw = localStorage.getItem(CHIAVE);
+    if (raw) {
+      const s = JSON.parse(raw) as Stato;
+      if (Array.isArray(s.giocatori) && s.ruoli && Array.isArray(s.vivi)) return { ...statoIniziale(), ...s };
+    }
+  } catch {
+    /* storage non disponibile o dati rovinati: si riparte da zero */
+  }
+  return statoIniziale();
+}
+
+function salvaStato(s: Stato) {
+  try {
+    if (s.giocatori.length === 0) localStorage.removeItem(CHIAVE);
+    else localStorage.setItem(CHIAVE, JSON.stringify(s));
+  } catch {
+    /* ignora */
+  }
+}
+
 function nomeDi(s: Stato, posto: number | null): string {
   return s.giocatori.find((g) => g.posto === posto)?.nome ?? "";
 }
 
 export function LupusApp() {
-  const [s, dispatch] = useReducer(riduci, undefined, statoIniziale);
+  const [s, dispatch] = useReducer(riduci, undefined, caricaStato);
+
+  // La partita sopravvive al refresh della pagina.
+  useEffect(() => salvaStato(s), [s]);
   const [voce, setVoce] = useState(true);
 
   // Il narratore parla quando cambia la fase.
@@ -44,8 +71,8 @@ export function LupusApp() {
   if (s.giocatori.length === 0) {
     return (
       <Configurazione
-        onAvvia={(nomi) =>
-          dispatch({ tipo: "avvia", nomi, seme: Math.floor(Math.random() * 2 ** 32) })
+        onAvvia={(nomi, svelaRuoli, narratoreGioca) =>
+          dispatch({ tipo: "avvia", nomi, seme: Math.floor(Math.random() * 2 ** 32), svelaRuoli, narratoreGioca })
         }
       />
     );
@@ -66,7 +93,7 @@ export function LupusApp() {
       case "esito":
         return <Esito s={s} dispatch={dispatch} />;
       case "fine":
-        return <Fine s={s} />;
+        return <Fine s={s} dispatch={dispatch} />;
     }
   })();
 
@@ -77,8 +104,45 @@ export function LupusApp() {
         del narratore
       </label>
       {contenuto}
+      {/* Se il narratore gioca o il telefono passa di mano, i ruoli restano coperti. */}
+      {s.fase !== "carte" && s.fase !== "fine" && !s.narratoreGioca && <RuoliNarratore s={s} />}
+      {s.fase !== "fine" && <ChiudiPartita onChiudi={() => dispatch({ tipo: "azzera" })} />}
     </>
   );
+}
+
+/** Per il narratore: chi è chi e chi è ancora vivo. Chiuso di default. */
+function RuoliNarratore({ s }: { s: Stato }) {
+  const vivi = s.vivi.length;
+  return (
+    <details className="accordion" style={{ marginTop: "1.25rem" }}>
+      <summary>
+        Giocatori e ruoli ({vivi} vivi su {s.giocatori.length})
+      </summary>
+      <div className="accordion-corpo">
+        <p className="accordion-nota">Solo per il narratore: non mostrare lo schermo agli altri.</p>
+        <ul className="ruoli-narratore">
+          {s.giocatori.map((g) => {
+            const vivo = s.vivi.includes(g.posto);
+            return (
+              <li key={g.posto} className={vivo ? "" : "morto"}>
+                <span className="nome-g">{g.nome}</span>
+                <span className="stato">
+                  {NOME_RUOLO[s.ruoli[g.posto] ?? "contadino"]} · {vivo ? "vivo" : "morto"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </details>
+  );
+}
+
+/** « Era Contadino.» se la partita svela i ruoli di chi muore, altrimenti nulla. */
+function ruoloDetto(s: Stato, posto: number | null | undefined): string {
+  if (!s.svelaRuoli || posto === null || posto === undefined) return "";
+  return ` Era ${NOME_RUOLO[s.ruoli[posto] ?? "contadino"]}.`;
 }
 
 function frasePerFase(s: Stato): string | null {
@@ -90,20 +154,18 @@ function frasePerFase(s: Stato): string | null {
     case "medico":
       return "Il veggente torna a dormire. Il medico si risveglia e sceglie chi proteggere.";
     case "alba":
-      return s.vincitore || s.mortiNotte.length >= 0
-        ? `Il villaggio si risveglia. ${
-            s.mortiNotte.length
-              ? `Questa notte è morto ${nomeDi(s, s.mortiNotte[0] ?? null)}.`
-              : "Questa notte non è morto nessuno."
-          }`
-        : null;
+      return `Il villaggio si risveglia. ${
+        s.mortiNotte.length
+          ? `Questa notte è morto ${nomeDi(s, s.mortiNotte[0] ?? null)}.${ruoloDetto(s, s.mortiNotte[0])}`
+          : "Questa notte non è morto nessuno."
+      }`;
     case "voto":
       return s.ballottaggio
         ? "Ballottaggio. Votate tra i giocatori in parità."
         : "È ora di discutere e votare chi eliminare.";
     case "esito":
       return s.eliminato !== null
-        ? `${nomeDi(s, s.eliminato)} è stato eliminato. Era ${NOME_RUOLO[s.ruoli[s.eliminato] ?? "contadino"]}.`
+        ? `${nomeDi(s, s.eliminato)} è stato eliminato.${ruoloDetto(s, s.eliminato)}`
         : (s.messaggioVoto ?? null);
     case "fine":
       return s.vincitore === "villaggio" ? "Il villaggio ha vinto!" : "I lupi hanno vinto!";
@@ -114,8 +176,10 @@ function frasePerFase(s: Stato): string | null {
 
 type D = (a: Parameters<typeof riduci>[1]) => void;
 
-function Configurazione({ onAvvia }: { onAvvia: (nomi: string[]) => void }) {
+function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boolean, narratoreGioca: boolean) => void }) {
   const [testo, setTesto] = useState("");
+  const [svela, setSvela] = useState(true);
+  const [narratoreGioca, setNarratoreGioca] = useState(false);
   const [errore, setErrore] = useState<string | null>(null);
   const nomi = testo
     .split("\n")
@@ -134,7 +198,7 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[]) => void }) {
       setErrore("Servono almeno 4 giocatori");
       return;
     }
-    onAvvia(nomi);
+    onAvvia(nomi, svela, narratoreGioca);
   }
 
   return (
@@ -153,6 +217,18 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[]) => void }) {
           ? `Ruoli: ${lupiConsigliati(nomi.length)} lupo/i${nomi.length >= 5 ? ", 1 veggente" : ""}${nomi.length >= 7 ? ", 1 medico" : ""}, il resto contadini.`
           : "I ruoli vengono assegnati in automatico in base al numero di giocatori."}
       </p>
+      <label className="spunta">
+        <input type="checkbox" checked={svela} onChange={(e) => setSvela(e.target.checked)} />
+        Il narratore dice il ruolo di chi muore
+      </label>
+      <label className="spunta">
+        <input
+          type="checkbox"
+          checked={narratoreGioca}
+          onChange={(e) => setNarratoreGioca(e.target.checked)}
+        />
+        Il narratore gioca (il telefono resta al centro, senza elenco dei ruoli)
+      </label>
       {errore && <p className="errore">{errore}</p>}
       <button className="btn primario" type="submit">
         Inizia
@@ -210,12 +286,15 @@ const TITOLO_NOTTE = {
 function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const fase = s.fase as keyof typeof TITOLO_NOTTE;
   const scelto = fase === "lupi" ? s.vittima : fase === "veggente" ? s.ispezionato : s.protetto;
-  // I lupi non possono sbranarsi tra loro; il medico non può ripetere la stessa protezione.
+  // I lupi non possono sbranarsi tra loro e il veggente non indaga su di sé; il medico non può ripetere la stessa protezione.
   const candidati = s.vivi.filter((p) => {
     if (fase === "lupi") return s.ruoli[p] !== "lupo";
+    if (fase === "veggente") return s.ruoli[p] !== "veggente";
     if (fase === "medico") return p !== s.ultimoProtetto;
     return true;
   });
+  // Il veggente vede una sola persona: scelta fatta, gli altri nomi si bloccano.
+  const bloccato = (p: number) => fase === "veggente" && s.ispezionato !== null && s.ispezionato !== p;
   const risultato =
     fase === "veggente" && s.ispezionato !== null
       ? s.ruoli[s.ispezionato] === "lupo"
@@ -233,6 +312,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
           <button
             key={p}
             className={`btn${scelto === p ? " primario" : ""}`}
+            disabled={bloccato(p)}
             onClick={() => dispatch({ tipo: "scegli", posto: p })}
           >
             {nomeDi(s, p)}
@@ -258,8 +338,7 @@ function Alba({ s, dispatch }: { s: Stato; dispatch: D }) {
       <h2>Il villaggio si risveglia</h2>
       {morto !== undefined ? (
         <p>
-          Questa notte è morto <strong>{nomeDi(s, morto)}</strong>. Era{" "}
-          {NOME_RUOLO[s.ruoli[morto] ?? "contadino"]}.
+          Questa notte è morto <strong>{nomeDi(s, morto)}</strong>.{ruoloDetto(s, morto)}
         </p>
       ) : (
         <p>Questa notte non è morto nessuno.</p>
@@ -302,7 +381,7 @@ function Voto({ s, dispatch }: { s: Stato; dispatch: D }) {
             −
           </button>
           <strong>{voti[p] ?? 0}</strong>
-          <button className="btn" onClick={() => cambia(p, 1)}>
+          <button className="btn" disabled={totale >= s.vivi.length} onClick={() => cambia(p, 1)}>
             +
           </button>
         </div>
@@ -329,7 +408,7 @@ function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
       {s.eliminato !== null ? (
         <>
           <h2>{nomeDi(s, s.eliminato)} è eliminato</h2>
-          <p>Era {NOME_RUOLO[s.ruoli[s.eliminato] ?? "contadino"]}.</p>
+          {s.svelaRuoli && <p>Era {NOME_RUOLO[s.ruoli[s.eliminato] ?? "contadino"]}.</p>}
         </>
       ) : (
         <h2>{s.messaggioVoto}</h2>
@@ -341,7 +420,7 @@ function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
   );
 }
 
-function Fine({ s }: { s: Stato }) {
+function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
   return (
     <section className="schermata">
       <h2>{s.vincitore === "villaggio" ? "Vince il villaggio!" : "Vincono i lupi!"}</h2>
@@ -352,9 +431,33 @@ function Fine({ s }: { s: Stato }) {
           </li>
         ))}
       </ul>
-      <button className="btn primario" onClick={() => window.location.reload()}>
+      <button className="btn primario" onClick={() => dispatch({ tipo: "azzera" })}>
         Nuova partita
       </button>
     </section>
+  );
+}
+
+function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const [conferma, setConferma] = useState(false);
+  if (!conferma) {
+    return (
+      <div className="chiudi-partita">
+        <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
+          Chiudi la partita
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="rivedi">
+      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <button className="btn pericolo" onClick={onChiudi}>
+        Sì, chiudi
+      </button>
+      <button className="btn" onClick={() => setConferma(false)}>
+        No, continua
+      </button>
+    </div>
   );
 }

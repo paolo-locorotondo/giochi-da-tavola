@@ -1,8 +1,10 @@
+/* Avvisi: barra oro a sinistra su fondo neutro, leggibili in entrambi i temi */
 .avviso {
-  background: #3a2f12;
-  color: var(--accent);
+  background: var(--s2);
+  color: var(--fg);
+  border-left: 4px solid var(--ac);
   border-radius: 0.6rem;
-  padding: 0.5rem 0.8rem;
+  padding: 0.6rem 0.8rem;
   margin: 0.5rem 0;
 }
 
@@ -30,7 +32,15 @@
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  color: var(--muted);
+  color: var(--mu);
+  min-height: var(--tocco);
+}
+
+.spunta input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--ac);
+  flex: none;
 }
 
 .elenco {
@@ -40,35 +50,85 @@
 }
 
 .elenco li {
-  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
 }
 
 .elenco .assente {
-  color: var(--muted);
+  color: var(--mu);
+}
+
+/* Pulsanti in griglia responsive: uno per riga sui telefoni stretti, più colonne se c'è spazio */
+.giocatori {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.6rem;
+  width: 100%;
+}
+
+/* Azioni (Nascondi, Avvia, Sollecita…): una per riga sul telefono, affiancate solo se c'è spazio */
+.azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.azioni > .primario-largo,
+.azioni > .btn.primario {
+  grid-column: 1 / -1;
 }
 
 .btn.voto {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 }
 
 .contatore {
-  background: var(--accent);
-  color: #14161f;
+  background: var(--ac);
+  color: var(--on-ac);
   border-radius: 999px;
   min-width: 1.6rem;
   padding: 0 0.4rem;
   font-weight: 700;
+  text-align: center;
 }
 
 .mancanti {
-  border-top: 1px solid #2c3145;
+  border-top: var(--bw) solid var(--bd);
   padding-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.btn:disabled {
-  opacity: 0.4;
+.mancanti p {
+  margin: 0;
+}
+
+/* Form dentro una schermata (indizio, tentativo): campo e pulsante ben distanziati */
+.schermata form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schermata form p {
+  margin: 0;
+}
+
+/* Disabilitato: si distingue per forma e colore neutro, non per trasparenza (che nel tema oro si sporca) */
+.btn:disabled,
+.btn.primario:disabled {
+  background: var(--s2);
+  border-color: var(--bd);
+  border-style: dashed;
+  color: var(--mu);
+  font-weight: 400;
   cursor: default;
 }
 
@@ -77,44 +137,82 @@
   align-items: center;
 }
 
-.elenco li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.35rem 0;
+.elenco li .btn.piccolo {
+  margin-left: auto;
 }
 
 .btn.piccolo {
-  margin-left: auto;
-  padding: 0.25rem 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  min-height: var(--tocco);
   font-size: 0.85rem;
 }
 
-.testata {
-  margin-bottom: 0.8rem;
-  border-bottom: 1px solid #2c3145;
-  padding-bottom: 0.5rem;
+/* Intestazione: chi sono io, poi la stanza in un accordion */
+.intestazione-partita {
+  margin-bottom: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .chi-sono {
-  margin: 0 0 0.3rem;
+  margin: 0;
 }
 
-.info-stanza summary {
-  cursor: pointer;
-  color: var(--muted);
+.codice-riga {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.codice-riga strong {
+  font-family: var(--font-titoli);
+  font-size: 1.4rem;
+  letter-spacing: 0.2em;
+  color: var(--ac);
+}
+
+/* Chip dei giocatori: pallino più testo, mai solo colore */
+.chip-elenco {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 36px;
+  padding: 0.3rem 0.7rem;
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.chip.assente {
+  color: var(--mu);
+  border-style: dashed;
 }
 
 .pallino {
   width: 0.6rem;
   height: 0.6rem;
   border-radius: 50%;
-  background: #5b6078;
+  background: var(--bd-ctrl);
   flex: none;
 }
 
 .pallino.on {
-  background: #5fd38d;
+  background: var(--ac2);
 }
 
 .qr {
@@ -129,4 +227,41 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* La mia carta: scheda centrata, con progresso di chi l'ha vista */
+.rivedi {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.progresso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.progresso-barra {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--s2);
+  overflow: hidden;
+}
+
+.progresso-barra > span {
+  display: block;
+  height: 100%;
+  background: var(--ac2);
+  border-radius: inherit;
+  transition: width var(--durata-apri) ease;
+}
+
+.details-semplice > summary {
+  cursor: pointer;
+  min-height: var(--tocco);
+  display: flex;
+  align-items: center;
+  color: var(--mu);
 }

@@ -2,3 +2,43 @@
   margin: 0.2rem 0;
   font-size: 1.2rem;
 }
+
+/* Tasti di gioco: «Indovinata» e «Vietata detta» affiancati, «Passa» centrato sotto */
+.comandi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.comandi .passa {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-width: 50%;
+}
+
+.comandi .btn {
+  min-height: 56px;
+}
+
+/* Riepilogo del turno: carte indovinate, passate, con parola vietata detta */
+.riepilogo-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+}
+
+.riepilogo-carte .parole {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.riepilogo-carte .parole li + li {
+  margin-top: 0.4rem;
+}
+
+.riepilogo-carte .accordion-corpo p {
+  margin: 0;
+}

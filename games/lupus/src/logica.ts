@@ -33,10 +33,15 @@ export interface Stato {
   eliminato: number | null;
   messaggioVoto: string | null;
   vincitore: "lupi" | "villaggio" | null;
+  /** Se il narratore dice il ruolo di chi muore (di notte o al voto); a fine partita si vedono comunque tutti. */
+  svelaRuoli: boolean;
+  /** Se il narratore è anche un giocatore: il telefono sta al centro e i ruoli non si mostrano mai. */
+  narratoreGioca: boolean;
 }
 
 export type Azione =
-  | { tipo: "avvia"; nomi: readonly string[]; seme: number }
+  | { tipo: "avvia"; nomi: readonly string[]; seme: number; svelaRuoli?: boolean; narratoreGioca?: boolean }
+  | { tipo: "azzera" }
   | { tipo: "mostraCarta" }
   | { tipo: "prossimaCarta" }
   | { tipo: "scegli"; posto: number }
@@ -77,6 +82,8 @@ export function statoIniziale(): Stato {
     eliminato: null,
     messaggioVoto: null,
     vincitore: null,
+    svelaRuoli: true,
+    narratoreGioca: false,
   };
 }
 
@@ -100,23 +107,29 @@ export function contaVoti(voti: Record<number, number>): { eliminato: number | n
   return primi.length === 1 ? { eliminato: primi[0] ?? null, pari: [] } : { eliminato: null, pari: primi };
 }
 
-/** Fase notturna successiva: salta i ruoli che non esistono nella partita. */
-function dopoLupi(s: Stato): Fase {
-  return Object.values(s.ruoli).includes("veggente") ? "veggente" : dopoVeggente(s);
+/**
+ * Fase notturna successiva: salta i ruoli che non esistono nella partita.
+ * Quando la notte è finita (nessun altro ruolo da svegliare) la risolve, così
+ * la vittima muore anche nelle partite senza veggente o senza medico.
+ */
+function dopoLupi(s: Stato): Stato {
+  return Object.values(s.ruoli).includes("veggente") ? { ...s, fase: "veggente" } : dopoVeggente(s);
 }
-function dopoVeggente(s: Stato): Fase {
-  return Object.values(s.ruoli).includes("medico") ? "medico" : "alba";
+function dopoVeggente(s: Stato): Stato {
+  return Object.values(s.ruoli).includes("medico") ? { ...s, fase: "medico" } : risolviNotte(s);
 }
 
 function risolviNotte(s: Stato): Stato {
-  const morto = s.vittima !== null && s.vittima !== s.protetto ? s.vittima : null;
+  // Con il medico morto la fase si fa lo stesso (per non svelare nulla), ma la scelta è finta e non salva nessuno.
+  const protezione = haRuoloVivo(s, "medico") ? s.protetto : null;
+  const morto = s.vittima !== null && s.vittima !== protezione ? s.vittima : null;
   const vivi = s.vivi.filter((p) => p !== morto);
   const v = vincitore(s.ruoli, vivi);
   return {
     ...s,
     vivi,
     mortiNotte: morto === null ? [] : [morto],
-    ultimoProtetto: s.protetto,
+    ultimoProtetto: protezione,
     fase: "alba",
     vincitore: v,
   };
@@ -131,8 +144,17 @@ export function riduci(s: Stato, a: Azione): Stato {
       giocatori.forEach((g, i) => {
         mappa[g.posto] = ruoli[i] ?? "contadino";
       });
-      return { ...statoIniziale(), giocatori, ruoli: mappa, vivi: giocatori.map((g) => g.posto) };
+      return {
+        ...statoIniziale(),
+        giocatori,
+        ruoli: mappa,
+        vivi: giocatori.map((g) => g.posto),
+        svelaRuoli: a.svelaRuoli ?? true,
+        narratoreGioca: a.narratoreGioca ?? false,
+      };
     }
+    case "azzera":
+      return statoIniziale();
     case "mostraCarta":
       return { ...s, cartaMostrata: true };
     case "prossimaCarta": {
@@ -143,13 +165,14 @@ export function riduci(s: Stato, a: Azione): Stato {
     }
     case "scegli": {
       if (s.fase === "lupi") return { ...s, vittima: a.posto };
-      if (s.fase === "veggente") return { ...s, ispezionato: a.posto };
+      // Il veggente guarda una sola persona a notte: dopo la prima scelta non si cambia.
+      if (s.fase === "veggente") return s.ispezionato === null ? { ...s, ispezionato: a.posto } : s;
       if (s.fase === "medico") return { ...s, protetto: a.posto };
       return s;
     }
     case "avanti": {
-      if (s.fase === "lupi") return { ...s, fase: dopoLupi(s) };
-      if (s.fase === "veggente") return { ...s, fase: dopoVeggente(s) };
+      if (s.fase === "lupi") return dopoLupi(s);
+      if (s.fase === "veggente") return dopoVeggente(s);
       if (s.fase === "medico") return risolviNotte(s);
       if (s.fase === "alba") return { ...s, fase: "voto", ballottaggio: null, messaggioVoto: null };
       return s;

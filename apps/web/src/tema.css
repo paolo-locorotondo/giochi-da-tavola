@@ -1,0 +1,61 @@
+/*
+ * Token di interfaccia: uno stile × un tema. Vedi .claude/skills/ui-giochi-da-tavola.
+ * Per aggiungere uno stile: due blocchi qui (dark e light) e una voce nelle impostazioni.
+ * I componenti usano solo queste variabili, mai valori scritti a mano.
+ */
+
+/* Valori comuni a ogni stile e tema */
+:root {
+  --font-titoli: Georgia, "Times New Roman", serif;
+  --font-testo: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --icona-s: 20px;
+  --icona-m: 24px;
+  --icona-l: 28px;
+  --tocco: 44px;
+  --durata-tocco: 120ms;
+  --durata-apri: 200ms;
+}
+
+/* Tavolo · scuro */
+html[data-stile="tavolo"][data-tema="dark"] {
+  color-scheme: dark;
+  --bg: #0e1a16;
+  --s1: #16271f;
+  --s2: #1d3328;
+  --bd: #2c4a3b;
+  --bd-ctrl: #6f9482;
+  --fg: #f3efe3;
+  --mu: #9db3a6;
+  --ac: #e3b341;
+  --on-ac: #1a1405;
+  --ac2: #3fa66b;
+  --on-ac2: #08140e;
+  --errore: #ff8a8a;
+  --pericolo: #e5484d;
+  --on-pericolo: #1a0505;
+  --r: 14px;
+  --bw: 1px;
+  --sh: 0 1px 0 #ffffff12 inset, 0 6px 16px #0006;
+}
+
+/* Tavolo · chiaro */
+html[data-stile="tavolo"][data-tema="light"] {
+  color-scheme: light;
+  --bg: #f3efe3;
+  --s1: #fffdf6;
+  --s2: #e8e2cf;
+  --bd: #cfc7ae;
+  --bd-ctrl: #7d7559;
+  --fg: #1b2a22;
+  --mu: #4b5e54;
+  --ac: #855a06;
+  --on-ac: #ffffff;
+  --ac2: #1a6b40;
+  --on-ac2: #ffffff;
+  --errore: #a32020;
+  --pericolo: #a32020;
+  --on-pericolo: #ffffff;
+  --r: 14px;
+  --bw: 1px;
+  --sh: 0 1px 0 #fff inset, 0 4px 12px #3a2f1018;
+}

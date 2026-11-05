@@ -1,6 +1,7 @@
-import { useReducer, useState, type FormEvent } from "react";
+import { useEffect, useReducer, useState, type FormEvent } from "react";
 import { creaGiocatori, type Giocatore } from "@gdt/engine";
 import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
+import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
 import { categorie, paroleDi, type Categoria } from "../parole";
 import { leggiRecenti, ricordaParola } from "./recenti";
@@ -16,9 +17,50 @@ const NOME_CATEGORIA: Record<Categoria, string> = {
   trasporti: "Mezzi di trasporto",
 };
 
+const CHIAVE = "gdt-impostore-locale";
+
+/** La macchina a stati ha funzioni: si salva solo la storia delle fasi e la si rigioca al caricamento. */
+function caricaSessione(): { sessione: Sessione; categoria: Categoria } {
+  try {
+    const raw = localStorage.getItem(CHIAVE);
+    if (raw) {
+      const { macchina: _scartata, storia, categoria, ...resto } = JSON.parse(raw) as Sessione & {
+        storia: FaseImpostore[];
+        categoria: Categoria;
+        macchina?: unknown;
+      };
+      let macchina = nuovaMacchinaImpostore();
+      for (const prossima of storia.slice(1)) {
+        const evento = (Object.entries(fasiImpostore.transizioni[macchina.fase]) as [EventoImpostore, FaseImpostore][]).find(
+          ([, f]) => f === prossima,
+        )?.[0];
+        if (!evento) throw new Error("storia non valida");
+        macchina = macchina.invia(evento);
+      }
+      if (resto.partita) return { sessione: { ...resto, macchina }, categoria };
+    }
+  } catch {
+    /* storage non disponibile o dati rovinati: si riparte da zero */
+  }
+  return { sessione: sessioneIniziale(), categoria: "cibi" };
+}
+
 export function ImpostoreLocale() {
-  const [sessione, dispatch] = useReducer(riduci, undefined, sessioneIniziale);
-  const [categoriaPartita, setCategoriaPartita] = useState<Categoria>("cibi");
+  const [iniziale] = useState(caricaSessione);
+  const [sessione, dispatch] = useReducer(riduci, iniziale.sessione);
+  const [categoriaPartita, setCategoriaPartita] = useState<Categoria>(iniziale.categoria);
+
+  // La partita sopravvive al refresh della pagina.
+  useEffect(() => {
+    try {
+      if (sessione.partita) {
+        const { macchina, ...resto } = sessione;
+        localStorage.setItem(CHIAVE, JSON.stringify({ ...resto, storia: macchina.storia, categoria: categoriaPartita }));
+      } else localStorage.removeItem(CHIAVE);
+    } catch {
+      /* ignora */
+    }
+  }, [sessione, categoriaPartita]);
   const { partita } = sessione;
 
   if (!partita) {
@@ -39,6 +81,7 @@ export function ImpostoreLocale() {
     );
   }
 
+  const contenuto = (() => {
   switch (sessione.macchina.fase) {
     case "distribuzione":
       return <Carte sessione={sessione} partita={partita} dispatch={dispatch} />;
@@ -67,7 +110,40 @@ export function ImpostoreLocale() {
         />
       );
   }
+  })();
+
+  return (
+    <>
+      {contenuto}
+      {sessione.macchina.fase !== "fine" && <ChiudiPartita onChiudi={() => dispatch({ tipo: "nuova" })} />}
+    </>
+  );
 }
+
+function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const [conferma, setConferma] = useState(false);
+  if (!conferma) {
+    return (
+      <div className="chiudi-partita">
+        <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
+          Chiudi la partita
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="rivedi">
+      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <button className="btn pericolo" onClick={onChiudi}>
+        Sì, chiudi
+      </button>
+      <button className="btn" onClick={() => setConferma(false)}>
+        No, continua
+      </button>
+    </div>
+  );
+}
+
 
 function nomeDi(partita: Partita, posto: number | null): string {
   return partita.giocatori.find((g) => g.posto === posto)?.nome ?? "";

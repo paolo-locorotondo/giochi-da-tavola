@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
+import { Copy, Eye, EyeOff } from "lucide-react";
 import { categorie, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 import "./online.css";
@@ -103,7 +104,7 @@ function Testata({ c, v }: { c: Collegamento; v: Vista }) {
     return n.occupato ? "scollegato" : "non ancora entrato";
   };
   return (
-    <div className="testata">
+    <div className="intestazione-partita">
       <p className="chi-sono">
         {io ? (
           <>
@@ -114,30 +115,55 @@ function Testata({ c, v }: { c: Collegamento; v: Vista }) {
           "Non hai ancora un nome in questa partita"
         )}
       </p>
-      <details className="info-stanza">
+      <details className="accordion">
         <summary>
-          Stanza {c.codice} · {collegati} collegati
+          <span>
+            Stanza {c.codice} · {collegati} collegati
+          </span>
         </summary>
-        <p>
-          Codice partita: <strong>{c.codice}</strong>
-        </p>
-        <p className="muted link-invito">{link}</p>
-        <QrInvito link={link} />
-        <ul className="elenco">
-          {v.nomi.map((n) => (
-            <li key={n.posto} className={n.collegato ? "" : "assente"}>
-              <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" />
-              <span>
+        <div className="accordion-corpo">
+          <div className="codice-riga">
+            <span className="muted">Codice partita</span>
+            <strong>{c.codice}</strong>
+            <CopiaLink link={link} />
+          </div>
+          <QrInvito link={link} />
+          <ul className="chip-elenco" aria-label="Giocatori nella stanza">
+            {v.nomi.map((n) => (
+              <li key={n.posto} className={`chip${n.collegato ? "" : " assente"}`}>
+                <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" />
                 {n.nome}
                 {n.organizzatore ? " *" : ""}
                 {n.posto === v.io ? " (tu)" : ""} · {stato(n)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="muted">* organizzatore</p>
+              </li>
+            ))}
+          </ul>
+          <p className="muted">* organizzatore</p>
+        </div>
       </details>
     </div>
+  );
+}
+
+/** Copia il link della stanza. Su HTTP locale l'appunti può non esistere: il bottone allora si nasconde. */
+function CopiaLink({ link }: { link: string }) {
+  const [copiato, setCopiato] = useState(false);
+  if (!navigator.clipboard) return null;
+  return (
+    <button
+      type="button"
+      className="btn piccolo"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(link);
+          setCopiato(true);
+        } catch {
+          /* permesso negato: resta il link scritto */
+        }
+      }}
+    >
+      <Copy size={16} aria-hidden="true" /> {copiato ? "Copiato" : "Copia link"}
+    </button>
   );
 }
 
@@ -148,7 +174,7 @@ function ChiudiPartita({ c }: { c: Collegamento }) {
       {conferma ? (
         <>
           <p>Chiudere la partita per tutti? Non si può annullare.</p>
-          <button className="btn" onClick={() => c.invia({ t: "chiudi" })}>
+          <button className="btn pericolo" onClick={() => c.invia({ t: "chiudi" })}>
             Sì, chiudi
           </button>
           <button className="btn" onClick={() => setConferma(false)}>
@@ -156,7 +182,7 @@ function ChiudiPartita({ c }: { c: Collegamento }) {
           </button>
         </>
       ) : (
-        <button className="link" onClick={() => setConferma(true)}>
+        <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
           Chiudi la partita
         </button>
       )}
@@ -264,8 +290,9 @@ function RivediCarta({ v }: { v: Vista }) {
   if (!v.carta || !["indizi", "voto", "tentativo"].includes(v.fase)) return null;
   return (
     <div className="rivedi">
-      <button className="btn piccolo" onClick={() => setAperta(!aperta)}>
-        {aperta ? "Nascondi la mia carta" : "Rivedi la mia carta"}
+      <button className="btn" onClick={() => setAperta(!aperta)}>
+        {aperta ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+        {aperta ? " Nascondi la mia carta" : " Rivedi la mia carta"}
       </button>
       {aperta && (
         <div className="carta">
@@ -450,9 +477,11 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
         ))}
       </ul>
       {v.host && (
-        <button className="btn primario" disabled={inSala < 3} onClick={() => c.azione({ tipo: "avvia" })}>
-          Avvia la partita ({inSala})
-        </button>
+        <div className="azioni">
+          <button className="btn primario" disabled={inSala < 3} onClick={() => c.azione({ tipo: "avvia" })}>
+            Avvia la partita ({inSala})
+          </button>
+        </div>
       )}
     </section>
   );
@@ -489,24 +518,39 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
           </>
         )}
       </div>
-      {scoperta && (
-        <button className="btn" onClick={() => setScoperta(false)}>
-          Nascondi
-        </button>
-      )}
-      <p className="muted">
-        Hanno visto la carta: {v.viste} su {v.nomi.filter((n) => n.inGioco).length}
-      </p>
-      {v.host && (
-        <button
-          className="btn primario"
-          disabled={v.viste < v.nomi.filter((n) => n.inGioco).length}
-          onClick={() => c.azione({ tipo: "avanti" })}
-        >
-          Tutti hanno visto: via agli indizi
-        </button>
-      )}
+      <ProgressoCarte viste={v.viste} totale={v.nomi.filter((n) => n.inGioco).length} />
+      <div className="azioni">
+        {scoperta && (
+          <button className="btn" onClick={() => setScoperta(false)}>
+            <EyeOff size={18} aria-hidden="true" /> Nascondi
+          </button>
+        )}
+        {v.host && (
+          <button
+            className="btn primario"
+            disabled={v.viste < v.nomi.filter((n) => n.inGioco).length}
+            onClick={() => c.azione({ tipo: "avanti" })}
+          >
+            Tutti hanno visto: via agli indizi
+          </button>
+        )}
+      </div>
     </section>
+  );
+}
+
+/** Quanti hanno già guardato la propria carta: barra e testo, così non dipende dal solo colore. */
+function ProgressoCarte({ viste, totale }: { viste: number; totale: number }) {
+  const percentuale = totale > 0 ? Math.round((viste / totale) * 100) : 0;
+  return (
+    <div className="progresso">
+      <p className="muted">
+        Hanno visto la carta: <strong>{viste}</strong> su {totale}
+      </p>
+      <div className="progresso-barra" role="progressbar" aria-valuemin={0} aria-valuemax={totale} aria-valuenow={viste}>
+        <span style={{ width: `${percentuale}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -583,9 +627,11 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
       <h2>{voto.ballottaggio ? "Ballottaggio" : "Votazione"}</h2>
       {voto.ballottaggio && v.ultimoEsito && <p className="muted">Pareggio: si rivota solo tra i pari merito.</p>}
       {v.indizi && (
-        <details>
+        <details className="accordion">
           <summary>Indizi dati</summary>
-          <ElencoIndizi v={v} nome={nome} />
+          <div className="accordion-corpo">
+            <ElencoIndizi v={v} nome={nome} />
+          </div>
         </details>
       )}
       <p className="muted">

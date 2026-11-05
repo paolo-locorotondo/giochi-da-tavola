@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CARTE } from "./carte";
-import { chiudiTurno, eFinita, nuovaPartita, squadraDiTurno, vincitrice } from "./logica";
+import { carteDellaPartita, chiudiTurno, eFinita, nuovaPartita, squadraDiTurno, vincitrice } from "./logica";
 
 describe("carte", () => {
   it("hanno 5 parole vietate e nessun duplicato", () => {
@@ -21,5 +21,12 @@ describe("partita", () => {
     p = chiudiTurno(p, { corrette: ["x"], saltate: [], errori: [] });
     expect(eFinita(p)).toBe(true);
     expect(vincitrice(p)).toBe(0);
+  });
+  it("conserva le carte di tutti i turni", () => {
+    let p = nuovaPartita(["A", "B"], 1, 60, CARTE, 1);
+    p = chiudiTurno(p, { corrette: ["x"], saltate: ["s"], errori: ["q"] });
+    p = chiudiTurno(p, { corrette: ["y"], saltate: [], errori: [] });
+    expect(p.storico).toHaveLength(2);
+    expect(carteDellaPartita(p)).toEqual({ corrette: ["x", "y"], saltate: ["s"], errori: ["q"] });
   });
 });

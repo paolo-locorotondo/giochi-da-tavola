@@ -16,11 +16,45 @@ import {
 import "./tabu.css";
 
 const TURNO_VUOTO: Turno = { corrette: [], saltate: [], errori: [] };
+const CHIAVE = "gdt-tabu-partita";
+
+interface Salvata {
+  partita: Partita | null;
+  fase: Fase;
+  turno: Turno;
+}
+
+function carica(): Salvata {
+  try {
+    const raw = localStorage.getItem(CHIAVE);
+    if (raw) {
+      const s = JSON.parse(raw) as Salvata;
+      if (s.partita && Array.isArray(s.partita.mazzo) && s.turno) {
+        // Un turno a metà riparte dall'inizio: il timer non si può riprendere.
+        return { ...s, fase: s.fase === "gioco" ? "pronti" : s.fase, turno: s.fase === "gioco" ? TURNO_VUOTO : s.turno };
+      }
+    }
+  } catch {
+    /* storage non disponibile: si riparte da zero */
+  }
+  return { partita: null, fase: "pronti", turno: TURNO_VUOTO };
+}
 
 export function TabuApp() {
-  const [partita, setPartita] = useState<Partita | null>(null);
-  const [fase, setFase] = useState<Fase>("pronti");
-  const [turno, setTurno] = useState<Turno>(TURNO_VUOTO);
+  const [iniziale] = useState(carica);
+  const [partita, setPartita] = useState<Partita | null>(iniziale.partita);
+  const [fase, setFase] = useState<Fase>(iniziale.fase);
+  const [turno, setTurno] = useState<Turno>(iniziale.turno);
+
+  // La partita sopravvive al refresh della pagina.
+  useEffect(() => {
+    try {
+      if (partita) localStorage.setItem(CHIAVE, JSON.stringify({ partita, fase, turno }));
+      else localStorage.removeItem(CHIAVE);
+    } catch {
+      /* ignora */
+    }
+  }, [partita, fase, turno]);
 
   if (!partita) {
     return (
@@ -44,6 +78,16 @@ export function TabuApp() {
           {partita.squadre[0].nome} {partita.squadre[0].punti} – {partita.squadre[1].punti}{" "}
           {partita.squadre[1].nome}
         </p>
+        <h3>Carte della partita</h3>
+        {partita.storico.map((x, i) => (
+          <div key={i} className="turno-storico">
+            <p className="muted">
+              {partita.squadre[x.squadra].nome} · turno {Math.floor(i / 2) + 1} ({punteggioTurno(x.turno) >= 0 ? "+" : ""}
+              {punteggioTurno(x.turno)})
+            </p>
+            <RiepilogoCarte turno={x.turno} />
+          </div>
+        ))}
         <button className="btn primario" onClick={() => setPartita(null)}>
           Nuova partita
         </button>
@@ -73,6 +117,7 @@ export function TabuApp() {
         >
           Via!
         </button>
+        <ChiudiPartita onChiudi={() => setPartita(null)} />
       </section>
     );
   }
@@ -103,6 +148,7 @@ export function TabuApp() {
         {p >= 0 ? "+" : ""}
         {p}
       </p>
+      <RiepilogoCarte turno={turno} />
       <button
         className="btn primario"
         onClick={() => {
@@ -113,6 +159,48 @@ export function TabuApp() {
         Avanti
       </button>
     </section>
+  );
+}
+
+/** Parola in grassetto con le vietate tra parentesi: «burro (latte, pane, …)». */
+function VoceCarta({ parola }: { parola: string }) {
+  const vietate = CARTE.find((c) => c.parola === parola)?.vietate ?? [];
+  return (
+    <li>
+      <strong>{parola}</strong>
+      {vietate.length > 0 && <span className="muted"> ({vietate.join(", ")})</span>}
+    </li>
+  );
+}
+
+function ElencoCarte({ titolo, parole, aperto }: { titolo: string; parole: string[]; aperto?: boolean }) {
+  return (
+    <details className="accordion" open={aperto}>
+      <summary>
+        {titolo} ({parole.length})
+      </summary>
+      <div className="accordion-corpo">
+        {parole.length === 0 ? (
+          <p className="muted">Nessuna.</p>
+        ) : (
+          <ul className="parole">
+            {parole.map((p, i) => (
+              <VoceCarta key={i} parola={p} />
+            ))}
+          </ul>
+        )}
+      </div>
+    </details>
+  );
+}
+
+function RiepilogoCarte({ turno }: { turno: Turno }) {
+  return (
+    <div className="riepilogo-carte">
+      <ElencoCarte titolo="Indovinate" parole={turno.corrette} />
+      <ElencoCarte titolo="Vietata detta" parole={turno.errori} />
+      <ElencoCarte titolo="Passate" parole={turno.saltate} />
+    </div>
   );
 }
 
@@ -159,7 +247,7 @@ function Gioco({
           </p>
         ))}
       </div>
-      <div className="giocatori">
+      <div className="comandi">
         <button
           className="btn primario"
           onClick={() => onCambia({ ...turno, corrette: [...turno.corrette, c.parola] })}
@@ -167,19 +255,20 @@ function Gioco({
           Indovinata (+1)
         </button>
         <button
-          className="btn"
+          className="btn pericolo"
           onClick={() => onCambia({ ...turno, errori: [...turno.errori, c.parola] })}
         >
           Vietata detta (−1)
         </button>
+        <button
+          className="btn passa"
+          onClick={() => onCambia({ ...turno, saltate: [...turno.saltate, c.parola] })}
+        >
+          Passa
+        </button>
       </div>
-      <button
-        className="btn"
-        onClick={() => onCambia({ ...turno, saltate: [...turno.saltate, c.parola] })}
-      >
-        Passa
-      </button>
       <p className="muted">Punti del turno: {punteggioTurno(turno)}</p>
+      <RiepilogoCarte turno={turno} />
     </section>
   );
 }
@@ -234,5 +323,29 @@ function Configurazione({
         Inizia
       </button>
     </form>
+  );
+}
+
+function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const [conferma, setConferma] = useState(false);
+  if (!conferma) {
+    return (
+      <div className="chiudi-partita">
+        <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
+          Chiudi la partita
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="rivedi">
+      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <button className="btn pericolo" onClick={onChiudi}>
+        Sì, chiudi
+      </button>
+      <button className="btn" onClick={() => setConferma(false)}>
+        No, continua
+      </button>
+    </div>
   );
 }

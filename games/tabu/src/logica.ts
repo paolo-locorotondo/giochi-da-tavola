@@ -15,6 +15,8 @@ export interface Partita {
   turno: number;
   mazzo: Carta[];
   prossima: number;
+  /** Turni già chiusi, in ordine: servono al riepilogo finale con tutte le carte. */
+  storico: { squadra: 0 | 1; turno: Turno }[];
 }
 
 export type Fase = "pronti" | "gioco" | "riepilogo" | "fine";
@@ -43,6 +45,7 @@ export function nuovaPartita(
     turno: 0,
     mazzo: creaRng(seme).mescola(carte),
     prossima: 0,
+    storico: [],
   };
 }
 
@@ -69,7 +72,16 @@ export function chiudiTurno(p: Partita, t: Turno): Partita {
   const s = squadraDiTurno(p);
   const squadre: [Squadra, Squadra] = [{ ...p.squadre[0] }, { ...p.squadre[1] }];
   squadre[s].punti += punteggioTurno(t);
-  return { ...p, squadre, turno: p.turno + 1 };
+  return { ...p, squadre, turno: p.turno + 1, storico: [...p.storico, { squadra: s, turno: t }] };
+}
+
+/** Tutte le carte di tre tipi giocate finora, da tutti i turni chiusi. */
+export function carteDellaPartita(p: Partita): Turno {
+  return {
+    corrette: p.storico.flatMap((x) => x.turno.corrette),
+    saltate: p.storico.flatMap((x) => x.turno.saltate),
+    errori: p.storico.flatMap((x) => x.turno.errori),
+  };
 }
 
 export function eFinita(p: Partita): boolean {

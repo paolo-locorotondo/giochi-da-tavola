@@ -1,6 +1,6 @@
 .voce {
   display: block;
-  color: var(--muted);
+  color: var(--mu);
   font-size: 0.9rem;
   margin: 0.5rem 0;
 }
@@ -24,11 +24,57 @@
 }
 
 .elenco-ruoli .morto {
-  color: var(--muted);
+  color: var(--mu);
   text-decoration: line-through;
 }
 
+/* Accordion del narratore: nome a sinistra, ruolo e stato a destra */
+.ruoli-narratore {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ruoli-narratore li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--tocco);
+  border-bottom: var(--bw) solid var(--bd);
+}
+
+.ruoli-narratore li:last-child {
+  border-bottom: none;
+}
+
+.ruoli-narratore .morto {
+  color: var(--errore);
+}
+
+.ruoli-narratore .morto .nome-g {
+  text-decoration: line-through;
+}
+
+.ruoli-narratore .stato {
+  font-size: 0.9rem;
+  color: var(--mu);
+  text-align: right;
+}
+
+.accordion-nota {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--mu);
+}
+
+/* Disabilitato: forma e colore neutro, non trasparenza (il tema oro si sporcherebbe) */
 .btn:disabled {
-  opacity: 0.4;
+  background: var(--s2);
+  border-color: var(--bd);
+  border-style: dashed;
+  color: var(--mu);
   cursor: default;
 }

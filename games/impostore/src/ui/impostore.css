@@ -15,69 +15,194 @@
   min-height: 0;
 }
 
+/* Scelta della modalità: due righe grandi con icona a sinistra */
+.scelta-modo {
+  align-items: stretch;
+  text-align: left;
+}
+
+.scelta-modo h2 {
+  font-family: var(--font-titoli);
+  text-align: center;
+  margin: 0 0 0.5rem;
+}
+
+.modo {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 84px;
+  padding: 0.75rem;
+  font: inherit;
+  text-align: left;
+  color: var(--fg);
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  cursor: pointer;
+}
+
+.modo:active {
+  background: var(--s2);
+}
+
+.modo-icona {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+}
+
+/* Un solo telefono: oro. Ognuno col suo: verde. */
+.modo-icona--locale {
+  color: var(--on-ac);
+  background: var(--ac);
+}
+
+.modo-icona--online {
+  color: var(--on-ac2);
+  background: var(--ac2);
+}
+
+.modo-testo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.modo-nome {
+  font-family: var(--font-titoli);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modo-desc {
+  color: var(--mu);
+  font-size: 0.9rem;
+}
+
+/* Campi di testo: etichetta sopra, controllo alto almeno 52 px, bordo ben visibile */
 .campo {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  color: var(--muted);
+  gap: 0.4rem;
+  color: var(--mu);
+  font-size: 0.9rem;
 }
 
 .campo input,
 .campo select,
 .campo textarea {
   font: inherit;
+  font-size: 1rem; /* 16 px: evita lo zoom automatico su iOS */
   color: var(--fg);
-  background: #1e2130;
-  border: 1px solid #2c3145;
-  border-radius: 0.6rem;
-  padding: 0.7rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+  padding: 0.75rem 0.9rem;
+  min-height: 52px;
+}
+
+.campo input::placeholder,
+.campo textarea::placeholder {
+  color: var(--mu);
 }
 
 .btn {
   font: inherit;
   color: var(--fg);
-  background: #1e2130;
-  border: 1px solid #2c3145;
-  border-radius: 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
   padding: 0.8rem 1.2rem;
+  min-height: 48px;
   cursor: pointer;
 }
 
+.btn:active {
+  background: var(--s2);
+}
+
 .btn.primario {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #14161f;
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
   font-weight: 600;
 }
 
+/*
+ * Azioni distruttive o «sbagliate»: rosso dei token (--pericolo). Il colore non è mai
+ * l'unico segnale: il testo dice sempre cosa fa il pulsante.
+ */
+.btn.pericolo {
+  background: var(--pericolo);
+  border-color: var(--pericolo);
+  color: var(--on-pericolo);
+  font-weight: 600;
+}
+
+.btn.pericolo-contorno {
+  border-color: var(--errore);
+  color: var(--errore);
+}
+
+/* La carta: scheda in evidenza con bordo oro, contenuto centrato */
 .carta {
   width: 100%;
-  padding: 2rem 1rem;
-  border: 2px solid var(--accent);
-  border-radius: 1rem;
-  background: #1e2130;
+  min-height: 11rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border: 2px solid var(--ac);
+  border-radius: calc(var(--r) + 4px);
+  background: var(--s1);
+  box-shadow: var(--sh);
+  text-align: center;
+}
+
+.carta p {
+  margin: 0;
 }
 
 .grande {
+  font-family: var(--font-titoli);
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--ac);
   margin: 0.5rem 0;
 }
 
-.giocatori {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  width: 100%;
-}
-
 .errore {
-  color: #ff8a8a;
+  color: var(--errore);
   margin: 0;
 }
 
 .suggerimento {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--mu);
+}
+
+/* Campi di testo fuori da un'etichetta .campo (indizio, tentativo): stesso aspetto */
+.schermata input:not([type="checkbox"]):not([type="radio"]) {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--fg);
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+  padding: 0.75rem 0.9rem;
+  min-height: 52px;
+  width: 100%;
+}
+
+.chiudi-partita {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.25rem;
 }
