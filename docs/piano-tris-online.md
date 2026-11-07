@@ -79,3 +79,17 @@ contiene decisioni, ordine di lavoro e stato di avanzamento.
 - [x] 3. UI online Tris (`games/tic-tac-toe/src/ui/Tris.tsx`, `online/TrisOnline.tsx`; hook condiviso in `packages/collegamento`; e2e `apps/web/e2e/tris-online.spec.ts`)
 - [x] 4. README, decisioni.md, CHANGELOG (rilasciato 0.10.0)
 - [ ] 5. Coda (fuori scopo ora)
+
+## Passo 5 (da fare): partita veloce con coda
+
+Stato al 2026-11-07: Tris online rilasciato in 0.10.0 (commit bcf82cf, tag v0.10.0, push a carico dell'utente). Qui sotto lo schema di partenza, da rivedere guardando il codice.
+
+Idea (dal vecchio progetto `../tic-tac-toe`, solo l'idea): in `/tris`, modalità online, un pulsante «Partita veloce». Si scrive solo il proprio nome; il server accoda il telefono e, appena ce ne sono due in attesa, crea la stanza, li siede (il primo in coda = X e organizzatore) e avvia la partita. Nessun codice da condividere.
+
+Schema tecnico proposto:
+- Nuovi messaggi `DaClient`: `{ t: "coda", gioco, nome, token? }` e `{ t: "esciDaCoda" }`; risposta `{ t: "inCoda" }` e poi il solito `benvenuto` + `vista` quando è stato abbinato.
+- `apps/server`: coda in memoria per gioco (`Map<gioco, { token, nome, connessione }[]>`), abbinamento a coppie nell'ordine di arrivo. Il gioco dichiara se supporta la coda (campo opzionale su `GiocoOnline`, es. `coda?: { giocatori: 2 }`, e un `nuovoStatoDaCoda`/uso di `nuovoStato(nomi)` + `occupa` dei posti + `avvia`).
+- Va tolto dalla coda chi chiude la connessione, chi esce, chi aspetta troppo (es. 2 minuti: messaggio «Nessun avversario, riprova o gioca contro il telefono»). Due nomi uguali: il server li distingue (es. suffisso) oppure l'UI li accetta perché i posti sono per posto, non per nome (da decidere: `nuovoStato` oggi rifiuta nomi uguali).
+- Limite alla coda (es. 50 voci) e stessa pulizia delle stanze.
+- UI: pulsante nella schermata «Crea» (secondario, non primario), stato «In coda…» con «Annulla», poi entra nella partita già avviata. Testi in `locales/{it,en}.ts`, e2e con due contesti che premono «Partita veloce».
+- Test: server (abbinamento, uscita, disconnessione, scadenza), e2e, README del gioco, CHANGELOG (MINOR 0.11.0 se rilasciato).
