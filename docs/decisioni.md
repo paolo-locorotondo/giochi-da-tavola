@@ -127,6 +127,14 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
 - **Logica di gioco in TypeScript puro e deterministica**, separata dalla UI: testabile e
   identica nel browser (modalità A) e sul server (modalità B).
 - **Fasi come macchina a stati.**
+- **Carte e testi nei dati**: le carte di ogni gioco (parole, categorie, personaggi) stanno in
+  `games/<gioco>/data/<lingua>/*.json` e si cambiano senza toccare il codice; il README del gioco
+  spiega come. Le regole (poteri dei ruoli, punteggi) restano nel codice: sono logica, non dati.
+- **Impostazioni**: l'ingranaggio mostra sempre «App» (tema, audio) e, dentro un gioco, anche le
+  impostazioni del gioco, dichiarate nel `manifest` (`impostazioni`) e salvate dal pacchetto
+  `@gdt/preferenze`. Sono dell'app su quel telefono, non della partita.
+- **Lingue**: pacchetto nostro (non i18next) per avere chiavi controllate dal compilatore, peso
+  quasi nullo e plurali con `Intl.PluralRules`. Lingue previste: italiano, inglese. Da realizzare.
 - **Narratore** (Lupus): oggi un narratore automatico a voce (Web Speech API, funziona
   offline). Previsto anche un pannello per un narratore umano.
 
@@ -138,7 +146,9 @@ giochi-da-tavola/
 │   ├── web/        → PWA: menu giochi, indirizzi per gioco
 │   └── server/     → server partite WebSocket (Node), serve anche l'app
 ├── packages/
-│   └── engine/     → RNG con seme, codice partita, utilità comuni
+│   ├── engine/     → RNG con seme, codice partita, utilità comuni
+│   ├── suoni/      → suoni sintetizzati e interruttore audio
+│   └── preferenze/ → impostazioni dei giochi salvate sul telefono
 ├── games/
 │   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
 │   ├── lupus/      → regole e UI a un telefono

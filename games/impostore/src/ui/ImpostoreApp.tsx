@@ -5,19 +5,9 @@ import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
 import { validaConfigurazione } from "../logic/validazione";
-import { categorie, paroleDi, type Categoria } from "../parole";
+import { categorie, nomeCategoria, paroleDi, type Categoria } from "../parole";
 import { leggiRecenti, ricordaParola } from "./recenti";
 import "./impostore.css";
-
-const NOME_CATEGORIA: Record<Categoria, string> = {
-  cibi: "Cibi",
-  animali: "Animali",
-  luoghi: "Luoghi",
-  mestieri: "Mestieri",
-  sport: "Sport",
-  oggetti: "Oggetti",
-  trasporti: "Mezzi di trasporto",
-};
 
 const CHIAVE = "gdt-impostore-locale";
 
@@ -216,7 +206,7 @@ function Configurazione({
         <select value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria)}>
           {categorie.map((c) => (
             <option key={c} value={c}>
-              {NOME_CATEGORIA[c]}
+              {nomeCategoria(c)}
             </option>
           ))}
         </select>

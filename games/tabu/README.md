@@ -13,7 +13,7 @@ Gioco a squadre con un solo telefono. Servono **almeno 4 persone**, divise in du
 5. Allo scadere del tempo si sommano i punti e tocca all'altra squadra.
 6. Dopo i turni scelti vince la squadra con più punti.
 
-Le carte sono **originali** (148 parole): non sono quelle del gioco commerciale.
+Le carte sono **originali** (140 parole): non sono quelle del gioco commerciale.
 
 ## Modalità di gioco
 
@@ -45,9 +45,22 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Struttura
 
-- `src/carte.ts`: le carte (parola + 5 vietate), una riga per carta.
+- `data/it/carte.json`: le carte (parola + 5 vietate), una riga per carta; `src/carte.ts` le legge.
 - `src/logica.ts`: regole pure (punti, turni, vincitore); `src/validazione.ts`: nomi delle squadre.
 - `src/ui/TabuApp.tsx`: le schermate.
+
+## Come cambiare o aggiungere le carte
+
+Le carte stanno in `data/it/carte.json`, una per riga. Non serve toccare il codice.
+
+```json
+{"parola": "Pizza", "vietate": ["forno", "mozzarella", "pomodoro", "Napoli", "impasto"]}
+```
+
+- **Aggiungere una carta**: aggiungi una riga in fondo (attenzione alla virgola tra una riga e l'altra, e niente virgola dopo l'ultima). Servono la parola e **esattamente cinque** parole vietate.
+- **Modificare o togliere**: cambia o cancella la riga.
+- Regole controllate dai test (`pnpm test:unit`): almeno 120 carte, nessuna parola da indovinare ripetuta (ignorando maiuscole), nessuno spazio ai bordi, la parola non compare tra le sue vietate, cinque vietate diverse.
+- Le carte devono essere **originali**: non copiare quelle del gioco commerciale.
 
 ## Deploy
 

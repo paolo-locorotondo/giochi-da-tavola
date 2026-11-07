@@ -14,22 +14,9 @@ import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
 import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
 import { Transizione } from "./Transizione";
+import { DESCRIZIONE_RUOLO, NOME_RUOLO } from "../personaggi";
 import { TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
-
-const NOME_RUOLO: Record<Ruolo, string> = {
-  lupo: "Lupo",
-  contadino: "Contadino",
-  veggente: "Veggente",
-  medico: "Medico",
-};
-
-const DESCRIZIONE_RUOLO: Record<Ruolo, string> = {
-  lupo: "Di notte scegli con gli altri lupi chi sbranare. Di giorno fingi di essere innocente.",
-  contadino: "Non hai poteri: scopri i lupi parlando e votando.",
-  veggente: "Ogni notte scopri se un giocatore è un lupo.",
-  medico: "Ogni notte proteggi un giocatore dai lupi (non lo stesso due notti di fila).",
-};
 
 /** Il verso di chi muore, uno per ruolo: con un ruolo nuovo il compilatore chiede il suo suono. */
 const SUONO_MORTO: Record<Ruolo, NomeSuono> = {

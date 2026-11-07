@@ -2,19 +2,9 @@ import { useEffect, useState, type FormEvent } from "react";
 import { suona } from "@gdt/suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
-import { categorie, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
+import { categorie, nomeCategoria, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 import "./online.css";
-
-const NOME_CATEGORIA: Record<Categoria, string> = {
-  cibi: "Cibi",
-  animali: "Animali",
-  luoghi: "Luoghi",
-  mestieri: "Mestieri",
-  sport: "Sport",
-  oggetti: "Oggetti",
-  trasporti: "Mezzi di trasporto",
-};
 
 export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: string | null; onLocale: () => void }) {
   const c = useCollegamento(codiceIniziale);
@@ -261,7 +251,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
         <select value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria)}>
           {categorie.map((k) => (
             <option key={k} value={k}>
-              {NOME_CATEGORIA[k]}
+              {nomeCategoria(k)}
             </option>
           ))}
         </select>

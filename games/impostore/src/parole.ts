@@ -12,5 +12,10 @@ export type Categoria = keyof typeof dati;
 export const categorie = Object.keys(dati) as Categoria[];
 
 export function paroleDi(categoria: Categoria): readonly string[] {
-  return dati[categoria];
+  return dati[categoria].parole;
+}
+
+/** Nome della categoria come si legge nell'interfaccia (campo «nome» del file dati). */
+export function nomeCategoria(categoria: Categoria): string {
+  return dati[categoria].nome;
 }

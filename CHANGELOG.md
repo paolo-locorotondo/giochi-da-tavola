@@ -9,6 +9,11 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Cambiato
+
+- Carte nei dati: Tabù legge le carte da `games/tabu/data/it/carte.json`; Impostore ha il nome di ogni categoria nel file delle parole (`nome` + `parole`); Lupus ha i testi dei personaggi in `games/lupus/data/it/personaggi.json`. Nessun cambiamento visibile. I README spiegano come cambiare o aggiungere carte e personaggi.
+- Tabù: il README dichiarava 148 carte, sono 140.
+
 ## [0.6.1] - 2026-11-07
 
 ### Cambiato

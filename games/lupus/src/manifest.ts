@@ -1,4 +1,5 @@
 import { IMPOSTAZIONI } from "./impostazioni";
+import { PERSONAGGI_REGOLAMENTO } from "./personaggi";
 
 export const manifest = {
   id: "lupus",
@@ -20,11 +21,6 @@ export const manifest = {
       "Ruoli: 1 lupo ogni 4 giocatori (arrotondato), veggente da 5 giocatori, medico da 7, il resto contadini. Servono almeno 4 persone.",
       "Regole del gioco classico: esistono varianti.",
     ],
-    personaggi: [
-      { nome: "Lupo", testo: "Di notte sceglie con gli altri lupi chi sbranare. Di giorno finge di essere innocente." },
-      { nome: "Contadino", testo: "Non ha poteri: scopre i lupi parlando e votando." },
-      { nome: "Veggente", testo: "Ogni notte scopre se un giocatore è un lupo." },
-      { nome: "Medico", testo: "Ogni notte protegge un giocatore dai lupi (non lo stesso due notti di fila)." },
-    ],
+    personaggi: PERSONAGGI_REGOLAMENTO,
   },
 } as const;

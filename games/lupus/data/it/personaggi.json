@@ -1,0 +1,22 @@
+{
+  "lupo": {
+    "nome": "Lupo",
+    "tuo": "Di notte scegli con gli altri lupi chi sbranare. Di giorno fingi di essere innocente.",
+    "regolamento": "Di notte sceglie con gli altri lupi chi sbranare. Di giorno finge di essere innocente."
+  },
+  "contadino": {
+    "nome": "Contadino",
+    "tuo": "Non hai poteri: scopri i lupi parlando e votando.",
+    "regolamento": "Non ha poteri: scopre i lupi parlando e votando."
+  },
+  "veggente": {
+    "nome": "Veggente",
+    "tuo": "Ogni notte scopri se un giocatore è un lupo.",
+    "regolamento": "Ogni notte scopre se un giocatore è un lupo."
+  },
+  "medico": {
+    "nome": "Medico",
+    "tuo": "Ogni notte proteggi un giocatore dai lupi (non lo stesso due notti di fila).",
+    "regolamento": "Ogni notte protegge un giocatore dai lupi (non lo stesso due notti di fila)."
+  }
+}

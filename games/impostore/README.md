@@ -59,13 +59,25 @@ src/logic/       partita dal seme, fasi, sessione a un telefono, validazione (lo
 src/online/      partita online, logica pura usata anche dal server
 src/ui/          schermate React e parole recenti; ui/online/ per il collegamento WebSocket
 src/parole.ts    accesso alle parole e VERSIONE_DATI
-data/it/parole.json   parole per categoria
+data/it/parole.json   categorie: nome da mostrare e parole
 ```
 
-**Parole.** Modifica `data/it/parole.json`: una lista per categoria, senza duplicati (nemmeno ignorando maiuscole e accenti),
-almeno 30 voci (lo verifica un test). Una nuova categoria va aggiunta anche a `NOME_CATEGORIA` in `src/ui/ImpostoreApp.tsx` e
-`src/ui/online/ImpostoreOnline.tsx`. Se cambi ordine o contenuto di categorie esistenti, incrementa `VERSIONE_DATI` in `src/parole.ts`
-(serve ai codici condivisi; la modalità a un telefono non ne risente).
+## Come cambiare o aggiungere le parole
+
+Le «carte» di Impostore sono le parole, raggruppate per categoria in `data/it/parole.json`. Non serve toccare il codice.
+
+```json
+"animali": {
+  "nome": "Animali",
+  "parole": ["cane", "gatto", "elefante"]
+}
+```
+
+- **Aggiungere o togliere una parola**: modifica la lista `parole` della categoria. Niente doppioni (nemmeno ignorando maiuscole e accenti), nessuno spazio ai bordi.
+- **Nuova categoria**: aggiungi un blocco con `nome` (come appare nel menu) e `parole`, almeno 30. Compare da sola in modalità a un telefono e online.
+- **Rinominare una categoria**: cambia solo `nome`. Non cambiare la chiave (`animali`): serve al codice e alle partite salvate.
+- **Incrementa `VERSIONE_DATI`** in `src/parole.ts` se cambi l'ordine o il contenuto di categorie esistenti. Serve ai codici partita condivisi, perché due telefoni con elenchi diversi darebbero parole diverse; la modalità a un telefono non ne risente. Aggiungere una categoria in fondo non lo richiede.
+- Controlla con `pnpm test:unit`: i test verificano numero minimo, doppioni, spazi e nomi.
 
 ## Deploy
 
