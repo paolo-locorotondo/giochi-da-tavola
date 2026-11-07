@@ -12,6 +12,7 @@
   "dependencies": {
     "@gdt/engine": "workspace:*",
     "@gdt/impostore": "workspace:*",
+    "@gdt/tic-tac-toe": "workspace:*",
     "ws": "^8.18.0",
     "tsx": "^4.19.2"
   },

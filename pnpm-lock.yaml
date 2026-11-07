@@ -26,6 +26,9 @@ importers:
       '@gdt/impostore':
         specifier: workspace:*
         version: link:../../games/impostore
+      '@gdt/tic-tac-toe':
+        specifier: workspace:*
+        version: link:../../games/tic-tac-toe
       tsx:
         specifier: ^4.19.2
         version: 4.23.15

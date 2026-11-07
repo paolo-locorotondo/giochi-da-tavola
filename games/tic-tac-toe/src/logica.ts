@@ -35,7 +35,21 @@ export interface Partita {
   esito: Esito | null;
 }
 
-export type CodiceErrore = "partitaFinita" | "casellaNonValida" | "casellaOccupata";
+export type CodiceErrore =
+  | "partitaFinita"
+  | "casellaNonValida"
+  | "casellaOccupata"
+  // Solo online (src/online): la UI li traduce come gli altri.
+  | "nomiNonValidi"
+  | "nomeInesistente"
+  | "nomeOccupato"
+  | "giaIniziata"
+  | "pochiHannoScelto"
+  | "nonTocca"
+  | "nonPartecipa"
+  | "nonInCorso"
+  | "nonFinita"
+  | "azioneNonValida";
 
 export class ErroreTris extends Error {
   readonly codice: CodiceErrore;

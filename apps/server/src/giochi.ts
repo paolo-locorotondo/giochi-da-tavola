@@ -1,5 +1,6 @@
 import type { GiocoOnline } from "@gdt/engine";
 import { impostoreOnline } from "@gdt/impostore/online";
+import { trisOnline } from "@gdt/tic-tac-toe/online";
 
 /**
  * I giochi che il server sa ospitare, per `id`. Per aggiungerne uno: un modulo
@@ -10,6 +11,7 @@ export type GiocoQualsiasi = GiocoOnline<any, any, any>;
 
 export const GIOCHI_ONLINE: Readonly<Record<string, GiocoQualsiasi>> = {
   [impostoreOnline.id]: impostoreOnline,
+  [trisOnline.id]: trisOnline,
 };
 
 /** Il gioco con questo id; quello predefinito (Impostore) se manca, per i client di prima. */
