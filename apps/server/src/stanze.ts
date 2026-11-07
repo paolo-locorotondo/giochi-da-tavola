@@ -1,24 +1,18 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { ALFABETO } from "@gdt/engine";
-import {
-  applica,
-  nuovoStato,
-  vistaPer,
-  type AzioneOnline,
-  type ConfigOnline,
-  type StatoOnline,
-  type Vista,
-} from "@gdt/impostore/online";
+import { ALFABETO, type RichiestaOnline } from "@gdt/engine";
+import { giocoOnline, type GiocoQualsiasi } from "./giochi";
 
 /**
- * Stanze di gioco in memoria. Ogni telefono è identificato da un token casuale salvato sul
- * dispositivo: con quello rientra nello stesso posto dopo refresh o caduta di rete.
- * Il server decide chi può fare cosa e manda a ognuno solo la sua vista.
+ * Stanze di gioco in memoria, uguali per tutti i giochi. Ogni telefono è identificato da un
+ * token casuale salvato sul dispositivo: con quello rientra nello stesso posto dopo refresh o
+ * caduta di rete. Il server decide chi può fare cosa (posti qui, regole nel modulo del gioco)
+ * e manda a ognuno solo la sua vista.
  */
 
 export interface Stanza {
   codice: string;
-  stato: StatoOnline;
+  gioco: GiocoQualsiasi;
+  stato: any;
   tokenHost: string;
   /** token → posto scelto (null = ancora nella scelta del nome). */
   telefoni: Map<string, number | null>;
@@ -27,31 +21,28 @@ export interface Stanza {
 
 /** Messaggi dal telefono al server. */
 export type DaClient =
-  | { t: "crea"; nomi: string[]; config: ConfigOnline; token?: string }
+  /** `gioco` assente = Impostore (i client di prima non lo mandavano). */
+  | { t: "crea"; gioco?: string; nomi: string[]; config: unknown; token?: string }
   | { t: "entra"; codice: string; token?: string }
   | { t: "azione"; azione: AzioneClient }
   | { t: "sollecita" }
   | { t: "chiudi" };
 
-/** Azioni che un telefono può chiedere: il server completa chi le fa. */
+/**
+ * Azioni che un telefono può chiedere: il server completa chi le fa. Quelle di posto le
+ * gestisce il server; tutte le altre le traduce il modulo del gioco (`traduci`).
+ */
 export type AzioneClient =
   | { tipo: "occupa"; posto: number }
   | { tipo: "libera"; posto: number }
   /** Partita già avviata: un telefono senza posto riprende quello di un giocatore scollegato. */
   | { tipo: "riprendi"; posto: number }
-  | { tipo: "avvia" }
-  | { tipo: "avanti" }
-  | { tipo: "visto" }
-  /** Indizi scritti: il giocatore di turno invia il suo. */
-  | { tipo: "indizio"; testo: string }
-  | { tipo: "vota"; posto: number }
-  | { tipo: "tenta"; testo: string }
-  | { tipo: "nuova" };
+  | RichiestaOnline;
 
 /** Messaggi dal server al telefono. */
 export type DaServer =
   | { t: "benvenuto"; codice: string; token: string }
-  | { t: "vista"; vista: Vista }
+  | { t: "vista"; vista: unknown }
   | { t: "sollecito" }
   | { t: "chiusa" }
   | { t: "errore"; messaggio: string };
@@ -70,15 +61,12 @@ export function nuovoCodice(esistenti: { has(c: string): boolean }): string {
   }
 }
 
-export function creaStanza(
-  codice: string,
-  nomi: string[],
-  config: ConfigOnline,
-  tokenHost: string,
-): Stanza {
+export function creaStanza(codice: string, nomi: string[], config: unknown, tokenHost: string, gioco: unknown = "impostore"): Stanza {
+  const g = giocoOnline(gioco);
   return {
     codice,
-    stato: nuovoStato(nomi, config),
+    gioco: g,
+    stato: g.nuovoStato(nomi, config),
     tokenHost,
     telefoni: new Map([[tokenHost, null]]),
     ultimaAttivita: Date.now(),
@@ -88,15 +76,16 @@ export function creaStanza(
 /** Dice se un telefono (token) ha una connessione aperta in questo momento. */
 export type Connesso = (token: string) => boolean;
 
-export function vistaDi(stanza: Stanza, token: string, connesso: Connesso = () => false): Vista {
-  const vista = vistaPer(stanza.stato, stanza.telefoni.get(token) ?? null, token === stanza.tokenHost);
+export function vistaDi(stanza: Stanza, token: string, connesso: Connesso = () => false): any {
   const collegati = new Set<number>();
   for (const [t, p] of stanza.telefoni) if (p !== null && connesso(t)) collegati.add(p);
   const organizzatore = stanza.telefoni.get(stanza.tokenHost) ?? null;
-  return {
-    ...vista,
-    nomi: vista.nomi.map((n) => ({ ...n, collegato: collegati.has(n.posto), organizzatore: n.posto === organizzatore })),
-  };
+  return stanza.gioco.vistaPer(stanza.stato, stanza.telefoni.get(token) ?? null, token === stanza.tokenHost, { collegati, organizzatore });
+}
+
+/** Posti che il gioco sta aspettando (per «sollecita»). */
+export function mancantiDi(stanza: Stanza): readonly number[] {
+  return stanza.gioco.mancanti?.(stanza.stato) ?? [];
 }
 
 /**
@@ -104,79 +93,47 @@ export function vistaDi(stanza: Stanza, token: string, connesso: Connesso = () =
  * Lancia un errore con un messaggio da mostrare se non è permessa.
  */
 export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, connesso: Connesso = () => false): void {
+  const g = stanza.gioco;
   const host = token === stanza.tokenHost;
   const mio = stanza.telefoni.get(token) ?? null;
-  const s = stanza.stato;
-  const soloHost = () => {
-    if (!host) throw new Error("Solo chi ha creato la partita può farlo");
-  };
+  const momento = g.momento(stanza.stato);
+  const posto = Number((a as { posto?: unknown }).posto);
 
-  let azione: AzioneOnline;
   switch (a.tipo) {
     case "occupa":
       if (mio !== null) throw new Error("Hai già scelto il tuo nome");
-      if (s.fase !== "sala") throw new Error("La partita è già iniziata: aspetta la prossima");
-      azione = { tipo: "occupa", posto: a.posto };
+      if (momento !== "sala") throw new Error("La partita è già iniziata: aspetta la prossima");
+      stanza.stato = g.applica(stanza.stato, { tipo: "occupa", posto });
+      stanza.telefoni.set(token, posto);
       break;
     case "libera": {
-      if (!host && a.posto !== mio) throw new Error("Puoi liberare solo il tuo nome");
-      const inCorso = s.fase !== "sala" && s.fase !== "fine";
+      if (!host && posto !== mio) throw new Error("Puoi liberare solo il tuo nome");
+      const inCorso = momento === "inCorso";
       if (inCorso && !host) throw new Error("Durante la partita solo l'organizzatore può liberare un posto");
-      for (const [t, p] of stanza.telefoni) if (p === a.posto) stanza.telefoni.set(t, null);
-      stanza.ultimaAttivita = Date.now();
+      for (const [t, p] of stanza.telefoni) if (p === posto) stanza.telefoni.set(t, null);
       // Partita in corso: il giocatore resta nella partita, cambia solo il telefono che lo rappresenta.
-      if (inCorso) return;
-      azione = { tipo: "libera", posto: a.posto };
+      if (!inCorso) stanza.stato = g.applica(stanza.stato, { tipo: "libera", posto });
       break;
     }
     case "riprendi": {
       if (mio !== null) throw new Error("Hai già un posto");
-      if (s.fase === "sala") throw new Error("Scegli il tuo nome dalla lista");
-      if (!s.inGioco.includes(a.posto)) throw new Error("Questo giocatore non partecipa");
-      const titolari = [...stanza.telefoni].filter(([, p]) => p === a.posto).map(([t]) => t);
+      if (momento === "sala") throw new Error("Scegli il tuo nome dalla lista");
+      if (!g.inGioco(stanza.stato).includes(posto)) throw new Error("Questo giocatore non partecipa");
+      const titolari = [...stanza.telefoni].filter(([, p]) => p === posto).map(([t]) => t);
       if (titolari.some(connesso)) {
         throw new Error("Quel giocatore risulta collegato da un altro telefono: se è il tuo, chiedi all'organizzatore di liberarlo");
       }
       for (const t of titolari) stanza.telefoni.set(t, null);
-      stanza.telefoni.set(token, a.posto);
+      stanza.telefoni.set(token, posto);
       // Se il posto era dell'organizzatore (telefono caduto e perso), chi lo riprende lo diventa.
       if (titolari.includes(stanza.tokenHost)) stanza.tokenHost = token;
-      stanza.ultimaAttivita = Date.now();
-      return;
-    }
-    case "avvia":
-      soloHost();
-      azione = { tipo: "avvia", seme: randomInt(2 ** 32) };
-      break;
-    case "avanti":
-      soloHost();
-      azione = { tipo: "avanti" };
-      break;
-    case "nuova":
-      soloHost();
-      azione = { tipo: "nuova" };
-      break;
-    case "visto":
-      if (mio === null) return;
-      azione = { tipo: "visto", posto: mio };
-      break;
-    case "indizio":
-      if (mio === null) throw new Error("Scegli prima il tuo nome");
-      azione = { tipo: "indizio", chi: mio, testo: String(a.testo ?? "") };
-      break;
-    case "vota": {
-      // Si vota solo dal proprio telefono: nessuno vota per un altro.
-      if (mio === null) throw new Error("Scegli prima il tuo nome");
-      azione = { tipo: "vota", chi: mio, posto: a.posto };
       break;
     }
-    case "tenta":
-      if (mio === null || mio !== s.eliminato) throw new Error("Solo l'impostore scoperto può tentare");
-      azione = { tipo: "tenta", testo: a.testo };
-      break;
+    default: {
+      const azione = g.traduci(stanza.stato, { posto: mio, host, seme: () => randomInt(2 ** 32) }, a as RichiestaOnline);
+      if (azione === null) return;
+      stanza.stato = g.applica(stanza.stato, azione);
+    }
   }
-
-  stanza.stato = applica(s, azione);
-  if (azione.tipo === "occupa") stanza.telefoni.set(token, azione.posto);
   stanza.ultimaAttivita = Date.now();
 }

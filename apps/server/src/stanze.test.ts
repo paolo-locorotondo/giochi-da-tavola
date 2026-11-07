@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { creaStanza, eseguiAzione, vistaDi } from "./stanze";
+import { creaStanza, eseguiAzione } from "./stanze";
+import { vistaDi as vistaGenerica } from "./stanze";
+import type { Vista } from "@gdt/impostore/online";
+
+/** La vista con il tipo di Impostore (il server la tratta senza tipo). */
+const vistaDi = (...a: Parameters<typeof vistaGenerica>): Vista => vistaGenerica(...a);
 
 const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: false, lingua: "it" as const };
 

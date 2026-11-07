@@ -2,9 +2,8 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
-import { mancanti } from "@gdt/impostore/online";
 import { WebSocketServer, type WebSocket } from "ws";
-import { creaStanza, eseguiAzione, nuovoCodice, nuovoToken, vistaDi, type DaClient, type DaServer, type Stanza } from "./stanze";
+import { creaStanza, eseguiAzione, mancantiDi, nuovoCodice, nuovoToken, vistaDi, type DaClient, type DaServer, type Stanza } from "./stanze";
 
 /**
  * Server di gioco: serve l'app (cartella `STATIC_DIR`) e tiene le partite via WebSocket su `/ws`.
@@ -135,7 +134,7 @@ wss.on("connection", (ws) => {
           if (!Array.isArray(m.nomi) || m.nomi.length > MAX_NOMI) throw new Error(`Al massimo ${MAX_NOMI} giocatori`);
           token = nuovoToken();
           const codice = nuovoCodice(stanze);
-          stanza = creaStanza(codice, m.nomi, m.config, token);
+          stanza = creaStanza(codice, m.nomi, m.config, token, m.gioco);
           stanze.set(codice, stanza);
           collega(ws, stanza, token);
           break;
@@ -156,7 +155,7 @@ wss.on("connection", (ws) => {
           break;
         case "sollecita": {
           if (!stanza || token !== stanza.tokenHost) throw new Error("Solo l'organizzatore può sollecitare");
-          const da = new Set(mancanti(stanza.stato));
+          const da = new Set(mancantiDi(stanza));
           for (const [t, socket] of connessioni.get(stanza.codice) ?? []) {
             const p = stanza.telefoni.get(t);
             if (p != null && da.has(p)) for (const w of socket) invia(w, { t: "sollecito" });

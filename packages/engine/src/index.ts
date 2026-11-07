@@ -15,3 +15,4 @@ export type { DefinizioneFasi, Macchina } from "./fasi";
 export { creaGiocatori } from "./giocatori";
 export type { Giocatore } from "./giocatori";
 export { MAX_CARATTERI_NOME, limitaRighe, limitaTesto } from "./testo";
+export type { ContestoOnline, GiocoOnline, MomentoOnline, PresenzeOnline, RichiestaOnline } from "./online";

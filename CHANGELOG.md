@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Interno
+
+- Server di gioco generico: `apps/server` non dipende più da Impostore. Ogni gioco online espone un `GiocoOnline` (contratto in `@gdt/engine`: `nuovoStato`, `applica`, `traduci` con i permessi, `vistaPer`, `momento`, `inGioco`) e si registra in `apps/server/src/giochi.ts`. Il messaggio `crea` accetta `gioco` (assente = Impostore, per i client di prima). Primo passo del Tris online (`docs/piano-tris-online.md`).
+
 ## [0.9.0] - 2026-11-07
 
 ### Aggiunto
