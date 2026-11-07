@@ -1,0 +1,87 @@
+.tris {
+  gap: 1.1rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.tris-opzioni-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.tris-opzioni-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.tris-stato {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-titoli);
+  font-size: 1.25rem;
+  font-weight: 700;
+  min-height: 1.75rem;
+  overflow-wrap: anywhere;
+}
+
+/* Griglia 3×3: caselle quadrate, larghe quanto lo schermo fino a un massimo */
+.tris-griglia {
+  align-self: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: min(100%, 20rem);
+}
+
+.tris-casella {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-titoli);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--fg);
+  background: var(--s1);
+  border: var(--bw, 1px) solid var(--bd-ctrl);
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: transform var(--durata-pressione, 120ms);
+}
+
+.tris-casella:active:not([aria-disabled="true"]) {
+  transform: translateY(2px);
+}
+
+.tris-casella[aria-disabled="true"] {
+  cursor: default;
+}
+
+.tris-casella:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.tris-X {
+  color: var(--ac);
+}
+
+.tris-O {
+  color: var(--ac2);
+}
+
+.tris-vincente {
+  background: var(--s2);
+  border-color: var(--ac);
+  border-width: 2px;
+}
+
+.tris-punteggio {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.tris-punteggio h3 {
+  margin: 0;
+}

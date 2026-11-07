@@ -3,12 +3,12 @@ import { fissaCaso, schermata } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
-test("menu: elenca i quattro giochi", async ({ page }) => {
+test("menu: elenca i cinque giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
-  await expect(page.locator("a.gioco")).toHaveCount(4);
+  await expect(page.locator("a.gioco")).toHaveCount(5);
   // Tutti si giocano offline; solo Impostore anche online.
-  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(4);
+  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(5);
   await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(1);
   await expect(page.locator("a.gioco", { hasText: "Impostore" }).getByRole("img", { name: /online/ })).toHaveCount(1);
   await schermata(page, "menu");
@@ -16,7 +16,7 @@ test("menu: elenca i quattro giochi", async ({ page }) => {
 
 test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Impostore", "Lupus in fabula", "Tabù"]);
+  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Impostore", "Lupus in fabula", "Tabù", "Tris"]);
   await expect(page.getByRole("searchbox")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
@@ -32,7 +32,7 @@ test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
   await expect(page.getByRole("searchbox")).toHaveCount(0);
-  await expect(page.locator("a.gioco")).toHaveCount(4);
+  await expect(page.locator("a.gioco")).toHaveCount(5);
 });
 
 test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {

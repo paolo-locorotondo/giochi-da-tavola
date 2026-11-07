@@ -18,9 +18,10 @@ Giochi, in ordine:
    telefono con narratore a voce; la versione ognuno col suo telefono è il prossimo passo.
 3. **Tabù** — due squadre, timer, carte con parola vietata. Resta **solo a un telefono**:
    il telefono deve passare di mano, giocarlo online non avrebbe senso.
-4. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
+4. **Tris** — tre in fila, contro il telefono o in due; online da fare.
+5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
-5. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
+6. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
 ## Piattaforma
@@ -155,7 +156,8 @@ giochi-da-tavola/
 │   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
 │   ├── lupus/      → regole e UI a un telefono
 │   ├── tabu/       → regole, carte e UI
-│   └── dadi/       → lancio, modelli di dado e UI
+│   ├── dadi/       → lancio, modelli di dado e UI
+│   └── tic-tac-toe/ → regole, telefono avversario (minimax) e UI
 ├── Dockerfile, docker-compose.yml
 └── docs/           → questo file e le guide
 ```
@@ -199,7 +201,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 - Grafica: stile «Tavolo» fatto; altri stili (Argilla, Quiz) solo se richiesti.
 - Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
 - Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
-- TODO **Tic-Tac-Toe** (nuovo gioco, con le due modalità: un telefono e online). Esiste già una versione in `F:\Paolo_Work\MyProjects	ic-tac-toe` (`game.js`, `online.js`, `server.js`, `TODO.md`, `WebSocket.md`, test in `test/`). Prima leggerla e decidere: se conviene **estrarne** logica e server (portando la logica in TypeScript puro in `games/tic-tac-toe/`, il protocollo online nel server esistente) oppure **ricrearlo da zero** «simile» seguendo le regole del progetto (logica pura separata dalla UI, `@gdt/i18n` it/en, dati e testi nei file, stile «Tavolo», README del gioco, test unitari ed e2e, verifica visiva a 375 px). Il repo è pubblico: non copiare nulla di non pubblicabile.
+- TODO **Tris, modalità online**: il gioco c'è (v0.9.0, `games/tic-tac-toe`, ricreato da zero, un telefono: contro il telefono a tre livelli o in due). Manca ognuno col suo telefono: `apps/server` oggi è specifico di Impostore (`DaClient`/`DaServer`, `stanze.ts`), quindi va generalizzato (stanze per gioco) o va aggiunto un canale. Dal vecchio progetto (`../tic-tac-toe`) si può riprendere l'idea della partita veloce con coda (non il codice); chi inizia alterna a ogni rivincita.
 - TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
 - TODO Lupus, nuovi ruoli: i test ora coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
   Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo

@@ -23,6 +23,7 @@ deterministico: stesso seme, stesso risultato, nessuna rete e nessun browser.
 | `games/impostore` | partita dal seme, validazione dei campi, sessione a un telefono, parole (formato e duplicati), parole recenti, tutta la partita online (`regole.test.ts`: stanza, carte, indizi scritti, voto, ballottaggio, tentativo, privacy della vista) |
 | `games/lupus` | distribuzione dei ruoli per 4–20 giocatori, candidati della notte, risoluzione della notte, voto e ballottaggio, vittoria, partite intere con molti semi |
 | `games/tabu` | punti del turno, alternanza delle squadre, fine e pareggio, qualità delle carte, nomi di default |
+| `games/tic-tac-toe` | le 8 linee vincenti, pareggio, mosse non valide, «difficile» che non perde mai e pareggia contro sé stesso, riproducibilità con un seme |
 | `games/dadi` | lancio sempre valido e riproducibile con un seme, distribuzione uniforme anche col generatore crittografico, valori personalizzati, qualità dei modelli |
 | `apps/server` | permessi di ogni azione, token, codici stanza, rientro, privacy della vista per ogni telefono |
 

@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.9.0] - 2026-11-07
+
+### Aggiunto
+
+- Nuovo gioco **Tris** (`/tris`), a un telefono: contro il telefono (facile, medio, difficile; il difficile non perde mai) oppure in due. Sceglie il segno X/O, chi inizia alterna a ogni partita, punteggio della serie. Italiano e inglese. La modalità online non c'è ancora (punto aperto in `docs/decisioni.md`).
+
 ## [0.8.2] - 2026-11-07
 
 ### Aggiunto

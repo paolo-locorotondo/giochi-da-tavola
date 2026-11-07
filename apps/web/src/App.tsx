@@ -3,6 +3,7 @@ import { DadiApp, manifest as dadi } from "@gdt/dadi";
 import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
 import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
+import { TrisApp, manifest as tris } from "@gdt/tic-tac-toe";
 
 import { applicaLingua, usaLingua, usaT, type Lingua, type TestiGioco } from "@gdt/i18n";
 
@@ -27,6 +28,7 @@ const giochi: VoceGioco[] = [
   { ...lupus, Componente: LupusApp },
   { ...tabu, Componente: TabuApp },
   { ...dadi, Componente: DadiApp },
+  { ...tris, Componente: TrisApp },
 ];
 
 /** Il gioco indicato dall'indirizzo: `/impostore`, `/impostore/ABC123`, ... */
@@ -59,6 +61,7 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   lupus: "luna",
   tabu: "divieto",
   dadi: "dadi",
+  tris: "griglia",
 };
 
 function Versione() {

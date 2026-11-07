@@ -15,6 +15,7 @@ segrete (una parola, un ruolo), guida le fasi del gioco e raccoglie le scelte qu
 | **Lupus in fabula**: ruoli segreti, notte e giorno, voto | Un telefono con narratore a voce (online: in arrivo) | [Leggi la guida](games/lupus/README.md) |
 | **Tabù**: due squadre, timer, parole vietate | Un telefono | [Leggi la guida](games/tabu/README.md) |
 | **Dadi**: moneta, D4…D20 e dado con i valori che vuoi | Un telefono | [Leggi la guida](games/dadi/README.md) |
+| **Tris**: tre in fila, contro il telefono o in due | Un telefono (online: in arrivo) | [Leggi la guida](games/tic-tac-toe/README.md) |
 
 Due modi di giocare: **un solo telefono** (il telefono passa di mano, nessuna rete) oppure
 **ognuno col suo telefono**, che richiede il server di gioco.
