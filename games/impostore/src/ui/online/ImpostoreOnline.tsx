@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { suona } from "@gdt/suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
 import { categorie, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
@@ -705,6 +706,10 @@ function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number
 
 function Fine({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
   const f = v.fine;
+  const vincitore = f?.vincitore;
+  useEffect(() => {
+    if (vincitore) suona(vincitore === "civili" ? "civili" : "impostori");
+  }, [vincitore]);
   if (!f) return null;
   const e = v.ultimoEsito;
   return (

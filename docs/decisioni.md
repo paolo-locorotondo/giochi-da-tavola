@@ -172,7 +172,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-- Piano di test (da fare): provare uno per uno i comandi pnpm della tabella in docs/sviluppo.md e la prova in locale; sospetto che qualcosa non funzioni.
+- Test grafici: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Manca un test automatico con più telefoni veri per la partita online.
 - Prova su telefoni veri: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro.
 - Lupus ognuno col suo telefono (ruoli segreti, notte, voto).
 - Prova del server online su Render (condizioni del piano gratuito da verificare).
@@ -183,10 +183,10 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 - Licenza del repository (README: "Da definire").
 - Turborepo sì/no (si può decidere più avanti).
 - Vercel: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). Da scollegare anche dalla dashboard di Vercel.
-- Grafica: la sistemazione dell'interfaccia (UI/UX) è il prossimo passo, con skill dedicate e test grafici (Playwright, con screenshot su un solo sistema operativo).
+- Grafica: stile «Tavolo» fatto; altri stili (Argilla, Quiz) solo se richiesti.
 - Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
 - Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
-- TODO Lupus, nuovi ruoli: quando i test coprono tutti i casi, sessione dedicata.
+- TODO Lupus, nuovi ruoli: i test ora coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
   Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo
   notturno ha una sua fase (come veggente e medico) e `risolviNotte` applica gli effetti.
   Per aggiungerne molti conviene trasformare le fasi in una lista di ruoli notturni ordinati,

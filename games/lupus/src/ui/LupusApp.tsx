@@ -1,6 +1,6 @@
-import { useEffect, useReducer, useState, type FormEvent } from "react";
-import { creaGiocatori } from "@gdt/engine";
+import { useEffect, useReducer, useRef, useState, type FormEvent } from "react";
 import {
+  candidatiNotte,
   contaVoti,
   lupiConsigliati,
   riduci,
@@ -8,6 +8,8 @@ import {
   type Ruolo,
   type Stato,
 } from "../logica";
+import { validaConfigurazione } from "../validazione";
+import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
 import { parla, silenzio } from "./voce";
 import "./lupus.css";
 
@@ -23,6 +25,14 @@ const DESCRIZIONE_RUOLO: Record<Ruolo, string> = {
   contadino: "Non hai poteri: scopri i lupi parlando e votando.",
   veggente: "Ogni notte scopri se un giocatore è un lupo.",
   medico: "Ogni notte proteggi un giocatore dai lupi (non lo stesso due notti di fila).",
+};
+
+/** Il verso di chi muore, uno per ruolo: con un ruolo nuovo il compilatore chiede il suo suono. */
+const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
+  lupo: "mortoLupo",
+  contadino: "mortoContadino",
+  veggente: "mortoVeggente",
+  medico: "mortoMedico",
 };
 
 const CHIAVE = "gdt-lupus-partita";
@@ -59,14 +69,31 @@ export function LupusApp() {
   // La partita sopravvive al refresh della pagina.
   useEffect(() => salvaStato(s), [s]);
   const [voce, setVoce] = useState(true);
+  // L'interruttore audio delle impostazioni comanda su tutto: spento, la voce si ferma; riacceso, riparte la fase corrente.
+  const [audio, setAudio] = useState(audioAttivo);
+  useEffect(() => seguiAudio(() => setAudio(audioAttivo())), []);
 
   // Il narratore parla quando cambia la fase.
   useEffect(() => {
-    if (!voce || s.giocatori.length === 0) return;
+    if (!voce || !audio || s.giocatori.length === 0) return;
     const testo = frasePerFase(s);
     if (testo) parla(testo);
     return silenzio;
-  }, [s.fase, s.notte, s.ballottaggio, s.eliminato, voce, s.giocatori.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.fase, s.notte, s.ballottaggio, s.eliminato, voce, audio, s.giocatori.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Suoni di scena: ululato quando scende la notte, gallo all'alba. Il verso del morto solo se il narratore ne dice il ruolo.
+  const faseSuoni = useRef(s.fase);
+  useEffect(() => {
+    const prima = faseSuoni.current;
+    faseSuoni.current = s.fase;
+    if (prima === s.fase) return;
+    const morto = s.fase === "alba" ? s.mortiNotte[0] : s.fase === "esito" ? s.eliminato : null;
+    if (s.fase === "lupi") suona("ululato");
+    else if (s.fase === "alba") suona("gallo");
+    if (s.svelaRuoli && morto !== null && morto !== undefined) {
+      suona(SUONO_MORTO[s.ruoli[morto] ?? "contadino"], s.fase === "alba" ? 1.5 : 0);
+    }
+  }, [s.fase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (s.giocatori.length === 0) {
     return (
@@ -102,6 +129,7 @@ export function LupusApp() {
       <label className="voce">
         <input type="checkbox" checked={voce} onChange={(e) => setVoce(e.target.checked)} /> Voce
         del narratore
+        {audio ? "" : " (audio spento nelle impostazioni)"}
       </label>
       {contenuto}
       {/* Se il narratore gioca o il telefono passa di mano, i ruoli restano coperti. */}
@@ -188,16 +216,12 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
 
   function invia(e: FormEvent) {
     e.preventDefault();
-    try {
-      creaGiocatori(nomi);
-    } catch (err) {
-      setErrore(err instanceof Error ? err.message : "Nomi non validi");
+    const problema = validaConfigurazione(nomi);
+    if (problema) {
+      setErrore(problema);
       return;
     }
-    if (nomi.length < 4) {
-      setErrore("Servono almeno 4 giocatori");
-      return;
-    }
+    setErrore(null);
     onAvvia(nomi, svela, narratoreGioca);
   }
 
@@ -227,15 +251,14 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
           checked={narratoreGioca}
           onChange={(e) => setNarratoreGioca(e.target.checked)}
         />
-        Il narratore gioca (il telefono resta al centro, senza elenco dei ruoli)
+        {narratoreGioca
+          ? "Il narratore gioca (il telefono resta al centro e non compare l'elenco dei giocatori con ruoli e stato vivo/morto)"
+          : "Il narratore non gioca (il telefono lo tiene il narratore, che avrà a supporto l'elenco dei giocatori con ruoli e stato vivo/morto)"}
       </label>
       {errore && <p className="errore">{errore}</p>}
       <button className="btn primario" type="submit">
         Inizia
       </button>
-      <p className="suggerimento">
-        Il telefono fa da narratore: mettilo al centro del tavolo con il volume alto.
-      </p>
     </form>
   );
 }
@@ -287,12 +310,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const fase = s.fase as keyof typeof TITOLO_NOTTE;
   const scelto = fase === "lupi" ? s.vittima : fase === "veggente" ? s.ispezionato : s.protetto;
   // I lupi non possono sbranarsi tra loro e il veggente non indaga su di sé; il medico non può ripetere la stessa protezione.
-  const candidati = s.vivi.filter((p) => {
-    if (fase === "lupi") return s.ruoli[p] !== "lupo";
-    if (fase === "veggente") return s.ruoli[p] !== "veggente";
-    if (fase === "medico") return p !== s.ultimoProtetto;
-    return true;
-  });
+  const candidati = candidatiNotte(s);
   // Il veggente vede una sola persona: scelta fatta, gli altri nomi si bloccano.
   const bloccato = (p: number) => fase === "veggente" && s.ispezionato !== null && s.ispezionato !== p;
   const risultato =
@@ -421,6 +439,9 @@ function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
 }
 
 function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
+  useEffect(() => {
+    suona(s.vincitore === "villaggio" ? "fineContadini" : "fineLupi");
+  }, [s.vincitore]);
   return (
     <section className="schermata">
       <h2>{s.vincitore === "villaggio" ? "Vince il villaggio!" : "Vincono i lupi!"}</h2>

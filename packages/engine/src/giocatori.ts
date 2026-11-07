@@ -1,5 +1,5 @@
 export interface Giocatore {
-  /** Numero di posto al tavolo, a partire da 1. È ciò che il telefono inserisce nel livello 1. */
+  /** Numero di posto al tavolo, a partire da 1. Identifica il giocatore in partita. */
   posto: number;
   nome: string;
 }

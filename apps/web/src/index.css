@@ -51,7 +51,153 @@ h1 {
   cursor: pointer;
 }
 
-/* Barra dentro un gioco: indietro a sinistra, nome al centro, tema a destra */
+/* Impostazioni: finestra modale (<dialog>) a scheda centrata */
+.impostazioni {
+  width: min(32rem, calc(100% - 2rem));
+  max-height: 85dvh;
+  margin: auto;
+  padding: 1rem;
+  overflow: hidden;
+  color: var(--fg);
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+}
+
+/* Colonna: testata fissa in alto, corpo che scorre (display solo da aperto, altrimenti il dialog non si nasconde) */
+.impostazioni[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.impostazioni-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.impostazioni::backdrop {
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.impostazioni-testata {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.impostazioni-testata h2 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-size: 1.15rem;
+  color: var(--ac);
+}
+
+.impostazioni-voci {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.impostazioni-voce {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 56px;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  color: var(--fg);
+  background: var(--s2);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 2px);
+  cursor: pointer;
+}
+
+.impostazioni-voce:has(.interruttore) {
+  justify-content: space-between;
+}
+
+.impostazioni-voce-testo {
+  flex: 1;
+}
+
+
+/* Interruttore animato: solo transform e colore */
+.interruttore {
+  flex: none;
+  width: 48px;
+  height: 28px;
+  padding: 3px;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: 999px;
+  transition: background-color var(--durata-apri) ease;
+}
+
+.interruttore-pomello {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: var(--mu);
+  border-radius: 50%;
+  transition: transform var(--durata-apri) ease, background-color var(--durata-apri) ease;
+}
+
+[aria-checked="true"] > .interruttore {
+  background: var(--ac);
+}
+
+[aria-checked="true"] > .interruttore > .interruttore-pomello {
+  background: var(--on-ac);
+  transform: translateX(20px);
+}
+
+.regole-sezione {
+  margin: 1.25rem 0 0.5rem;
+  font-family: var(--font-titoli);
+  font-size: 1.05rem;
+  color: var(--ac);
+}
+
+.regole-personaggi {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+  line-height: 1.45;
+}
+
+.regole-personaggi dt {
+  font-weight: 700;
+}
+
+.regole-personaggi dd {
+  margin: 0;
+  color: var(--mu);
+}
+
+.regole-passi {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.6rem;
+  line-height: 1.45;
+}
+
+.regole-nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
+/* Barra dentro un gioco: indietro a sinistra, nome al centro, impostazioni a destra */
 .barra-gioco {
   display: grid;
   grid-template-columns: 48px 1fr 48px;
@@ -138,6 +284,18 @@ a.tema-btn {
   padding: 0;
   display: grid;
   gap: 0.75rem;
+}
+
+/* Riga dell'elenco: il gioco (link) e, staccato a destra, il libro del regolamento */
+.riga-gioco {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.riga-gioco > .gioco {
+  flex: 1;
+  min-width: 0;
 }
 
 .gioco {

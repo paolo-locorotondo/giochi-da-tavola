@@ -2,21 +2,30 @@
 
 Requisiti: Node.js 20 o superiore e pnpm 9. Dal terminale di Visual Studio Code:
 
-| Comando | Cosa fa |
-|---|---|
-| `pnpm install` | Prepara tutto (solo la prima volta, o dopo un aggiornamento delle dipendenze) |
-| `pnpm dev` | Apre l'app sul computer, su `http://localhost:5173`. Si aggiorna da sola quando salvi un file. Vanno solo i giochi a un telefono |
-| `pnpm dev:rete` | Come `pnpm dev`, ma raggiungibile anche dagli altri dispositivi della stessa rete (telefono, tablet): Vite stampa un indirizzo "Network" tipo `http://192.168.1.20:5173`. Su Windows serve la regola del firewall |
-| `pnpm dev:server` | Avvia il server di gioco (porta 8080). Insieme a `pnpm dev` in un altro terminale permette di provare "ognuno col suo telefono" mentre si modifica il codice, da `http://localhost:5173/impostore`. Per giocare e basta usa `docker compose up` |
-| `pnpm anteprima` | Fa la build vera e la serve. È l'unico modo per provare in locale l'installazione e l'uso offline, che in `pnpm dev` non ci sono. Funziona su `localhost`, non dal telefono in `http://192.168…` (manca l'HTTPS) |
-| `pnpm typecheck`, `pnpm test`, `pnpm build` | Controlli prima di pubblicare, in quest'ordine |
+## Quale comando uso, e quale indirizzo apro
+
+Due soli modi di far girare l'app. **Apri sempre l'indirizzo della riga che hai lanciato**, gli altri non sono pagine da visitare.
+
+| Voglio... | Comando | Indirizzo da aprire |
+|---|---|---|
+| **Modificare il codice** e vedere subito l'effetto (anche online e dal telefono) | `pnpm dev` | **`http://localhost:5173`** (dal telefono: l'indirizzo `Network` che stampa) |
+| **Giocare davvero**, o provare installazione e offline (build vera) | `docker compose up` | **`http://localhost:8080`** |
+
+Cosa succede con `pnpm dev`: parte il sito (porta 5173, è l'unica pagina da aprire) e, dietro le quinte, il server
+delle partite online (porta 8081, senza pagine: aprirla mostra solo un avviso). Il sito parla da solo col server.
+Su Windows, per aprirlo dal telefono serve la regola del firewall (vedi sotto).
+
+Prima volta: `pnpm install`.
+
+Controlli prima di pubblicare, in quest'ordine: `pnpm typecheck`, `pnpm test`, `pnpm build`.
+`pnpm test` fa test unitari e grafici: vedi [test.md](test.md).
 
 Per fermare un comando: clicca nel terminale e premi **Ctrl + C**.
 
-Per aprire l'app dal telefono, la prima volta su Windows serve un'autorizzazione del firewall: è spiegata
-nella sezione "Provarlo sul telefono" della [guida di Impostore](../games/impostore/README.md#provarlo-sul-telefono).
+Per aprire l'app dal telefono, la prima volta su Windows serve un'autorizzazione del firewall: passi completi in
+[provare-in-locale.md](provare-in-locale.md).
 
-Ogni gioco ha la sua guida con cosa controllare e come provarlo: vedi la cartella `games/`.
+Ogni gioco ha la sua guida con cosa controllare e come provarlo: vedi la cartella `games/`. Come sono fatti i test: [test.md](test.md).
 
 ## Struttura
 
@@ -24,7 +33,9 @@ Ogni gioco ha la sua guida con cosa controllare e come provarlo: vedi la cartell
 apps/web/        app contenitore: menu dei giochi
 apps/server/     server di gioco WebSocket (serve anche l'app)
 packages/engine/ motore condiviso: numeri casuali con seme, giocatori, codice partita, fasi
+packages/suoni/  audio: interruttore unico (spento di default) e suoni sintetizzati dei giochi
 games/           un gioco per cartella, ognuno con la sua guida
+apps/web/e2e/    test grafici (Playwright, 375 px, tema scuro e chiaro)
 docs/            guide e decisioni di progetto
 ```
 

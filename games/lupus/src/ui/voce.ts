@@ -1,7 +1,10 @@
+import { audioAttivo } from "@gdt/suoni";
+
 /** Narratore a voce con la sintesi vocale del telefono (funziona offline). */
 export function parla(testo: string): void {
   if (typeof speechSynthesis === "undefined") return;
   speechSynthesis.cancel();
+  if (!audioAttivo()) return;
   const u = new SpeechSynthesisUtterance(testo);
   u.lang = "it-IT";
   u.rate = 0.95;

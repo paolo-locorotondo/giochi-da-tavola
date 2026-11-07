@@ -21,18 +21,21 @@ Due modi di giocare: **un solo telefono** (il telefono passa di mano, nessuna re
 ## Provarla in locale
 
 ```
-pnpm install      # solo la prima volta
-pnpm dev          # giochi a un telefono, su http://localhost:5173
-docker compose up # app + server di gioco su http://localhost:8080 (anche "ognuno col suo telefono")
+pnpm install       # solo la prima volta
+pnpm dev           # per modificare il codice → apri SOLO http://localhost:5173
+docker compose up  # per giocare / build vera, installazione e offline → apri http://localhost:8080
 ```
 
-Requisiti: Node.js 20+, pnpm 9; Docker per il server.
+Con `pnpm dev` parte anche il server delle partite online (porta 8081), ma non ha pagine: non si apre. Entrambi i comandi
+sono raggiungibili anche dal telefono sulla stessa WiFi e includono "ognuno col suo telefono".
+Requisiti: Node.js 20+, pnpm 9; Docker per `docker compose`. Passi dettagliati: [docs/provare-in-locale.md](docs/provare-in-locale.md).
 
 ## Documentazione
 
 | Per... | Leggi |
 |---|---|
-| Comandi di sviluppo, test, struttura del repo | [docs/sviluppo.md](docs/sviluppo.md) |
+| Comandi di sviluppo, struttura del repo | [docs/sviluppo.md](docs/sviluppo.md) |
+| Test unitari e grafici, come aggiornarli | [docs/test.md](docs/test.md) |
 | Giocare dagli amici con il PC come server (WiFi/hotspot) | [docs/guida-giocare-con-il-pc.md](docs/guida-giocare-con-il-pc.md) |
 | Pubblicare il server o il sito online | [docs/guida-deploy-online.md](docs/guida-deploy-online.md) |
 | Capire stanze, dati sul browser, sicurezza | [docs/architettura-tecnica.md](docs/architettura-tecnica.md) |
@@ -42,4 +45,4 @@ Requisiti: Node.js 20+, pnpm 9; Docker per il server.
 
 ## Licenza
 
-Da definire.
+Da definire (punto aperto in [docs/decisioni.md](docs/decisioni.md)).

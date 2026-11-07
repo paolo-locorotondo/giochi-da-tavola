@@ -4,11 +4,9 @@ import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
 
 import { Icona, type NomeIcona } from "./Icona";
-import { impostaTema, temaAttuale, type Tema } from "./tema";
+import { Impostazioni, PulsanteRegolamento, type GiocoConRegole } from "./Impostazioni";
 
-interface VoceGioco {
-  id: string;
-  nome: string;
+interface VoceGioco extends GiocoConRegole {
   descrizione: string;
   Componente: () => ReactElement;
 }
@@ -45,25 +43,6 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   tabu: "divieto",
 };
 
-function InterruttoreTema() {
-  const [tema, setTema] = useState<Tema>(temaAttuale);
-  const scuro = tema === "dark";
-  return (
-    <button
-      type="button"
-      className="tema-btn"
-      aria-label={scuro ? "Passa al tema chiaro" : "Passa al tema scuro"}
-      onClick={() => {
-        const nuovo: Tema = scuro ? "light" : "dark";
-        impostaTema(nuovo);
-        setTema(nuovo);
-      }}
-    >
-      <Icona nome={scuro ? "sole" : "luna"} />
-    </button>
-  );
-}
-
 function Versione() {
   return <p className="versione">Giochi da tavola · v{__APP_VERSION__}</p>;
 }
@@ -77,16 +56,24 @@ export function App() {
     vai(a);
   };
 
+  // Dentro un gioco con un livello interno (es. la modalità di Impostore) la freccia fa un passo indietro,
+  // come il tasto del telefono; altrimenti riporta all'elenco dei giochi.
+  const indietro = (e: MouseEvent) => {
+    e.preventDefault();
+    if ((window.history.state as { gdtModo?: string } | null)?.gdtModo) window.history.back();
+    else vai("/");
+  };
+
   if (gioco) {
     const { Componente } = gioco;
     return (
       <main className="app">
         <header className="barra-gioco">
-          <a className="tema-btn" href="/" onClick={naviga("/")} aria-label="Torna ai giochi">
+          <a className="tema-btn" href="/" onClick={indietro} aria-label="Indietro">
             <Icona nome="indietro" />
           </a>
           <span className="barra-titolo">{gioco.nome}</span>
-          <InterruttoreTema />
+          <Impostazioni gioco={gioco} />
         </header>
         <Componente />
         <Versione />
@@ -98,11 +85,11 @@ export function App() {
     <main className="app">
       <header className="app-testata">
         <h1>Giochi da tavola</h1>
-        <InterruttoreTema />
+        <Impostazioni />
       </header>
       <ul className="lista-giochi">
         {giochi.map((g) => (
-          <li key={g.id}>
+          <li key={g.id} className="riga-gioco">
             <a className="gioco" href={`/${g.id}`} onClick={naviga(`/${g.id}`)}>
               <span className="gioco-icona">
                 <Icona nome={ICONE_GIOCHI[g.id] ?? "divieto"} dimensione={28} />
@@ -112,6 +99,7 @@ export function App() {
                 <span className="muted">{g.descrizione}</span>
               </span>
             </a>
+            <PulsanteRegolamento gioco={g} />
           </li>
         ))}
       </ul>

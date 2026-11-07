@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gdt/engine": "workspace:*"
+    "@gdt/engine": "workspace:*",
+    "@gdt/suoni": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.3.1"

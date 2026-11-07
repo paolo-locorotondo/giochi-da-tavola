@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { suona } from "@gdt/suoni";
 import type { Vista } from "../../online";
 
 /** Messaggi verso il server (specchio di apps/server/src/stanze.ts). */
@@ -111,7 +112,7 @@ export function useCollegamento(codiceIniziale: string | null): Collegamento {
           codiceRef.current = m.codice;
           setCodice(m.codice);
           salvaToken(m.codice, m.token);
-          window.history.replaceState(null, "", `/impostore/${m.codice}`);
+          window.history.replaceState(window.history.state, "", `/impostore/${m.codice}`);
         } else if (m.t === "vista") {
           setVista(m.vista);
           setSollecitato(false);
@@ -123,10 +124,11 @@ export function useCollegamento(codiceIniziale: string | null): Collegamento {
           setChiusa(true);
           setVista(null);
           setCodice(null);
-          window.history.replaceState(null, "", "/impostore");
+          window.history.replaceState(window.history.state, "", "/impostore");
         } else if (m.t === "sollecito") {
           setSollecitato(true);
           navigator.vibrate?.([200, 100, 200]);
+          suona("sollecito");
         } else {
           setErrore(m.messaggio);
         }

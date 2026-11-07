@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { suona } from "@gdt/suoni";
 import { CARTE } from "../carte";
 import {
   avanzaCarta,
@@ -13,6 +14,7 @@ import {
   type Partita,
   type Turno,
 } from "../logica";
+import { nomiSquadre } from "../validazione";
 import "./tabu.css";
 
 const TURNO_VUOTO: Turno = { corrette: [], saltate: [], errori: [] };
@@ -228,6 +230,7 @@ function Gioco({
       if (s === 0) {
         clearInterval(id);
         navigator.vibrate?.(400);
+        suona("fineTurno");
         fine.current();
       }
     }, 250);
@@ -250,19 +253,31 @@ function Gioco({
       <div className="comandi">
         <button
           className="btn primario"
-          onClick={() => onCambia({ ...turno, corrette: [...turno.corrette, c.parola] })}
+          data-suono="no"
+          onClick={() => {
+            suona("indovinata");
+            onCambia({ ...turno, corrette: [...turno.corrette, c.parola] });
+          }}
         >
           Indovinata (+1)
         </button>
         <button
           className="btn pericolo"
-          onClick={() => onCambia({ ...turno, errori: [...turno.errori, c.parola] })}
+          data-suono="no"
+          onClick={() => {
+            suona("vietata");
+            onCambia({ ...turno, errori: [...turno.errori, c.parola] });
+          }}
         >
           Vietata detta (−1)
         </button>
         <button
           className="btn passa"
-          onClick={() => onCambia({ ...turno, saltate: [...turno.saltate, c.parola] })}
+          data-suono="no"
+          onClick={() => {
+            suona("passa");
+            onCambia({ ...turno, saltate: [...turno.saltate, c.parola] });
+          }}
         >
           Passa
         </button>
@@ -270,6 +285,44 @@ function Gioco({
       <p className="muted">Punti del turno: {punteggioTurno(turno)}</p>
       <RiepilogoCarte turno={turno} />
     </section>
+  );
+}
+
+/** Numero con − e + (limiti min/max): più rapido di un menu su telefono. */
+function Selettore({
+  etichetta,
+  valore,
+  min,
+  max,
+  passo,
+  onCambia,
+}: {
+  etichetta: string;
+  valore: number;
+  min: number;
+  max: number;
+  passo: number;
+  onCambia: (v: number) => void;
+}) {
+  const imposta = (v: number) => onCambia(Math.min(max, Math.max(min, v)));
+  return (
+    <div className="campo" role="group" aria-label={etichetta}>
+      {etichetta}
+      <div className="selettore">
+        <button type="button" className="tema-btn" aria-label={`Meno ${etichetta.toLowerCase()}`} disabled={valore <= min} onClick={() => imposta(valore - passo)}>
+          −
+        </button>
+        <output className="selettore-valore" aria-live="polite">
+          {valore}
+        </output>
+        <button type="button" className="tema-btn" aria-label={`Più ${etichetta.toLowerCase()}`} disabled={valore >= max} onClick={() => imposta(valore + passo)}>
+          +
+        </button>
+      </div>
+      <span className="muted selettore-limiti">
+        da {min} a {max}
+      </span>
+    </div>
   );
 }
 
@@ -288,7 +341,7 @@ function Configurazione({
       className="schermata allineata"
       onSubmit={(e) => {
         e.preventDefault();
-        onAvvia([a.trim() || "Squadra 1", b.trim() || "Squadra 2"], turni, secondi);
+        onAvvia(nomiSquadre(a, b), turni, secondi);
       }}
     >
       <label className="campo">
@@ -299,26 +352,8 @@ function Configurazione({
         Seconda squadra
         <input value={b} onChange={(e) => setB(e.target.value)} />
       </label>
-      <label className="campo">
-        Turni per squadra
-        <select value={turni} onChange={(e) => setTurni(Number(e.target.value))}>
-          {[3, 4, 5, 6, 8, 10].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="campo">
-        Secondi per turno
-        <select value={secondi} onChange={(e) => setSecondi(Number(e.target.value))}>
-          {[30, 45, 60, 90, 120].map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Selettore etichetta="Turni per squadra" valore={turni} min={1} max={20} passo={1} onCambia={setTurni} />
+      <Selettore etichetta="Secondi per turno" valore={secondi} min={10} max={180} passo={5} onCambia={setSecondi} />
       <button className="btn primario" type="submit">
         Inizia
       </button>

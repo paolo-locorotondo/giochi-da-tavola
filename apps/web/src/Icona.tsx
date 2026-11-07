@@ -1,4 +1,18 @@
-import { ArrowLeft, Ban, EyeOff, Moon, Sun, Wifi, WifiOff, type LucideIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  Ban,
+  BookOpen,
+  EyeOff,
+  Moon,
+  Settings,
+  Sun,
+  Volume2,
+  VolumeX,
+  Wifi,
+  WifiOff,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 
 /* Solo le icone usate: l'import per nome tiene fuori dal bundle tutte le altre. */
 const ICONE = {
@@ -7,6 +21,11 @@ const ICONE = {
   "occhio-barrato": EyeOff,
   divieto: Ban,
   indietro: ArrowLeft,
+  impostazioni: Settings,
+  regolamento: BookOpen,
+  chiudi: X,
+  "volume-si": Volume2,
+  "volume-no": VolumeX,
   wifi: Wifi,
   "wifi-barrato": WifiOff,
 } satisfies Record<string, LucideIcon>;

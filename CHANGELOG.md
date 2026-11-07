@@ -7,6 +7,30 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 - **MINOR**: nuovi giochi o nuove modalità
 - **PATCH**: correzioni
 
+## [Non rilasciato]
+
+### Aggiunto
+
+- Test grafici (Playwright, 375 px, tema scuro e chiaro) per menu, Impostore, Lupus e Tabù; vedi `docs/test.md`.
+- Test unitari estesi a tutta la logica e alle validazioni (da circa 100 a 550 test): Lupus, Tabù, Impostore online, permessi del server, motore.
+- `pnpm test:unit`, `pnpm test:e2e`, `pnpm coverage`.
+- Regolamento nell'app: libro accanto a ogni gioco nel menu; dentro un gioco anche dall'ingranaggio. Si scorre solo il testo, titolo e X restano fermi. Lupus ha la sezione "I personaggi".
+- Impostazioni (ingranaggio in alto a destra): interruttori animati per tema scuro e audio. L'audio è spento di default: acceso, dà un suono a ogni pulsante e attiva i suoni dei giochi (Tabù: indovinata, vietata, passa e fine turno; Impostore: vittoria di civili o impostori e sollecito online; Lupus: voce del narratore, gallo all'alba, ululato all'inizio della notte, un verso per ogni ruolo di chi muore se il narratore ne dice il ruolo, e due suoni di fine partita per contadini e lupi). Spegnerlo ferma subito la voce in corso. Nuovo pacchetto `packages/suoni` (suoni sintetizzati, nessun file).
+
+### Cambiato
+
+- Impostore: la freccia indietro (e il tasto indietro del telefono) dalla modalità scelta torna a «Come giocate?», non al menu.
+- Tabù: turni (1–20) e secondi per turno (10–180, a passi di 5) si scelgono con − / + invece che da un elenco fisso.
+- Lupus: il testo della spunta del narratore cambia secondo la scelta; tolta la frase sotto «Inizia».
+- Impostore: testi aggiornati per la modalità online e per il giro degli indizi nel regolamento.
+- `pnpm dev`: la porta 8081 rimuove da sola un vecchio service worker rimasto da una build precedente.
+
+- Comandi di sviluppo: `pnpm dev` avvia sito e server di gioco insieme ed è raggiungibile anche dal telefono. Rimossi `pnpm dev:server`, `pnpm dev:rete` e `pnpm anteprima` (la build vera si prova con `docker compose up`).
+
+- Lupus: i candidati della notte (lupi, veggente, medico) si calcolano nella logica, non più nella schermata; il server di gioco e la UI usano le stesse regole. Il riduttore ora rifiuta scelte non valide.
+- Lupus: controllo dei nomi spostato in `validazione.ts` (stesso messaggio: servono almeno 4 giocatori).
+- Documentazione: README dei giochi snelliti (sezioni "Regolamento" e "Modalità di gioco" Offline/Online, comandi in breve); la guida passo passo e il firewall sono in `docs/provare-in-locale.md`; nuova guida `docs/test.md`; corretti il link a "Pubblicare" e il verso del giro in Impostore, la tabella dei dati sul browser, i conteggi di parole e carte.
+
 ## [0.4.2] - 2026-11-05
 
 ### Aggiunto

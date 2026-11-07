@@ -5,8 +5,9 @@ import pkg from "./package.json";
 
 export default defineConfig({
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
-  // In sviluppo il WebSocket passa al server di gioco (pnpm dev:server).
-  server: { proxy: { "/ws": { target: "ws://localhost:8080", ws: true } } },
+  // In sviluppo (pnpm dev) il sito è raggiungibile anche dal telefono sulla stessa rete (host: true)
+  // e il WebSocket passa al server di gioco, avviato insieme.
+  server: { host: true, proxy: { "/ws": { target: "ws://localhost:8081", ws: true } } },
   plugins: [
     react(),
     VitePWA({

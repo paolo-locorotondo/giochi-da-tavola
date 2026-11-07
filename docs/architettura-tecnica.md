@@ -10,8 +10,25 @@ telefono (browser)  ⇄  WebSocket /ws  ⇄  server Node (apps/server)  →  log
         └── scarica l'app (HTML/JS) dallo stesso server
 ```
 
-- **Server** (`apps/server`): un processo Node. Serve i file dell'app e tiene le partite. È lo stesso in
-  `docker compose up` sul PC e su un hosting online.
+È **un'unica applicazione** con due parti nel codice: il **sito** (`apps/web`, quello che si vede) e il
+**server di gioco** (`apps/server`, tiene le partite online). Quante porte vedi dipende solo da come la avvii:
+
+```
+pnpm dev            sito (Vite)      → http://localhost:5173   ← l'unico indirizzo da aprire
+                    server di gioco  → porta 8081, nessuna pagina; Vite gli inoltra /ws
+
+docker compose up   un solo processo → http://localhost:8080   (sito già costruito + partite, come online)
+```
+
+In sviluppo sono due processi per avere il ricaricamento istantaneo del sito. In produzione il server Node
+serve anche i file del sito, quindi è un processo solo.
+
+Nota: la porta 8081 non va mai aperta nel browser. Se ci hai aperto in passato una versione costruita del sito,
+il browser può aver tenuto un service worker (la parte offline della PWA) che continua a mostrare quella
+vecchia versione con F5; il server di sviluppo lo rimuove da solo, oppure: DevTools → Application → Service Workers → Unregister.
+
+- **Server** (`apps/server`): un processo Node. Serve i file dell'app (in produzione) e tiene le partite.
+  È lo stesso in `docker compose up` sul PC e su un hosting online.
 - **Logica di gioco** (es. `games/impostore/src/online`): funzioni pure `nuovoStato`, `applica`, `vistaPer`.
   Non conoscono la rete. Il server le chiama.
 - **Telefono**: mostra la "vista" ricevuta e manda richieste ("vota Anna"). Non decide nulla.
@@ -53,6 +70,10 @@ Solo `localStorage` (niente cookie, niente account, niente dati inviati a terzi)
 |---|---|---|
 | `gdt.impostore.token.<CODICE>` | il token del telefono per quella partita | alla chiusura della partita; altrimenti resta (pochi byte) finché non cancelli i dati del sito |
 | `gdt.impostore.recenti` | ultime parole uscite per categoria (modalità un telefono) | finché non cancelli i dati del sito |
+| `gdt-impostore-locale` | partita Impostore a un telefono in corso | a fine partita o con "Chiudi la partita" |
+| `gdt-lupus-partita` | partita Lupus in corso | a fine partita o con "Chiudi la partita" |
+| `gdt-tabu-partita` | partita Tabù in corso (un turno a metà riparte da "Via!": il timer non si riprende) | a fine partita o con "Chiudi la partita" |
+| `gdt-tema`, `gdt-stile` | tema scuro/chiaro scelto e stile grafico | finché non cancelli i dati del sito |
 
 Il service worker della PWA mette in cache i file dell'app per farla funzionare offline. Il browser, se
 l'archivio è bloccato (navigazione privata), continua a funzionare senza memoria: il refresh in quel caso fa perdere il posto.

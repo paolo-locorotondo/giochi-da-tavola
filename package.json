@@ -7,15 +7,18 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "pnpm --filter @gdt/web dev",
-    "dev:server": "pnpm --filter @gdt/server dev",
-    "dev:rete": "pnpm --filter @gdt/web dev --host",
-    "anteprima": "pnpm build && pnpm --filter @gdt/web preview",
+    "dev": "pnpm --parallel --filter @gdt/web --filter @gdt/server dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm test:unit && pnpm test:e2e",
+    "test:unit": "pnpm -r test",
+    "test:e2e": "pnpm --filter @gdt/web test:e2e",
+    "test:e2e:aggiorna": "pnpm --filter @gdt/web test:e2e:aggiorna",
+    "coverage": "vitest run --coverage --config vitest.coverage.config.ts"
   },
   "devDependencies": {
-    "typescript": "~5.6.3"
+    "@vitest/coverage-v8": "2.1.9",
+    "typescript": "~5.6.3",
+    "vitest": "2.1.9"
   }
 }

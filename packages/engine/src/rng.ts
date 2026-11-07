@@ -1,7 +1,7 @@
 /**
  * Generatore pseudocasuale deterministico (mulberry32).
- * Stesso seme → stessa sequenza, su qualsiasi telefono: serve per il livello 1
- * (ogni telefono ricalcola da solo la propria parola/ruolo).
+ * Stesso seme → stessa sequenza, su qualsiasi telefono: serve per rifare la stessa partita dal seme (test, partita salvata)
+ * e per tenere stabile il formato di `creaPartita`.
  * Usa solo aritmetica a 32 bit intera, quindi il risultato non dipende dalla piattaforma.
  */
 

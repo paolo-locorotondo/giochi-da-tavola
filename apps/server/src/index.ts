@@ -13,6 +13,8 @@ import { creaStanza, eseguiAzione, nuovoCodice, nuovoToken, vistaDi, type DaClie
 
 const PORTA = Number(process.env.PORT ?? 8080);
 const STATICI = resolve(process.env.STATIC_DIR ?? "../web/dist");
+/** Impostato da `pnpm dev` (src/dev.ts): il sito lo serve Vite, questo processo tiene solo le partite. */
+const SOLO_SERVER = process.env.SOLO_SERVER === "1";
 const ORE_INATTIVITA = 6;
 const MAX_STANZE = 300;
 const MAX_BYTE_MESSAGGIO = 4096;
@@ -40,6 +42,26 @@ const http = createServer((req, res) => {
   const percorso = decodeURIComponent((req.url ?? "/").split("?")[0] ?? "/");
   if (percorso === "/salute") {
     res.writeHead(200, { "content-type": "text/plain" }).end("ok");
+    return;
+  }
+  if (SOLO_SERVER && percorso === "/sw.js") {
+    // Se su questa porta è stato installato in passato il sito (service worker), qui si rimuove da solo.
+    res
+      .writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache" })
+      .end(
+        "self.addEventListener('install',()=>self.skipWaiting());" +
+          "self.addEventListener('activate',e=>e.waitUntil((async()=>{" +
+          "for(const k of await caches.keys())await caches.delete(k);" +
+          "await self.registration.unregister();" +
+          "for(const c of await self.clients.matchAll({type:'window'}))c.navigate(c.url);})()));",
+      );
+    return;
+  }
+  if (SOLO_SERVER) {
+    // `pnpm dev`: qui non c'è il sito (è su Vite), solo le partite via WebSocket.
+    res
+      .writeHead(200, { "content-type": "text/plain; charset=utf-8" })
+      .end("Questo è solo il server di gioco (pnpm dev). Il sito è su http://localhost:5173");
     return;
   }
   let file = normalize(join(STATICI, percorso));
@@ -181,6 +203,10 @@ setInterval(() => {
 }, 600_000);
 
 http.listen(PORTA, () => {
+  if (SOLO_SERVER) {
+    console.log(`Server di gioco avviato sulla porta ${PORTA} (nessuna pagina qui: apri il sito su http://localhost:5173)`);
+    return;
+  }
   console.log(`Giochi da tavola: server avviato sulla porta ${PORTA}`);
   console.log(`App servita da ${STATICI}`);
   console.log("");

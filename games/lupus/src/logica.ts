@@ -94,6 +94,19 @@ export function vincitore(ruoli: Record<number, Ruolo>, vivi: readonly number[])
   return null;
 }
 
+/**
+ * Chi si può scegliere nella fase notturna `fase`: solo i vivi; i lupi non sbranano altri lupi,
+ * il veggente non indaga su di sé e il medico non protegge due notti di fila la stessa persona.
+ */
+export function candidatiNotte(s: Stato, fase: Fase = s.fase): number[] {
+  return s.vivi.filter((p) => {
+    if (fase === "lupi") return s.ruoli[p] !== "lupo";
+    if (fase === "veggente") return s.ruoli[p] !== "veggente";
+    if (fase === "medico") return p !== s.ultimoProtetto;
+    return false;
+  });
+}
+
 export function haRuoloVivo(s: Stato, ruolo: Ruolo): boolean {
   return s.vivi.some((p) => s.ruoli[p] === ruolo);
 }
@@ -164,6 +177,7 @@ export function riduci(s: Stato, a: Azione): Stato {
       return nuovaNotte({ ...s, cartaMostrata: false });
     }
     case "scegli": {
+      if (!candidatiNotte(s).includes(a.posto)) return s;
       if (s.fase === "lupi") return { ...s, vittima: a.posto };
       // Il veggente guarda una sola persona a notte: dopo la prima scelta non si cambia.
       if (s.fase === "veggente") return s.ispezionato === null ? { ...s, ispezionato: a.posto } : s;

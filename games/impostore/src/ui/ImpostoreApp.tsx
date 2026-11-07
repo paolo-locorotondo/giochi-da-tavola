@@ -1,8 +1,10 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
-import { creaGiocatori, type Giocatore } from "@gdt/engine";
+import { suona } from "@gdt/suoni";
+import type { Giocatore } from "@gdt/engine";
 import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
+import { validaConfigurazione } from "../logic/validazione";
 import { categorie, paroleDi, type Categoria } from "../parole";
 import { leggiRecenti, ricordaParola } from "./recenti";
 import "./impostore.css";
@@ -171,7 +173,7 @@ function Configurazione({
 
   function invia(e: FormEvent) {
     e.preventDefault();
-    const problema = valida(nomi, numImpostori);
+    const problema = validaConfigurazione(nomi, numImpostori);
     if (problema) {
       setErrore(problema);
       return;
@@ -227,20 +229,6 @@ function Configurazione({
       </button>
     </form>
   );
-}
-
-/** Controlli sui dati della configurazione, prima di avviare la partita. */
-function valida(nomi: string[], numImpostori: number): string | null {
-  try {
-    creaGiocatori(nomi);
-  } catch (e) {
-    return e instanceof Error ? e.message : "Nomi non validi";
-  }
-  if (nomi.length < 3) return "Servono almeno 3 giocatori";
-  if (numImpostori * 2 >= nomi.length) {
-    return `Con ${nomi.length} giocatori gli impostori possono essere al massimo ${Math.floor((nomi.length - 1) / 2)}`;
-  }
-  return null;
 }
 
 function Carte({
@@ -369,6 +357,11 @@ function Fine({
   onNuova: () => void;
 }) {
   const esito = esitoSessione(sessione);
+  const vincitore = esito?.vincitore;
+  // Un suono diverso per chi ha vinto, una volta sola quando compare la schermata finale.
+  useEffect(() => {
+    if (vincitore) suona(vincitore === "civili" ? "civili" : "impostori");
+  }, [vincitore]);
   if (!esito) return null;
   const impostori = partita.impostori.map((p) => nomeDi(partita, p)).join(", ");
 
