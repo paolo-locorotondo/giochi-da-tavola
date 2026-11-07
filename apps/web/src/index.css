@@ -449,6 +449,31 @@ a.tema-btn {
   font-weight: 600;
 }
 
+/* Nome del gioco e, accanto, le modalità: offline (oro) e online (verde), stesse icone della scelta modalità */
+.gioco-titolo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.6rem;
+}
+
+.gioco-modi {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.modo-badge {
+  display: inline-flex;
+}
+
+.modo-badge--offline {
+  color: var(--ac);
+}
+
+.modo-badge--online {
+  color: var(--ac2);
+}
+
 .link {
   text-decoration: none;
   display: inline-flex;

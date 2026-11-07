@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.8.2] - 2026-11-07
+
+### Aggiunto
+
+- Home: accanto al nome di ogni gioco ci sono le icone delle modalità, le stesse della scelta in Impostore: offline (un solo telefono, oro) e online (ognuno col suo telefono, verde). Tutti i giochi hanno l'offline; l'online c'è solo in Impostore (`online: true` nel `manifest`).
+
 ## [0.8.1] - 2026-11-07
 
 ### Aggiunto

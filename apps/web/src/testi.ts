@@ -18,6 +18,8 @@ const it = {
   regolamentoDi: "Regolamento di {gioco}",
   regolamentoTitolo: "Regolamento · {gioco}",
   iPersonaggi: "I personaggi",
+  giocaOffline: "Si gioca offline, con un solo telefono",
+  giocaOnline: "Si gioca anche online, ognuno col suo telefono",
 } as const;
 
 export const dizionari: Dizionari<typeof it> = {
@@ -40,5 +42,7 @@ export const dizionari: Dizionari<typeof it> = {
     regolamentoDi: "Rules of {gioco}",
     regolamentoTitolo: "Rules · {gioco}",
     iPersonaggi: "The characters",
+    giocaOffline: "Playable offline, on one phone",
+    giocaOnline: "Also playable online, one phone each",
   },
 };

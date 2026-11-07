@@ -13,6 +13,8 @@ import { Impostazioni, PulsanteRegolamento, type GiocoConRegole } from "./Impost
 /** Ogni gioco dà l'identità (`id`) e una funzione che ne restituisce i testi nella lingua scelta. */
 interface ManifestGioco {
   id: string;
+  /** true = c'è anche la modalità online; tutti i giochi funzionano offline. */
+  online?: boolean;
   testi: (lingua: Lingua) => TestiGioco;
 }
 
@@ -35,7 +37,7 @@ function giocoDaPercorso(percorso: string): VoceGioco | undefined {
 
 /** Il gioco con i testi nella lingua corrente, come lo vogliono le schede (regolamento, impostazioni). */
 function conTesti(g: VoceGioco, lingua: Lingua): GiocoConRegole {
-  return { id: g.id, ...g.testi(lingua) };
+  return { id: g.id, online: g.online === true, ...g.testi(lingua) };
 }
 
 function usaPercorso(): [string, (a: string) => void] {
@@ -165,7 +167,19 @@ export function App() {
                 <Icona nome={ICONE_GIOCHI[g.id] ?? "divieto"} dimensione={28} />
               </span>
               <span className="gioco-testo">
-                <span className="gioco-nome">{g.nome}</span>
+                <span className="gioco-titolo">
+                  <span className="gioco-nome">{g.nome}</span>
+                  <span className="gioco-modi">
+                    <span className="modo-badge modo-badge--offline" role="img" aria-label={t("giocaOffline")}>
+                      <Icona nome="wifi-barrato" dimensione={20} />
+                    </span>
+                    {g.online && (
+                      <span className="modo-badge modo-badge--online" role="img" aria-label={t("giocaOnline")}>
+                        <Icona nome="wifi" dimensione={20} />
+                      </span>
+                    )}
+                  </span>
+                </span>
                 <span className="muted">{g.descrizione}</span>
               </span>
             </a>

@@ -7,6 +7,10 @@ test("menu: elenca i quattro giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
   await expect(page.locator("a.gioco")).toHaveCount(4);
+  // Tutti si giocano offline; solo Impostore anche online.
+  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(4);
+  await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(1);
+  await expect(page.locator("a.gioco", { hasText: "Impostore" }).getByRole("img", { name: /online/ })).toHaveCount(1);
   await schermata(page, "menu");
 });
 
