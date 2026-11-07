@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.5.0] - 2026-11-07
+
 ### Aggiunto
 
 - Test grafici (Playwright, 375 px, tema scuro e chiaro) per menu, Impostore, Lupus e Tabù; vedi `docs/test.md`.
