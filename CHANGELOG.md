@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.7.1] - 2026-11-07
+
+### Cambiato
+
+- La scelta della lingua mostra le bandiere (SVG).
+- README di Lupus: riportata la guida per aggiungere un personaggio (era stata tolta per errore), aggiornata alle lingue.
+
 ## [0.7.0] - 2026-11-07
 
 ### Aggiunto

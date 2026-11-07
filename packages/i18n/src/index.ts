@@ -28,21 +28,21 @@ export type Dizionari<D> = { it: D } & Record<Exclude<Lingua, "it">, Dizionario<
 export type Parametri = Record<string, string | number>;
 export type Traduttore<D> = (chiave: keyof D & string, parametri?: Parametri) => string;
 
-function èLingua(v: unknown): v is Lingua {
+function eLingua(v: unknown): v is Lingua {
   return typeof v === "string" && (LINGUE as readonly string[]).includes(v);
 }
 
 /** Dalla lingua del telefono: se è una delle nostre, quella; altrimenti l'italiano. */
 export function linguaDelTelefono(): Lingua {
   const codice = typeof navigator === "undefined" ? "" : (navigator.language ?? "").slice(0, 2).toLowerCase();
-  return èLingua(codice) ? codice : LINGUA_PREDEFINITA;
+  return eLingua(codice) ? codice : LINGUA_PREDEFINITA;
 }
 
 /** Lingua scelta dall'utente su questo telefono; se non ha scelto, quella del telefono. */
 export function leggiLingua(): Lingua {
   try {
     const v = localStorage.getItem(CHIAVE);
-    if (èLingua(v)) return v;
+    if (eLingua(v)) return v;
   } catch {
     /* storage non disponibile */
   }

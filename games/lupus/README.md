@@ -65,6 +65,24 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - `src/locales/<lingua>.ts` (`it.ts` è il riferimento) e `src/locales/index.ts`: tutti gli altri testi visibili (schermate, frasi del narratore, regolamento, impostazioni).
 - `src/impostazioni.ts` e `src/manifest.ts`: impostazioni e testi per l'app (`manifest.testi(lingua)`).
 
+## Personaggi: cosa si cambia nei dati e cosa nel codice
+
+In Lupus le «carte» sono i **personaggi**. Un personaggio ha due parti:
+
+- **Testi** (nei dati, `data/<lingua>/personaggi.json`): per ogni ruolo `nome`, `tuo` (cosa legge il giocatore sulla propria carta, in seconda persona) e `regolamento` (la voce di «I personaggi» nel regolamento, in terza persona). **Modificare questi testi non richiede il codice**: cambi il file e basta.
+- **Poteri** (nel codice, `src/logica.ts`): chi si sveglia, cosa può scegliere, come si risolve la notte, chi vince, quanti ce ne sono ogni N giocatori. Questa parte non è nei dati: sono regole, e un errore nel JSON non deve poterle rompere.
+
+**Aggiungere un personaggio nuovo** (per esempio la guardia o il cacciatore) richiede quindi entrambe le parti, e il compilatore ti guida perché ogni elenco di ruoli è un `Record<Ruolo, …>`:
+
+1. Aggiungi il ruolo al tipo `Ruolo` in `src/logica.ts`.
+2. Scrivi i suoi testi in **ogni** `data/<lingua>/personaggi.json` (`it`, `en`); il compilatore segnala dove manca.
+3. Decidi in `distribuisciRuoli` da quanti giocatori compare.
+4. Se agisce di notte: aggiungi la fase, il candidato (`candidatiNotte`), l'azione e la risoluzione in `riduci`, e la schermata in `src/ui/LupusApp.tsx` (titolo, testo del narratore, `FINE_TURNO`, e la fase in `FASI_CON_TRANSIZIONE`).
+5. Aggiungi il suo verso di morte in `SUONO_MORTO` (e il suono in `packages/suoni`).
+6. Aggiorna il regolamento («Ruoli: …») qui e in `src/locales/{it,en}.ts` (regolamento, e anche le frasi del narratore e dell'interfaccia del nuovo ruolo), e scrivi i test in `src/logica.test.ts`.
+
+La fase di notte per ora è una sequenza scritta nel codice (lupi → veggente → medico): renderla un elenco ordinato nei dati è un lavoro futuro, da fare quando arriverà il primo ruolo nuovo.
+
 ## Lingue
 
 Italiano e inglese. La lingua si sceglie dall'ingranaggio dell'app; il narratore a voce parla nella stessa lingua (serve una voce installata sul telefono per quella lingua). I **suoni** (ululato, gallo, versi dei ruoli, fine partita) non dipendono dalla lingua, la **voce** sì.

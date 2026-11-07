@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
-
+import { Bandiera } from "./Bandiera";
 import { Icona, type NomeIcona } from "./Icona";
 import { audioAttivo, impostaAudio } from "@gdt/suoni";
 import { scriviPreferenza, usaPreferenza, type ImpostazioneGioco } from "@gdt/preferenze";
@@ -105,7 +105,10 @@ function SceltaLingua() {
         {LINGUE.map((l) => (
           <label key={l} className="scelta-opzione">
             <input type="radio" name={id} checked={l === lingua} onChange={() => scriviLingua(l)} lang={l} />
-            <span lang={l}>{NOME_LINGUA[l]}</span>
+            <span lang={l}>
+              <Bandiera lingua={l} />
+              {NOME_LINGUA[l]}
+            </span>
           </label>
         ))}
       </div>
