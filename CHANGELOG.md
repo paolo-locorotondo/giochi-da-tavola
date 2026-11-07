@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.8.1] - 2026-11-07
+
 ### Aggiunto
 
 - Home: i giochi sono in ordine alfabetico (nella lingua in uso) e la lente in alto apre una barra di ricerca per filtrarli per nome o descrizione.
