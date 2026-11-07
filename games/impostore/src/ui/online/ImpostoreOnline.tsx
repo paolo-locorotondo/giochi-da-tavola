@@ -8,6 +8,7 @@ import { dizionari } from "../../locales";
 import { testoMessaggio } from "../../errori-ui";
 import { g, Ricco } from "../Ricco";
 import { categorie, lingueParole, nomeCategoria, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
+import { MAX_CARATTERI_PAROLA } from "../../parole";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 import "./online.css";
 
@@ -698,7 +699,7 @@ function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number
     >
       <h2>{t("seiStatoScoperto")}</h2>
       <p>{t("indovinaParola")}</p>
-      <input autoFocus autoComplete="off" maxLength={40} autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
+      <input autoFocus autoComplete="off" maxLength={MAX_CARATTERI_PAROLA} autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
       <button className="btn primario" type="submit">
         {t("conferma")}
       </button>

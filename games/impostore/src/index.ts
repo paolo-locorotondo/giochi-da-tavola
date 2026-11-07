@@ -13,7 +13,7 @@ export { fasiImpostore, nuovaMacchinaImpostore, vincitore } from "./logic/fasi";
 export type { EventoImpostore, FaseImpostore, Vincitore } from "./logic/fasi";
 export { esitoSessione, riduci, sessioneIniziale } from "./logic/sessione";
 export type { Azione, EsitoSessione, Sessione } from "./logic/sessione";
-export { categorie, lingueParole, nomeCategoria, paroleDi, VERSIONE_DATI } from "./parole";
+export { categorie, lingueParole, nomeCategoria, paroleDi, VERSIONE_DATI, MAX_CARATTERI_PAROLA } from "./parole";
 export { ErroreGioco, leggiMessaggio, messaggioDi } from "./errori";
 export type { ProblemaGioco } from "./errori";
 export { dizionari } from "./locales";

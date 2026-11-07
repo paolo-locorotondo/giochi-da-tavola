@@ -10,6 +10,27 @@ test("menu: elenca i quattro giochi", async ({ page }) => {
   await schermata(page, "menu");
 });
 
+test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Impostore", "Lupus in fabula", "Tabù"]);
+  await expect(page.getByRole("searchbox")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Cerca un gioco" }).click();
+  const ricerca = page.getByRole("searchbox", { name: "Cerca un gioco" });
+  await expect(ricerca).toBeFocused();
+  await ricerca.fill("TABU");
+  await expect(page.locator("a.gioco")).toHaveCount(1);
+  await expect(page.locator(".gioco-nome")).toHaveText("Tabù");
+  await schermata(page, "ricerca");
+
+  await ricerca.fill("zzz");
+  await expect(page.getByText("Nessun gioco trovato.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Cerca un gioco" }).click();
+  await expect(page.getByRole("searchbox")).toHaveCount(0);
+  await expect(page.locator("a.gioco")).toHaveCount(4);
+});
+
 test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
   for (const [percorso, testo] of [
     ["/impostore", "Come giocate?"],

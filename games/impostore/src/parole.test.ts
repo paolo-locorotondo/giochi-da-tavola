@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { VERSIONE_DATI, categorie, lingueParole, nomeCategoria, paroleDi } from "./parole";
+import { MAX_CARATTERI_PAROLA, VERSIONE_DATI, categorie, lingueParole, nomeCategoria, paroleDi } from "./parole";
 import { dizionari } from "./locales";
 
 const norm = (p: string) =>
@@ -31,6 +31,7 @@ describe("dati delle parole", () => {
         expect(typeof p).toBe("string");
         expect(p).toBe(p.trim());
         expect(p.length).toBeGreaterThan(1);
+        expect(Array.from(p).length).toBeLessThanOrEqual(MAX_CARATTERI_PAROLA);
       }
       const chiavi = parole.map(norm);
       expect(new Set(chiavi).size).toBe(chiavi.length);

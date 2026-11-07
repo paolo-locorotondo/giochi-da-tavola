@@ -75,7 +75,7 @@ Le «carte» di Impostore sono le parole, raggruppate per categoria in `data/<li
 }
 ```
 
-- **Aggiungere o togliere una parola**: modifica la lista `parole` della categoria. Niente doppioni (nemmeno ignorando maiuscole e accenti), nessuno spazio ai bordi.
+- **Aggiungere o togliere una parola**: modifica la lista `parole` della categoria. **Al massimo 40 caratteri** (`MAX_CARATTERI_PAROLA` in `src/parole.ts`): è anche il limite del campo in cui l'impostore scoperto prova a indovinare la parola, quindi una parola più lunga non potrebbe mai essere scritta (lo verifica un test). Niente doppioni (nemmeno ignorando maiuscole e accenti), nessuno spazio ai bordi.
 - **Nuova categoria**: aggiungi un blocco con `nome` (come appare nel menu) e `parole`, almeno 30. Compare da sola in modalità a un telefono e online.
 - **Rinominare una categoria**: cambia solo `nome`. Non cambiare la chiave (`animali`): serve al codice e alle partite salvate.
 - **Incrementa `VERSIONE_DATI`** in `src/parole.ts` se cambi l'ordine o il contenuto di categorie esistenti. Serve ai codici partita condivisi, perché due telefoni con elenchi diversi darebbero parole diverse; la modalità a un telefono non ne risente. Aggiungere una categoria in fondo non lo richiede.

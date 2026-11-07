@@ -9,6 +9,19 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Aggiunto
+
+- Home: i giochi sono in ordine alfabetico (nella lingua in uso) e la lente in alto apre una barra di ricerca per filtrarli per nome o descrizione.
+
+### Corretto
+
+- Il click sonoro dei pulsanti non suonava su quelli che si disabilitano cliccandoli (il «Lancia» dei Dadi).
+
+### Cambiato
+
+- Impostore: la parola da indovinare ha un massimo di 40 caratteri (`MAX_CARATTERI_PAROLA`), valido per il campo del tentativo e per le parole in `data/`; un test controlla le parole e il README lo ricorda.
+- Dadi: documentato che per ora c'è solo il suono di click dei pulsanti, come negli altri giochi.
+
 ## [0.8.0] - 2026-11-07
 
 ### Aggiunto

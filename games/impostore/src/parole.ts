@@ -9,6 +9,9 @@ import type { Lingua } from "@gdt/i18n";
  */
 export const VERSIONE_DATI = 2;
 
+/** Massimo di caratteri di una parola: è anche il limite del campo in cui l'impostore scoperto prova a indovinarla. */
+export const MAX_CARATTERI_PAROLA = 40;
+
 /** Le chiavi di categoria sono le stesse in tutte le lingue (le guida il file italiano): lo controlla un test. */
 export type Categoria = keyof typeof it;
 

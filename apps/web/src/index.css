@@ -38,6 +38,16 @@ h1 {
   gap: 0.75rem;
 }
 
+.testata-azioni {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ricerca {
+  margin-top: 1rem;
+}
+
 .tema-btn {
   flex: none;
   width: 48px;

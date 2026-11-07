@@ -9,7 +9,7 @@ import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
 import { validaConfigurazione } from "../logic/validazione";
-import { categorie, nomeCategoria, paroleDi, type Categoria } from "../parole";
+import { MAX_CARATTERI_PAROLA, categorie, nomeCategoria, paroleDi, type Categoria } from "../parole";
 import { chiaveRecenti, leggiRecenti, ricordaParola } from "./recenti";
 import "./impostore.css";
 
@@ -335,7 +335,7 @@ function Tentativo({
         <input
           autoFocus
           autoComplete="off"
-          maxLength={40}
+          maxLength={MAX_CARATTERI_PAROLA}
           autoCapitalize="none"
           value={testo}
           onChange={(e) => setTesto(e.target.value)}

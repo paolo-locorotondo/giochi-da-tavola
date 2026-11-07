@@ -64,12 +64,27 @@ function Versione() {
   return <p className="versione">{t("versione", { versione: __APP_VERSION__ })}</p>;
 }
 
+/** Senza maiuscole e senza accenti, per confrontare nomi e testo cercato. */
+const normalizza = (s: string) =>
+  s
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+
 export function App() {
   const [percorso, vai] = usaPercorso();
   const lingua = usaLingua();
   const t = usaT(dizionari);
   const voce = giocoDaPercorso(percorso);
   const gioco = voce ? conTesti(voce, lingua) : undefined;
+  const [ricercaAperta, setRicercaAperta] = useState(false);
+  const [filtro, setFiltro] = useState("");
+
+  // Elenco in ordine alfabetico per nome nella lingua corrente, filtrato dalla ricerca (nome o descrizione).
+  const elenco = giochi
+    .map((v) => conTesti(v, lingua))
+    .sort((a, b) => a.nome.localeCompare(b.nome, lingua))
+    .filter((g) => !filtro.trim() || normalizza(`${g.nome} ${g.descrizione}`).includes(normalizza(filtro.trim())));
 
   // `lang` della pagina e titolo della scheda del browser seguono la lingua scelta.
   useEffect(() => {
@@ -111,12 +126,39 @@ export function App() {
     <main className="app">
       <header className="app-testata">
         <h1>{t("titolo")}</h1>
-        <Impostazioni />
+        <div className="testata-azioni">
+          <button
+            type="button"
+            className="tema-btn"
+            aria-label={t("cerca")}
+            aria-expanded={ricercaAperta}
+            aria-controls="ricerca-giochi"
+            onClick={() => {
+              setRicercaAperta(!ricercaAperta);
+              if (ricercaAperta) setFiltro("");
+            }}
+          >
+            <Icona nome={ricercaAperta ? "chiudi" : "cerca"} />
+          </button>
+          <Impostazioni />
+        </div>
       </header>
+      {ricercaAperta && (
+        <div className="campo ricerca" id="ricerca-giochi">
+          <input
+            type="search"
+            autoFocus
+            autoComplete="off"
+            spellCheck={false}
+            aria-label={t("cerca")}
+            placeholder={t("cerca")}
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+          />
+        </div>
+      )}
       <ul className="lista-giochi">
-        {giochi.map((voceGioco) => {
-          const g = conTesti(voceGioco, lingua);
-          return (
+        {elenco.map((g) => (
           <li key={g.id} className="riga-gioco">
             <a className="gioco" href={`/${g.id}`} onClick={naviga(`/${g.id}`)}>
               <span className="gioco-icona">
@@ -129,9 +171,9 @@ export function App() {
             </a>
             <PulsanteRegolamento gioco={g} />
           </li>
-          );
-        })}
+        ))}
       </ul>
+      {elenco.length === 0 && <p className="muted" role="status">{t("nessunGioco")}</p>}
       <Versione />
     </main>
   );

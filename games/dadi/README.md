@@ -38,13 +38,15 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - Con «riduci movimento» attivo nel telefono non c'è animazione e il risultato è immediato.
 - Cambiando lingua dall'ingranaggio cambiano i nomi dei modelli (Moneta/Coin, Testa/Heads).
 - Lo storico tiene gli ultimi 10 lanci e si può cancellare.
-- Il suono dei dadi non c'è ancora (vedi sotto).
+- Ogni pulsante fa il suono di click come negli altri giochi (vedi «Suono»).
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
 
 ## Suono
 
-Non ancora presente: il progetto richiede suoni **registrati** (file audio), non sintetizzati, con licenza che permetta di pubblicarli nel repo. Quando saranno scelti i file (CC0), vanno messi in `packages/suoni/audio/` con la fonte in `CREDITI.md` e aggiunti i formati a `globPatterns` di `apps/web/vite.config.ts`, perché funzionino offline.
+Per ora c'è solo il click dei pulsanti, uguale a quello degli altri giochi (è globale, in `apps/web/src/main.tsx`, e segue l'interruttore Audio). Non ci sono suoni propri del lancio.
+
+I suoni personalizzati (lancio del dado, caduta della moneta) arriveranno con file audio **registrati** con licenza che permetta di pubblicarli nel repo (CC0): vanno messi in `packages/suoni/audio/` con la fonte in `CREDITI.md` e i formati aggiunti a `globPatterns` di `apps/web/vite.config.ts`, perché funzionino offline.
 
 ## Struttura
 
