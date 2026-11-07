@@ -25,6 +25,7 @@ Serve il server di gioco ([giocare con il PC](../../docs/guida-giocare-con-il-pc
 - Si muove solo dal proprio telefono e al proprio turno: lo controlla il server, non l'app.
 - Finita la partita la **rivincita** parte quando la chiedono entrambi; chi inizia alterna e il punteggio della serie continua.
 - Un terzo telefono che entra guarda la partita; può prendere il posto di un giocatore caduto («Eri già in questa partita?»).
+- **Partita veloce** (senza codici): ognuno scrive solo il proprio nome e tocca «Cerca un avversario». Il server mette in coda i telefoni e, appena sono in due, crea la stanza: il primo in coda è X e organizzatore, la partita parte da sola. Due nomi uguali diventano «Anna» e «Anna (2)». Si può annullare; dopo 2 minuti senza avversario l'app lo dice e propone il telefono singolo. La coda è in memoria (max 50) e un telefono che si scollega ne esce.
 - Refresh o schermo bloccato non fanno perdere il posto. L'organizzatore può chiudere la partita per tutti. Se il server non risponde entro 8 secondi l'app propone la modalità a un telefono.
 
 Come funzionano stanze, token e sicurezza: [architettura-tecnica.md](../../docs/architettura-tecnica.md). La logica online sta in `src/online/gioco.ts` (pura, usata dal server).
@@ -47,6 +48,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - Cambiare modalità, livello o segno azzera partita e punteggio.
 - Le caselle sono leggibili dal lettore di schermo («Casella 2, colonna 2: X») e l'esito si annuncia.
 - Cambiando lingua dall'ingranaggio cambiano testi ed etichette.
+- Partita veloce: due telefoni premono «Cerca un avversario» e finiscono nella stessa partita già avviata; «Annulla» toglie dalla coda; stesso nome sui due telefoni → il secondo diventa «… (2)».
 - Online (due telefoni, o due schede del browser con una in navigazione privata): sala con i due posti, «Inizia la partita» solo con entrambi, mossa rifiutata fuori turno, rivincita a due, refresh che riporta nel proprio posto, terzo telefono che guarda, «Chiudi la partita» che chiude per tutti.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
@@ -57,6 +59,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - `src/logica.test.ts`: le 8 linee, pareggio, errori, «difficile» che non perde mai, riproducibilità con seme.
 - `src/locales/{it,en}.ts`: tutti i testi e il regolamento; `src/manifest.ts` li espone all'app.
 - `src/online/gioco.ts`: stato, azioni, permessi e vista della partita online (contratto `GiocoOnline` di `@gdt/engine`, registrato in `apps/server/src/giochi.ts`); test in `gioco.test.ts`.
+- `apps/server/src/coda.ts`: la coda della partita veloce (pura, con test); un gioco la abilita con `coda: { giocatori: 2 }` nel suo `GiocoOnline`.
 - `src/ui/Tris.tsx` (scelta della modalità), `TrisLocale.tsx` (un telefono), `online/TrisOnline.tsx` (online, usa `@gdt/collegamento`) e `tris.css`.
 - Nessun dato in `data/`: il gioco non ha carte.
 

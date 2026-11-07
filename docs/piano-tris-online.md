@@ -1,6 +1,6 @@
 # Piano: Tris online («ognuno col suo telefono»)
 
-Stato: completato fino al passo 4. Data piano: 2026-11-07. Questo file è il riferimento se il contesto si riempie:
+Stato: completato (passo 5 in 0.11.0). Data piano: 2026-11-07. Questo file è il riferimento se il contesto si riempie:
 contiene decisioni, ordine di lavoro e stato di avanzamento.
 
 ## Contesto
@@ -78,9 +78,9 @@ contiene decisioni, ordine di lavoro e stato di avanzamento.
 - [x] 2. Modulo online Tris + test (`games/tic-tac-toe/src/online/gioco.ts`, registrato in `apps/server/src/giochi.ts`; test in `gioco.test.ts` e `apps/server/src/tris.test.ts`). Messaggi: `crea` con `gioco: "tris"`, `nomi` di 2 giocatori, `config` ignorata; azioni `occupa`, `libera`, `avvia` (host), `muovi {casella}`, `rivincita`. Errori = codici `ErroreTris` (da tradurre nella UI come `errore_<codice>`).
 - [x] 3. UI online Tris (`games/tic-tac-toe/src/ui/Tris.tsx`, `online/TrisOnline.tsx`; hook condiviso in `packages/collegamento`; e2e `apps/web/e2e/tris-online.spec.ts`)
 - [x] 4. README, decisioni.md, CHANGELOG (rilasciato 0.10.0)
-- [ ] 5. Coda (fuori scopo ora)
+- [x] 5. Partita veloce con coda (rilasciata 0.11.0: `apps/server/src/coda.ts`, `coda` in `GiocoOnline`, `PartitaVeloce` in `TrisOnline.tsx`, e2e `tris-coda.spec.ts`; nomi uguali → suffisso «(2)»; scadenza 2 min)
 
-## Passo 5 (da fare): partita veloce con coda
+## Passo 5 (fatto): partita veloce con coda
 
 Stato al 2026-11-07: Tris online rilasciato in 0.10.0 (commit bcf82cf, tag v0.10.0, push a carico dell'utente). Qui sotto lo schema di partenza, da rivedere guardando il codice.
 

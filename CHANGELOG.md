@@ -9,6 +9,16 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.11.0] - 2026-11-07
+
+### Aggiunto
+
+- **Tris, «Partita veloce»**: nella schermata online di Tris basta scrivere il proprio nome e toccare «Cerca un avversario». Il server abbina i telefoni in coda a due a due e avvia subito la partita (il primo in coda è X e organizzatore), senza codici da scambiarsi. Si può annullare; dopo 2 minuti senza avversario l'app propone di giocare con un solo telefono. Nomi uguali diventano «Nome» e «Nome (2)».
+
+### Interno
+
+- Coda in memoria per gioco (`apps/server/src/coda.ts`, max 50 voci); un gioco online la abilita con `coda: { giocatori }` in `GiocoOnline`. Nuovi messaggi `coda`, `esciDaCoda`, `inCoda`, `codaScaduta`. I test e2e della coda girano uno alla volta (progetti `coda-*`) perché la coda è condivisa dal server.
+
 ## [0.10.0] - 2026-11-07
 
 ### Aggiunto

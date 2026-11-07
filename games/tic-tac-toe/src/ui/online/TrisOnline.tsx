@@ -12,6 +12,7 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
+  const [veloce, setVeloce] = useState(false);
 
   // Gli errori transitori spariscono dopo qualche secondo.
   useEffect(() => {
@@ -61,11 +62,12 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
         </section>
       );
     }
+    if (veloce || c.inCoda) return <PartitaVeloce c={c} onIndietro={() => setVeloce(false)} onLocale={onLocale} />;
     if (inserisci) return <EntraConCodice c={c} onIndietro={() => setInserisci(false)} />;
     return (
       <>
         {stato}
-        <Crea c={c} onEntra={() => setInserisci(true)} />
+        <Crea c={c} onEntra={() => setInserisci(true)} onVeloce={() => setVeloce(true)} />
       </>
     );
   }
@@ -83,7 +85,7 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
   );
 }
 
-function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
+function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; onVeloce: () => void }) {
   const t = usaT(dizionari);
   const [a, setA] = useState("");
   const [b, setB] = useState("");
@@ -112,6 +114,60 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       </button>
       <button className="btn" type="button" onClick={onEntra}>
         {t("hoUnCodice")}
+      </button>
+      <button className="btn" type="button" onClick={onVeloce}>
+        {t("partitaVeloce")}
+      </button>
+    </form>
+  );
+}
+
+/** Partita veloce: solo il proprio nome; il server abbina due telefoni in attesa e avvia. */
+function PartitaVeloce({ c, onIndietro, onLocale }: { c: Collegamento; onIndietro: () => void; onLocale: () => void }) {
+  const t = usaT(dizionari);
+  const [nome, setNome] = useState("");
+  const pulito = nome.trim();
+  if (c.inCoda) {
+    return (
+      <section className="schermata allineata" aria-live="polite">
+        <h2>{t("inCoda")}</h2>
+        <p className="muted">{t("inCodaTesto", { nome: pulito })}</p>
+        <button className="btn" type="button" onClick={c.annullaCoda}>
+          {t("annulla")}
+        </button>
+      </section>
+    );
+  }
+  return (
+    <form
+      className="schermata allineata"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (pulito && c.connesso) c.cercaAvversario(pulito);
+      }}
+    >
+      <h2>{t("partitaVeloce")}</h2>
+      <p className="muted">{t("partitaVeloceTesto")}</p>
+      {c.codaScaduta && (
+        <p className="avviso" role="status">
+          {t("codaScaduta")}
+        </p>
+      )}
+      <label className="campo">
+        {t("tuoNome")}
+        <input autoFocus value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setNome(e.target.value)} />
+      </label>
+      {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
+      <button className="btn primario" type="submit" disabled={!c.connesso || !pulito}>
+        {t("cercaAvversario")}
+      </button>
+      {c.codaScaduta && (
+        <button className="btn" type="button" onClick={onLocale}>
+          {t("giocaUnTelefono")}
+        </button>
+      )}
+      <button className="btn" type="button" onClick={onIndietro}>
+        {t("indietro")}
       </button>
     </form>
   );

@@ -7,13 +7,17 @@ export type Messaggio =
   | { t: "entra"; codice: string; token?: string }
   | { t: "azione"; azione: Record<string, unknown> }
   | { t: "sollecita" }
-  | { t: "chiudi" };
+  | { t: "chiudi" }
+  | { t: "coda"; gioco: string; nome: string }
+  | { t: "esciDaCoda" };
 
 type DaServer<V> =
   | { t: "benvenuto"; codice: string; token: string }
   | { t: "vista"; vista: V }
   | { t: "sollecito" }
   | { t: "chiusa" }
+  | { t: "inCoda"; in: boolean }
+  | { t: "codaScaduta" }
   | { t: "errore"; messaggio: string };
 
 const ATTESA_MASSIMA_MS = 8000;
@@ -55,6 +59,13 @@ export interface Collegamento<V> {
   sollecitato: boolean;
   /** La partita è stata chiusa dall'organizzatore. */
   chiusa: boolean;
+  /** Partita veloce: in coda in attesa di un avversario. */
+  inCoda: boolean;
+  /** Nessun avversario è arrivato in tempo (si azzera rimettendosi in coda). */
+  codaScaduta: boolean;
+  /** Mi metto in coda con il mio nome; quando arriva un avversario entro nella partita già avviata. */
+  cercaAvversario: (nome: string) => void;
+  annullaCoda: () => void;
   invia: (m: Messaggio) => void;
   azione: (a: Record<string, unknown>) => void;
   azzeraErrore: () => void;
@@ -76,6 +87,10 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
   const ws = useRef<WebSocket | null>(null);
   const codiceRef = useRef<string | null>(codiceIniziale);
   const inAttesa = useRef<Messaggio[]>([]);
+  const [inCoda, setInCoda] = useState(false);
+  const [codaScaduta, setCodaScaduta] = useState(false);
+  /** Nome con cui sono in coda: se la connessione cade, al rientro mi rimetto in coda. */
+  const nomeInCoda = useRef<string | null>(null);
 
   // Se per troppo tempo non c'è connessione, lo si dice invece di restare in attesa all'infinito.
   useEffect(() => {
@@ -105,11 +120,18 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
         const c = codiceRef.current;
         // Rientro: se conosco già il codice, mi riaggancio con il mio token.
         if (c) s.send(JSON.stringify({ t: "entra", codice: c, token: leggiToken(gioco, c) }));
+        else if (nomeInCoda.current !== null) {
+          // Il server toglie dalla coda chi si scollega: al rientro ci si rimette (in fondo).
+          inAttesa.current = inAttesa.current.filter((m) => m.t !== "coda");
+          s.send(JSON.stringify({ t: "coda", gioco, nome: nomeInCoda.current }));
+        }
         for (const m of inAttesa.current.splice(0)) s.send(JSON.stringify(m));
       };
       s.onmessage = (e) => {
         const m = JSON.parse(String(e.data)) as DaServer<V>;
         if (m.t === "benvenuto") {
+          nomeInCoda.current = null;
+          setInCoda(false);
           codiceRef.current = m.codice;
           setCodice(m.codice);
           salvaToken(gioco, m.codice, m.token);
@@ -126,11 +148,23 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
           setVista(null);
           setCodice(null);
           window.history.replaceState(window.history.state, "", `/${gioco}`);
+        } else if (m.t === "inCoda") {
+          if (!m.in) nomeInCoda.current = null;
+          setInCoda(m.in);
+        } else if (m.t === "codaScaduta") {
+          nomeInCoda.current = null;
+          setInCoda(false);
+          setCodaScaduta(true);
         } else if (m.t === "sollecito") {
           setSollecitato(true);
           navigator.vibrate?.([200, 100, 200]);
           suona("sollecito");
         } else {
+          // Un errore mentre cerco un avversario (es. server pieno) mi toglie dalla coda.
+          if (nomeInCoda.current !== null && !codiceRef.current) {
+            nomeInCoda.current = null;
+            setInCoda(false);
+          }
           setErrore(m.messaggio);
         }
       };
@@ -156,8 +190,28 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
     };
   }, [gioco]);
 
+  const cercaAvversario = useCallback(
+    (nome: string) => {
+      nomeInCoda.current = nome;
+      setCodaScaduta(false);
+      setInCoda(true);
+      invia({ t: "coda", gioco, nome });
+    },
+    [gioco, invia],
+  );
+  const annullaCoda = useCallback(() => {
+    nomeInCoda.current = null;
+    setInCoda(false);
+    inAttesa.current = inAttesa.current.filter((m) => m.t !== "coda");
+    invia({ t: "esciDaCoda" });
+  }, [invia]);
+
   return {
     vista,
+    inCoda,
+    codaScaduta,
+    cercaAvversario,
+    annullaCoda,
     codice,
     connesso,
     nonRaggiungibile,

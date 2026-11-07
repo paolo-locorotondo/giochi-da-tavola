@@ -201,7 +201,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 - Grafica: stile «Tavolo» fatto; altri stili (Argilla, Quiz) solo se richiesti.
 - Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
 - Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
-- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`. Piano e scelte in `docs/piano-tris-online.md`. Resta come idea la partita veloce con coda (dal vecchio progetto `../tic-tac-toe`, solo l'idea).
+- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`. Piano e scelte in `docs/piano-tris-online.md`. Partita veloce con coda rilasciata in 0.11.0 (idea dal vecchio progetto `../tic-tac-toe`).
 - TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
 - TODO Lupus, nuovi ruoli: i test ora coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
   Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo

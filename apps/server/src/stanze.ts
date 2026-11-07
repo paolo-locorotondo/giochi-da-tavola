@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { ALFABETO, type RichiestaOnline } from "@gdt/engine";
+import { ALFABETO, MAX_CARATTERI_NOME, limitaTesto, type RichiestaOnline } from "@gdt/engine";
 import { giocoOnline, type GiocoQualsiasi } from "./giochi";
 
 /**
@@ -26,7 +26,10 @@ export type DaClient =
   | { t: "entra"; codice: string; token?: string }
   | { t: "azione"; azione: AzioneClient }
   | { t: "sollecita" }
-  | { t: "chiudi" };
+  | { t: "chiudi" }
+  /** Partita veloce: mi metto in coda con il mio nome. */
+  | { t: "coda"; gioco?: string; nome: string }
+  | { t: "esciDaCoda" };
 
 /**
  * Azioni che un telefono può chiedere: il server completa chi le fa. Quelle di posto le
@@ -45,6 +48,10 @@ export type DaServer =
   | { t: "vista"; vista: unknown }
   | { t: "sollecito" }
   | { t: "chiusa" }
+  /** Sono (o non sono più) in coda per la partita veloce. */
+  | { t: "inCoda"; in: boolean }
+  /** Nessun avversario è arrivato in tempo. */
+  | { t: "codaScaduta" }
   | { t: "errore"; messaggio: string };
 
 const LUNGHEZZA_CODICE = 5;
@@ -71,6 +78,34 @@ export function creaStanza(codice: string, nomi: string[], config: unknown, toke
     telefoni: new Map([[tokenHost, null]]),
     ultimaAttivita: Date.now(),
   };
+}
+
+/** Nomi puliti e distinti (senza distinguere maiuscole): al doppione si aggiunge « (2)», « (3)»… */
+export function nomiDistinti(nomi: string[]): string[] {
+  const visti = new Set<string>();
+  return nomi.map((grezzo) => {
+    const base = limitaTesto(grezzo.trim(), MAX_CARATTERI_NOME - 4);
+    let nome = base;
+    for (let n = 2; visti.has(nome.toLocaleLowerCase("it-IT")); n++) nome = `${base} (${n})`;
+    visti.add(nome.toLocaleLowerCase("it-IT"));
+    return nome;
+  });
+}
+
+/**
+ * Stanza di una partita veloce: i telefoni in coda siedono ai posti 1..n nell'ordine, il primo
+ * è l'organizzatore, e la partita parte subito.
+ */
+export function creaStanzaDaCoda(codice: string, gioco: string, voci: { token: string; nome: string }[]): Stanza {
+  const g = giocoOnline(gioco);
+  if (!g.coda || voci.length !== g.coda.giocatori) throw new Error("Questo gioco non ha la partita veloce");
+  const stanza = creaStanza(codice, nomiDistinti(voci.map((v) => v.nome)), {}, voci[0]!.token, gioco);
+  voci.forEach((v, i) => {
+    stanza.telefoni.set(v.token, null);
+    eseguiAzione(stanza, v.token, { tipo: "occupa", posto: i + 1 });
+  });
+  eseguiAzione(stanza, voci[0]!.token, { tipo: "avvia" });
+  return stanza;
 }
 
 /** Dice se un telefono (token) ha una connessione aperta in questo momento. */

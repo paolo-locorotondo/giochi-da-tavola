@@ -3,7 +3,9 @@ import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
 import { WebSocketServer, type WebSocket } from "ws";
-import { creaStanza, eseguiAzione, mancantiDi, nuovoCodice, nuovoToken, vistaDi, type DaClient, type DaServer, type Stanza } from "./stanze";
+import { Code } from "./coda";
+import { giocoOnline } from "./giochi";
+import { creaStanza, creaStanzaDaCoda, eseguiAzione, mancantiDi, nuovoCodice, nuovoToken, vistaDi, type DaClient, type DaServer, type Stanza } from "./stanze";
 
 /**
  * Server di gioco: serve l'app (cartella `STATIC_DIR`) e tiene le partite via WebSocket su `/ws`.
@@ -22,6 +24,13 @@ const MAX_NOMI = 60;
 const stanze = new Map<string, Stanza>();
 /** Connessioni aperte per stanza: token → socket. Più schede dello stesso browser condividono il token. */
 const connessioni = new Map<string, Map<string, Set<WebSocket>>>();
+
+/** Telefono in coda per la partita veloce: sa entrare nella stanza quando viene abbinato. */
+interface InCoda {
+  ws: WebSocket;
+  entra(stanza: Stanza, token: string): void;
+}
+const code = new Code<InCoda>();
 
 const eConnesso = (codice: string) => (token: string) => (connessioni.get(codice)?.get(token)?.size ?? 0) > 0;
 
@@ -113,6 +122,14 @@ wss.on("connection", (ws) => {
   let stanza: Stanza | null = null;
   let token = "";
   let vivo = true;
+  const io: InCoda = {
+    ws,
+    entra(s, t) {
+      stanza = s;
+      token = t;
+      collega(ws, s, t);
+    },
+  };
   ws.on("pong", () => (vivo = true));
   const battito = setInterval(() => {
     if (!vivo) return ws.terminate();
@@ -148,6 +165,28 @@ wss.on("connection", (ws) => {
           collega(ws, s, token);
           break;
         }
+        case "coda": {
+          if (stanza) throw new Error("Sei già in una partita");
+          const gioco = typeof m.gioco === "string" ? m.gioco : "impostore";
+          const g = giocoOnline(gioco);
+          if (!g.coda) throw new Error("Questo gioco non ha la partita veloce");
+          const nome = String(m.nome ?? "").trim();
+          if (!nome) throw new Error("nomiNonValidi");
+          if (stanze.size >= MAX_STANZE) throw new Error("Il server è pieno: riprova tra poco");
+          const gruppo = code.aggiungi(gioco, { token: nuovoToken(), nome, conn: io, dal: Date.now() }, g.coda.giocatori);
+          if (!gruppo) {
+            invia(ws, { t: "inCoda", in: true });
+            break;
+          }
+          const codice = nuovoCodice(stanze);
+          const nuova = creaStanzaDaCoda(codice, gioco, gruppo);
+          stanze.set(codice, nuova);
+          for (const v of gruppo) v.conn.entra(nuova, v.token);
+          break;
+        }
+        case "esciDaCoda":
+          if (code.togli(io)) invia(ws, { t: "inCoda", in: false });
+          break;
         case "azione":
           if (!stanza) throw new Error("Non sei in una partita");
           eseguiAzione(stanza, token, m.azione, eConnesso(stanza.codice));
@@ -179,6 +218,7 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     clearInterval(battito);
+    code.togli(io);
     if (stanza) {
       const mappa = connessioni.get(stanza.codice);
       const insieme = mappa?.get(token);
@@ -200,6 +240,11 @@ setInterval(() => {
     }
   }
 }, 600_000);
+
+// Chi aspetta un avversario da troppo tempo viene avvisato e tolto dalla coda.
+setInterval(() => {
+  for (const v of code.scadute(Date.now())) invia(v.conn.ws, { t: "codaScaduta" });
+}, 5_000);
 
 http.listen(PORTA, () => {
   if (SOLO_SERVER) {
