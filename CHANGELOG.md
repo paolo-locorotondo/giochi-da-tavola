@@ -9,6 +9,20 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.8.0] - 2026-11-07
+
+### Aggiunto
+
+- Nuovo gioco **Dadi** (`/dadi`, italiano e inglese): moneta, D4, D6, D8, D10, D12, D20 e dado personalizzato con i valori scritti uno per riga; con due valori diventa una moneta. Lancio con `crypto.getRandomValues` (senza bias), animazione che rispetta «riduci movimento», storico degli ultimi lanci. I modelli stanno in `games/dadi/data/<lingua>/modelli.json`.
+
+### Cambiato
+
+- Limite di 20 caratteri per i nomi dei giocatori e delle squadre (Impostore, Lupus, Tabù) e per i valori del dado personalizzato, perché non escano dagli elementi grafici. Nell'Impostore online il limite dei nomi scende da 40 a 20.
+
+### Corretto
+
+- Impostazioni: l'etichetta del tema ora segue il tema in uso («Tema scuro» / «Tema chiaro», «Dark theme» / «Light theme») invece di restare sempre «Tema scuro».
+
 ## [0.7.1] - 2026-11-07
 
 ### Cambiato

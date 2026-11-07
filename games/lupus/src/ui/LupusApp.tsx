@@ -9,6 +9,7 @@ import {
   type Ruolo,
   type Stato,
 } from "../logica";
+import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
 import { traduttore, usaLingua, usaT, type Lingua, type Traduttore } from "@gdt/i18n";
 import { validaConfigurazione, type ErroreConfigurazione } from "../validazione";
 import { dizionari } from "../locales";
@@ -266,7 +267,7 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
         <textarea
           rows={8}
           value={testo}
-          onChange={(e) => setTesto(e.target.value)}
+          onChange={(e) => setTesto(limitaRighe(e.target.value, MAX_CARATTERI_NOME))}
           placeholder={t("placeholderNomi")}
         />
       </label>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { suona } from "@gdt/suoni";
 import { usaLingua, usaT, type Traduttore } from "@gdt/i18n";
 import { carteDi, type Carta } from "../carte";
@@ -355,11 +356,11 @@ function Configurazione({
     >
       <label className="campo">
         {t("primaSquadra")}
-        <input value={a} onChange={(e) => setA(e.target.value)} />
+        <input maxLength={MAX_CARATTERI_NOME} value={a} onChange={(e) => setA(e.target.value)} />
       </label>
       <label className="campo">
         {t("secondaSquadra")}
-        <input value={b} onChange={(e) => setB(e.target.value)} />
+        <input maxLength={MAX_CARATTERI_NOME} value={b} onChange={(e) => setB(e.target.value)} />
       </label>
       <Selettore etichetta={t("turniPerSquadra")} valore={turni} min={1} max={20} passo={1} onCambia={setTurni} />
       <Selettore etichetta={t("secondiPerTurno")} valore={secondi} min={10} max={180} passo={5} onCambia={setSecondi} />

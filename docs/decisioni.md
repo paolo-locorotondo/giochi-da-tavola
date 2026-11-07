@@ -18,7 +18,9 @@ Giochi, in ordine:
    telefono con narratore a voce; la versione ognuno col suo telefono è il prossimo passo.
 3. **Tabù** — due squadre, timer, carte con parola vietata. Resta **solo a un telefono**:
    il telefono deve passare di mano, giocarlo online non avrebbe senso.
-4. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
+4. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
+   Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
+5. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
 ## Piattaforma
@@ -123,7 +125,7 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
   versioni sempre allineate, un'unica app "raccolta".
 - **Ogni gioco è un plugin** (`games/*`): esporta un `manifest`, la logica e la UI; l'app
   li carica in lazy loading.
-- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`.
+- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`, `/dadi`.
 - **Logica di gioco in TypeScript puro e deterministica**, separata dalla UI: testabile e
   identica nel browser (modalità A) e sul server (modalità B).
 - **Fasi come macchina a stati.**
@@ -152,7 +154,8 @@ giochi-da-tavola/
 ├── games/
 │   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
 │   ├── lupus/      → regole e UI a un telefono
-│   └── tabu/       → regole, carte e UI
+│   ├── tabu/       → regole, carte e UI
+│   └── dadi/       → lancio, modelli di dado e UI
 ├── Dockerfile, docker-compose.yml
 └── docs/           → questo file e le guide
 ```

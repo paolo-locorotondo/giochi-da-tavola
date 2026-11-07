@@ -1,6 +1,6 @@
 import type { Lingua } from "@gdt/i18n";
 import { ErroreGioco } from "../errori";
-import type { Giocatore } from "@gdt/engine";
+import { MAX_CARATTERI_NOME, limitaTesto, type Giocatore } from "@gdt/engine";
 import { carta, creaPartita, eImpostore, impostoriMassimi, verificaTentativo, type Carta, type Partita } from "../logic/partita";
 import { vincitore, type Vincitore } from "../logic/fasi";
 import { paroleDi, categorie, lingueParole, type Categoria } from "../parole";
@@ -73,7 +73,7 @@ export type AzioneOnline =
   | { tipo: "nuova" };
 
 export function nuovoStato(nomi: string[], config: ConfigOnline): StatoOnline {
-  const puliti = nomi.map((n) => n.trim().slice(0, 40)).filter(Boolean);
+  const puliti = nomi.map((n) => limitaTesto(n.trim(), MAX_CARATTERI_NOME)).filter(Boolean);
   if (new Set(puliti.map((n) => n.toLocaleLowerCase("it-IT"))).size !== puliti.length) {
     throw new ErroreGioco("nomiUguali");
   }

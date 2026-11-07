@@ -14,3 +14,4 @@ export { creaMacchina } from "./fasi";
 export type { DefinizioneFasi, Macchina } from "./fasi";
 export { creaGiocatori } from "./giocatori";
 export type { Giocatore } from "./giocatori";
+export { MAX_CARATTERI_NOME, limitaRighe, limitaTesto } from "./testo";

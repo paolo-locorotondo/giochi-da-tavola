@@ -54,9 +54,9 @@ describe("nuovoStato: validazione", () => {
     expect(nuovoStato(["  Anna ", "", "Bruno", "   ", "Carla"], cfg).nomi).toEqual(["Anna", "Bruno", "Carla"]);
   });
 
-  it("taglia i nomi lunghi a 40 caratteri", () => {
+  it("taglia i nomi lunghi a 20 caratteri", () => {
     const s = nuovoStato(["a".repeat(80), "Bruno", "Carla"], cfg);
-    expect(s.nomi[0]).toHaveLength(40);
+    expect(s.nomi[0]).toHaveLength(20);
   });
 
   it("rifiuta i nomi uguali, senza badare a maiuscole e spazi", () => {

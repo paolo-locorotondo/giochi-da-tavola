@@ -4,7 +4,7 @@ import { usaLingua, usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoProblema } from "../errori-ui";
 import { g, Ricco } from "./Ricco";
-import type { Giocatore } from "@gdt/engine";
+import { MAX_CARATTERI_NOME, limitaRighe, type Giocatore } from "@gdt/engine";
 import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
@@ -187,7 +187,7 @@ function Configurazione({
         <textarea
           rows={6}
           value={testoNomi}
-          onChange={(e) => setTestoNomi(e.target.value)}
+          onChange={(e) => setTestoNomi(limitaRighe(e.target.value, MAX_CARATTERI_NOME))}
           placeholder={t("segnapostoNomi")}
         />
       </label>
@@ -335,6 +335,7 @@ function Tentativo({
         <input
           autoFocus
           autoComplete="off"
+          maxLength={40}
           autoCapitalize="none"
           value={testo}
           onChange={(e) => setTesto(e.target.value)}

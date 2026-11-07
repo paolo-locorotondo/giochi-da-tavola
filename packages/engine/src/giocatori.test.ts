@@ -28,9 +28,9 @@ describe("creaGiocatori: altri casi", () => {
     expect(creaGiocatori([])).toEqual([]);
   });
 
-  it("accetta accenti e nomi lunghi", () => {
+  it("accetta gli accenti e accorcia i nomi troppo lunghi", () => {
     const lungo = "Giovanna".repeat(10);
-    expect(creaGiocatori(["Niccolò", lungo]).map((g) => g.nome)).toEqual(["Niccolò", lungo]);
+    expect(creaGiocatori(["Niccolò", lungo]).map((g) => g.nome)).toEqual(["Niccolò", lungo.slice(0, 20)]);
   });
 
   it("il duplicato vale anche con spazi e accenti maiuscoli", () => {

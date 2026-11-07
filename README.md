@@ -14,6 +14,7 @@ segrete (una parola, un ruolo), guida le fasi del gioco e raccoglie le scelte qu
 | **Impostore**: tutti conoscono la parola segreta tranne uno | Un telefono (anche offline) e ognuno col suo telefono | [Leggi la guida](games/impostore/README.md) |
 | **Lupus in fabula**: ruoli segreti, notte e giorno, voto | Un telefono con narratore a voce (online: in arrivo) | [Leggi la guida](games/lupus/README.md) |
 | **Tabù**: due squadre, timer, parole vietate | Un telefono | [Leggi la guida](games/tabu/README.md) |
+| **Dadi**: moneta, D4…D20 e dado con i valori che vuoi | Un telefono | [Leggi la guida](games/dadi/README.md) |
 
 Due modi di giocare: **un solo telefono** (il telefono passa di mano, nessuna rete) oppure
 **ognuno col suo telefono**, che richiede il server di gioco.

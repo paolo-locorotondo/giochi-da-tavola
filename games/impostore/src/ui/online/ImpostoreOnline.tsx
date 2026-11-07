@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
 import { suona } from "@gdt/suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
@@ -234,7 +235,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
     >
       <label className="campo">
         {t("giocatoriLabel")}
-        <textarea rows={6} value={testo} onChange={(e) => setTesto(e.target.value)} placeholder={t("segnapostoNomi")} />
+        <textarea rows={6} value={testo} onChange={(e) => setTesto(limitaRighe(e.target.value, MAX_CARATTERI_NOME))} placeholder={t("segnapostoNomi")} />
         <span className="suggerimento">{t("ognunoSceglieNome")}</span>
       </label>
       <label className="campo">
@@ -697,7 +698,7 @@ function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number
     >
       <h2>{t("seiStatoScoperto")}</h2>
       <p>{t("indovinaParola")}</p>
-      <input autoFocus autoComplete="off" autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
+      <input autoFocus autoComplete="off" maxLength={40} autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
       <button className="btn primario" type="submit">
         {t("conferma")}
       </button>

@@ -1,0 +1,126 @@
+.dadi {
+  gap: 1.25rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.dadi-scelta .scelta-opzioni {
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 0.9rem;
+}
+
+/* «Personalizzato» è lungo: occupa tutta l'ultima riga */
+.dadi-scelta .scelta-opzione:last-child {
+  grid-column: 1 / -1;
+}
+
+.dadi textarea {
+  resize: vertical;
+}
+
+/* Il dado: riquadro grande con la faccia al centro; la moneta è tonda */
+.dado-scena {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 11rem;
+  height: 11rem;
+  padding: 0.5rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: calc(var(--r) + 4px);
+  box-shadow: var(--sh);
+}
+
+.dado-moneta {
+  border-radius: 50%;
+}
+
+/* Il testo non esce mai dal riquadro: valori lunghi più piccoli, il resto viene ritagliato */
+.dado-scena {
+  overflow: hidden;
+}
+
+.dado-faccia-lunga {
+  font-size: 1.4rem;
+}
+
+.dado-moneta .dado-faccia {
+  max-width: 80%;
+}
+
+.dado-faccia {
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  font-family: var(--font-titoli);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ac);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Lancio: il dado ruota e rimbalza (solo transform); con «riduci movimento» non c'è animazione */
+.dado-gira {
+  animation: dado-lancio 0.9s ease-in-out;
+}
+
+.dado-moneta.dado-gira {
+  animation: moneta-lancio 0.9s ease-in-out;
+}
+
+@keyframes dado-lancio {
+  0% {
+    transform: translateY(0) rotate(0);
+  }
+  35% {
+    transform: translateY(-1.5rem) rotate(200deg);
+  }
+  70% {
+    transform: translateY(0) rotate(420deg);
+  }
+  85% {
+    transform: translateY(-0.4rem) rotate(350deg);
+  }
+  100% {
+    transform: translateY(0) rotate(360deg);
+  }
+}
+
+@keyframes moneta-lancio {
+  0% {
+    transform: translateY(0) rotateX(0);
+  }
+  50% {
+    transform: translateY(-2rem) rotateX(900deg);
+  }
+  100% {
+    transform: translateY(0) rotateX(1800deg);
+  }
+}
+
+.dado-esito {
+  min-height: 1.5em;
+  margin: 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.dadi-lancia {
+  min-height: 56px;
+  font-size: 1.1rem;
+}
+
+.dadi-storico {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dadi-storico h3,
+.dadi-storico p {
+  margin: 0;
+}

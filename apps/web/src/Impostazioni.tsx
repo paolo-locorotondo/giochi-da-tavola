@@ -209,7 +209,7 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
               <li>
                 <Interruttore
                   icona={scuro ? "luna" : "sole"}
-                  testo={t("temaScuro")}
+                  testo={t(scuro ? "temaScuro" : "temaChiaro")}
                   acceso={scuro}
                   onCambia={(v) => {
                     const nuovo: Tema = v ? "dark" : "light";

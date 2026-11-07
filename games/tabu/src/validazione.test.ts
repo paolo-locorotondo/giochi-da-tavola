@@ -17,4 +17,8 @@ describe("nomiSquadre", () => {
     expect(nomiSquadre("", "Blu")).toEqual(["Squadra 1", "Blu"]);
     expect(nomiSquadre("Rossi", " ")).toEqual(["Rossi", "Squadra 2"]);
   });
+
+  it("accorcia i nomi troppo lunghi", () => {
+    expect(nomiSquadre("R".repeat(50), "Blu")).toEqual(["R".repeat(20), "Blu"]);
+  });
 });

@@ -3,10 +3,10 @@ import { fissaCaso, schermata } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
-test("menu: elenca i tre giochi", async ({ page }) => {
+test("menu: elenca i quattro giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
-  await expect(page.locator("a.gioco")).toHaveCount(3);
+  await expect(page.locator("a.gioco")).toHaveCount(4);
   await schermata(page, "menu");
 });
 
@@ -15,6 +15,7 @@ test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
     ["/impostore", "Come giocate?"],
     ["/lupus", "Giocatori (uno per riga, almeno 4)"],
     ["/tabu", "Prima squadra"],
+    ["/dadi", "Che cosa lanci?"],
   ] as const) {
     await page.goto(percorso);
     await expect(page.getByText(testo)).toBeVisible();
@@ -28,8 +29,12 @@ test("tema: segue il sistema; l'interruttore lo inverte e lo ricorda", async ({ 
 
   const opposto = atteso === "light" ? "dark" : "light";
   await page.getByRole("button", { name: "Impostazioni" }).click();
-  await page.getByRole("switch", { name: "Tema scuro" }).click();
+  // L'etichetta dice il tema in uso e cambia insieme a lui.
+  const nomeAttuale = atteso === "light" ? "Tema chiaro" : "Tema scuro";
+  const nomeOpposto = atteso === "light" ? "Tema scuro" : "Tema chiaro";
+  await page.getByRole("switch", { name: nomeAttuale }).click();
   await expect(page.locator("html")).toHaveAttribute("data-tema", opposto);
+  await expect(page.getByRole("switch", { name: nomeOpposto })).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-tema", opposto);
 });
