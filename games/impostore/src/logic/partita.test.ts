@@ -13,7 +13,7 @@ import {
 } from "./partita";
 
 const giocatori = creaGiocatori(["Anna", "Luca", "Marco", "Sara", "Piero", "Giulia"]);
-const parole = paroleDi("cibi");
+const parole = paroleDi("cibi", "it");
 const config: ConfigPartita = { giocatori, numImpostori: 1, parole };
 
 describe("creaPartita", () => {
@@ -58,10 +58,10 @@ describe("creaPartita", () => {
   });
 
   it("rifiuta configurazioni non valide", () => {
-    expect(() => creaPartita({ ...config, giocatori: giocatori.slice(0, 2) }, 1)).toThrow(/3 giocatori/);
-    expect(() => creaPartita({ ...config, numImpostori: 0 }, 1)).toThrow(/impostori/);
-    expect(() => creaPartita({ ...config, numImpostori: 3 }, 1)).toThrow(/impostori/);
-    expect(() => creaPartita({ ...config, parole: [] }, 1)).toThrow(/parole/);
+    expect(() => creaPartita({ ...config, giocatori: giocatori.slice(0, 2) }, 1)).toThrow("pochiGiocatori");
+    expect(() => creaPartita({ ...config, numImpostori: 0 }, 1)).toThrow("impostoriNonValidi");
+    expect(() => creaPartita({ ...config, numImpostori: 3 }, 1)).toThrow("impostoriNonValidi");
+    expect(() => creaPartita({ ...config, parole: [] }, 1)).toThrow("categoriaVuota");
   });
 });
 
@@ -106,7 +106,7 @@ describe("carta", () => {
   });
 
   it("rifiuta un posto inesistente", () => {
-    expect(() => carta(creaPartita(config, 1), 99)).toThrow(/posto 99/);
+    expect(() => carta(creaPartita(config, 1), 99)).toThrow("postoInesistente:99");
   });
 });
 
@@ -135,14 +135,14 @@ describe("risultatoVoto", () => {
   });
 
   it("rifiuta un voto vuoto", () => {
-    expect(() => risultatoVoto({})).toThrow(/Nessun voto/);
+    expect(() => risultatoVoto({})).toThrow("nessunVoto");
   });
 });
 
 describe("dati", () => {
   it("ogni categoria ha almeno 50 parole senza duplicati", () => {
     for (const c of categorie) {
-      const lista = paroleDi(c);
+      const lista = paroleDi(c, "it");
       expect(lista.length, c).toBeGreaterThanOrEqual(50);
       expect(new Set(lista).size, c).toBe(lista.length);
     }
@@ -150,7 +150,7 @@ describe("dati", () => {
 
   it("nessuna parola è ripetuta nemmeno ignorando maiuscole e accenti", () => {
     for (const c of categorie) {
-      const normalizzate = paroleDi(c).map(normalizza);
+      const normalizzate = paroleDi(c, "it").map(normalizza);
       const doppie = normalizzate.filter((p, i) => normalizzate.indexOf(p) !== i);
       expect(doppie, c).toEqual([]);
     }
@@ -158,7 +158,7 @@ describe("dati", () => {
 
   it("nessuna parola ha spazi ai bordi né è vuota", () => {
     for (const c of categorie) {
-      for (const p of paroleDi(c)) {
+      for (const p of paroleDi(c, "it")) {
         expect(p, c).toBe(p.trim());
         expect(p.length, c).toBeGreaterThan(0);
       }

@@ -1,0 +1,22 @@
+{
+  "lupo": {
+    "nome": "Werewolf",
+    "tuo": "At night you choose, with the other werewolves, who to devour. By day you pretend to be innocent.",
+    "regolamento": "At night, chooses with the other werewolves who to devour. By day, pretends to be innocent."
+  },
+  "contadino": {
+    "nome": "Villager",
+    "tuo": "You have no powers: help find the werewolves by talking and voting.",
+    "regolamento": "Has no powers: helps find the werewolves by talking and voting."
+  },
+  "veggente": {
+    "nome": "Seer",
+    "tuo": "Every night you find out whether a player is a werewolf.",
+    "regolamento": "Every night, finds out whether a player is a werewolf."
+  },
+  "medico": {
+    "nome": "Doctor",
+    "tuo": "Every night you protect one player from the werewolves (never the same one two nights in a row).",
+    "regolamento": "Every night, protects one player from the werewolves (never the same one two nights in a row)."
+  }
+}

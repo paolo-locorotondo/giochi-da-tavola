@@ -3,11 +3,19 @@ import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
 import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
 
+import { applicaLingua, usaLingua, usaT, type Lingua, type TestiGioco } from "@gdt/i18n";
+
 import { Icona, type NomeIcona } from "./Icona";
+import { dizionari } from "./testi";
 import { Impostazioni, PulsanteRegolamento, type GiocoConRegole } from "./Impostazioni";
 
-interface VoceGioco extends GiocoConRegole {
-  descrizione: string;
+/** Ogni gioco dà l'identità (`id`) e una funzione che ne restituisce i testi nella lingua scelta. */
+interface ManifestGioco {
+  id: string;
+  testi: (lingua: Lingua) => TestiGioco;
+}
+
+interface VoceGioco extends ManifestGioco {
   Componente: () => ReactElement;
 }
 
@@ -21,6 +29,11 @@ const giochi: VoceGioco[] = [
 function giocoDaPercorso(percorso: string): VoceGioco | undefined {
   const id = percorso.split("/")[1];
   return giochi.find((g) => g.id === id);
+}
+
+/** Il gioco con i testi nella lingua corrente, come lo vogliono le schede (regolamento, impostazioni). */
+function conTesti(g: VoceGioco, lingua: Lingua): GiocoConRegole {
+  return { id: g.id, ...g.testi(lingua) };
 }
 
 function usaPercorso(): [string, (a: string) => void] {
@@ -44,12 +57,22 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
 };
 
 function Versione() {
-  return <p className="versione">Giochi da tavola · v{__APP_VERSION__}</p>;
+  const t = usaT(dizionari);
+  return <p className="versione">{t("versione", { versione: __APP_VERSION__ })}</p>;
 }
 
 export function App() {
   const [percorso, vai] = usaPercorso();
-  const gioco = giocoDaPercorso(percorso);
+  const lingua = usaLingua();
+  const t = usaT(dizionari);
+  const voce = giocoDaPercorso(percorso);
+  const gioco = voce ? conTesti(voce, lingua) : undefined;
+
+  // `lang` della pagina e titolo della scheda del browser seguono la lingua scelta.
+  useEffect(() => {
+    applicaLingua(lingua);
+    document.title = t("titolo");
+  }, [lingua, t]);
 
   const naviga = (a: string) => (e: MouseEvent) => {
     e.preventDefault();
@@ -64,12 +87,12 @@ export function App() {
     else vai("/");
   };
 
-  if (gioco) {
-    const { Componente } = gioco;
+  if (voce && gioco) {
+    const { Componente } = voce;
     return (
       <main className="app">
         <header className="barra-gioco">
-          <a className="tema-btn" href="/" onClick={indietro} aria-label="Indietro">
+          <a className="tema-btn" href="/" onClick={indietro} aria-label={t("indietro")}>
             <Icona nome="indietro" />
           </a>
           <span className="barra-titolo">{gioco.nome}</span>
@@ -84,11 +107,13 @@ export function App() {
   return (
     <main className="app">
       <header className="app-testata">
-        <h1>Giochi da tavola</h1>
+        <h1>{t("titolo")}</h1>
         <Impostazioni />
       </header>
       <ul className="lista-giochi">
-        {giochi.map((g) => (
+        {giochi.map((voceGioco) => {
+          const g = conTesti(voceGioco, lingua);
+          return (
           <li key={g.id} className="riga-gioco">
             <a className="gioco" href={`/${g.id}`} onClick={naviga(`/${g.id}`)}>
               <span className="gioco-icona">
@@ -101,7 +126,8 @@ export function App() {
             </a>
             <PulsanteRegolamento gioco={g} />
           </li>
-        ))}
+          );
+        })}
       </ul>
       <Versione />
     </main>

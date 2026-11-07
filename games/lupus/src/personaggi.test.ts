@@ -1,8 +1,10 @@
+import { LINGUE } from "@gdt/i18n";
 import { describe, expect, it } from "vitest";
-import dati from "../data/it/personaggi.json";
-import { DESCRIZIONE_RUOLO, NOME_RUOLO, PERSONAGGI_REGOLAMENTO } from "./personaggi";
+import { PERSONAGGI, descrizioneRuolo, nomeRuolo, personaggiRegolamento } from "./personaggi";
 
-describe("personaggi (data/it/personaggi.json)", () => {
+describe.each(LINGUE)("personaggi (data/%s/personaggi.json)", (lingua) => {
+  const dati = PERSONAGGI[lingua];
+
   it("ci sono i quattro ruoli del gioco", () => {
     expect(Object.keys(dati).sort()).toEqual(["contadino", "lupo", "medico", "veggente"]);
   });
@@ -14,9 +16,15 @@ describe("personaggi (data/it/personaggi.json)", () => {
     }
   });
 
-  it("le esportazioni usano i testi del file", () => {
-    expect(NOME_RUOLO.lupo).toBe(dati.lupo.nome);
-    expect(DESCRIZIONE_RUOLO.medico).toBe(dati.medico.tuo);
-    expect(PERSONAGGI_REGOLAMENTO).toHaveLength(4);
+  it("le funzioni usano i testi del file", () => {
+    expect(nomeRuolo("lupo", lingua)).toBe(dati.lupo.nome);
+    expect(descrizioneRuolo("medico", lingua)).toBe(dati.medico.tuo);
+    expect(personaggiRegolamento(lingua)).toHaveLength(4);
+  });
+});
+
+describe("personaggi: le lingue sono davvero diverse", () => {
+  it("il nome del lupo cambia con la lingua", () => {
+    expect(nomeRuolo("lupo", "it")).not.toBe(nomeRuolo("lupo", "en"));
   });
 });

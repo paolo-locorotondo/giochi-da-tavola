@@ -31,7 +31,11 @@ export interface Stato {
   ballottaggio: number[] | null;
   /** Esito dell'ultimo voto, per mostrarlo. */
   eliminato: number | null;
-  messaggioVoto: string | null;
+  /**
+   * Perché non c'è un eliminato, come codice (la UI lo traduce): "ballottaggio" = primo pareggio,
+   * "ancora-pari" = secondo pareggio o nessun voto. null = nulla da dire.
+   */
+  esitoVoto: "ballottaggio" | "ancora-pari" | null;
   vincitore: "lupi" | "villaggio" | null;
   /** Se il narratore dice il ruolo di chi muore (di notte o al voto); a fine partita si vedono comunque tutti. */
   svelaRuoli: boolean;
@@ -80,7 +84,7 @@ export function statoIniziale(): Stato {
     mortiNotte: [],
     ballottaggio: null,
     eliminato: null,
-    messaggioVoto: null,
+    esitoVoto: null,
     vincitore: null,
     svelaRuoli: true,
     narratoreGioca: false,
@@ -188,20 +192,20 @@ export function riduci(s: Stato, a: Azione): Stato {
       if (s.fase === "lupi") return dopoLupi(s);
       if (s.fase === "veggente") return dopoVeggente(s);
       if (s.fase === "medico") return risolviNotte(s);
-      if (s.fase === "alba") return { ...s, fase: "voto", ballottaggio: null, messaggioVoto: null };
+      if (s.fase === "alba") return { ...s, fase: "voto", ballottaggio: null, esitoVoto: null };
       return s;
     }
     case "chiudiVoto": {
       const { eliminato, pari } = contaVoti(a.voti);
       if (eliminato === null && pari.length > 1 && s.ballottaggio === null) {
-        return { ...s, ballottaggio: pari, messaggioVoto: "Pareggio: ballottaggio tra i pari merito." };
+        return { ...s, ballottaggio: pari, esitoVoto: "ballottaggio" };
       }
       if (eliminato === null) {
         // Secondo pareggio, o nessun voto: nessuno viene eliminato.
-        return { ...s, fase: "esito", eliminato: null, ballottaggio: null, messaggioVoto: "Ancora pari: nessuno viene eliminato." };
+        return { ...s, fase: "esito", eliminato: null, ballottaggio: null, esitoVoto: "ancora-pari" };
       }
       const vivi = s.vivi.filter((p) => p !== eliminato);
-      return { ...s, vivi, fase: "esito", eliminato, ballottaggio: null, messaggioVoto: null, vincitore: vincitore(s.ruoli, vivi) };
+      return { ...s, vivi, fase: "esito", eliminato, ballottaggio: null, esitoVoto: null, vincitore: vincitore(s.ruoli, vivi) };
     }
     case "dopoVoto":
       return s.vincitore ? { ...s, fase: "fine" } : nuovaNotte(s);
@@ -218,7 +222,7 @@ function nuovaNotte(s: Stato): Stato {
     ispezionato: null,
     mortiNotte: [],
     eliminato: null,
-    messaggioVoto: null,
+    esitoVoto: null,
     ballottaggio: null,
   };
 }

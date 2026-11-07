@@ -9,6 +9,9 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@gdt/preferenze": "workspace:*"
+  },
   "peerDependencies": {
     "react": "^18.3.1"
   },

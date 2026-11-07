@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.7.0] - 2026-11-07
+
+### Aggiunto
+
+- Inglese: l'app, Impostore, Lupus in fabula e Tabù si possono usare in italiano o inglese (ingranaggio → Lingua; predefinita quella del telefono). Ogni lingua ha le sue parole, carte e personaggi (`data/en/`). In Impostore online la lingua delle parole si sceglie alla creazione della stanza.
+- Nuovo pacchetto `packages/i18n` (`@gdt/i18n`): lingua, traduzioni con segnaposti e plurali.
+
 ### Cambiato
 
 - Carte nei dati: Tabù legge le carte da `games/tabu/data/it/carte.json`; Impostore ha il nome di ogni categoria nel file delle parole (`nome` + `parole`); Lupus ha i testi dei personaggi in `games/lupus/data/it/personaggi.json`. Nessun cambiamento visibile. I README spiegano come cambiare o aggiungere carte e personaggi.

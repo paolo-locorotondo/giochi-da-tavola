@@ -134,7 +134,7 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
   impostazioni del gioco, dichiarate nel `manifest` (`impostazioni`) e salvate dal pacchetto
   `@gdt/preferenze`. Sono dell'app su quel telefono, non della partita.
 - **Lingue**: pacchetto nostro (non i18next) per avere chiavi controllate dal compilatore, peso
-  quasi nullo e plurali con `Intl.PluralRules`. Lingue previste: italiano, inglese. Da realizzare.
+  quasi nullo e plurali con `Intl.PluralRules`. Lingue: italiano e inglese (realizzato, v0.7.0). Ogni gioco ha `src/locales/{it,en}.ts` e dati in `data/<lingua>/`; la logica non produce frasi ma codici (errori, esiti) che la UI traduce. Limite noto: alcuni messaggi di errore propri del server di gioco (`apps/server`) sono ancora in italiano.
 - **Narratore** (Lupus): oggi un narratore automatico a voce (Web Speech API, funziona
   offline). Previsto anche un pannello per un narratore umano.
 

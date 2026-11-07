@@ -1,7 +1,9 @@
+import type { Lingua } from "@gdt/i18n";
+import { ErroreGioco } from "../errori";
 import type { Giocatore } from "@gdt/engine";
 import { carta, creaPartita, eImpostore, impostoriMassimi, verificaTentativo, type Carta, type Partita } from "../logic/partita";
 import { vincitore, type Vincitore } from "../logic/fasi";
-import { paroleDi, categorie, type Categoria } from "../parole";
+import { paroleDi, categorie, lingueParole, type Categoria } from "../parole";
 
 /**
  * Impostore con un telefono per giocatore. Modulo puro: lo usa il server, che tiene lo stato
@@ -13,6 +15,8 @@ export type FaseOnline = "sala" | "carte" | "indizi" | "voto" | "tentativo" | "f
 export interface ConfigOnline {
   numImpostori: number;
   categoria: Categoria;
+  /** Lingua delle parole, scelta da chi crea la partita: tutti vedono le stesse parole qualunque sia la lingua della loro interfaccia. */
+  lingua: Lingua;
   /** true = contatori dei voti in diretta; false = si rivelano a voto chiuso. */
   votiVisibili: boolean;
   /** true = gli indizi si scrivono nell'app, uno alla volta in ordine (per chi non è allo stesso tavolo). */
@@ -71,12 +75,13 @@ export type AzioneOnline =
 export function nuovoStato(nomi: string[], config: ConfigOnline): StatoOnline {
   const puliti = nomi.map((n) => n.trim().slice(0, 40)).filter(Boolean);
   if (new Set(puliti.map((n) => n.toLocaleLowerCase("it-IT"))).size !== puliti.length) {
-    throw new Error("Ci sono nomi uguali");
+    throw new ErroreGioco("nomiUguali");
   }
-  if (puliti.length < 3) throw new Error("Servono almeno 3 giocatori");
-  if (!categorie.includes(config.categoria)) throw new Error("Categoria non valida");
+  if (puliti.length < 3) throw new ErroreGioco("pochiGiocatori");
+  if (!categorie.includes(config.categoria)) throw new ErroreGioco("categoriaNonValida");
+  if (!lingueParole.includes(config.lingua)) throw new ErroreGioco("linguaNonValida");
   if (config.numImpostori < 1 || config.numImpostori > impostoriMassimi(puliti.length)) {
-    throw new Error(`Con ${puliti.length} giocatori gli impostori possono essere al massimo ${impostoriMassimi(puliti.length)}`);
+    throw new ErroreGioco("troppiImpostori", impostoriMassimi(puliti.length));
   }
   return {
     fase: "sala",
@@ -140,23 +145,23 @@ function chiudiRound(s: StatoOnline): StatoOnline {
 export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
   switch (a.tipo) {
     case "occupa":
-      if (a.posto < 1 || a.posto > s.nomi.length) throw new Error("Nome inesistente");
-      if (s.occupati.includes(a.posto)) throw new Error("Nome già scelto da un altro");
+      if (a.posto < 1 || a.posto > s.nomi.length) throw new ErroreGioco("nomeInesistente");
+      if (s.occupati.includes(a.posto)) throw new ErroreGioco("nomeOccupato");
       return { ...s, occupati: [...s.occupati, a.posto] };
 
     case "libera":
       return { ...s, occupati: s.occupati.filter((p) => p !== a.posto) };
 
     case "avvia": {
-      if (s.fase !== "sala") throw new Error("La partita è già iniziata");
+      if (s.fase !== "sala") throw new ErroreGioco("giaIniziata");
       const inGioco = [...s.occupati].sort((a, b) => a - b);
-      if (inGioco.length < 3) throw new Error("Servono almeno 3 giocatori che hanno scelto il nome");
+      if (inGioco.length < 3) throw new ErroreGioco("pochiHannoScelto");
       if (s.config.numImpostori * 2 >= inGioco.length) {
-        throw new Error(`Con ${inGioco.length} giocatori gli impostori possono essere al massimo ${impostoriMassimi(inGioco.length)}`);
+        throw new ErroreGioco("troppiImpostori", impostoriMassimi(inGioco.length));
       }
       const giocatori: Giocatore[] = inGioco.map((p) => ({ posto: p, nome: s.nomi[p - 1] as string }));
       const partita = creaPartita(
-        { giocatori, numImpostori: s.config.numImpostori, parole: paroleDi(s.config.categoria), escluse: s.usate },
+        { giocatori, numImpostori: s.config.numImpostori, parole: paroleDi(s.config.categoria, s.config.lingua), escluse: s.usate },
         a.seme,
       );
       return {
@@ -181,42 +186,42 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
       return s.viste.includes(a.posto) ? s : { ...s, viste: [...s.viste, a.posto] };
 
     case "indizio": {
-      if (s.fase !== "indizi" || !s.config.indiziScritti) throw new Error("Gli indizi non si scrivono adesso");
-      if (turnoIndizio(s) !== a.chi) throw new Error("Non tocca a te");
+      if (s.fase !== "indizi" || !s.config.indiziScritti) throw new ErroreGioco("indiziNonOra");
+      if (turnoIndizio(s) !== a.chi) throw new ErroreGioco("nonTocca");
       const testo = a.testo.trim().slice(0, MAX_INDIZIO);
-      if (!testo) throw new Error("Scrivi un indizio");
+      if (!testo) throw new ErroreGioco("indizioVuoto");
       return { ...s, indizi: [...s.indizi, { posto: a.chi, testo }] };
     }
 
     case "avanti":
       if (s.fase === "carte") {
-        if (s.viste.length < s.inGioco.length) throw new Error("Non tutti hanno visto la carta");
+        if (s.viste.length < s.inGioco.length) throw new ErroreGioco("nonTuttiVisto");
         return { ...s, fase: "indizi" };
       }
       if (s.fase === "indizi") {
-        if (s.config.indiziScritti && turnoIndizio(s) !== null) throw new Error("Non tutti hanno scritto l'indizio");
+        if (s.config.indiziScritti && turnoIndizio(s) !== null) throw new ErroreGioco("nonTuttiScritto");
         return { ...s, fase: "voto", voti: {}, candidati: null, ultimoEsito: null };
       }
-      throw new Error("Non si può avanzare adesso");
+      throw new ErroreGioco("nonSiAvanza");
 
     case "vota": {
-      if (s.fase !== "voto") throw new Error("Non si sta votando");
-      if (!s.inGioco.includes(a.chi)) throw new Error("Questo giocatore non partecipa");
+      if (s.fase !== "voto") throw new ErroreGioco("nonSiVota");
+      if (!s.inGioco.includes(a.chi)) throw new ErroreGioco("nonPartecipa");
       const candidati = s.candidati ?? s.inGioco;
-      if (!candidati.includes(a.posto)) throw new Error("Non puoi votare questo giocatore");
-      if (a.chi === a.posto) throw new Error("Non puoi votare te stesso");
+      if (!candidati.includes(a.posto)) throw new ErroreGioco("votoNonValido");
+      if (a.chi === a.posto) throw new ErroreGioco("votoTeStesso");
       const voti = { ...s.voti, [a.chi]: a.posto };
       const next = { ...s, voti };
       return mancanti(next).length === 0 ? chiudiRound(next) : next;
     }
 
     case "tenta": {
-      if (s.fase !== "tentativo" || !s.partita) throw new Error("Nessun tentativo in corso");
+      if (s.fase !== "tentativo" || !s.partita) throw new ErroreGioco("nessunTentativo");
       return { ...s, fase: "fine", indovinato: verificaTentativo(s.partita, a.testo) };
     }
 
     case "nuova":
-      if (s.fase !== "fine") throw new Error("La partita non è finita");
+      if (s.fase !== "fine") throw new ErroreGioco("nonFinita");
       return { ...s, fase: "sala", partita: null, inGioco: [], viste: [], voti: {}, indizi: [], candidati: null, ultimoEsito: null, eliminato: null, indovinato: false };
   }
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
 import { ImpostoreLocale } from "./ImpostoreApp";
 import { ImpostoreOnline } from "./online/ImpostoreOnline";
+import { usaT } from "@gdt/i18n";
+import { dizionari } from "../locales";
 
 type Modo = "scelta" | "locale" | "online";
 
@@ -20,6 +22,7 @@ function modoDaCronologia(): Modo | null {
 }
 
 export function ImpostoreApp() {
+  const t = usaT(dizionari);
   const [codice] = useState(codiceDaIndirizzo);
   const [modo, setModo] = useState<Modo>(() => modoDaCronologia() ?? (codice ? "online" : "scelta"));
 
@@ -45,14 +48,14 @@ export function ImpostoreApp() {
 
   return (
     <section className="schermata scelta-modo">
-      <h2>Come giocate?</h2>
+      <h2>{t("comeGiocate")}</h2>
       <button type="button" className="modo" onClick={() => scegli("locale")}>
         <span className="modo-icona modo-icona--locale">
           <WifiOff size={28} aria-hidden="true" />
         </span>
         <span className="modo-testo">
-          <span className="modo-nome">Un solo telefono</span>
-          <span className="modo-desc">Il telefono passa di mano. Anche offline.</span>
+          <span className="modo-nome">{t("unTelefono")}</span>
+          <span className="modo-desc">{t("unTelefonoDesc")}</span>
         </span>
       </button>
       <button type="button" className="modo" onClick={() => scegli("online")}>
@@ -60,8 +63,8 @@ export function ImpostoreApp() {
           <Wifi size={28} aria-hidden="true" />
         </span>
         <span className="modo-testo">
-          <span className="modo-nome">Ognuno col suo telefono</span>
-          <span className="modo-desc">Serve internet, oppure essere collegati alla stessa rete (WiFi) del server di gioco.</span>
+          <span className="modo-nome">{t("ognunoIlSuo")}</span>
+          <span className="modo-desc">{t("ognunoIlSuoDesc")}</span>
         </span>
       </button>
     </section>

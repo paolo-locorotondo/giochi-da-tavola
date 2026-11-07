@@ -12,7 +12,7 @@ import {
 } from "./gioco";
 
 const nomi = ["Anna", "Bruno", "Carla", "Dario", "Elena"];
-const cfg: ConfigOnline = { numImpostori: 1, categoria: "cibi", votiVisibili: true };
+const cfg: ConfigOnline = { numImpostori: 1, categoria: "cibi", lingua: "it", votiVisibili: true };
 
 const occupa = (s: StatoOnline, posti: number[]) => posti.reduce((x, p) => applica(x, { tipo: "occupa", posto: p }), s);
 const visti = (s: StatoOnline) => s.inGioco.reduce((x, p) => applica(x, { tipo: "visto", posto: p }), s);
@@ -60,26 +60,26 @@ describe("nuovoStato: validazione", () => {
   });
 
   it("rifiuta i nomi uguali, senza badare a maiuscole e spazi", () => {
-    expect(() => nuovoStato(["Anna", "anna ", "Carla"], cfg)).toThrow("Ci sono nomi uguali");
+    expect(() => nuovoStato(["Anna", "anna ", "Carla"], cfg)).toThrow("nomiUguali");
   });
 
   it("rifiuta meno di 3 giocatori (contando solo i nomi non vuoti)", () => {
-    expect(() => nuovoStato(["Anna", "Bruno"], cfg)).toThrow("Servono almeno 3 giocatori");
-    expect(() => nuovoStato(["Anna", "Bruno", " "], cfg)).toThrow("Servono almeno 3 giocatori");
+    expect(() => nuovoStato(["Anna", "Bruno"], cfg)).toThrow("pochiGiocatori");
+    expect(() => nuovoStato(["Anna", "Bruno", " "], cfg)).toThrow("pochiGiocatori");
   });
 
   it("rifiuta una categoria che non esiste", () => {
-    expect(() => nuovoStato(nomi, { ...cfg, categoria: "marziani" as never })).toThrow("Categoria non valida");
+    expect(() => nuovoStato(nomi, { ...cfg, categoria: "marziani" as never })).toThrow("categoriaNonValida");
   });
 
   it.each([[0], [-1], [3], [10]])("rifiuta %i impostori con 5 giocatori", (n) => {
-    expect(() => nuovoStato(nomi, { ...cfg, numImpostori: n })).toThrow(/al massimo 2/);
+    expect(() => nuovoStato(nomi, { ...cfg, numImpostori: n })).toThrow("troppiImpostori:2");
   });
 
   it("accetta il massimo di impostori consentito", () => {
     expect(() => nuovoStato(nomi, { ...cfg, numImpostori: 2 })).not.toThrow();
     expect(() => nuovoStato(nomi.slice(0, 3), { ...cfg, numImpostori: 1 })).not.toThrow();
-    expect(() => nuovoStato(nomi.slice(0, 3), { ...cfg, numImpostori: 2 })).toThrow(/al massimo 1/);
+    expect(() => nuovoStato(nomi.slice(0, 3), { ...cfg, numImpostori: 2 })).toThrow("troppiImpostori:1");
   });
 
   it("gli indizi scritti sono spenti se non richiesti", () => {
@@ -92,13 +92,13 @@ describe("sala: occupa e libera", () => {
   it("rifiuta posti inesistenti", () => {
     const s = nuovoStato(nomi, cfg);
     for (const posto of [0, -1, 6, 99]) {
-      expect(() => applica(s, { tipo: "occupa", posto })).toThrow("Nome inesistente");
+      expect(() => applica(s, { tipo: "occupa", posto })).toThrow("nomeInesistente");
     }
   });
 
   it("un nome occupato non si può prendere", () => {
     const s = occupa(nuovoStato(nomi, cfg), [2]);
-    expect(() => applica(s, { tipo: "occupa", posto: 2 })).toThrow("Nome già scelto da un altro");
+    expect(() => applica(s, { tipo: "occupa", posto: 2 })).toThrow("nomeOccupato");
   });
 
   it("libera rimette il nome a disposizione", () => {
@@ -124,12 +124,12 @@ describe("sala: occupa e libera", () => {
 describe("avvia", () => {
   it("servono almeno 3 giocatori seduti", () => {
     const s = occupa(nuovoStato(nomi, cfg), [1, 2]);
-    expect(() => applica(s, { tipo: "avvia", seme: 1 })).toThrow("Servono almeno 3 giocatori che hanno scelto il nome");
+    expect(() => applica(s, { tipo: "avvia", seme: 1 })).toThrow("pochiHannoScelto");
   });
 
   it("gli impostori restano meno della metà di chi è seduto davvero", () => {
     const s = occupa(nuovoStato(nomi, { ...cfg, numImpostori: 2 }), [1, 2, 3]);
-    expect(() => applica(s, { tipo: "avvia", seme: 1 })).toThrow(/al massimo 1/);
+    expect(() => applica(s, { tipo: "avvia", seme: 1 })).toThrow("troppiImpostori:1");
   });
 
   it("gioca solo chi è seduto, in ordine di posto", () => {
@@ -141,7 +141,7 @@ describe("avvia", () => {
   });
 
   it("non si avvia due volte", () => {
-    expect(() => applica(aCarte(), { tipo: "avvia", seme: 2 })).toThrow("La partita è già iniziata");
+    expect(() => applica(aCarte(), { tipo: "avvia", seme: 2 })).toThrow("giaIniziata");
   });
 
   it("stesso seme, stessa partita", () => {
@@ -195,7 +195,7 @@ describe("carte", () => {
 
   it("avanti in carte richiede che abbiano visto tutti", () => {
     const s = applica(aCarte(), { tipo: "visto", posto: 1 });
-    expect(() => applica(s, { tipo: "avanti" })).toThrow("Non tutti hanno visto la carta");
+    expect(() => applica(s, { tipo: "avanti" })).toThrow("nonTuttiVisto");
     expect(applica(visti(s), { tipo: "avanti" }).fase).toBe("indizi");
   });
 });
@@ -207,7 +207,7 @@ describe("avanti e fasi sbagliate", () => {
     expect(tentativo.fase).toBe("tentativo");
     const fine = applica(tentativo, { tipo: "tenta", testo: "x" });
     for (const s of [inSala(), voto, tentativo, fine]) {
-      expect(() => applica(s, { tipo: "avanti" })).toThrow("Non si può avanzare adesso");
+      expect(() => applica(s, { tipo: "avanti" })).toThrow("nonSiAvanza");
     }
   });
 
@@ -245,13 +245,13 @@ describe("indizi scritti", () => {
   it("solo chi ha il turno può scrivere", () => {
     const s = scritti();
     const altro = ordineIndizi(s)[1]!;
-    expect(() => applica(s, { tipo: "indizio", chi: altro, testo: "x" })).toThrow("Non tocca a te");
+    expect(() => applica(s, { tipo: "indizio", chi: altro, testo: "x" })).toThrow("nonTocca");
   });
 
   it("l'indizio vuoto o di soli spazi è respinto", () => {
     const s = scritti();
     for (const testo of ["", "   ", "\n"]) {
-      expect(() => applica(s, { tipo: "indizio", chi: turnoIndizio(s)!, testo })).toThrow("Scrivi un indizio");
+      expect(() => applica(s, { tipo: "indizio", chi: turnoIndizio(s)!, testo })).toThrow("indizioVuoto");
     }
   });
 
@@ -262,12 +262,12 @@ describe("indizi scritti", () => {
 
   it("non si scrive quando gli indizi sono a voce", () => {
     const s = aIndizi(5, { indiziScritti: false });
-    expect(() => applica(s, { tipo: "indizio", chi: 1, testo: "x" })).toThrow("Gli indizi non si scrivono adesso");
+    expect(() => applica(s, { tipo: "indizio", chi: 1, testo: "x" })).toThrow("indiziNonOra");
   });
 
   it("non si scrive fuori dalla fase indizi", () => {
     expect(() => applica(aCarte(5, { indiziScritti: true }), { tipo: "indizio", chi: 1, testo: "x" })).toThrow(
-      "Gli indizi non si scrivono adesso",
+      "indiziNonOra",
     );
   });
 
@@ -295,24 +295,24 @@ describe("indizi scritti", () => {
 
 describe("voto: validazioni", () => {
   it("si vota solo nella fase di voto", () => {
-    expect(() => applica(aIndizi(), { tipo: "vota", chi: 1, posto: 2 })).toThrow("Non si sta votando");
-    expect(() => applica(inSala(), { tipo: "vota", chi: 1, posto: 2 })).toThrow("Non si sta votando");
+    expect(() => applica(aIndizi(), { tipo: "vota", chi: 1, posto: 2 })).toThrow("nonSiVota");
+    expect(() => applica(inSala(), { tipo: "vota", chi: 1, posto: 2 })).toThrow("nonSiVota");
   });
 
   it("vota solo chi partecipa", () => {
     const s = applica(visti(applica(occupa(nuovoStato(nomi, cfg), [1, 2, 3]), { tipo: "avvia", seme: 1 })), { tipo: "avanti" });
     const voto = applica(s, { tipo: "avanti" });
-    expect(() => applica(voto, { tipo: "vota", chi: 5, posto: 1 })).toThrow("Questo giocatore non partecipa");
+    expect(() => applica(voto, { tipo: "vota", chi: 5, posto: 1 })).toThrow("nonPartecipa");
   });
 
   it("non si vota chi non partecipa", () => {
     const s = applica(visti(applica(occupa(nuovoStato(nomi, cfg), [1, 2, 3]), { tipo: "avvia", seme: 1 })), { tipo: "avanti" });
     const voto = applica(s, { tipo: "avanti" });
-    expect(() => applica(voto, { tipo: "vota", chi: 1, posto: 5 })).toThrow("Non puoi votare questo giocatore");
+    expect(() => applica(voto, { tipo: "vota", chi: 1, posto: 5 })).toThrow("votoNonValido");
   });
 
   it("non si vota sé stessi", () => {
-    expect(() => applica(aVoto(), { tipo: "vota", chi: 2, posto: 2 })).toThrow("Non puoi votare te stesso");
+    expect(() => applica(aVoto(), { tipo: "vota", chi: 2, posto: 2 })).toThrow("votoTeStesso");
   });
 
   it("si può cambiare voto finché il round non si chiude", () => {
@@ -377,7 +377,7 @@ describe("voto: esiti", () => {
 
   it("non si tenta fuori dalla fase di tentativo", () => {
     for (const s of [inSala(), aCarte(), aVoto()]) {
-      expect(() => applica(s, { tipo: "tenta", testo: "x" })).toThrow("Nessun tentativo in corso");
+      expect(() => applica(s, { tipo: "tenta", testo: "x" })).toThrow("nessunTentativo");
     }
   });
 
@@ -389,13 +389,13 @@ describe("voto: esiti", () => {
     expect(s.candidati).toEqual([1, 2]);
     expect(s.voti).toEqual({});
     expect(s.ultimoEsito).toMatchObject({ eliminato: null, ballottaggio: true });
-    expect(() => applica(s, { tipo: "vota", chi: 3, posto: 4 })).toThrow("Non puoi votare questo giocatore");
+    expect(() => applica(s, { tipo: "vota", chi: 3, posto: 4 })).toThrow("votoNonValido");
   });
 
   it("nel ballottaggio chi è candidato non può votare sé stesso ma vota l'altro", () => {
     let s = aVoto(4);
     for (const [chi, posto] of [[1, 2], [2, 1], [3, 1], [4, 2]] as const) s = applica(s, { tipo: "vota", chi, posto });
-    expect(() => applica(s, { tipo: "vota", chi: 1, posto: 1 })).toThrow("Non puoi votare te stesso");
+    expect(() => applica(s, { tipo: "vota", chi: 1, posto: 1 })).toThrow("votoTeStesso");
     for (const [chi, posto] of [[1, 2], [2, 1], [3, 2], [4, 2]] as const) s = applica(s, { tipo: "vota", chi, posto });
     expect(s.eliminato).toBe(2);
     expect(s.candidati).toEqual([1, 2]);
@@ -425,7 +425,7 @@ describe("voto: esiti", () => {
 describe("nuova partita", () => {
   it("solo a partita finita", () => {
     for (const s of [inSala(), aCarte(), aIndizi(), aVoto()]) {
-      expect(() => applica(s, { tipo: "nuova" })).toThrow("La partita non è finita");
+      expect(() => applica(s, { tipo: "nuova" })).toThrow("nonFinita");
     }
   });
 

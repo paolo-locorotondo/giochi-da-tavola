@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { CARTE } from "./carte";
+import { LINGUE } from "@gdt/i18n";
+import { carteDi } from "./carte";
 
-const chiave = (s: string) => s.toLocaleLowerCase("it");
+const chiave = (s: string) => s.toLocaleLowerCase();
 
-describe("mazzo di carte", () => {
+describe.each(LINGUE)("mazzo di carte (%s)", (lingua) => {
+  const CARTE = carteDi(lingua);
+
   it("ha abbastanza carte per una partita lunga", () => {
     // 10 turni a testa da 120 secondi: servono ben più di un centinaio di carte prima di ripetersi.
     expect(CARTE.length).toBeGreaterThanOrEqual(120);
@@ -22,7 +25,6 @@ describe("mazzo di carte", () => {
     for (const v of c.vietate) {
       expect(v).not.toBe("");
       expect(v).toBe(v.trim());
-      // La parola da indovinare non può essere tra le vietate.
       expect(chiave(v)).not.toBe(chiave(c.parola));
     }
     expect(new Set(c.vietate.map(chiave)).size).toBe(5);

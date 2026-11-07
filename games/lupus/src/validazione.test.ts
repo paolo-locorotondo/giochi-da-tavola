@@ -9,18 +9,24 @@ describe("validaConfigurazione (Lupus)", () => {
 
   it.each([[0], [1], [2], [3]])("rifiuta %i giocatori", (n) => {
     const nomi = Array.from({ length: n }, (_, i) => `G${i}`);
-    expect(validaConfigurazione(nomi)).toBe(`Servono almeno ${MIN_GIOCATORI} giocatori`);
+    expect(validaConfigurazione(nomi)).toEqual({ codice: "pochi", minimo: MIN_GIOCATORI });
   });
 
   it("rifiuta i nomi duplicati, anche con maiuscole diverse", () => {
-    expect(validaConfigurazione(["Anna", "Luca", "anna", "Sara"])).not.toBeNull();
+    expect(validaConfigurazione(["Anna", "Luca", "anna", "Sara"])).toEqual({ codice: "nome-duplicato", nome: "anna" });
   });
 
-  it("rifiuta un nome vuoto", () => {
-    expect(validaConfigurazione(["Anna", "Luca", "  ", "Sara"])).not.toBeNull();
+  it("rifiuta un nome vuoto e dice a che posto", () => {
+    expect(validaConfigurazione(["Anna", "Luca", "  ", "Sara"])).toEqual({ codice: "nome-vuoto", posto: 3 });
   });
 
   it("i nomi sbagliati hanno la precedenza sul numero minimo", () => {
-    expect(validaConfigurazione(["A", "a"])).not.toBe(`Servono almeno ${MIN_GIOCATORI} giocatori`);
+    expect(validaConfigurazione(["A", "a"])?.codice).toBe("nome-duplicato");
+  });
+
+  it("non produce frasi: solo codici uguali in ogni lingua", () => {
+    for (const nomi of [["A"], ["A", "a"], ["A", ""]]) {
+      expect(typeof validaConfigurazione(nomi)).toBe("object");
+    }
   });
 });

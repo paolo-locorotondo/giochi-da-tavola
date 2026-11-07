@@ -2,12 +2,17 @@ import { useEffect, useState, type FormEvent } from "react";
 import { suona } from "@gdt/suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
-import { categorie, nomeCategoria, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
+import { NOME_LINGUA, usaLingua, usaT, type Lingua } from "@gdt/i18n";
+import { dizionari } from "../../locales";
+import { testoMessaggio } from "../../errori-ui";
+import { g, Ricco } from "../Ricco";
+import { categorie, lingueParole, nomeCategoria, impostoriConsigliati, impostoriMassimi, type Categoria, type Vista } from "../../online";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 import "./online.css";
 
 export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: string | null; onLocale: () => void }) {
   const c = useCollegamento(codiceIniziale);
+  const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
 
   // Errori transitori (es. "nome già scelto") spariscono dopo qualche secondo.
@@ -17,32 +22,29 @@ export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: 
     return () => clearTimeout(id);
   }, [c.errore]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stato = !c.connesso ? <p className="avviso">Connessione al server…</p> : null;
+  const stato = !c.connesso ? <p className="avviso">{t("connessione")}</p> : null;
 
   // Senza vista e senza connessione da troppo tempo: meglio dirlo e proporre l'alternativa.
   if (!c.vista && !c.connesso && c.nonRaggiungibile && !c.chiusa) {
     return (
       <section className="schermata">
-        <h2>Server non raggiungibile</h2>
-        <p className="muted">
-          Non riesco a collegarmi al server di gioco. Controlla la connessione (internet, oppure il WiFi del PC che
-          fa da server). Intanto puoi giocare con un solo telefono, anche senza rete.
-        </p>
+        <h2>{t("serverNonRaggiungibile")}</h2>
+        <p className="muted">{t("serverNonRaggiungibileTesto")}</p>
         <button className="btn primario" onClick={onLocale}>
-          Gioca con un solo telefono
+          {t("giocaUnTelefono")}
         </button>
       </section>
     );
   }
-  const err = c.errore ? <p className="errore">{c.errore}</p> : null;
+  const err = c.errore ? <p className="errore">{testoMessaggio(t, c.errore)}</p> : null;
 
   if (c.chiusa) {
     return (
       <section className="schermata">
-        <h2>Partita chiusa</h2>
-        <p className="muted">L'organizzatore ha chiuso la partita.</p>
+        <h2>{t("partitaChiusa")}</h2>
+        <p className="muted">{t("partitaChiusaTesto")}</p>
         <button className="btn primario" onClick={() => window.location.assign("/impostore")}>
-          Torna al gioco
+          {t("tornaAlGioco")}
         </button>
       </section>
     );
@@ -54,7 +56,7 @@ export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: 
         <section className="schermata">
           {stato}
           {err}
-          <p className="muted">Entro nella partita {codiceIniziale}…</p>
+          <p className="muted">{t("entroNella", { codice: codiceIniziale })}</p>
         </section>
       );
     }
@@ -71,11 +73,11 @@ export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: 
   return (
     <>
       {c.nonRaggiungibile && !c.connesso ? (
-        <p className="avviso">Connessione persa: continuo a riprovare. La partita resta nel server.</p>
+        <p className="avviso">{t("connessionePersa")}</p>
       ) : (
         stato
       )}
-      {c.sollecitato && <p className="avviso">Tocca a te!</p>}
+      {c.sollecitato && <p className="avviso">{t("toccaATe")}</p>}
       {err}
       <Testata c={c} v={c.vista} />
       <Partita c={c} v={c.vista} />
@@ -86,50 +88,44 @@ export function ImpostoreOnline({ codiceIniziale, onLocale }: { codiceIniziale: 
 
 /** In cima a ogni schermata: chi sono io e, a richiesta, codice stanza e chi è collegato. */
 function Testata({ c, v }: { c: Collegamento; v: Vista }) {
+  const t = usaT(dizionari);
   const io = v.nomi.find((n) => n.posto === v.io);
   const link = c.codice ? `${window.location.origin}/impostore/${c.codice}` : "";
   const collegati = v.nomi.filter((n) => n.collegato).length;
   const stato = (n: Vista["nomi"][number]) => {
-    if (v.fase !== "sala" && !n.inGioco) return "non partecipa";
-    if (n.collegato) return "collegato";
-    return n.occupato ? "scollegato" : "non ancora entrato";
+    if (v.fase !== "sala" && !n.inGioco) return t("statoNonPartecipa");
+    if (n.collegato) return t("statoCollegato");
+    return n.occupato ? t("statoScollegato") : t("statoNonEntrato");
   };
   return (
     <div className="intestazione-partita">
       <p className="chi-sono">
-        {io ? (
-          <>
-            Sei <strong>{io.nome}</strong>
-            {v.host ? " · organizzatore" : ""}
-          </>
-        ) : (
-          "Non hai ancora un nome in questa partita"
-        )}
+        {io ? <Ricco testo={t(v.host ? "seiTuOrganizzatore" : "seiTu", { nome: g(io.nome) })} /> : t("senzaNome")}
       </p>
       <details className="accordion">
         <summary>
           <span>
-            Stanza {c.codice} · {collegati} collegati
+            {t("stanza", { codice: c.codice ?? "", n: collegati })}
           </span>
         </summary>
         <div className="accordion-corpo">
           <div className="codice-riga">
-            <span className="muted">Codice partita</span>
+            <span className="muted">{t("codicePartita")}</span>
             <strong>{c.codice}</strong>
             <CopiaLink link={link} />
           </div>
           <QrInvito link={link} />
-          <ul className="chip-elenco" aria-label="Giocatori nella stanza">
+          <ul className="chip-elenco" aria-label={t("giocatoriNellaStanza")}>
             {v.nomi.map((n) => (
               <li key={n.posto} className={`chip${n.collegato ? "" : " assente"}`}>
                 <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" />
                 {n.nome}
                 {n.organizzatore ? " *" : ""}
-                {n.posto === v.io ? " (tu)" : ""} · {stato(n)}
+                {n.posto === v.io ? ` ${t("tu")}` : ""} · {stato(n)}
               </li>
             ))}
           </ul>
-          <p className="muted">* organizzatore</p>
+          <p className="muted">{t("organizzatoreLegenda")}</p>
         </div>
       </details>
     </div>
@@ -138,6 +134,7 @@ function Testata({ c, v }: { c: Collegamento; v: Vista }) {
 
 /** Copia il link della stanza. Su HTTP locale l'appunti può non esistere: il bottone allora si nasconde. */
 function CopiaLink({ link }: { link: string }) {
+  const t = usaT(dizionari);
   const [copiato, setCopiato] = useState(false);
   if (!navigator.clipboard) return null;
   return (
@@ -153,28 +150,29 @@ function CopiaLink({ link }: { link: string }) {
         }
       }}
     >
-      <Copy size={16} aria-hidden="true" /> {copiato ? "Copiato" : "Copia link"}
+      <Copy size={16} aria-hidden="true" /> {copiato ? t("copiato") : t("copiaLink")}
     </button>
   );
 }
 
 function ChiudiPartita({ c }: { c: Collegamento }) {
+  const t = usaT(dizionari);
   const [conferma, setConferma] = useState(false);
   return (
     <section className="schermata allineata chiudi">
       {conferma ? (
         <>
-          <p>Chiudere la partita per tutti? Non si può annullare.</p>
+          <p>{t("chiudiPerTutti")}</p>
           <button className="btn pericolo" onClick={() => c.invia({ t: "chiudi" })}>
-            Sì, chiudi
+            {t("siChiudi")}
           </button>
           <button className="btn" onClick={() => setConferma(false)}>
-            No, continua
+            {t("noContinua")}
           </button>
         </>
       ) : (
         <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
-          Chiudi la partita
+          {t("chiudiPartita")}
         </button>
       )}
     </section>
@@ -182,6 +180,7 @@ function ChiudiPartita({ c }: { c: Collegamento }) {
 }
 
 function EntraConCodice({ c, onIndietro }: { c: Collegamento; onIndietro: () => void }) {
+  const t = usaT(dizionari);
   const [codice, setCodice] = useState("");
   function invia(e: FormEvent) {
     e.preventDefault();
@@ -193,21 +192,24 @@ function EntraConCodice({ c, onIndietro }: { c: Collegamento; onIndietro: () => 
   return (
     <form className="schermata allineata" onSubmit={invia}>
       <label className="campo">
-        Codice della partita
+        {t("codiceLabel")}
         <input autoFocus autoCapitalize="characters" value={codice} onChange={(e) => setCodice(e.target.value)} />
       </label>
-      {c.errore && <p className="errore">{c.errore}</p>}
+      {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit">
-        Entra
+        {t("entra")}
       </button>
       <button className="btn" type="button" onClick={onIndietro}>
-        Indietro
+        {t("indietro")}
       </button>
     </form>
   );
 }
 
 function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
+  const t = usaT(dizionari);
+  const linguaApp = usaLingua();
+  const [lingua, setLingua] = useState<Lingua>(linguaApp);
   const [testo, setTesto] = useState("");
   const [scelta, setScelta] = useState<number | null>(null);
   const [categoria, setCategoria] = useState<Categoria>("cibi");
@@ -227,49 +229,58 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       className="schermata allineata"
       onSubmit={(e) => {
         e.preventDefault();
-        c.invia({ t: "crea", nomi, config: { numImpostori, categoria, votiVisibili, indiziScritti } });
+        c.invia({ t: "crea", nomi, config: { numImpostori, categoria, lingua, votiVisibili, indiziScritti } });
       }}
     >
       <label className="campo">
-        Giocatori (uno per riga, almeno 3)
-        <textarea rows={6} value={testo} onChange={(e) => setTesto(e.target.value)} placeholder={"Anna\nLuca\nMarco"} />
-        <span className="suggerimento">Ognuno sceglierà il proprio nome dal suo telefono.</span>
+        {t("giocatoriLabel")}
+        <textarea rows={6} value={testo} onChange={(e) => setTesto(e.target.value)} placeholder={t("segnapostoNomi")} />
+        <span className="suggerimento">{t("ognunoSceglieNome")}</span>
       </label>
       <label className="campo">
-        Numero di impostori
+        {t("numImpostori")}
         <select value={numImpostori} onChange={(e) => setScelta(Number(e.target.value))}>
           {Array.from({ length: massimi }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
-              {n}
-              {n === consigliati ? " (consigliato)" : ""}
+              {n === consigliati ? t("consigliato", { n }) : n}
             </option>
           ))}
         </select>
       </label>
       <label className="campo">
-        Categoria
+        {t("linguaParole")}
+        <select value={lingua} onChange={(e) => setLingua(e.target.value as Lingua)}>
+          {lingueParole.map((l) => (
+            <option key={l} value={l}>
+              {NOME_LINGUA[l]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="campo">
+        {t("categoria")}
         <select value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria)}>
           {categorie.map((k) => (
             <option key={k} value={k}>
-              {nomeCategoria(k)}
+              {nomeCategoria(k, lingua)}
             </option>
           ))}
         </select>
       </label>
       <label className="spunta">
         <input type="checkbox" checked={votiVisibili} onChange={(e) => setVotiVisibili(e.target.checked)} />
-        Mostra i voti in diretta durante la votazione
+        {t("votiInDiretta")}
       </label>
       <label className="spunta">
         <input type="checkbox" checked={indiziScritti} onChange={(e) => setIndiziScritti(e.target.checked)} />
-        Indizi scritti nell'app, uno alla volta (per giocare da case diverse)
+        {t("indiziScritti")}
       </label>
-      {c.errore && <p className="errore">{c.errore}</p>}
+      {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso}>
-        Crea la partita
+        {t("creaPartita")}
       </button>
       <button className="btn" type="button" onClick={onEntra}>
-        Ho un codice: entra
+        {t("hoUnCodice")}
       </button>
     </form>
   );
@@ -277,21 +288,22 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
 
 /** Rivedere la propria carta dopo la fase "carte": nascosta finché non la tocchi, la vedi solo tu. */
 function RivediCarta({ v }: { v: Vista }) {
+  const t = usaT(dizionari);
   const [aperta, setAperta] = useState(false);
   if (!v.carta || !["indizi", "voto", "tentativo"].includes(v.fase)) return null;
   return (
     <div className="rivedi">
       <button className="btn" onClick={() => setAperta(!aperta)}>
         {aperta ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
-        {aperta ? " Nascondi la mia carta" : " Rivedi la mia carta"}
+        {` ${aperta ? t("nascondiCarta") : t("rivediCarta")}`}
       </button>
       {aperta && (
         <div className="carta">
           {v.carta.ruolo === "impostore" ? (
-            <p className="grande">Sei l'impostore: non conosci la parola</p>
+            <p className="grande">{t("seiImpostoreNonConosci")}</p>
           ) : (
             <>
-              <p>La parola è</p>
+              <p>{t("laParolaE")}</p>
               <p className="grande">{v.carta.parola}</p>
             </>
           )}
@@ -311,16 +323,17 @@ function Partita({ c, v }: { c: Collegamento; v: Vista }) {
 }
 
 function Fase({ c, v }: { c: Collegamento; v: Vista }) {
+  const t = usaT(dizionari);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
 
   if (v.io === null && v.fase !== "sala") {
     const liberi = v.nomi.filter((n) => n.inGioco && !n.collegato);
     return (
       <section className="schermata allineata">
-        <h2>Partita in corso</h2>
+        <h2>{t("partitaInCorso")}</h2>
         {liberi.length > 0 ? (
           <>
-            <p>Eri già in questa partita? Tocca il tuo nome per rientrare:</p>
+            <p>{t("eriGia")}</p>
             <div className="giocatori">
               {liberi.map((n) => (
                 <button key={n.posto} className="btn" onClick={() => c.azione({ tipo: "riprendi", posto: n.posto })}>
@@ -328,12 +341,12 @@ function Fase({ c, v }: { c: Collegamento; v: Vista }) {
                 </button>
               ))}
             </div>
-            <p className="muted">Se non eri tra i giocatori, aspetta la prossima partita.</p>
+            <p className="muted">{t("nonEriTraiGiocatori")}</p>
           </>
         ) : (
-          <p className="muted">Hai aperto il link a partita iniziata e tutti i giocatori sono collegati. Aspetta la prossima.</p>
+          <p className="muted">{t("linkATuttiCollegati")}</p>
         )}
-        {c.errore && <p className="errore">{c.errore}</p>}
+        {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       </section>
     );
   }
@@ -348,16 +361,16 @@ function Fase({ c, v }: { c: Collegamento; v: Vista }) {
         <IndiziScritti c={c} v={v} nome={nome} />
       ) : (
         <section className="schermata">
-          <h2>Indizi</h2>
+          <h2>{t("indizi")}</h2>
           <p>
-            Parte <strong>{nome(v.primo)}</strong>: ognuno dice a voce un indizio, in senso orario.
+            <Ricco testo={t("indiziVoceOnline", { nome: g(nome(v.primo)) })} />
           </p>
           {v.host ? (
             <button className="btn primario" onClick={() => c.azione({ tipo: "avanti" })}>
-              Si passa al voto
+              {t("passaAlVoto")}
             </button>
           ) : (
-            <p className="muted">L'organizzatore avvierà il voto.</p>
+            <p className="muted">{t("organizzatoreAvviaVoto")}</p>
           )}
         </section>
       );
@@ -372,6 +385,7 @@ function Fase({ c, v }: { c: Collegamento; v: Vista }) {
 
 /** QR code del link, disegnato nel telefono: funziona anche su HTTP locale, senza internet. */
 function QrInvito({ link }: { link: string }) {
+  const t = usaT(dizionari);
   const [svg, setSvg] = useState("");
   useEffect(() => {
     let vivo = true;
@@ -384,17 +398,18 @@ function QrInvito({ link }: { link: string }) {
   }, [link]);
   if (!svg) return null;
   // Lo SVG lo genera la nostra libreria a partire dal link: nessun contenuto esterno.
-  return <div className="qr" aria-label="QR code per entrare nella partita" dangerouslySetInnerHTML={{ __html: svg }} />;
+  return <div className="qr" aria-label={t("qrAria")} dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
 function Invito({ codice }: { codice: string }) {
+  const t = usaT(dizionari);
   const link = `${window.location.origin}/impostore/${codice}`;
   const [copiato, setCopiato] = useState(false);
   // Su http://192.168… (non HTTPS) il browser non offre né Condividi né appunti.
   const puoCondividere = typeof navigator.share === "function" || !!navigator.clipboard;
   async function condividi() {
     try {
-      if (navigator.share) await navigator.share({ title: "Impostore", text: "Entra nella partita:", url: link });
+      if (navigator.share) await navigator.share({ title: t("condividiTitolo"), text: t("condividiTesto"), url: link });
       else {
         await navigator.clipboard.writeText(link);
         setCopiato(true);
@@ -405,22 +420,23 @@ function Invito({ codice }: { codice: string }) {
   }
   return (
     <div className="invito">
-      <p className="muted">Codice partita</p>
+      <p className="muted">{t("codicePartita")}</p>
       <p className="grande codice">{codice}</p>
       <p className="muted link-invito">{link}</p>
       <QrInvito link={link} />
       {puoCondividere ? (
         <button className="btn" onClick={condividi}>
-          {copiato ? "Link copiato" : "Condividi il link"}
+          {copiato ? t("linkCopiato") : t("condividiLink")}
         </button>
       ) : (
-        <p className="muted">Su questo indirizzo non c'è "Condividi": detta il codice o il link agli altri.</p>
+        <p className="muted">{t("nessunCondividi")}</p>
       )}
     </div>
   );
 }
 
 function Sala({ c, v }: { c: Collegamento; v: Vista }) {
+  const t = usaT(dizionari);
   const liberi = v.nomi.filter((n) => !n.occupato).length;
   const inSala = v.nomi.length - liberi;
   return (
@@ -428,8 +444,8 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
       {c.codice && v.host && <Invito codice={c.codice} />}
       {v.io === null ? (
         <>
-          <h2>Chi sei?</h2>
-          <p className="muted">Tocca il tuo nome.</p>
+          <h2>{t("chiSei")}</h2>
+          <p className="muted">{t("toccaIlNome")}</p>
           <div className="giocatori">
             {v.nomi.map((n) => (
               <button
@@ -445,13 +461,11 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
         </>
       ) : (
         <>
-          <h2>Ciao {v.nomi.find((n) => n.posto === v.io)?.nome}</h2>
-          <p className="muted">Aspetta che entrino gli altri.</p>
+          <h2>{t("ciao", { nome: v.nomi.find((n) => n.posto === v.io)?.nome ?? "" })}</h2>
+          <p className="muted">{t("aspettaGliAltri")}</p>
         </>
       )}
-      <p>
-        Entrati: {inSala} su {v.nomi.length}
-      </p>
+      <p>{t("entrati", { dentro: inSala, totale: v.nomi.length })}</p>
       <ul className="elenco">
         {v.nomi.map((n) => (
           <li key={n.posto} className={n.occupato ? "" : "assente"}>
@@ -461,7 +475,7 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
             </span>
             {v.host && n.occupato && n.posto !== v.io && (
               <button className="btn piccolo" onClick={() => c.azione({ tipo: "libera", posto: n.posto })}>
-                Libera
+                {t("libera")}
               </button>
             )}
           </li>
@@ -470,7 +484,7 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
       {v.host && (
         <div className="azioni">
           <button className="btn primario" disabled={inSala < 3} onClick={() => c.azione({ tipo: "avvia" })}>
-            Avvia la partita ({inSala})
+            {t("avviaPartita", { n: inSala })}
           </button>
         </div>
       )}
@@ -479,6 +493,7 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
 }
 
 function Carta({ c, v }: { c: Collegamento; v: Vista }) {
+  const t = usaT(dizionari);
   const [scoperta, setScoperta] = useState(false);
   if (!v.carta) return null;
   const mioNome = v.nomi.find((n) => n.posto === v.io)?.nome;
@@ -490,21 +505,21 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
   return (
     <section className="schermata">
       <p className="muted">
-        <strong>{mioNome}</strong> · la tua carta, guarda solo tu
+        <Ricco testo={t("cartaTua", { nome: g(mioNome ?? "") })} />
       </p>
       <div className="carta">
         {!scoperta ? (
           <button className="btn primario" onClick={scopri}>
-            Scopri
+            {t("scopri")}
           </button>
         ) : v.carta.ruolo === "impostore" ? (
           <>
-            <p>Sei l'impostore</p>
-            <p className="grande">Non conosci la parola</p>
+            <p>{t("seiImpostore")}</p>
+            <p className="grande">{t("nonConosciParola")}</p>
           </>
         ) : (
           <>
-            <p>La parola è</p>
+            <p>{t("laParolaE")}</p>
             <p className="grande">{v.carta.parola}</p>
           </>
         )}
@@ -513,7 +528,7 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
       <div className="azioni">
         {scoperta && (
           <button className="btn" onClick={() => setScoperta(false)}>
-            <EyeOff size={18} aria-hidden="true" /> Nascondi
+            <EyeOff size={18} aria-hidden="true" /> {t("nascondi")}
           </button>
         )}
         {v.host && (
@@ -522,7 +537,7 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
             disabled={v.viste < v.nomi.filter((n) => n.inGioco).length}
             onClick={() => c.azione({ tipo: "avanti" })}
           >
-            Tutti hanno visto: via agli indizi
+            {t("tuttiHannoVisto")}
           </button>
         )}
       </div>
@@ -532,11 +547,12 @@ function Carta({ c, v }: { c: Collegamento; v: Vista }) {
 
 /** Quanti hanno già guardato la propria carta: barra e testo, così non dipende dal solo colore. */
 function ProgressoCarte({ viste, totale }: { viste: number; totale: number }) {
+  const t = usaT(dizionari);
   const percentuale = totale > 0 ? Math.round((viste / totale) * 100) : 0;
   return (
     <div className="progresso">
       <p className="muted">
-        Hanno visto la carta: <strong>{viste}</strong> su {totale}
+        <Ricco testo={t("hannoVistoLaCarta", { viste: g(viste), totale })} />
       </p>
       <div className="progresso-barra" role="progressbar" aria-valuemin={0} aria-valuemax={totale} aria-valuenow={viste}>
         <span style={{ width: `${percentuale}%` }} />
@@ -561,6 +577,7 @@ function ElencoIndizi({ v, nome }: { v: Vista; nome: (p: number | null) => strin
 }
 
 function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
+  const t = usaT(dizionari);
   const [testo, setTesto] = useState("");
   const ind = v.indizi;
   if (!ind) return null;
@@ -568,7 +585,7 @@ function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: nu
   const giocatore = v.nomi.find((n) => n.posto === ind.turno);
   return (
     <section className="schermata allineata">
-      <h2>Indizi</h2>
+      <h2>{t("indizi")}</h2>
       <ElencoIndizi v={v} nome={nome} />
       {mioTurno ? (
         <form
@@ -578,30 +595,29 @@ function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: nu
             setTesto("");
           }}
         >
-          <p>Tocca a te: scrivi il tuo indizio.</p>
+          <p>{t("toccaATeScrivi")}</p>
           <input autoFocus autoComplete="off" maxLength={60} value={testo} onChange={(e) => setTesto(e.target.value)} />
           <button className="btn primario" type="submit" disabled={!testo.trim()}>
-            Invia
+            {t("invia")}
           </button>
         </form>
       ) : ind.turno !== null ? (
         <p className="muted">
-          Tocca a <strong>{nome(ind.turno)}</strong>
-          {giocatore && !giocatore.collegato ? " · scollegato" : ""}…
+          <Ricco testo={t(giocatore && !giocatore.collegato ? "toccaAScollegato" : "toccaA", { nome: g(nome(ind.turno)) })} />
         </p>
       ) : (
-        <p className="muted">Hanno scritto tutti.</p>
+        <p className="muted">{t("hannoScrittoTutti")}</p>
       )}
-      {c.errore && <p className="errore">{c.errore}</p>}
+      {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       {v.host && (
         <div className="mancanti">
           {ind.turno !== null && !mioTurno && (
             <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
-              Sollecita {nome(ind.turno)}
+              {t("sollecitaNome", { nome: nome(ind.turno) })}
             </button>
           )}
           <button className="btn primario" disabled={ind.turno !== null} onClick={() => c.azione({ tipo: "avanti" })}>
-            Si passa al voto
+            {t("passaAlVoto")}
           </button>
         </div>
       )}
@@ -610,24 +626,23 @@ function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: nu
 }
 
 function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
+  const t = usaT(dizionari);
   const voto = v.voto;
   if (!voto) return null;
   const sonoInGioco = v.nomi.find((n) => n.posto === v.io)?.inGioco ?? false;
   return (
     <section className="schermata allineata">
-      <h2>{voto.ballottaggio ? "Ballottaggio" : "Votazione"}</h2>
-      {voto.ballottaggio && v.ultimoEsito && <p className="muted">Pareggio: si rivota solo tra i pari merito.</p>}
+      <h2>{voto.ballottaggio ? t("ballottaggio") : t("votazione")}</h2>
+      {voto.ballottaggio && v.ultimoEsito && <p className="muted">{t("pareggioRivota")}</p>}
       {v.indizi && (
         <details className="accordion">
-          <summary>Indizi dati</summary>
+          <summary>{t("indiziDati")}</summary>
           <div className="accordion-corpo">
             <ElencoIndizi v={v} nome={nome} />
           </div>
         </details>
       )}
-      <p className="muted">
-        Hanno votato {voto.hannoVotato} su {voto.totale}. Votare è obbligatorio per tutti.
-      </p>
+      <p className="muted">{t("hannoVotato", { votato: voto.hannoVotato, totale: voto.totale })}</p>
       {sonoInGioco ? (
         <div className="giocatori">
           {voto.candidati
@@ -644,23 +659,23 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
             ))}
         </div>
       ) : (
-        <p className="muted">Non partecipi a questa partita.</p>
+        <p className="muted">{t("nonPartecipi")}</p>
       )}
-      {sonoInGioco && voto.mioVoto !== null && <p className="muted">Hai votato {nome(voto.mioVoto)}. Puoi cambiare finché non votano tutti.</p>}
+      {sonoInGioco && voto.mioVoto !== null && <p className="muted">{t("haiVotato", { nome: nome(voto.mioVoto) })}</p>}
       {v.host && voto.mancanti && voto.mancanti.length > 0 && (
         <div className="mancanti">
-          <p>Mancano:</p>
+          <p>{t("mancano")}</p>
           <ul className="elenco">
             {voto.mancanti.map((p) => (
               <li key={p}>
                 <span>
-                  {nome(p)} {v.nomi.find((n) => n.posto === p)?.collegato ? "" : "· scollegato"}
+                  {nome(p)} {v.nomi.find((n) => n.posto === p)?.collegato ? "" : t("scollegatoSuffisso")}
                 </span>
               </li>
             ))}
           </ul>
           <button className="btn" onClick={() => c.invia({ t: "sollecita" })}>
-            Sollecita
+            {t("sollecita")}
           </button>
         </div>
       )}
@@ -669,6 +684,7 @@ function Voto({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
 }
 
 function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
+  const t = usaT(dizionari);
   const [testo, setTesto] = useState("");
   const tocca = v.io !== null && v.io === v.eliminato;
   return tocca ? (
@@ -679,22 +695,23 @@ function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number
         c.azione({ tipo: "tenta", testo });
       }}
     >
-      <h2>Sei stato scoperto</h2>
-      <p>Puoi ancora vincere: indovina la parola segreta.</p>
+      <h2>{t("seiStatoScoperto")}</h2>
+      <p>{t("indovinaParola")}</p>
       <input autoFocus autoComplete="off" autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
       <button className="btn primario" type="submit">
-        Conferma
+        {t("conferma")}
       </button>
     </form>
   ) : (
     <section className="schermata">
-      <h2>{nome(v.eliminato)} è l'impostore!</h2>
-      <p className="muted">Sta provando a indovinare la parola…</p>
+      <h2>{t("eLImpostore", { nome: nome(v.eliminato) })}</h2>
+      <p className="muted">{t("staIndovinando")}</p>
     </section>
   );
 }
 
 function Fine({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | null) => string }) {
+  const t = usaT(dizionari);
   const f = v.fine;
   const vincitore = f?.vincitore;
   useEffect(() => {
@@ -704,28 +721,29 @@ function Fine({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
   const e = v.ultimoEsito;
   return (
     <section className="schermata">
-      <h2>{f.vincitore === "civili" ? "Vincono i civili!" : "Vincono gli impostori!"}</h2>
+      <h2>{f.vincitore === "civili" ? t("vincitoCivili") : t("vincitoImpostori")}</h2>
       <p>
-        La parola era <strong>{f.parola}</strong>
+        <Ricco testo={t("laParolaEra", { parola: g(f.parola) })} />
       </p>
-      <p className="muted">Impostori: {f.impostori.map(nome).join(", ")}</p>
-      {f.eliminato !== null && <p className="muted">Eliminato: {nome(f.eliminato)}</p>}
+      <p className="muted">{t("impostoriElenco", { nomi: f.impostori.map(nome).join(", ") })}</p>
+      {f.eliminato !== null && <p className="muted">{t("eliminato", { nome: nome(f.eliminato) })}</p>}
       {e && (
         <p className="muted">
-          {f.eliminato === null ? "Pareggio anche al ballottaggio: nessuno eliminato. " : ""}
-          Voti dell'ultima votazione:{" "}
-          {Object.entries(e.conteggi)
-            .sort((a, b) => b[1] - a[1])
-            .map(([p, n]) => `${nome(Number(p))} ${n} ${n === 1 ? "voto" : "voti"}`)
-            .join(", ")}
+          {f.eliminato === null ? `${t("pareggioNessuno")} ` : ""}
+          {t("votiUltima", {
+            elenco: Object.entries(e.conteggi)
+              .sort((a, b) => b[1] - a[1])
+              .map(([p, n]) => t("votiDi", { nome: nome(Number(p)), voti: t("votoConteggio", { n }) }))
+              .join(", "),
+          })}
         </p>
       )}
       {v.host ? (
         <button className="btn primario" onClick={() => c.azione({ tipo: "nuova" })}>
-          Nuova partita (stessa sala)
+          {t("nuovaStessaSala")}
         </button>
       ) : (
-        <p className="muted">L'organizzatore può avviare un'altra partita.</p>
+        <p className="muted">{t("altraPartita")}</p>
       )}
     </section>
   );

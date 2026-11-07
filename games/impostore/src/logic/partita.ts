@@ -1,3 +1,4 @@
+import { ErroreGioco } from "../errori";
 import { creaRng, type Giocatore } from "@gdt/engine";
 
 export interface ConfigPartita {
@@ -40,11 +41,11 @@ export function creaPartita(config: ConfigPartita, seme: number | string): Parti
   const { giocatori, numImpostori, parole, escluse = [] } = config;
   const n = giocatori.length;
 
-  if (n < 3) throw new Error("Servono almeno 3 giocatori");
+  if (n < 3) throw new ErroreGioco("pochiGiocatori");
   if (!Number.isInteger(numImpostori) || numImpostori < 1 || numImpostori * 2 >= n) {
-    throw new Error(`Numero di impostori non valido (${numImpostori}) per ${n} giocatori`);
+    throw new ErroreGioco("impostoriNonValidi");
   }
-  if (parole.length === 0) throw new Error("La categoria non ha parole");
+  if (parole.length === 0) throw new ErroreGioco("categoriaVuota");
 
   const rng = creaRng(seme);
   const disponibili = parole.filter((p) => !escluse.includes(p));
@@ -63,7 +64,7 @@ export function creaPartita(config: ConfigPartita, seme: number | string): Parti
 /** Ciò che il giocatore al posto dato vede sulla propria carta segreta. */
 export function carta(partita: Partita, posto: number): Carta {
   if (!partita.giocatori.some((g) => g.posto === posto)) {
-    throw new Error(`Nessun giocatore al posto ${posto}`);
+    throw new ErroreGioco("postoInesistente", posto);
   }
   return partita.impostori.includes(posto)
     ? { ruolo: "impostore" }
@@ -95,7 +96,7 @@ export function risultatoVoto(voti: Readonly<Record<number, number>>): EsitoVoto
   for (const votato of Object.values(voti)) {
     conteggio.set(votato, (conteggio.get(votato) ?? 0) + 1);
   }
-  if (conteggio.size === 0) throw new Error("Nessun voto espresso");
+  if (conteggio.size === 0) throw new ErroreGioco("nessunVoto");
   const massimo = Math.max(...conteggio.values());
   const posti = [...conteggio].filter(([, v]) => v === massimo).map(([p]) => p).sort((a, b) => a - b);
   return posti.length === 1

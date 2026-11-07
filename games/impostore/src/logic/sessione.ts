@@ -1,3 +1,4 @@
+import { ErroreGioco } from "../errori";
 import { creaGiocatori, type Macchina } from "@gdt/engine";
 import { nuovaMacchinaImpostore, vincitore, type EventoImpostore, type FaseImpostore, type Vincitore } from "./fasi";
 import { creaPartita, eImpostore, verificaTentativo, type Partita } from "./partita";
@@ -44,7 +45,7 @@ export function sessioneIniziale(): Sessione {
 }
 
 function partitaCorrente(s: Sessione): Partita {
-  if (!s.partita) throw new Error("Nessuna partita avviata");
+  if (!s.partita) throw new ErroreGioco("nessunaPartita");
   return s.partita;
 }
 

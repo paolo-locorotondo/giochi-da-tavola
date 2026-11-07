@@ -59,27 +59,25 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Struttura
 
-- `src/logica.ts`: regole pure (ruoli, candidati della notte, voto, vittoria); `src/validazione.ts`: controllo dei nomi.
-- `src/ui/LupusApp.tsx`: schermate e narratore; `src/ui/voce.ts`: sintesi vocale.
-- `data/it/personaggi.json`: i testi dei personaggi; `src/personaggi.ts` li legge.
+- `src/logica.ts`: regole pure (ruoli, candidati della notte, voto, vittoria); non produce frasi, solo codici (es. `esitoVoto`). `src/validazione.ts`: controllo dei nomi, restituisce un codice d'errore.
+- `src/ui/LupusApp.tsx`: schermate e narratore; `src/ui/voce.ts`: sintesi vocale nella lingua dell'app (`it-IT`, `en-US`).
+- `data/<lingua>/personaggi.json`: i testi dei personaggi per lingua; `src/personaggi.ts` li legge.
+- `src/locales/<lingua>.ts` (`it.ts` è il riferimento) e `src/locales/index.ts`: tutti gli altri testi visibili (schermate, frasi del narratore, regolamento, impostazioni).
+- `src/impostazioni.ts` e `src/manifest.ts`: impostazioni e testi per l'app (`manifest.testi(lingua)`).
 
-## Personaggi: cosa si cambia nei dati e cosa nel codice
+## Lingue
 
-In Lupus le «carte» sono i **personaggi**. Un personaggio ha due parti:
+Italiano e inglese. La lingua si sceglie dall'ingranaggio dell'app; il narratore a voce parla nella stessa lingua (serve una voce installata sul telefono per quella lingua). I **suoni** (ululato, gallo, versi dei ruoli, fine partita) non dipendono dalla lingua, la **voce** sì.
 
-- **Testi** (nei dati, `data/it/personaggi.json`): per ogni ruolo `nome`, `tuo` (cosa legge il giocatore sulla propria carta, in seconda persona) e `regolamento` (la voce di «I personaggi» nel regolamento, in terza persona). **Modificare questi testi non richiede il codice**: cambi il file e basta.
-- **Poteri** (nel codice, `src/logica.ts`): chi si sveglia, cosa può scegliere, come si risolve la notte, chi vince, quanti ce ne sono ogni N giocatori. Questa parte non è nei dati: sono regole, e un errore nel JSON non deve poterle rompere.
+**Aggiungere una lingua** (es. `fr`):
 
-**Aggiungere un personaggio nuovo** (per esempio la guardia o il cacciatore) richiede quindi entrambe le parti, e il compilatore ti guida perché ogni elenco di ruoli è un `Record<Ruolo, …>`:
+1. Aggiungila in `LINGUE` e `NOME_LINGUA` di `packages/i18n/src/index.ts` (e il codice voce in `LINGUA_VOCE` di `src/ui/voce.ts`).
+2. Copia `src/locales/en.ts` in `src/locales/fr.ts`, traduci i valori (le chiavi restano uguali) e aggiungila in `src/locales/index.ts`.
+3. Copia `data/en/personaggi.json` in `data/fr/personaggi.json`, traduci e aggiungila in `PERSONAGGI` di `src/personaggi.ts`.
 
-1. Aggiungi il ruolo al tipo `Ruolo` in `src/logica.ts`.
-2. Scrivi i suoi testi in `data/it/personaggi.json` (e in `NOME_RUOLO` / `DESCRIZIONE_RUOLO` in `src/personaggi.ts`).
-3. Decidi in `distribuisciRuoli` da quanti giocatori compare.
-4. Se agisce di notte: aggiungi la fase, il candidato (`candidatiNotte`), l'azione e la risoluzione in `riduci`, e la schermata in `src/ui/LupusApp.tsx` (titolo, testo del narratore, `FINE_TURNO`, e la fase in `FASI_CON_TRANSIZIONE`).
-5. Aggiungi il suo verso di morte in `SUONO_MORTO` (e il suono in `packages/suoni`).
-6. Aggiorna il regolamento («Ruoli: …») qui e in `src/manifest.ts`, e scrivi i test in `src/logica.test.ts`.
+Il compilatore segnala una lingua o una chiave mancante.
 
-La fase di notte per ora è una sequenza scritta nel codice (lupi → veggente → medico): renderla un elenco ordinato nei dati è un lavoro futuro, da fare quando arriverà il primo ruolo nuovo.
+**Tradurre o cambiare un personaggio**: modifica `nome`, `tuo` e `regolamento` in `data/<lingua>/personaggi.json`, senza toccare il codice. Le chiavi (`lupo`, `contadino`, `veggente`, `medico`) sono i ruoli del codice e non si traducono.
 
 ## Deploy
 

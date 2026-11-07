@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import type { ImpostazioneGioco } from "@gdt/preferenze";
 
 /** Lingue dell'app. Per aggiungerne una: qui, in `NOME_LINGUA` e un file `locales/<lingua>.ts` per pacchetto. */
 export const LINGUE = ["it", "en"] as const;
@@ -12,8 +13,11 @@ export const LINGUA_PREDEFINITA: Lingua = "it";
 const CHIAVE = "gdt-lingua";
 const EVENTO = "gdt-lingua";
 
-/** Una voce è una frase con `{segnaposto}` oppure le forme del plurale (si sceglie con `{n}`). */
-export type Voce = string | { zero?: string; one: string; two?: string; few?: string; many?: string; other: string };
+/**
+ * Una voce è una frase con `{segnaposto}`, una lista di frasi (es. i passi del regolamento: si leggono
+ * con `elenco()`) oppure le forme del plurale (si sceglie con `{n}`).
+ */
+export type Voce = string | readonly string[] | { zero?: string; one: string; two?: string; few?: string; many?: string; other: string };
 
 /**
  * Il dizionario di riferimento (italiano) fissa le chiavi; ogni altra lingua deve avere
@@ -86,14 +90,39 @@ export function traduttore<D extends Record<string, Voce>>(dizionari: Dizionari<
   return (chiave, parametri) => {
     const voce = dizionario[chiave] ?? (dizionari.it as Record<string, Voce>)[chiave];
     if (voce === undefined) return chiave;
+    if (Array.isArray(voce)) return voce.join(" ");
     if (typeof voce === "string") return riempi(voce, parametri);
     const n = Number(parametri?.n ?? 0);
-    const forma = n === 0 && voce.zero !== undefined ? "zero" : plurali.select(n);
-    return riempi(voce[forma as keyof typeof voce] ?? voce.other, parametri);
+    const plurale = voce as Exclude<Voce, string | readonly string[]>;
+    const forma = n === 0 && plurale.zero !== undefined ? "zero" : plurali.select(n);
+    return riempi(plurale[forma as keyof typeof plurale] ?? plurale.other, parametri);
   };
+}
+
+/** Una lista di frasi di una lingua (es. `elenco(dizionari, "en", "regolamentoPassi")`). */
+export function elenco<D extends Record<string, Voce>>(dizionari: Dizionari<D>, lingua: Lingua, chiave: keyof D & string): readonly string[] {
+  const v = ((dizionari[lingua] ?? dizionari.it) as Record<string, Voce>)[chiave];
+  return Array.isArray(v) ? v : [];
 }
 
 /** Per i componenti: `const t = usaT(dizionari)`; cambia da sola con la lingua. */
 export function usaT<D extends Record<string, Voce>>(dizionari: Dizionari<D>): Traduttore<D> {
   return traduttore(dizionari, usaLingua());
+}
+
+/**
+ * Testi di un gioco che l'app mostra fuori dal gioco stesso (elenco, regolamento, ingranaggio).
+ * Ogni gioco li fornisce con `manifest.testi(lingua)`.
+ */
+export interface TestiGioco {
+  nome: string;
+  descrizione: string;
+  regolamento: {
+    passi: readonly string[];
+    note?: readonly string[];
+    /** Elenco di ruoli/personaggi con la loro abilità, mostrato dopo i passi. */
+    personaggi?: readonly { nome: string; testo: string }[];
+  };
+  /** Impostazioni del gioco con i testi nella lingua scelta (chiavi, valori e predefiniti non cambiano con la lingua). */
+  impostazioni: readonly ImpostazioneGioco[];
 }

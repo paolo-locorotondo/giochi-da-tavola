@@ -302,10 +302,10 @@ describe("risoluzione della notte", () => {
   });
 
   it("dall'alba si va al voto, senza ballottaggio", () => {
-    const voto = riduci(alla(avvia(8), "alba", { ballottaggio: [1, 2], messaggioVoto: "x" }), { tipo: "avanti" });
+    const voto = riduci(alla(avvia(8), "alba", { ballottaggio: [1, 2], esitoVoto: "ballottaggio" }), { tipo: "avanti" });
     expect(voto.fase).toBe("voto");
     expect(voto.ballottaggio).toBeNull();
-    expect(voto.messaggioVoto).toBeNull();
+    expect(voto.esitoVoto).toBeNull();
   });
 });
 
@@ -359,7 +359,7 @@ describe("votazione", () => {
     expect(s.fase).toBe("esito");
     expect(s.eliminato).toBe(2);
     expect(s.vivi).not.toContain(2);
-    expect(s.messaggioVoto).toBeNull();
+    expect(s.esitoVoto).toBeNull();
   });
 
   it("eliminato l'ultimo lupo vince il villaggio", () => {
@@ -395,7 +395,7 @@ describe("votazione", () => {
     const s = riduci(voto(), { tipo: "chiudiVoto", voti: { 1: 2, 2: 2, 3: 1 } });
     expect(s.fase).toBe("voto");
     expect(s.ballottaggio).toEqual([1, 2]);
-    expect(s.messaggioVoto).toMatch(/ballottaggio/i);
+    expect(s.esitoVoto).toBe("ballottaggio");
     expect(s.vivi).toHaveLength(8);
   });
 
@@ -413,7 +413,7 @@ describe("votazione", () => {
     expect(s.fase).toBe("esito");
     expect(s.eliminato).toBeNull();
     expect(s.vivi).toHaveLength(8);
-    expect(s.messaggioVoto).toMatch(/nessuno/i);
+    expect(s.esitoVoto).toBe("ancora-pari");
     expect(s.vincitore).toBeNull();
   });
 

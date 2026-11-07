@@ -30,7 +30,7 @@ describe("validaConfigurazione (Impostore)", () => {
   });
 
   it.each([[0], [1], [2]])("rifiuta %i giocatori", (n) => {
-    expect(validaConfigurazione(nomi(n), 1)).toBe("Servono almeno 3 giocatori");
+    expect(validaConfigurazione(nomi(n), 1)).toEqual({ codice: "pochiGiocatori" });
   });
 
   it.each([
@@ -40,9 +40,7 @@ describe("validaConfigurazione (Impostore)", () => {
     [6, 3, 2],
     [10, 5, 4],
   ])("%i giocatori con %i impostori: massimo %i", (n, impostori, massimo) => {
-    expect(validaConfigurazione(nomi(n), impostori)).toBe(
-      `Con ${n} giocatori gli impostori possono essere al massimo ${massimo}`,
-    );
+    expect(validaConfigurazione(nomi(n), impostori)).toEqual({ codice: "troppiImpostori", n: massimo });
   });
 
   it("i nomi doppi sono respinti, anche con maiuscole diverse", () => {
@@ -54,6 +52,6 @@ describe("validaConfigurazione (Impostore)", () => {
   });
 
   it("i nomi sbagliati hanno la precedenza sugli altri errori", () => {
-    expect(validaConfigurazione(["A", "a"], 5)).not.toBe("Servono almeno 3 giocatori");
+    expect(validaConfigurazione(["A", "a"], 5)).not.toEqual({ codice: "pochiGiocatori" });
   });
 });

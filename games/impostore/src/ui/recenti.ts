@@ -18,6 +18,11 @@ function leggi(): Recenti {
   }
 }
 
+/** Chiave delle parole recenti: ogni lingua ha le sue (l'italiano resta con la chiave di prima). */
+export function chiaveRecenti(categoria: string, lingua: string): string {
+  return lingua === "it" ? categoria : `${lingua}:${categoria}`;
+}
+
 export function leggiRecenti(categoria: string): string[] {
   const valori = leggi()[categoria];
   return Array.isArray(valori) ? valori : [];

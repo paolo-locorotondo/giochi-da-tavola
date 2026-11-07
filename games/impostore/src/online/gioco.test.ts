@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { applica, mancanti, nuovoStato, ordineIndizi, turnoIndizio, vistaPer, type StatoOnline } from "./gioco";
 
 const nomi = ["Anna", "Bruno", "Carla", "Dario"];
-const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: true };
+const cfg = { numImpostori: 1, categoria: "cibi" as const, lingua: "it" as const, votiVisibili: true };
 
 function pronta(): StatoOnline {
   let s = nuovoStato(nomi, cfg);

@@ -1,7 +1,7 @@
 {
   "name": "@gdt/web",
   "private": true,
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,7 @@
     "test:e2e:aggiorna": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@gdt/i18n": "workspace:*",
     "@gdt/impostore": "workspace:*",
     "@gdt/lupus": "workspace:*",
     "@gdt/preferenze": "workspace:*",

@@ -45,7 +45,8 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Struttura
 
-- `data/it/carte.json`: le carte (parola + 5 vietate), una riga per carta; `src/carte.ts` le legge.
+- `data/<lingua>/carte.json` (`it`, `en`): le carte (parola + 5 vietate), una riga per carta; `src/carte.ts` sceglie il mazzo della lingua.
+- `src/locales/{it,en}.ts`: tutti i testi dell'interfaccia e il regolamento; `src/manifest.ts` li espone all'app.
 - `src/logica.ts`: regole pure (punti, turni, vincitore); `src/validazione.ts`: nomi delle squadre.
 - `src/ui/TabuApp.tsx`: le schermate.
 
@@ -61,6 +62,14 @@ Le carte stanno in `data/it/carte.json`, una per riga. Non serve toccare il codi
 - **Modificare o togliere**: cambia o cancella la riga.
 - Regole controllate dai test (`pnpm test:unit`): almeno 120 carte, nessuna parola da indovinare ripetuta (ignorando maiuscole), nessuno spazio ai bordi, la parola non compare tra le sue vietate, cinque vietate diverse.
 - Le carte devono essere **originali**: non copiare quelle del gioco commerciale.
+
+## Lingue
+
+Italiano e inglese. Le **carte non si traducono**: ogni lingua ha il proprio mazzo originale (`data/it/carte.json`, `data/en/carte.json`), perché un gioco di parole vietate dipende dalla lingua. Cambiando lingua dall'ingranaggio, la prossima partita usa il mazzo corrispondente (una partita in corso mantiene il suo).
+
+- **Cambiare un testo**: modifica la chiave in `src/locales/it.ts` e in `src/locales/en.ts`; il compilatore segnala se manca in una lingua.
+- **Aggiungere una lingua**: aggiungila in `packages/i18n`, poi crea `src/locales/<lingua>.ts` e `data/<lingua>/carte.json` (stesse regole dei test: almeno 120 carte, cinque vietate diverse).
+- Nel codice niente frasi: il TSX usa `t("chiave")`.
 
 ## Deploy
 

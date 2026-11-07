@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { creaStanza, eseguiAzione, vistaDi } from "./stanze";
 
-const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: false };
+const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: false, lingua: "it" as const };
 
 describe("permessi", () => {
   it("solo l'organizzatore avvia; ognuno vota per sé", () => {

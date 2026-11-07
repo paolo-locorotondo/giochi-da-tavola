@@ -9,12 +9,14 @@ import {
   type Ruolo,
   type Stato,
 } from "../logica";
-import { validaConfigurazione } from "../validazione";
+import { traduttore, usaLingua, usaT, type Lingua, type Traduttore } from "@gdt/i18n";
+import { validaConfigurazione, type ErroreConfigurazione } from "../validazione";
+import { dizionari } from "../locales";
 import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
 import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
 import { Transizione } from "./Transizione";
-import { DESCRIZIONE_RUOLO, NOME_RUOLO } from "../personaggi";
+import { descrizioneRuolo, nomeRuolo } from "../personaggi";
 import { TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
 
@@ -58,6 +60,7 @@ function nomeDi(s: Stato, posto: number | null): string {
 }
 
 export function LupusApp() {
+  const t = usaT(dizionari);
   const [s, dispatch] = useReducer(riduci, undefined, caricaStato);
 
   // La partita sopravvive al refresh della pagina.
@@ -68,12 +71,13 @@ export function LupusApp() {
   useEffect(() => seguiAudio(() => setAudio(audioAttivo())), []);
 
   // Il narratore parla quando cambia la fase.
+  const lingua = usaLingua();
   useEffect(() => {
     if (!voce || !audio || s.giocatori.length === 0) return;
-    const testo = frasePerFase(s);
-    if (testo) parla(testo);
+    const testo = frasePerFase(s, lingua);
+    if (testo) parla(testo, lingua);
     return silenzio;
-  }, [s.fase, s.notte, s.ballottaggio, s.eliminato, voce, audio, s.giocatori.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.fase, s.notte, s.ballottaggio, s.eliminato, voce, audio, s.giocatori.length, lingua]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Suoni di scena: ululato quando scende la notte, gallo all'alba. Il verso del morto solo se il narratore ne dice il ruolo.
   const faseSuoni = useRef(s.fase);
@@ -133,9 +137,8 @@ export function LupusApp() {
   return (
     <>
       <label className="voce">
-        <input type="checkbox" checked={voce} onChange={(e) => setVoce(e.target.checked)} /> Voce
-        del narratore
-        {audio ? "" : " (audio spento nelle impostazioni)"}
+        <input type="checkbox" checked={voce} onChange={(e) => setVoce(e.target.checked)} /> {t("voceNarratore")}
+        {audio ? "" : t("audioSpento")}
       </label>
       {contenuto}
       {/* Se il narratore gioca o il telefono passa di mano, i ruoli restano coperti. */}
@@ -147,14 +150,16 @@ export function LupusApp() {
 
 /** Per il narratore: chi è chi e chi è ancora vivo. Chiuso di default. */
 function RuoliNarratore({ s }: { s: Stato }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   const vivi = s.vivi.length;
   return (
     <details className="accordion" style={{ marginTop: "1.25rem" }}>
       <summary>
-        Giocatori e ruoli ({vivi} vivi su {s.giocatori.length})
+        {t("ruoliNarratoreTitolo", { vivi, tot: s.giocatori.length })}
       </summary>
       <div className="accordion-corpo">
-        <p className="accordion-nota">Solo per il narratore: non mostrare lo schermo agli altri.</p>
+        <p className="accordion-nota">{t("soloNarratore")}</p>
         <ul className="ruoli-narratore">
           {s.giocatori.map((g) => {
             const vivo = s.vivi.includes(g.posto);
@@ -162,7 +167,7 @@ function RuoliNarratore({ s }: { s: Stato }) {
               <li key={g.posto} className={vivo ? "" : "morto"}>
                 <span className="nome-g">{g.nome}</span>
                 <span className="stato">
-                  {NOME_RUOLO[s.ruoli[g.posto] ?? "contadino"]} · {vivo ? "vivo" : "morto"}
+                  {t("statoRuolo", { ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua), stato: vivo ? t("vivo") : t("morto") })}
                 </span>
               </li>
             );
@@ -173,48 +178,71 @@ function RuoliNarratore({ s }: { s: Stato }) {
   );
 }
 
+type T = Traduttore<typeof dizionari.it>;
+
 /** « Era Contadino.» se la partita svela i ruoli di chi muore, altrimenti nulla. */
-function ruoloDetto(s: Stato, posto: number | null | undefined): string {
+function ruoloDetto(s: Stato, posto: number | null | undefined, t: T, lingua: Lingua): string {
   if (!s.svelaRuoli || posto === null || posto === undefined) return "";
-  return ` Era ${NOME_RUOLO[s.ruoli[posto] ?? "contadino"]}.`;
+  return " " + t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[posto] ?? "contadino", lingua) });
 }
 
-function frasePerFase(s: Stato): string | null {
+/** Il messaggio del voto senza eliminato, dal codice della logica. */
+function testoEsito(esito: Stato["esitoVoto"], t: T): string | null {
+  if (esito === "ballottaggio") return t("esitoPareggio");
+  if (esito === "ancora-pari") return t("esitoAncoraPari");
+  return null;
+}
+
+/** Cosa dice il narratore a voce in ogni fase, nella lingua scelta. */
+function frasePerFase(s: Stato, lingua: Lingua): string | null {
+  const t = traduttore(dizionari, lingua);
   switch (s.fase) {
     case "lupi":
-      return `Notte ${s.notte}. Il villaggio si addormenta. Tutti chiudono gli occhi. I lupi si risvegliano e scelgono chi sbranare.`;
+      return t("vLupi", { notte: s.notte });
     case "veggente":
-      return "I lupi tornano a dormire. Il veggente si risveglia e indica un giocatore da esaminare.";
+      return t("vVeggente");
     case "medico":
-      return "Il veggente torna a dormire. Il medico si risveglia e sceglie chi proteggere.";
+      return t("vMedico");
     case "alba":
-      return `Il villaggio si risveglia. ${
-        s.mortiNotte.length
-          ? `Questa notte è morto ${nomeDi(s, s.mortiNotte[0] ?? null)}.${ruoloDetto(s, s.mortiNotte[0])}`
-          : "Questa notte non è morto nessuno."
-      }`;
+      return s.mortiNotte.length
+        ? t("vAlbaMorto", { nome: nomeDi(s, s.mortiNotte[0] ?? null), ruolo: ruoloDetto(s, s.mortiNotte[0], t, lingua) })
+        : t("vAlbaNessuno");
     case "voto":
-      return s.ballottaggio
-        ? "Ballottaggio. Votate tra i giocatori in parità."
-        : "È ora di discutere e votare chi eliminare.";
+      return s.ballottaggio ? t("vBallottaggio") : t("vVoto");
     case "esito":
       return s.eliminato !== null
-        ? `${nomeDi(s, s.eliminato)} è stato eliminato.${ruoloDetto(s, s.eliminato)}`
-        : (s.messaggioVoto ?? null);
+        ? t("vEliminato", { nome: nomeDi(s, s.eliminato), ruolo: ruoloDetto(s, s.eliminato, t, lingua) })
+        : testoEsito(s.esitoVoto, t);
     case "fine":
-      return s.vincitore === "villaggio" ? "Il villaggio ha vinto!" : "I lupi hanno vinto!";
+      return s.vincitore === "villaggio" ? t("vFineVillaggio") : t("vFineLupi");
     default:
       return null;
   }
 }
 
+/** Segnaposto per mettere il nome in grassetto dentro una frase tradotta. */
+const SEGNO = "\u0000";
+
 type D = (a: Parameters<typeof riduci>[1]) => void;
 
+/** La frase dell'errore di configurazione, nella lingua scelta. */
+function testoErrore(e: ErroreConfigurazione, t: T): string {
+  switch (e.codice) {
+    case "nome-vuoto":
+      return t("errNomeVuoto", { posto: e.posto });
+    case "nome-duplicato":
+      return t("errNomeDuplicato", { nome: e.nome });
+    case "pochi":
+      return t("errPochi", { minimo: e.minimo });
+  }
+}
+
 function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boolean, narratoreGioca: boolean) => void }) {
+  const t = usaT(dizionari);
   const [testo, setTesto] = useState("");
   const [svela, setSvela] = useState(true);
   const [narratoreGioca, setNarratoreGioca] = useState(false);
-  const [errore, setErrore] = useState<string | null>(null);
+  const [errore, setErrore] = useState<ErroreConfigurazione | null>(null);
   const nomi = testo
     .split("\n")
     .map((r) => r.trim())
@@ -234,22 +262,28 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
   return (
     <form className="schermata allineata" onSubmit={invia}>
       <label className="campo">
-        Giocatori (uno per riga, almeno 4)
+        {t("giocatoriLabel")}
         <textarea
           rows={8}
           value={testo}
           onChange={(e) => setTesto(e.target.value)}
-          placeholder={"Anna\nLuca\nMarco\nSara"}
+          placeholder={t("placeholderNomi")}
         />
       </label>
       <p className="suggerimento">
         {nomi.length >= 4
-          ? `Ruoli: ${lupiConsigliati(nomi.length)} lupo/i${nomi.length >= 5 ? ", 1 veggente" : ""}${nomi.length >= 7 ? ", 1 medico" : ""}, il resto contadini.`
-          : "I ruoli vengono assegnati in automatico in base al numero di giocatori."}
+          ? t("ruoliElenco", {
+              elenco: [
+                t("ruoliLupi", { n: lupiConsigliati(nomi.length) }),
+                ...(nomi.length >= 5 ? [t("ruoliVeggente")] : []),
+                ...(nomi.length >= 7 ? [t("ruoliMedico")] : []),
+              ].join(", "),
+            })
+          : t("ruoliAutomatici")}
       </p>
       <label className="spunta">
         <input type="checkbox" checked={svela} onChange={(e) => setSvela(e.target.checked)} />
-        Il narratore dice il ruolo di chi muore
+        {t("svelaRuoli")}
       </label>
       <label className="spunta">
         <input
@@ -257,31 +291,31 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
           checked={narratoreGioca}
           onChange={(e) => setNarratoreGioca(e.target.checked)}
         />
-        {narratoreGioca
-          ? "Il narratore gioca (il telefono resta al centro e non compare l'elenco dei giocatori con ruoli e stato vivo/morto)"
-          : "Il narratore non gioca (il telefono lo tiene il narratore, che avrà a supporto l'elenco dei giocatori con ruoli e stato vivo/morto)"}
+        {narratoreGioca ? t("narratoreGioca") : t("narratoreNonGioca")}
       </label>
-      {errore && <p className="errore">{errore}</p>}
+      {errore && <p className="errore">{testoErrore(errore, t)}</p>}
       <button className="btn primario" type="submit">
-        Inizia
+        {t("inizia")}
       </button>
     </form>
   );
 }
 
 function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   const g = s.giocatori[s.indiceCarta];
   if (!g) return null;
   if (!s.cartaMostrata) {
     return (
       <section className="schermata">
         <p className="muted">
-          Carta {s.indiceCarta + 1} di {s.giocatori.length}
+          {t("cartaDi", { n: s.indiceCarta + 1, tot: s.giocatori.length })}
         </p>
-        <p>Passa il telefono a</p>
+        <p>{t("passaA")}</p>
         <h2>{g.nome}</h2>
         <button className="btn primario" onClick={() => dispatch({ tipo: "mostraCarta" })}>
-          Mostra il mio ruolo
+          {t("mostraRuolo")}
         </button>
       </section>
     );
@@ -293,34 +327,28 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
       : [];
   return (
     <section className="schermata">
-      <p className="muted">{g.nome}, guarda solo tu</p>
+      <p className="muted">{t("guardaSoloTu", { nome: g.nome })}</p>
       <div className="carta">
-        <p className="grande">{NOME_RUOLO[ruolo]}</p>
-        <p>{DESCRIZIONE_RUOLO[ruolo]}</p>
-        {compagni.length > 0 && <p className="muted">Compagni: {compagni.map((c) => c.nome).join(", ")}</p>}
+        <p className="grande">{nomeRuolo(ruolo, lingua)}</p>
+        <p>{descrizioneRuolo(ruolo, lingua)}</p>
+        {compagni.length > 0 && <p className="muted">{t("compagni", { nomi: compagni.map((c) => c.nome).join(", ") })}</p>}
       </div>
       <button className="btn" onClick={() => dispatch({ tipo: "prossimaCarta" })}>
-        Ho visto, passa il telefono
+        {t("hoVistoPassa")}
       </button>
     </section>
   );
 }
 
-const TITOLO_NOTTE = {
-  lupi: "I lupi scelgono la vittima",
-  veggente: "Il veggente indaga",
-  medico: "Il medico protegge",
-} as const;
+type FaseNotte = "lupi" | "veggente" | "medico";
 
-/** Il pulsante che chiude il turno di un ruolo: dice sempre di lasciare il telefono e tornare a dormire. */
-const FINE_TURNO: Record<keyof typeof TITOLO_NOTTE, string> = {
-  lupi: "Conferma e torna a dormire",
-  veggente: "Ho visto, torna a dormire",
-  medico: "Conferma e torna a dormire",
-};
+/** Chiavi del dizionario: titolo della fase e pulsante che chiude il turno (dice sempre di tornare a dormire). */
+const TITOLO_NOTTE = { lupi: "titoloLupi", veggente: "titoloVeggente", medico: "titoloMedico" } as const;
+const FINE_TURNO = { lupi: "fineLupi", veggente: "fineVeggente", medico: "fineMedico" } as const;
 
 function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
-  const fase = s.fase as keyof typeof TITOLO_NOTTE;
+  const t = usaT(dizionari);
+  const fase = s.fase as FaseNotte;
   const scelto = fase === "lupi" ? s.vittima : fase === "veggente" ? s.ispezionato : s.protetto;
   // I lupi non possono sbranarsi tra loro e il veggente non indaga su di sé; il medico non può ripetere la stessa protezione.
   const candidati = candidatiNotte(s);
@@ -329,15 +357,15 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const risultato =
     fase === "veggente" && s.ispezionato !== null
       ? s.ruoli[s.ispezionato] === "lupo"
-        ? "È un lupo!"
-        : "Non è un lupo."
+        ? t("eUnLupo")
+        : t("nonELupo")
       : null;
 
   return (
     <section className="schermata">
-      <p className="muted">Notte {s.notte} — tutti a occhi chiusi</p>
-      <h2>{TITOLO_NOTTE[fase]}</h2>
-      <p className="muted">Solo chi ha il ruolo tocca il telefono.</p>
+      <p className="muted">{t("notteOcchiChiusi", { notte: s.notte })}</p>
+      <h2>{t(TITOLO_NOTTE[fase])}</h2>
+      <p className="muted">{t("soloChiHaRuolo")}</p>
       <div className="giocatori">
         {candidati.map((p) => (
           <button
@@ -356,35 +384,41 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
         disabled={scelto === null}
         onClick={() => dispatch({ tipo: "avanti" })}
       >
-        {FINE_TURNO[fase]}
+        {t(FINE_TURNO[fase])}
       </button>
     </section>
   );
 }
 
 function Alba({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   const morto = s.mortiNotte[0];
   return (
     <section className="schermata">
-      <h2>Il villaggio si risveglia</h2>
+      <h2>{t("albaTitolo")}</h2>
       {morto !== undefined ? (
         <p>
-          Questa notte è morto <strong>{nomeDi(s, morto)}</strong>.{ruoloDetto(s, morto)}
+          {t("albaMorto", { nome: SEGNO })
+            .split(SEGNO)
+            .flatMap((pezzo, i) => (i === 0 ? [pezzo] : [<strong key="nome">{nomeDi(s, morto)}</strong>, pezzo]))}
+          {ruoloDetto(s, morto, t, lingua)}
         </p>
       ) : (
-        <p>Questa notte non è morto nessuno.</p>
+        <p>{t("albaNessuno")}</p>
       )}
       <button
         className="btn primario"
         onClick={() => dispatch({ tipo: s.vincitore ? "dopoVoto" : "avanti" })}
       >
-        {s.vincitore ? "Vedi il risultato" : "Si discute e si vota"}
+        {s.vincitore ? t("vediRisultato") : t("discuteVota")}
       </button>
     </section>
   );
 }
 
 function Voto({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
   const [voti, setVoti] = useState<Record<number, number>>({});
   const candidati = s.ballottaggio ?? s.vivi;
   const totale = Object.values(voti).reduce((a, b) => a + b, 0);
@@ -399,26 +433,25 @@ function Voto({ s, dispatch }: { s: Stato; dispatch: D }) {
 
   return (
     <section className="schermata allineata">
-      <h2>{s.ballottaggio ? "Ballottaggio" : "Votazione"}</h2>
-      {s.messaggioVoto && <p className="muted">{s.messaggioVoto}</p>}
+      <h2>{s.ballottaggio ? t("ballottaggio") : t("votazione")}</h2>
+      {testoEsito(s.esitoVoto, t) && <p className="muted">{testoEsito(s.esitoVoto, t)}</p>}
       <p className="muted">
-        Ognuno vota a voce un giocatore; segna i voti qui sotto. Devono votare tutti i vivi (
-        {totale}/{s.vivi.length}).
+        {t("votoIstruzioni", { totale, vivi: s.vivi.length })}
       </p>
       {candidati.map((p) => (
         <div key={p} className="riga-voto">
           <span>{nomeDi(s, p)}</span>
           <button className="btn" onClick={() => cambia(p, -1)}>
-            −
+            {t("meno")}
           </button>
           <strong>{voti[p] ?? 0}</strong>
           <button className="btn" disabled={totale >= s.vivi.length} onClick={() => cambia(p, 1)}>
-            +
+            {t("piu")}
           </button>
         </div>
       ))}
       {pronto && pari.length > 1 && (
-        <p className="muted">Pareggio tra {pari.map((p) => nomeDi(s, p)).join(", ")}.</p>
+        <p className="muted">{t("paritaTra", { nomi: pari.map((p) => nomeDi(s, p)).join(", ") })}</p>
       )}
       <button
         className="btn primario"
@@ -426,71 +459,76 @@ function Voto({ s, dispatch }: { s: Stato; dispatch: D }) {
         onClick={() => dispatch({ tipo: "chiudiVoto", voti })}
       >
         {eliminato === null && pari.length > 1 && !s.ballottaggio
-          ? "Vai al ballottaggio"
-          : "Chiudi la votazione"}
+          ? t("vaiBallottaggio")
+          : t("chiudiVotazione")}
       </button>
     </section>
   );
 }
 
 function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   return (
     <section className="schermata">
       {s.eliminato !== null ? (
         <>
-          <h2>{nomeDi(s, s.eliminato)} è eliminato</h2>
-          {s.svelaRuoli && <p>Era {NOME_RUOLO[s.ruoli[s.eliminato] ?? "contadino"]}.</p>}
+          <h2>{t("eliminatoTitolo", { nome: nomeDi(s, s.eliminato) })}</h2>
+          {s.svelaRuoli && <p>{t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[s.eliminato] ?? "contadino", lingua) })}</p>}
         </>
       ) : (
-        <h2>{s.messaggioVoto}</h2>
+        <h2>{testoEsito(s.esitoVoto, t)}</h2>
       )}
       <button className="btn primario" onClick={() => dispatch({ tipo: "dopoVoto" })}>
-        {s.vincitore ? "Vedi il risultato" : "Scende la notte"}
+        {s.vincitore ? t("vediRisultato") : t("scendeNotte")}
       </button>
     </section>
   );
 }
 
 function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   useEffect(() => {
     suona(s.vincitore === "villaggio" ? "fineContadini" : "fineLupi");
   }, [s.vincitore]);
   return (
     <section className="schermata">
-      <h2>{s.vincitore === "villaggio" ? "Vince il villaggio!" : "Vincono i lupi!"}</h2>
+      <h2>{s.vincitore === "villaggio" ? t("vinceVillaggio") : t("vinconoLupi")}</h2>
       <ul className="elenco-ruoli">
         {s.giocatori.map((g) => (
           <li key={g.posto} className={s.vivi.includes(g.posto) ? "" : "morto"}>
-            {g.nome}: {NOME_RUOLO[s.ruoli[g.posto] ?? "contadino"]}
+            {t("ruoloDi", { nome: g.nome, ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua) })}
           </li>
         ))}
       </ul>
       <button className="btn primario" onClick={() => dispatch({ tipo: "azzera" })}>
-        Nuova partita
+        {t("nuovaPartita")}
       </button>
     </section>
   );
 }
 
 function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const t = usaT(dizionari);
   const [conferma, setConferma] = useState(false);
   if (!conferma) {
     return (
       <div className="chiudi-partita">
         <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
-          Chiudi la partita
+          {t("chiudiPartita")}
         </button>
       </div>
     );
   }
   return (
     <div className="rivedi">
-      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <p>{t("chiudereConferma")}</p>
       <button className="btn pericolo" onClick={onChiudi}>
-        Sì, chiudi
+        {t("siChiudi")}
       </button>
       <button className="btn" onClick={() => setConferma(false)}>
-        No, continua
+        {t("noContinua")}
       </button>
     </div>
   );

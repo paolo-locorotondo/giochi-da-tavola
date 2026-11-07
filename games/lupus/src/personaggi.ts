@@ -1,30 +1,34 @@
-import dati from "../data/it/personaggi.json";
+import type { Lingua } from "@gdt/i18n";
+import en from "../data/en/personaggi.json";
+import it from "../data/it/personaggi.json";
 import type { Ruolo } from "./logica";
 
-/**
- * Testi dei personaggi, presi da `data/it/personaggi.json`.
- * Il tipo obbliga il file ad avere esattamente un elemento per ogni ruolo del codice:
- * un ruolo senza testi (o un testo senza ruolo) non compila.
- */
-const PERSONAGGI: Record<Ruolo, { nome: string; tuo: string; regolamento: string }> = dati;
+interface TestiRuolo {
+  nome: string;
+  /** Cosa legge il giocatore sulla propria carta (seconda persona). */
+  tuo: string;
+  /** La voce di «I personaggi» nel regolamento (terza persona). */
+  regolamento: string;
+}
 
-export const NOME_RUOLO: Record<Ruolo, string> = {
-  lupo: PERSONAGGI.lupo.nome,
-  contadino: PERSONAGGI.contadino.nome,
-  veggente: PERSONAGGI.veggente.nome,
-  medico: PERSONAGGI.medico.nome,
-};
+/**
+ * Testi dei personaggi per lingua, da `data/<lingua>/personaggi.json`.
+ * I tipi obbligano ogni lingua a esistere e ogni file ad avere un elemento per ogni ruolo del codice:
+ * una mancanza non compila.
+ */
+export const PERSONAGGI: Record<Lingua, Record<Ruolo, TestiRuolo>> = { it, en };
+
+export function nomeRuolo(ruolo: Ruolo, lingua: Lingua): string {
+  return PERSONAGGI[lingua][ruolo].nome;
+}
 
 /** Cosa legge il giocatore sulla propria carta. */
-export const DESCRIZIONE_RUOLO: Record<Ruolo, string> = {
-  lupo: PERSONAGGI.lupo.tuo,
-  contadino: PERSONAGGI.contadino.tuo,
-  veggente: PERSONAGGI.veggente.tuo,
-  medico: PERSONAGGI.medico.tuo,
-};
+export function descrizioneRuolo(ruolo: Ruolo, lingua: Lingua): string {
+  return PERSONAGGI[lingua][ruolo].tuo;
+}
 
 /** Voci della sezione «I personaggi» del regolamento, nell'ordine del file. */
-export const PERSONAGGI_REGOLAMENTO = (Object.keys(PERSONAGGI) as Ruolo[]).map((r) => ({
-  nome: PERSONAGGI[r].nome,
-  testo: PERSONAGGI[r].regolamento,
-}));
+export function personaggiRegolamento(lingua: Lingua): { nome: string; testo: string }[] {
+  const testi = PERSONAGGI[lingua];
+  return (Object.keys(testi) as Ruolo[]).map((r) => ({ nome: testi[r].nome, testo: testi[r].regolamento }));
+}

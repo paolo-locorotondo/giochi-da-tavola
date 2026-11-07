@@ -1,4 +1,6 @@
 import { useEffect, type CSSProperties } from "react";
+import { usaT } from "@gdt/i18n";
+import { dizionari } from "../locales";
 import { staParlando } from "./voce";
 
 /** Dopo la durata si aspetta ancora che il narratore finisca la frase, ma non oltre questi secondi. */
@@ -19,6 +21,7 @@ export function Transizione({
   giorno?: boolean;
   onFine: () => void;
 }) {
+  const t = usaT(dizionari);
   useEffect(() => {
     let intervallo: ReturnType<typeof setInterval> | undefined;
     const timer = setTimeout(() => {
@@ -42,15 +45,15 @@ export function Transizione({
       <span className={giorno ? "transizione-sole" : "transizione-luna"} aria-hidden="true" />
       {giorno ? (
         <>
-          <h2>Il villaggio si risveglia</h2>
-          <p>Tutti possono aprire gli occhi.</p>
-          <p className="muted">Il narratore sta per raccontare cosa è successo nella notte.</p>
+          <h2>{t("trAlba")}</h2>
+          <p>{t("trApriGliOcchi")}</p>
+          <p className="muted">{t("trRaccontare")}</p>
         </>
       ) : (
         <>
-          <h2>Occhi chiusi</h2>
-          <p>Chi ha appena toccato il telefono lo lascia al centro e torna a dormire.</p>
-          <p className="muted">Il narratore sta per chiamare il prossimo.</p>
+          <h2>{t("trOcchiChiusi")}</h2>
+          <p>{t("trLasciaTelefono")}</p>
+          <p className="muted">{t("trProssimo")}</p>
         </>
       )}
       <div className="transizione-barra" aria-hidden="true">

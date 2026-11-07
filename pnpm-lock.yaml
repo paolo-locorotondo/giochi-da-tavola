@@ -45,6 +45,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@gdt/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@gdt/impostore':
         specifier: workspace:*
         version: link:../../games/impostore
@@ -94,6 +97,9 @@ importers:
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@gdt/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
@@ -122,6 +128,9 @@ importers:
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@gdt/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@gdt/preferenze':
         specifier: workspace:*
         version: link:../../packages/preferenze
@@ -144,6 +153,9 @@ importers:
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@gdt/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
@@ -165,6 +177,10 @@ importers:
         version: 2.1.9(@types/node@20.19.43)(terser@5.51.2)
 
   packages/i18n:
+    dependencies:
+      '@gdt/preferenze':
+        specifier: workspace:*
+        version: link:../preferenze
     devDependencies:
       '@types/react':
         specifier: ^18.3.12

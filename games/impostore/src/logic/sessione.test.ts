@@ -9,7 +9,7 @@ function avviata(seme = 7): Sessione {
     tipo: "avvia",
     nomi,
     numImpostori: 1,
-    parole: paroleDi("cibi"),
+    parole: paroleDi("cibi", "it"),
     escluse: [],
     seme,
   });

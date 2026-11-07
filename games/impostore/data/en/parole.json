@@ -1,0 +1,138 @@
+{
+  "cibi": {
+    "nome": "Foods",
+    "parole": [
+      "pizza", "lasagna", "tiramisu", "ice cream", "risotto", "carbonara", "focaccia", "polenta",
+      "gnocchi", "omelette", "sandwich", "hamburger", "hot dog", "french fries", "fish and chips", "pancakes",
+      "waffles", "bacon", "sausage", "scrambled eggs", "toast", "porridge", "cereal", "yogurt",
+      "butter", "cheddar", "mozzarella", "parmesan", "brie", "camembert", "feta", "ham",
+      "salami", "pepperoni", "meatballs", "meatloaf", "roast beef", "fried chicken", "chicken wings", "steak",
+      "ribs", "barbecue", "lamb chops", "pot roast", "shepherd's pie", "stew", "chili", "soup",
+      "chicken soup", "tomato soup", "salad", "caesar salad", "coleslaw", "guacamole", "hummus", "falafel",
+      "kebab", "burrito", "taco", "nachos", "quesadilla", "enchilada", "sushi", "ramen",
+      "dumplings", "spring roll", "fried rice", "noodles", "curry", "pad thai", "paella", "tapas",
+      "croissant", "baguette", "bagel", "pretzel", "muffin", "cupcake", "brownie", "cookie",
+      "donut", "apple pie", "cheesecake", "pudding", "custard", "chocolate", "fudge", "caramel",
+      "marshmallow", "popcorn", "peanut butter", "jam", "honey", "maple syrup", "pasta", "spaghetti",
+      "macaroni and cheese", "ravioli", "mashed potatoes", "baked potato", "corn on the cob", "pumpkin pie", "milkshake",
+      "smoothie", "lemonade", "orange juice", "coffee", "tea", "hot chocolate", "cappuccino", "beer",
+      "wine", "cider", "cocktail", "apple", "banana", "orange", "strawberry", "watermelon",
+      "pineapple", "grapes", "cherry", "peach", "lemon", "mango", "avocado", "tomato",
+      "carrot", "broccoli", "spinach", "mushroom", "onion", "garlic", "pepper"
+    ]
+  },
+  "animali": {
+    "nome": "Animals",
+    "parole": [
+      "dog", "cat", "horse", "cow", "pig", "sheep", "goat", "chicken",
+      "duck", "goose", "turkey", "rabbit", "hamster", "guinea pig", "mouse", "rat",
+      "squirrel", "hedgehog", "fox", "wolf", "bear", "deer", "moose", "badger",
+      "otter", "beaver", "raccoon", "skunk", "bat", "owl", "eagle", "hawk",
+      "falcon", "parrot", "penguin", "seagull", "swan", "flamingo", "pigeon", "sparrow",
+      "woodpecker", "peacock", "ostrich", "lion", "tiger", "leopard", "cheetah", "jaguar",
+      "panther", "elephant", "rhinoceros", "hippopotamus", "giraffe", "zebra", "camel", "gorilla",
+      "chimpanzee", "orangutan", "monkey", "kangaroo", "koala", "panda", "sloth", "armadillo",
+      "crocodile", "alligator", "turtle", "tortoise", "snake", "lizard", "chameleon", "iguana",
+      "frog", "toad", "salamander", "shark", "whale", "dolphin", "seal", "walrus",
+      "octopus", "squid", "jellyfish", "crab", "lobster", "shrimp", "starfish", "seahorse",
+      "salmon", "trout", "goldfish", "eel", "butterfly", "bee", "wasp", "ant",
+      "spider", "scorpion", "ladybug", "dragonfly", "grasshopper", "cricket", "mosquito", "fly",
+      "snail", "worm", "donkey", "llama", "buffalo", "bull", "pony", "kitten",
+      "puppy", "lamb", "hyena", "meerkat", "platypus", "pelican", "toucan", "crow",
+      "cobra"
+    ]
+  },
+  "luoghi": {
+    "nome": "Places",
+    "parole": [
+      "school", "hospital", "library", "museum", "airport", "train station", "bus stop", "supermarket",
+      "bakery", "butcher shop", "pharmacy", "bank", "post office", "police station", "fire station", "town hall",
+      "church", "castle", "palace", "lighthouse", "bridge", "tunnel", "harbor", "beach",
+      "island", "desert", "jungle", "forest", "mountain", "volcano", "waterfall", "river",
+      "lake", "cave", "farm", "barn", "zoo", "aquarium", "circus", "amusement park",
+      "playground", "stadium", "cinema", "theater", "opera house", "concert hall", "nightclub", "casino",
+      "restaurant", "pizzeria", "cafe", "pub", "hotel", "motel", "campsite", "gym",
+      "swimming pool", "ski resort", "golf course", "racetrack", "skate park", "park", "garden", "orchard",
+      "vineyard", "greenhouse", "market", "shopping mall", "bookstore", "toy store", "clothing store", "hairdresser",
+      "laundromat", "gas station", "parking lot", "car wash", "garage", "factory", "warehouse", "office",
+      "laboratory", "observatory", "planetarium", "university", "kindergarten", "classroom", "cafeteria", "kitchen",
+      "bathroom", "bedroom", "attic", "basement", "balcony", "rooftop", "elevator", "staircase",
+      "courtyard", "square", "fountain", "cemetery", "monastery", "pyramid", "skyscraper", "windmill",
+      "cottage", "igloo", "tent", "treehouse", "submarine", "space station", "moon", "North Pole",
+      "Eiffel Tower", "Statue of Liberty", "Big Ben", "Colosseum"
+    ]
+  },
+  "mestieri": {
+    "nome": "Jobs",
+    "parole": [
+      "doctor", "nurse", "dentist", "surgeon", "pharmacist", "veterinarian", "teacher", "professor",
+      "librarian", "principal", "student", "lawyer", "judge", "police officer", "detective", "firefighter",
+      "soldier", "sailor", "pilot", "flight attendant", "astronaut", "bus driver", "taxi driver", "truck driver",
+      "train conductor", "mechanic", "electrician", "plumber", "carpenter", "bricklayer", "painter", "architect",
+      "engineer", "scientist", "chemist", "biologist", "astronomer", "programmer", "journalist", "photographer",
+      "writer", "poet", "actor", "director", "singer", "musician", "dancer", "clown",
+      "magician", "chef", "baker", "butcher", "waiter", "bartender", "farmer", "fisherman",
+      "gardener", "lumberjack", "miner", "shepherd", "cowboy", "blacksmith", "tailor", "hairdresser",
+      "barber", "jeweler", "florist", "cashier", "salesperson", "banker", "accountant", "secretary",
+      "manager", "mayor", "president", "king", "queen", "priest", "nun", "monk",
+      "lifeguard", "coach", "referee", "athlete", "jockey", "tour guide", "translator", "interpreter",
+      "cleaner", "janitor", "postman", "garbage collector", "locksmith", "glazier", "roofer", "welder",
+      "tattoo artist", "sculptor", "potter", "fashion designer", "model", "stylist", "nanny", "babysitter",
+       "sommelier", "spy", "pirate", "knight", "inventor", "stuntman", "paramedic",
+      "psychologist", "therapist", "economist", "surveyor", "auctioneer", "bodyguard"
+    ]
+  },
+  "sport": {
+    "nome": "Sports",
+    "parole": [
+      "soccer", "basketball", "baseball", "American football", "rugby", "tennis", "table tennis", "badminton",
+      "volleyball", "beach volleyball", "handball", "hockey", "ice hockey", "cricket", "golf", "bowling",
+      "billiards", "darts", "archery", "fencing", "boxing", "wrestling", "judo", "karate",
+      "taekwondo", "sumo", "weightlifting", "gymnastics", "athletics", "marathon", "sprint", "high jump",
+      "long jump", "pole vault", "javelin", "discus", "hurdles", "relay race", "swimming", "diving",
+      "water polo", "synchronized swimming", "rowing", "canoeing", "kayaking", "sailing", "surfing", "windsurfing",
+      "water skiing", "cycling", "mountain biking", "skateboarding", "roller skating", "ice skating", "figure skating", "skiing",
+      "snowboarding", "cross-country skiing", "ski jumping", "bobsled", "curling", "climbing", "hiking", "horse riding",
+      "polo", "triathlon", "decathlon", "motor racing", "rally", "motorcycling", "paragliding", "skydiving",
+      "bungee jumping", "rafting", "lacrosse", "squash",  "parkour", "yoga", "pilates",
+      "aerobics", "crossfit", "tug of war",    "cheerleading", "dodgeball",
+      "frisbee", "kickboxing", "snooker", "biathlon"
+    ]
+  },
+  "oggetti": {
+    "nome": "Objects",
+    "parole": [
+      "chair", "table", "sofa", "bed", "pillow", "blanket", "lamp", "mirror",
+      "clock", "alarm clock", "calendar", "carpet", "curtain", "door", "window", "key",
+      "lock", "umbrella", "suitcase", "backpack", "wallet", "purse", "glasses", "sunglasses",
+      "watch", "ring", "necklace", "bracelet", "earrings", "hat", "scarf", "gloves",
+      "shoes", "boots", "sandals", "socks", "shirt", "jacket", "coat", "jeans",
+      "dress", "tie", "belt", "pajamas", "towel", "soap", "shampoo", "toothbrush",
+      "toothpaste", "comb", "razor", "perfume", "lipstick", "hairdryer", "scissors", "needle",
+      "thread", "button", "zipper", "pen", "pencil", "eraser", "ruler", "notebook",
+      "book", "newspaper", "envelope", "stamp", "map", "globe", "telephone", "smartphone",
+      "laptop", "computer", "keyboard",  "printer", "camera", "television", "remote control",
+      "radio", "headphones", "speaker", "microphone", "battery", "charger", "flashlight", "candle",
+      "matches", "lighter", "hammer", "screwdriver", "wrench", "saw", "drill", "nail",
+      "screw", "ladder", "bucket", "broom", "mop", "vacuum cleaner", "iron", "washing machine",
+      "refrigerator", "oven", "microwave", "toaster", "kettle", "blender", "frying pan", "pot",
+      "knife", "fork", "spoon", "plate", "bowl", "cup", "glass", "bottle",
+      "teapot", "corkscrew", "can opener", "balloon", "teddy bear", "doll", "puzzle", "dice",
+      "playing cards", "guitar", "piano", "violin", "drum", "trophy", "medal", "flag",
+      "compass", "telescope", "magnifying glass", "binoculars", "toolbox", "trash can"
+    ]
+  },
+  "trasporti": {
+    "nome": "Transport",
+    "parole": [
+      "car", "bus", "taxi", "truck", "van", "motorcycle", "scooter", "moped",
+      "bicycle", "tricycle", "tractor", "ambulance", "fire truck", "police car", "limousine", "convertible",
+      "jeep", "school bus", "tram", "train", "subway", "cable car", "funicular", "monorail",
+      "airplane", "helicopter", "hot air balloon", "glider", "rocket", "spaceship", "drone", "boat",
+      "ship", "ferry", "cruise ship", "sailboat", "rowing boat", "canoe", "yacht", "speedboat",
+      "submarine", "raft", "gondola", "jet ski", "hovercraft", "tugboat", "fishing boat", "steamboat",
+       "roller skates", "sled", "snowmobile", "horse and carriage", "rickshaw", "wheelbarrow", "segway",
+      "electric scooter", "bulldozer", "crane", "forklift", "steam train", "aircraft carrier", "lifeboat", "pedal boat"
+    ]
+  }
+}

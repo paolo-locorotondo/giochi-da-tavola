@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gdt/i18n": "workspace:*",
     "@gdt/engine": "workspace:*",
     "@gdt/preferenze": "workspace:*",
     "@gdt/suoni": "workspace:*"

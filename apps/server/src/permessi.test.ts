@@ -2,7 +2,7 @@ import { ALFABETO } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
 import { creaStanza, eseguiAzione, nuovoCodice, nuovoToken, vistaDi, type Stanza } from "./stanze";
 
-const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: false };
+const cfg = { numImpostori: 1, categoria: "cibi" as const, votiVisibili: false, lingua: "it" as const };
 const TEL = ["host", "t2", "t3", "t4"];
 
 /** Stanza con i telefoni indicati, già seduti (posto = indice + 1). */
@@ -80,10 +80,10 @@ describe("creaStanza", () => {
   });
 
   it("rifiuta configurazioni non valide", () => {
-    expect(() => creaStanza("ABCDE", ["A", "B"], cfg, "h")).toThrow("Servono almeno 3 giocatori");
-    expect(() => creaStanza("ABCDE", ["A", "a", "C"], cfg, "h")).toThrow("Ci sono nomi uguali");
-    expect(() => creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, numImpostori: 2 }, "h")).toThrow(/al massimo/);
-    expect(() => creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, categoria: "x" as never }, "h")).toThrow("Categoria non valida");
+    expect(() => creaStanza("ABCDE", ["A", "B"], cfg, "h")).toThrow("pochiGiocatori");
+    expect(() => creaStanza("ABCDE", ["A", "a", "C"], cfg, "h")).toThrow("nomiUguali");
+    expect(() => creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, numImpostori: 2 }, "h")).toThrow("troppiImpostori:1");
+    expect(() => creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, categoria: "x" as never }, "h")).toThrow("categoriaNonValida");
   });
 });
 
@@ -103,13 +103,13 @@ describe("occupa", () => {
   it("un nome già preso non si prende", () => {
     const s = inSala(2);
     s.telefoni.set("t3", null);
-    expect(() => eseguiAzione(s, "t3", { tipo: "occupa", posto: 1 })).toThrow("Nome già scelto da un altro");
+    expect(() => eseguiAzione(s, "t3", { tipo: "occupa", posto: 1 })).toThrow("nomeOccupato");
     expect(s.telefoni.get("t3")).toBeNull();
   });
 
   it("un nome inesistente è respinto e non cambia nulla", () => {
     const s = creaStanza("ABCDE", ["A", "B", "C"], cfg, "host");
-    expect(() => eseguiAzione(s, "host", { tipo: "occupa", posto: 9 })).toThrow("Nome inesistente");
+    expect(() => eseguiAzione(s, "host", { tipo: "occupa", posto: 9 })).toThrow("nomeInesistente");
     expect(s.telefoni.get("host")).toBeNull();
   });
 
@@ -218,7 +218,7 @@ describe("azioni riservate all'organizzatore", () => {
 
   it("avvia con troppo pochi seduti dà l'errore del gioco", () => {
     const s = inSala(2);
-    expect(() => eseguiAzione(s, "host", { tipo: "avvia" })).toThrow("Servono almeno 3 giocatori");
+    expect(() => eseguiAzione(s, "host", { tipo: "avvia" })).toThrow("pochiHannoScelto");
     expect(s.stato.fase).toBe("sala");
   });
 
@@ -229,7 +229,7 @@ describe("azioni riservate all'organizzatore", () => {
 
   it("nuova funziona solo a fine partita", () => {
     const s = avviata(4);
-    expect(() => eseguiAzione(s, "host", { tipo: "nuova" })).toThrow("La partita non è finita");
+    expect(() => eseguiAzione(s, "host", { tipo: "nuova" })).toThrow("nonFinita");
     s.stato = { ...s.stato, fase: "fine" };
     eseguiAzione(s, "host", { tipo: "nuova" });
     expect(s.stato.fase).toBe("sala");
@@ -255,7 +255,7 @@ describe("visto", () => {
   it("l'organizzatore non può avanzare finché non hanno visto tutti", () => {
     const s = avviata(4);
     eseguiAzione(s, "host", { tipo: "visto" });
-    expect(() => eseguiAzione(s, "host", { tipo: "avanti" })).toThrow("Non tutti hanno visto la carta");
+    expect(() => eseguiAzione(s, "host", { tipo: "avanti" })).toThrow("nonTuttiVisto");
   });
 });
 
@@ -268,13 +268,13 @@ describe("voto", () => {
 
   it("ognuno vota dal proprio telefono, non per sé", () => {
     const s = inVoto();
-    expect(() => eseguiAzione(s, "t2", { tipo: "vota", posto: 2 })).toThrow("Non puoi votare te stesso");
+    expect(() => eseguiAzione(s, "t2", { tipo: "vota", posto: 2 })).toThrow("votoTeStesso");
     eseguiAzione(s, "t2", { tipo: "vota", posto: 3 });
     expect(s.stato.voti).toEqual({ 2: 3 });
   });
 
   it("fuori dal voto è respinto", () => {
-    expect(() => eseguiAzione(avviata(), "t2", { tipo: "vota", posto: 3 })).toThrow("Non si sta votando");
+    expect(() => eseguiAzione(avviata(), "t2", { tipo: "vota", posto: 3 })).toThrow("nonSiVota");
   });
 
   it("la partita si chiude quando votano tutti", () => {
@@ -344,7 +344,7 @@ describe("indizio", () => {
     for (const t of TEL.slice(0, 3)) eseguiAzione(s, t, { tipo: "visto" });
     eseguiAzione(s, "host", { tipo: "avanti" });
     const turno = vistaDi(s, "host").indizi!.turno!;
-    expect(() => eseguiAzione(s, TEL[turno - 1]!, { tipo: "indizio", testo: undefined as never })).toThrow("Scrivi un indizio");
+    expect(() => eseguiAzione(s, TEL[turno - 1]!, { tipo: "indizio", testo: undefined as never })).toThrow("indizioVuoto");
   });
 });
 

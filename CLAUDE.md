@@ -11,6 +11,7 @@ motivazioni e punti aperti decisi prima dell'avvio del progetto.
 - Ogni gioco in `games/*` ha un `README.md` con: come provarlo (locale, telefono, offline),
   cosa controllare, struttura, e una sezione Deploy (dove e come si pubblica).
   Il repo è pubblico: niente di non pubblicabile nei file.
+- **Lingue**: italiano e inglese con `@gdt/i18n`. Nessun testo visibile nei `.tsx` né nella logica: i testi stanno in `games/<gioco>/src/locales/{it,en}.ts` (stesse chiavi, lo verifica il compilatore), la logica restituisce codici. Le carte hanno un file per lingua in `data/<lingua>/`. Ogni manifest espone `testi(lingua)`.
 - **Carte nei dati**: le carte di ogni gioco (parole, categorie, personaggi) stanno in `games/<gioco>/data/<lingua>/` e il README del gioco spiega come cambiarle o aggiungerne, con un esempio. Le regole restano nel codice.
 - Il push lo fa sempre l'utente; le commit si possono fare in autonomia.
 - **Versione a ogni commit**: prima di committare valuta se ha senso rilasciare una versione (SemVer, regole in `CHANGELOG.md`). Se sì: sposta le voci di «Non rilasciato» sotto `## [x.y.z] - data`, alza `version` in `apps/web/package.json` (è il numero mostrato in basso nelle pagine), includi tutto nello stesso commit e crea il tag `vx.y.z` (annotato, come i precedenti) sul commit. Se la modifica è solo interna (test, doc) lascia la versione e scrivi la voce in «Non rilasciato». Il tag è locale: anche `git push --tags` lo fa l'utente.

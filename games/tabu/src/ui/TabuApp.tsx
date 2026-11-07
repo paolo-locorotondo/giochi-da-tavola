@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { suona } from "@gdt/suoni";
-import { CARTE } from "../carte";
+import { usaLingua, usaT, type Traduttore } from "@gdt/i18n";
+import { carteDi, type Carta } from "../carte";
+import { dizionari } from "../locales";
+import type { it as dizionarioIt } from "../locales/it";
 import {
   avanzaCarta,
   cartaCorrente,
@@ -42,7 +45,11 @@ function carica(): Salvata {
   return { partita: null, fase: "pronti", turno: TURNO_VUOTO };
 }
 
+type T = Traduttore<typeof dizionarioIt>;
+
 export function TabuApp() {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   const [iniziale] = useState(carica);
   const [partita, setPartita] = useState<Partita | null>(iniziale.partita);
   const [fase, setFase] = useState<Fase>(iniziale.fase);
@@ -62,7 +69,7 @@ export function TabuApp() {
     return (
       <Configurazione
         onAvvia={(nomi, turni, secondi) => {
-          setPartita(nuovaPartita(nomi, turni, secondi, CARTE, Math.floor(Math.random() * 2 ** 32)));
+          setPartita(nuovaPartita(nomi, turni, secondi, carteDi(lingua), Math.floor(Math.random() * 2 ** 32)));
           setFase("pronti");
         }}
       />
@@ -75,23 +82,23 @@ export function TabuApp() {
     const v = vincitrice(partita);
     return (
       <section className="schermata">
-        <h2>{v === null ? "Pareggio!" : `Vince ${partita.squadre[v].nome}!`}</h2>
-        <p>
-          {partita.squadre[0].nome} {partita.squadre[0].punti} – {partita.squadre[1].punti}{" "}
-          {partita.squadre[1].nome}
-        </p>
-        <h3>Carte della partita</h3>
+        <h2>{v === null ? t("pareggio") : t("vince", { squadra: partita.squadre[v].nome })}</h2>
+        <p>{risultato(t, partita)}</p>
+        <h3>{t("carteDellaPartita")}</h3>
         {partita.storico.map((x, i) => (
           <div key={i} className="turno-storico">
             <p className="muted">
-              {partita.squadre[x.squadra].nome} · turno {Math.floor(i / 2) + 1} ({punteggioTurno(x.turno) >= 0 ? "+" : ""}
-              {punteggioTurno(x.turno)})
+              {t("turnoStorico", {
+                squadra: partita.squadre[x.squadra].nome,
+                n: Math.floor(i / 2) + 1,
+                punti: `${punteggioTurno(x.turno) >= 0 ? "+" : ""}${punteggioTurno(x.turno)}`,
+              })}
             </p>
-            <RiepilogoCarte turno={x.turno} />
+            <RiepilogoCarte turno={x.turno} mazzo={partita.mazzo} />
           </div>
         ))}
         <button className="btn primario" onClick={() => setPartita(null)}>
-          Nuova partita
+          {t("nuovaPartita")}
         </button>
       </section>
     );
@@ -100,16 +107,10 @@ export function TabuApp() {
   if (fase === "pronti") {
     return (
       <section className="schermata">
-        <p className="muted">
-          {partita.squadre[0].nome} {partita.squadre[0].punti} – {partita.squadre[1].punti}{" "}
-          {partita.squadre[1].nome}
-        </p>
-        <p>Tocca a</p>
+        <p className="muted">{risultato(t, partita)}</p>
+        <p>{t("toccaA")}</p>
         <h2>{squadra.nome}</h2>
-        <p className="muted">
-          Un giocatore descrive le parole, i compagni indovinano. Una persona della squadra
-          avversaria controlla le parole vietate. Chi descrive tiene il telefono.
-        </p>
+        <p className="muted">{t("istruzioni")}</p>
         <button
           className="btn primario"
           onClick={() => {
@@ -117,7 +118,7 @@ export function TabuApp() {
             setFase("gioco");
           }}
         >
-          Via!
+          {t("via")}
         </button>
         <ChiudiPartita onChiudi={() => setPartita(null)} />
       </section>
@@ -141,16 +142,13 @@ export function TabuApp() {
   const p = punteggioTurno(turno);
   return (
     <section className="schermata">
-      <h2>Tempo scaduto!</h2>
-      <p>
-        {squadra.nome}: {turno.corrette.length} indovinate, {turno.errori.length} errori (−1
-        ciascuno)
-      </p>
+      <h2>{t("tempoScaduto")}</h2>
+      <p>{t("riepilogoTurno", { squadra: squadra.nome, corrette: turno.corrette.length, errori: turno.errori.length })}</p>
       <p className="grande">
         {p >= 0 ? "+" : ""}
         {p}
       </p>
-      <RiepilogoCarte turno={turno} />
+      <RiepilogoCarte turno={turno} mazzo={partita.mazzo} />
       <button
         className="btn primario"
         onClick={() => {
@@ -158,15 +156,20 @@ export function TabuApp() {
           setFase("pronti");
         }}
       >
-        Avanti
+        {t("avanti")}
       </button>
     </section>
   );
 }
 
-/** Parola in grassetto con le vietate tra parentesi: «burro (latte, pane, …)». */
-function VoceCarta({ parola }: { parola: string }) {
-  const vietate = CARTE.find((c) => c.parola === parola)?.vietate ?? [];
+/** Testo del punteggio: «Rossi 3 – 2 Blu». */
+function risultato(t: T, p: Partita): string {
+  return t("risultato", { a: p.squadre[0].nome, puntiA: p.squadre[0].punti, puntiB: p.squadre[1].punti, b: p.squadre[1].nome });
+}
+
+/** Parola in grassetto con le vietate tra parentesi: «burro (latte, pane, …)». Le carte sono quelle del mazzo della partita. */
+function VoceCarta({ parola, mazzo }: { parola: string; mazzo: readonly Carta[] }) {
+  const vietate = mazzo.find((c) => c.parola === parola)?.vietate ?? [];
   return (
     <li>
       <strong>{parola}</strong>
@@ -175,7 +178,8 @@ function VoceCarta({ parola }: { parola: string }) {
   );
 }
 
-function ElencoCarte({ titolo, parole, aperto }: { titolo: string; parole: string[]; aperto?: boolean }) {
+function ElencoCarte({ titolo, parole, mazzo, aperto }: { titolo: string; parole: string[]; mazzo: readonly Carta[]; aperto?: boolean }) {
+  const t = usaT(dizionari);
   return (
     <details className="accordion" open={aperto}>
       <summary>
@@ -183,11 +187,11 @@ function ElencoCarte({ titolo, parole, aperto }: { titolo: string; parole: strin
       </summary>
       <div className="accordion-corpo">
         {parole.length === 0 ? (
-          <p className="muted">Nessuna.</p>
+          <p className="muted">{t("nessuna")}</p>
         ) : (
           <ul className="parole">
             {parole.map((p, i) => (
-              <VoceCarta key={i} parola={p} />
+              <VoceCarta key={i} parola={p} mazzo={mazzo} />
             ))}
           </ul>
         )}
@@ -196,12 +200,13 @@ function ElencoCarte({ titolo, parole, aperto }: { titolo: string; parole: strin
   );
 }
 
-function RiepilogoCarte({ turno }: { turno: Turno }) {
+function RiepilogoCarte({ turno, mazzo }: { turno: Turno; mazzo: readonly Carta[] }) {
+  const t = usaT(dizionari);
   return (
     <div className="riepilogo-carte">
-      <ElencoCarte titolo="Indovinate" parole={turno.corrette} />
-      <ElencoCarte titolo="Vietata detta" parole={turno.errori} />
-      <ElencoCarte titolo="Passate" parole={turno.saltate} />
+      <ElencoCarte titolo={t("indovinate")} parole={turno.corrette} mazzo={mazzo} />
+      <ElencoCarte titolo={t("vietataDetta")} parole={turno.errori} mazzo={mazzo} />
+      <ElencoCarte titolo={t("passate")} parole={turno.saltate} mazzo={mazzo} />
     </div>
   );
 }
@@ -217,6 +222,7 @@ function Gioco({
   onCambia: (t: Turno) => void;
   onTempoFinito: () => void;
 }) {
+  const t = usaT(dizionari);
   const [rimasti, setRimasti] = useState(partita.secondiTurno);
   const fine = useRef(onTempoFinito);
   fine.current = onTempoFinito;
@@ -240,10 +246,10 @@ function Gioco({
   const c = cartaCorrente(partita);
   return (
     <section className="schermata">
-      <p className="grande">{rimasti}s</p>
+      <p className="grande">{t("secondi", { n: rimasti })}</p>
       <div className="carta">
         <p className="grande">{c.parola}</p>
-        <p className="muted">Non dire:</p>
+        <p className="muted">{t("nonDire")}</p>
         {c.vietate.map((v) => (
           <p key={v} className="vietata">
             {v}
@@ -259,7 +265,7 @@ function Gioco({
             onCambia({ ...turno, corrette: [...turno.corrette, c.parola] });
           }}
         >
-          Indovinata (+1)
+          {t("btnIndovinata")}
         </button>
         <button
           className="btn pericolo"
@@ -269,7 +275,7 @@ function Gioco({
             onCambia({ ...turno, errori: [...turno.errori, c.parola] });
           }}
         >
-          Vietata detta (−1)
+          {t("btnVietata")}
         </button>
         <button
           className="btn passa"
@@ -279,11 +285,11 @@ function Gioco({
             onCambia({ ...turno, saltate: [...turno.saltate, c.parola] });
           }}
         >
-          Passa
+          {t("btnPassa")}
         </button>
       </div>
-      <p className="muted">Punti del turno: {punteggioTurno(turno)}</p>
-      <RiepilogoCarte turno={turno} />
+      <p className="muted">{t("puntiDelTurno", { punti: punteggioTurno(turno) })}</p>
+      <RiepilogoCarte turno={turno} mazzo={partita.mazzo} />
     </section>
   );
 }
@@ -304,23 +310,24 @@ function Selettore({
   passo: number;
   onCambia: (v: number) => void;
 }) {
+  const t = usaT(dizionari);
   const imposta = (v: number) => onCambia(Math.min(max, Math.max(min, v)));
   return (
     <div className="campo" role="group" aria-label={etichetta}>
       {etichetta}
       <div className="selettore">
-        <button type="button" className="tema-btn" aria-label={`Meno ${etichetta.toLowerCase()}`} disabled={valore <= min} onClick={() => imposta(valore - passo)}>
+        <button type="button" className="tema-btn" aria-label={t("meno", { cosa: etichetta.toLowerCase() })} disabled={valore <= min} onClick={() => imposta(valore - passo)}>
           −
         </button>
         <output className="selettore-valore" aria-live="polite">
           {valore}
         </output>
-        <button type="button" className="tema-btn" aria-label={`Più ${etichetta.toLowerCase()}`} disabled={valore >= max} onClick={() => imposta(valore + passo)}>
+        <button type="button" className="tema-btn" aria-label={t("piu", { cosa: etichetta.toLowerCase() })} disabled={valore >= max} onClick={() => imposta(valore + passo)}>
           +
         </button>
       </div>
       <span className="muted selettore-limiti">
-        da {min} a {max}
+        {t("daA", { min, max })}
       </span>
     </div>
   );
@@ -331,8 +338,10 @@ function Configurazione({
 }: {
   onAvvia: (nomi: [string, string], turni: number, secondi: number) => void;
 }) {
-  const [a, setA] = useState("Squadra 1");
-  const [b, setB] = useState("Squadra 2");
+  const t = usaT(dizionari);
+  const predefiniti: [string, string] = [t("squadraN", { n: 1 }), t("squadraN", { n: 2 })];
+  const [a, setA] = useState(predefiniti[0]);
+  const [b, setB] = useState(predefiniti[1]);
   const [turni, setTurni] = useState(5);
   const [secondi, setSecondi] = useState(60);
 
@@ -341,45 +350,46 @@ function Configurazione({
       className="schermata allineata"
       onSubmit={(e) => {
         e.preventDefault();
-        onAvvia(nomiSquadre(a, b), turni, secondi);
+        onAvvia(nomiSquadre(a, b, predefiniti), turni, secondi);
       }}
     >
       <label className="campo">
-        Prima squadra
+        {t("primaSquadra")}
         <input value={a} onChange={(e) => setA(e.target.value)} />
       </label>
       <label className="campo">
-        Seconda squadra
+        {t("secondaSquadra")}
         <input value={b} onChange={(e) => setB(e.target.value)} />
       </label>
-      <Selettore etichetta="Turni per squadra" valore={turni} min={1} max={20} passo={1} onCambia={setTurni} />
-      <Selettore etichetta="Secondi per turno" valore={secondi} min={10} max={180} passo={5} onCambia={setSecondi} />
+      <Selettore etichetta={t("turniPerSquadra")} valore={turni} min={1} max={20} passo={1} onCambia={setTurni} />
+      <Selettore etichetta={t("secondiPerTurno")} valore={secondi} min={10} max={180} passo={5} onCambia={setSecondi} />
       <button className="btn primario" type="submit">
-        Inizia
+        {t("inizia")}
       </button>
     </form>
   );
 }
 
 function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const t = usaT(dizionari);
   const [conferma, setConferma] = useState(false);
   if (!conferma) {
     return (
       <div className="chiudi-partita">
         <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
-          Chiudi la partita
+          {t("chiudiPartita")}
         </button>
       </div>
     );
   }
   return (
     <div className="rivedi">
-      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <p>{t("chiudereConferma")}</p>
       <button className="btn pericolo" onClick={onChiudi}>
-        Sì, chiudi
+        {t("siChiudi")}
       </button>
       <button className="btn" onClick={() => setConferma(false)}>
-        No, continua
+        {t("noContinua")}
       </button>
     </div>
   );

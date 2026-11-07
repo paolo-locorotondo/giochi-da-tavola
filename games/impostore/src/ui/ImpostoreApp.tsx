@@ -1,12 +1,16 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
 import { suona } from "@gdt/suoni";
+import { usaLingua, usaT } from "@gdt/i18n";
+import { dizionari } from "../locales";
+import { testoProblema } from "../errori-ui";
+import { g, Ricco } from "./Ricco";
 import type { Giocatore } from "@gdt/engine";
 import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
 import { validaConfigurazione } from "../logic/validazione";
 import { categorie, nomeCategoria, paroleDi, type Categoria } from "../parole";
-import { leggiRecenti, ricordaParola } from "./recenti";
+import { chiaveRecenti, leggiRecenti, ricordaParola } from "./recenti";
 import "./impostore.css";
 
 const CHIAVE = "gdt-impostore-locale";
@@ -38,6 +42,7 @@ function caricaSessione(): { sessione: Sessione; categoria: Categoria } {
 }
 
 export function ImpostoreLocale() {
+  const lingua = usaLingua();
   const [iniziale] = useState(caricaSessione);
   const [sessione, dispatch] = useReducer(riduci, iniziale.sessione);
   const [categoriaPartita, setCategoriaPartita] = useState<Categoria>(iniziale.categoria);
@@ -64,8 +69,8 @@ export function ImpostoreLocale() {
             tipo: "avvia",
             nomi,
             numImpostori,
-            parole: paroleDi(categoria),
-            escluse: leggiRecenti(categoria),
+            parole: paroleDi(categoria, lingua),
+            escluse: leggiRecenti(chiaveRecenti(categoria, lingua)),
             seme: Math.floor(Math.random() * 2 ** 32),
           });
         }}
@@ -96,7 +101,7 @@ export function ImpostoreLocale() {
           sessione={sessione}
           partita={partita}
           onNuova={() => {
-            ricordaParola(categoriaPartita, partita.parola);
+            ricordaParola(chiaveRecenti(categoriaPartita, lingua), partita.parola);
             dispatch({ tipo: "nuova" });
           }}
         />
@@ -113,24 +118,25 @@ export function ImpostoreLocale() {
 }
 
 function ChiudiPartita({ onChiudi }: { onChiudi: () => void }) {
+  const t = usaT(dizionari);
   const [conferma, setConferma] = useState(false);
   if (!conferma) {
     return (
       <div className="chiudi-partita">
         <button className="btn pericolo-contorno" onClick={() => setConferma(true)}>
-          Chiudi la partita
+          {t("chiudiPartita")}
         </button>
       </div>
     );
   }
   return (
     <div className="rivedi">
-      <p>Chiudere la partita? Si perde lo stato attuale.</p>
+      <p>{t("chiudereLaPartita")}</p>
       <button className="btn pericolo" onClick={onChiudi}>
-        Sì, chiudi
+        {t("siChiudi")}
       </button>
       <button className="btn" onClick={() => setConferma(false)}>
-        No, continua
+        {t("noContinua")}
       </button>
     </div>
   );
@@ -146,6 +152,8 @@ function Configurazione({
 }: {
   onAvvia: (nomi: string[], numImpostori: number, categoria: Categoria) => void;
 }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
   const [testoNomi, setTestoNomi] = useState("");
   const [scelta, setScelta] = useState<number | null>(null);
   const [categoria, setCategoria] = useState<Categoria>("cibi");
@@ -165,7 +173,7 @@ function Configurazione({
     e.preventDefault();
     const problema = validaConfigurazione(nomi, numImpostori);
     if (problema) {
-      setErrore(problema);
+      setErrore(testoProblema(t, problema));
       return;
     }
     setErrore(null);
@@ -175,38 +183,37 @@ function Configurazione({
   return (
     <form className="schermata allineata" onSubmit={invia}>
       <label className="campo">
-        Giocatori (uno per riga, almeno 3)
+        {t("giocatoriLabel")}
         <textarea
           rows={6}
           value={testoNomi}
           onChange={(e) => setTestoNomi(e.target.value)}
-          placeholder={"Anna\nLuca\nMarco"}
+          placeholder={t("segnapostoNomi")}
         />
       </label>
 
       <label className="campo">
-        Numero di impostori
+        {t("numImpostori")}
         <select value={numImpostori} onChange={(e) => setScelta(Number(e.target.value))}>
           {Array.from({ length: massimi }, (_, i) => i + 1).map((n) => (
             <option key={n} value={n}>
-              {n}
-              {n === consigliati ? " (consigliato)" : ""}
+              {n === consigliati ? t("consigliato", { n }) : n}
             </option>
           ))}
         </select>
         <span className="suggerimento">
           {nomi.length < 3
-            ? "Il consiglio compare quando hai inserito almeno 3 giocatori."
-            : `Con ${nomi.length} giocatori si consiglia ${consigliati}. Massimo ${massimi}.`}
+            ? t("consiglioAssente")
+            : t("consiglio", { giocatori: nomi.length, consigliati, massimi })}
         </span>
       </label>
 
       <label className="campo">
-        Categoria
+        {t("categoria")}
         <select value={categoria} onChange={(e) => setCategoria(e.target.value as Categoria)}>
           {categorie.map((c) => (
             <option key={c} value={c}>
-              {nomeCategoria(c)}
+              {nomeCategoria(c, lingua)}
             </option>
           ))}
         </select>
@@ -215,7 +222,7 @@ function Configurazione({
       {errore && <p className="errore">{errore}</p>}
 
       <button className="btn primario" type="submit">
-        Inizia
+        {t("inizia")}
       </button>
     </form>
   );
@@ -230,18 +237,19 @@ function Carte({
   partita: Partita;
   dispatch: (a: { tipo: "mostraCarta" } | { tipo: "prossimaCarta" }) => void;
 }) {
+  const t = usaT(dizionari);
   const giocatore: Giocatore | undefined = partita.giocatori[sessione.indiceCarta];
   if (!giocatore) return null;
-  const progresso = `${sessione.indiceCarta + 1} di ${partita.giocatori.length}`;
+  const progresso = t("cartaProgresso", { n: sessione.indiceCarta + 1, totale: partita.giocatori.length });
 
   if (!sessione.cartaMostrata) {
     return (
       <section className="schermata">
-        <p className="muted">Carta {progresso}</p>
-        <p>Passa il telefono a</p>
+        <p className="muted">{progresso}</p>
+        <p>{t("passaA")}</p>
         <h2>{giocatore.nome}</h2>
         <button className="btn primario" onClick={() => dispatch({ tipo: "mostraCarta" })}>
-          Mostra la mia carta
+          {t("mostraCarta")}
         </button>
       </section>
     );
@@ -250,47 +258,48 @@ function Carte({
   const mia = carta(partita, giocatore.posto);
   return (
     <section className="schermata">
-      <p className="muted">{giocatore.nome}, guarda solo tu</p>
+      <p className="muted">{t("guardaSoloTu", { nome: giocatore.nome })}</p>
       <div className="carta">
         {mia.ruolo === "impostore" ? (
           <>
-            <p>Sei l'impostore</p>
-            <p className="grande">Non conosci la parola</p>
+            <p>{t("seiImpostore")}</p>
+            <p className="grande">{t("nonConosciParola")}</p>
           </>
         ) : (
           <>
-            <p>La parola è</p>
+            <p>{t("laParolaE")}</p>
             <p className="grande">{mia.parola}</p>
           </>
         )}
       </div>
       <button className="btn" onClick={() => dispatch({ tipo: "prossimaCarta" })}>
-        Ho visto, passa il telefono
+        {t("hoVistoPassa")}
       </button>
     </section>
   );
 }
 
 function Indizi({ partita, onAvanti }: { partita: Partita; onAvanti: () => void }) {
+  const t = usaT(dizionari);
   return (
     <section className="schermata">
-      <h2>Indizi</h2>
+      <h2>{t("indizi")}</h2>
       <p>
-        Partendo da <strong>{nomeDi(partita, partita.primoDiTurno)}</strong>, ognuno dice a voce
-        un indizio in senso orario.
+        <Ricco testo={t("indiziLocale", { nome: g(nomeDi(partita, partita.primoDiTurno)) })} />
       </p>
       <button className="btn primario" onClick={onAvanti}>
-        Si passa al voto
+        {t("passaAlVoto")}
       </button>
     </section>
   );
 }
 
 function Voto({ partita, onElimina }: { partita: Partita; onElimina: (posto: number) => void }) {
+  const t = usaT(dizionari);
   return (
     <section className="schermata">
-      <h2>Voto</h2>
-      <p>Discutete, poi votate. Tocca il nome di chi viene eliminato.</p>
+      <h2>{t("voto")}</h2>
+      <p>{t("votoLocale")}</p>
       <div className="giocatori">
         {partita.giocatori.map((g) => (
           <button key={g.posto} className="btn" onClick={() => onElimina(g.posto)}>
@@ -309,6 +318,7 @@ function Tentativo({
   nomeScoperto: string;
   onTenta: (testo: string) => void;
 }) {
+  const t = usaT(dizionari);
   const [testo, setTesto] = useState("");
 
   function invia(e: FormEvent) {
@@ -318,10 +328,10 @@ function Tentativo({
 
   return (
     <form className="schermata allineata" onSubmit={invia}>
-      <h2>{nomeScoperto} è stato scoperto</h2>
-      <p>Può ancora vincere: deve indovinare la parola segreta.</p>
+      <h2>{t("scopertoTitolo", { nome: nomeScoperto })}</h2>
+      <p>{t("scopertoTesto")}</p>
       <label className="campo">
-        Parola
+        {t("parolaLabel")}
         <input
           autoFocus
           autoComplete="off"
@@ -331,7 +341,7 @@ function Tentativo({
         />
       </label>
       <button className="btn primario" type="submit">
-        Conferma
+        {t("conferma")}
       </button>
     </form>
   );
@@ -346,6 +356,7 @@ function Fine({
   partita: Partita;
   onNuova: () => void;
 }) {
+  const t = usaT(dizionari);
   const esito = esitoSessione(sessione);
   const vincitore = esito?.vincitore;
   // Un suono diverso per chi ha vinto, una volta sola quando compare la schermata finale.
@@ -357,13 +368,13 @@ function Fine({
 
   return (
     <section className="schermata">
-      <h2>{esito.vincitore === "civili" ? "Vincono i civili!" : "Vincono gli impostori!"}</h2>
+      <h2>{esito.vincitore === "civili" ? t("vincitoCivili") : t("vincitoImpostori")}</h2>
       <p>
-        La parola era <strong>{partita.parola}</strong>
+        <Ricco testo={t("laParolaEra", { parola: g(partita.parola) })} />
       </p>
-      <p className="muted">Impostori: {impostori}</p>
+      <p className="muted">{t("impostoriElenco", { nomi: impostori })}</p>
       <button className="btn primario" onClick={onNuova}>
-        Nuova partita
+        {t("nuovaPartita")}
       </button>
     </section>
   );

@@ -58,13 +58,15 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 src/logic/       partita dal seme, fasi, sessione a un telefono, validazione (logica pura)
 src/online/      partita online, logica pura usata anche dal server
 src/ui/          schermate React e parole recenti; ui/online/ per il collegamento WebSocket
-src/parole.ts    accesso alle parole e VERSIONE_DATI
-data/it/parole.json   categorie: nome da mostrare e parole
+src/locales/     testi dell'interfaccia (it.ts, en.ts) e regolamento
+src/errori.ts    codici degli errori della logica (tradotti dalla UI)
+src/parole.ts    accesso alle parole (per lingua) e VERSIONE_DATI
+data/<lingua>/parole.json   categorie: nome da mostrare e parole (it, en)
 ```
 
 ## Come cambiare o aggiungere le parole
 
-Le «carte» di Impostore sono le parole, raggruppate per categoria in `data/it/parole.json`. Non serve toccare il codice.
+Le «carte» di Impostore sono le parole, raggruppate per categoria in `data/<lingua>/parole.json` (oggi `it` e `en`). Non serve toccare il codice, tranne che per aggiungere una lingua.
 
 ```json
 "animali": {
@@ -77,7 +79,10 @@ Le «carte» di Impostore sono le parole, raggruppate per categoria in `data/it/
 - **Nuova categoria**: aggiungi un blocco con `nome` (come appare nel menu) e `parole`, almeno 30. Compare da sola in modalità a un telefono e online.
 - **Rinominare una categoria**: cambia solo `nome`. Non cambiare la chiave (`animali`): serve al codice e alle partite salvate.
 - **Incrementa `VERSIONE_DATI`** in `src/parole.ts` se cambi l'ordine o il contenuto di categorie esistenti. Serve ai codici partita condivisi, perché due telefoni con elenchi diversi darebbero parole diverse; la modalità a un telefono non ne risente. Aggiungere una categoria in fondo non lo richiede.
-- Controlla con `pnpm test:unit`: i test verificano numero minimo, doppioni, spazi e nomi.
+- **Le chiavi delle categorie sono le stesse in tutte le lingue** (`animali`, `cibi`…): cambia solo `nome` e `parole`. Una categoria nuova va aggiunta in ogni lingua. Le parole inglesi sono originali, non tradotte una a una.
+- **Aggiungere una lingua**: crea `data/<lingua>/parole.json` con le stesse chiavi, importalo in `src/parole.ts`, aggiungi `src/locales/<lingua>.ts` ed esportalo da `locales/index.ts` (la lingua va registrata anche in `@gdt/i18n`).
+- **Online** la lingua delle parole è scelta dall'organizzatore alla creazione (`config.lingua`); a un telefono si usa la lingua dell'app. Le parole recenti sono ricordate per lingua.
+- Controlla con `pnpm test:unit`: i test verificano, per ogni lingua, numero minimo, doppioni, spazi e nomi.
 
 ## Deploy
 

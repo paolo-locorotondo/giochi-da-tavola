@@ -3,22 +3,15 @@ import { useId, useRef, useState, type MouseEvent, type ReactNode } from "react"
 import { Icona, type NomeIcona } from "./Icona";
 import { audioAttivo, impostaAudio } from "@gdt/suoni";
 import { scriviPreferenza, usaPreferenza, type ImpostazioneGioco } from "@gdt/preferenze";
+import { LINGUE, NOME_LINGUA, scriviLingua, usaLingua, usaT, type TestiGioco } from "@gdt/i18n";
+import { dizionari } from "./testi";
 import { impostaTema, temaAttuale, type Tema } from "./tema";
 
-export interface GiocoConRegole {
-  id: string;
-  nome: string;
-  /** Impostazioni del gioco (non della singola partita), nell'ingranaggio quando si è dentro il gioco. */
-  impostazioni?: readonly ImpostazioneGioco[];
-  regolamento: {
-    passi: readonly string[];
-    note?: readonly string[];
-    /** Elenco di ruoli/personaggi con la loro abilità, mostrato dopo i passi. */
-    personaggi?: readonly { nome: string; testo: string }[];
-  };
-}
+/** Un gioco con i suoi testi nella lingua corrente (manifest + `testi(lingua)`). */
+export type GiocoConRegole = TestiGioco & { id: string };
 
 function Regole({ gioco }: { gioco: GiocoConRegole }) {
+  const t = usaT(dizionari);
   return (
     <>
       <ol className="regole-passi">
@@ -33,7 +26,7 @@ function Regole({ gioco }: { gioco: GiocoConRegole }) {
       ))}
       {gioco.regolamento.personaggi ? (
         <>
-          <h3 className="regole-sezione">I personaggi</h3>
+          <h3 className="regole-sezione">{t("iPersonaggi")}</h3>
           <dl className="regole-personaggi">
             {gioco.regolamento.personaggi.map((p) => (
               <div key={p.nome}>
@@ -100,6 +93,26 @@ function SceltaGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneGioco }) 
   );
 }
 
+/** Lingua dell'interfaccia: vale per tutta l'app, su questo telefono. */
+function SceltaLingua() {
+  const lingua = usaLingua();
+  const t = usaT(dizionari);
+  const id = useId();
+  return (
+    <fieldset className="scelta">
+      <legend className="scelta-titolo">{t("lingua")}</legend>
+      <div className="scelta-opzioni">
+        {LINGUE.map((l) => (
+          <label key={l} className="scelta-opzione">
+            <input type="radio" name={id} checked={l === lingua} onChange={() => scriviLingua(l)} lang={l} />
+            <span lang={l}>{NOME_LINGUA[l]}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 /** Scheda modale (<dialog> nativo): Esc, X o un tocco sullo sfondo la chiudono. */
 function Scheda({
   finestra,
@@ -112,6 +125,7 @@ function Scheda({
   indietro?: () => void;
   children: ReactNode;
 }) {
+  const t = usaT(dizionari);
   const chiudi = () => finestra.current?.close();
   const sulloSfondo = (e: MouseEvent<HTMLDialogElement>) => {
     if (e.target === e.currentTarget) chiudi();
@@ -120,12 +134,12 @@ function Scheda({
     <dialog ref={finestra} className="impostazioni" aria-labelledby="impostazioni-titolo" onClick={sulloSfondo}>
       <div className="impostazioni-testata">
         {indietro ? (
-          <button type="button" className="tema-btn" aria-label="Torna alle impostazioni" onClick={indietro}>
+          <button type="button" className="tema-btn" aria-label={t("tornaAlleImpostazioni")} onClick={indietro}>
             <Icona nome="indietro" />
           </button>
         ) : null}
         <h2 id="impostazioni-titolo">{titolo}</h2>
-        <button type="button" className="tema-btn" aria-label="Chiudi" onClick={chiudi}>
+        <button type="button" className="tema-btn" aria-label={t("chiudi")} onClick={chiudi}>
           <Icona nome="chiudi" />
         </button>
       </div>
@@ -138,17 +152,18 @@ function Scheda({
 /** Libro accanto a un gioco nell'elenco: apre direttamente il regolamento di quel gioco. */
 export function PulsanteRegolamento({ gioco }: { gioco: GiocoConRegole }) {
   const finestra = useRef<HTMLDialogElement>(null);
+  const t = usaT(dizionari);
   return (
     <>
       <button
         type="button"
         className="tema-btn"
-        aria-label={`Regolamento di ${gioco.nome}`}
+        aria-label={t("regolamentoDi", { gioco: gioco.nome })}
         onClick={() => finestra.current?.showModal()}
       >
         <Icona nome="regolamento" />
       </button>
-      <Scheda finestra={finestra} titolo={`Regolamento · ${gioco.nome}`}>
+      <Scheda finestra={finestra} titolo={t("regolamentoTitolo", { gioco: gioco.nome })}>
         <Regole gioco={gioco} />
       </Scheda>
     </>
@@ -161,6 +176,7 @@ export function PulsanteRegolamento({ gioco }: { gioco: GiocoConRegole }) {
  */
 export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
   const finestra = useRef<HTMLDialogElement>(null);
+  const t = usaT(dizionari);
   const [tema, setTema] = useState<Tema>(temaAttuale);
   const [vista, setVista] = useState<"voci" | "regole">("voci");
   const [audio, setAudio] = useState(audioAttivo);
@@ -175,22 +191,22 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
 
   return (
     <>
-      <button type="button" className="tema-btn" aria-label="Impostazioni" onClick={apri}>
+      <button type="button" className="tema-btn" aria-label={t("impostazioni")} onClick={apri}>
         <Icona nome="impostazioni" />
       </button>
       <Scheda
         finestra={finestra}
-        titolo={vista === "regole" ? "Regolamento di gioco" : "Impostazioni"}
+        titolo={vista === "regole" ? t("regolamentoDiGioco") : t("impostazioni")}
         indietro={vista === "regole" ? () => setVista("voci") : undefined}
       >
         {vista === "voci" || !gioco ? (
           <>
-            {gioco ? <h3 className="impostazioni-sezione">App</h3> : null}
+            {gioco ? <h3 className="impostazioni-sezione">{t("sezioneApp")}</h3> : null}
             <ul className="impostazioni-voci">
               <li>
                 <Interruttore
                   icona={scuro ? "luna" : "sole"}
-                  testo="Tema scuro"
+                  testo={t("temaScuro")}
                   acceso={scuro}
                   onCambia={(v) => {
                     const nuovo: Tema = v ? "dark" : "light";
@@ -202,13 +218,16 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
               <li>
                 <Interruttore
                   icona={audio ? "volume-si" : "volume-no"}
-                  testo="Audio"
+                  testo={t("audio")}
                   acceso={audio}
                   onCambia={(v) => {
                     impostaAudio(v);
                     setAudio(v);
                   }}
                 />
+              </li>
+              <li>
+                <SceltaLingua />
               </li>
             </ul>
             {gioco ? (
@@ -223,7 +242,7 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
                   <li>
                     <button type="button" className="impostazioni-voce" onClick={() => setVista("regole")}>
                       <Icona nome="regolamento" />
-                      <span className="impostazioni-voce-testo">Regolamento di gioco</span>
+                      <span className="impostazioni-voce-testo">{t("regolamentoDiGioco")}</span>
                     </button>
                   </li>
                 </ul>
