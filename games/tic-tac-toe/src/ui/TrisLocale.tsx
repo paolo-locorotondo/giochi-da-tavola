@@ -20,7 +20,7 @@ type Modalita = "telefono" | "due";
 
 const PAUSA_TELEFONO = 450;
 
-export function TrisApp() {
+export function TrisLocale() {
   const t = usaT(dizionari);
   const [modalita, setModalita] = useState<Modalita>("telefono");
   const [livello, setLivello] = useState<Difficolta>("medio");

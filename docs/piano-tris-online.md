@@ -1,6 +1,6 @@
 # Piano: Tris online («ognuno col suo telefono»)
 
-Stato: in corso. Data piano: 2026-11-07. Questo file è il riferimento se il contesto si riempie:
+Stato: completato fino al passo 4. Data piano: 2026-11-07. Questo file è il riferimento se il contesto si riempie:
 contiene decisioni, ordine di lavoro e stato di avanzamento.
 
 ## Contesto
@@ -76,6 +76,6 @@ contiene decisioni, ordine di lavoro e stato di avanzamento.
 
 - [x] 1. Server generico (contratto `GiocoOnline` in `packages/engine/src/online.ts`, registro `apps/server/src/giochi.ts`, Impostore in `games/impostore/src/online/modulo.ts`; posti occupa/libera/riprendi restano nel server)
 - [x] 2. Modulo online Tris + test (`games/tic-tac-toe/src/online/gioco.ts`, registrato in `apps/server/src/giochi.ts`; test in `gioco.test.ts` e `apps/server/src/tris.test.ts`). Messaggi: `crea` con `gioco: "tris"`, `nomi` di 2 giocatori, `config` ignorata; azioni `occupa`, `libera`, `avvia` (host), `muovi {casella}`, `rivincita`. Errori = codici `ErroreTris` (da tradurre nella UI come `errore_<codice>`).
-- [ ] 3. UI online Tris
-- [ ] 4. README, decisioni.md, CHANGELOG
+- [x] 3. UI online Tris (`games/tic-tac-toe/src/ui/Tris.tsx`, `online/TrisOnline.tsx`; hook condiviso in `packages/collegamento`; e2e `apps/web/e2e/tris-online.spec.ts`)
+- [x] 4. README, decisioni.md, CHANGELOG (rilasciato 0.10.0)
 - [ ] 5. Coda (fuori scopo ora)

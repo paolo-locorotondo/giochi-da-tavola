@@ -125,6 +125,9 @@ importers:
 
   games/impostore:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -203,13 +206,25 @@ importers:
 
   games/tic-tac-toe:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
       '@gdt/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      lucide-react:
+        specifier: ^1.69.0
+        version: 1.69.0(@types/react@18.3.31)(react@18.3.1)
+      qrcode:
+        specifier: 1.5.4
+        version: 1.5.4
     devDependencies:
+      '@types/qrcode':
+        specifier: 1.5.5
+        version: 1.5.5
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.31
@@ -219,6 +234,19 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)(terser@5.51.2)
+
+  packages/collegamento:
+    dependencies:
+      '@gdt/suoni':
+        specifier: workspace:*
+        version: link:../suoni
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
 
   packages/engine:
     devDependencies:

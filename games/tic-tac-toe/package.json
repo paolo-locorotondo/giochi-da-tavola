@@ -14,13 +14,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gdt/collegamento": "workspace:*",
     "@gdt/i18n": "workspace:*",
-    "@gdt/engine": "workspace:*"
+    "@gdt/engine": "workspace:*",
+    "lucide-react": "^1.69.0",
+    "qrcode": "1.5.4"
   },
   "peerDependencies": {
     "react": "^18.3.1"
   },
   "devDependencies": {
+    "@types/qrcode": "1.5.5",
     "@types/react": "^18.3.12",
     "react": "^18.3.1",
     "vitest": "^2.1.8"

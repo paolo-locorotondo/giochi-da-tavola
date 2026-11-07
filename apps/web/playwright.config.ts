@@ -18,10 +18,19 @@ export default defineConfig({
     { name: "scuro", use: { colorScheme: "dark" } },
     { name: "chiaro", use: { colorScheme: "light" } },
   ],
-  webServer: {
-    command: `pnpm exec vite --port ${PORTA} --strictPort`,
-    url: `http://localhost:${PORTA}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      command: `pnpm exec vite --port ${PORTA} --strictPort`,
+      url: `http://localhost:${PORTA}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    // Server di gioco (porta 8081, a cui punta il proxy /ws di Vite): serve ai test online.
+    {
+      command: "pnpm --filter @gdt/server dev",
+      url: "http://localhost:8081/salute",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+  ],
 });

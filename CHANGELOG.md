@@ -9,10 +9,21 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.10.0] - 2026-11-07
+
+### Aggiunto
+
+- **Tris online** (`/tris`, «Ognuno col suo telefono»): l'organizzatore scrive i due nomi (X e O) e condivide codice, link o QR; ognuno prende il proprio posto e si muove solo dal suo telefono, al suo turno (lo verifica il server). Rivincita quando la chiedono entrambi, chi inizia alterna, punteggio della serie. Un terzo telefono può guardare o riprendere il posto di chi è caduto; il rientro dopo refresh o caduta di rete è automatico. L'organizzatore può chiudere la partita. Italiano e inglese. Nella home Tris ha ora anche il segno online.
+
+### Cambiato
+
+- In Tris, aprendo il gioco si sceglie prima «Un solo telefono» o «Ognuno col suo telefono» (come in Impostore).
+
 ### Interno
 
-- Server di gioco generico: `apps/server` non dipende più da Impostore. Ogni gioco online espone un `GiocoOnline` (contratto in `@gdt/engine`: `nuovoStato`, `applica`, `traduci` con i permessi, `vistaPer`, `momento`, `inGioco`) e si registra in `apps/server/src/giochi.ts`. Il messaggio `crea` accetta `gioco` (assente = Impostore, per i client di prima). Primo passo del Tris online (`docs/piano-tris-online.md`).
-- Tris online lato logica e server: `games/tic-tac-toe/src/online` (due posti, rivincita chiesta da entrambi, chi inizia alterna), registrato nel server. Ancora senza interfaccia online.
+- Server di gioco generico: `apps/server` non dipende più da Impostore. Ogni gioco online espone un `GiocoOnline` (contratto in `@gdt/engine`: `nuovoStato`, `applica`, `traduci` con i permessi, `vistaPer`, `momento`, `inGioco`) e si registra in `apps/server/src/giochi.ts`. Il messaggio `crea` accetta `gioco` (assente = Impostore, per i client di prima).
+- Nuovo pacchetto `packages/collegamento` (`@gdt/collegamento`): il hook WebSocket (rientro con token, riconnessione, stanza chiusa) è condiviso da Impostore e Tris.
+- Tris online lato logica: `games/tic-tac-toe/src/online` (con test) e test del server; i test grafici partono anche dal server di gioco (`playwright.config.ts`).
 
 ## [0.9.0] - 2026-11-07
 

@@ -12,6 +12,7 @@ async function modalitaDue(page: Page) {
 
 test("tris: in due si gioca fino alla vittoria e il punteggio cresce", async ({ page }) => {
   await page.goto("/tris");
+  await page.getByRole("button", { name: /Un solo telefono/ }).click();
   await modalitaDue(page);
   await expect(page.getByRole("status")).toHaveText("Tocca a X");
   await schermata(page, "iniziale-due");
@@ -35,6 +36,7 @@ test("tris: in due si gioca fino alla vittoria e il punteggio cresce", async ({ 
 
 test("tris: griglia piena senza tris è pareggio; una casella occupata non si può riusare", async ({ page }) => {
   await page.goto("/tris");
+  await page.getByRole("button", { name: /Un solo telefono/ }).click();
   await modalitaDue(page);
   await casella(page, 1, 1).click();
   await casella(page, 1, 1).click({ force: true });
@@ -51,6 +53,7 @@ test("tris: griglia piena senza tris è pareggio; una casella occupata non si pu
 
 test("tris: contro il telefono (difficile) risponde e non perde", async ({ page }) => {
   await page.goto("/tris");
+  await page.getByRole("button", { name: /Un solo telefono/ }).click();
   await page.getByRole("radio", { name: "Difficile" }).check({ force: true });
   await expect(page.getByRole("status")).toHaveText("Tocca a te");
   await casella(page, 2, 2).click();
@@ -62,6 +65,7 @@ test("tris: contro il telefono (difficile) risponde e non perde", async ({ page 
 
 test("tris: scegliendo O il telefono inizia da solo", async ({ page }) => {
   await page.goto("/tris");
+  await page.getByRole("button", { name: /Un solo telefono/ }).click();
   await page.getByRole("radio", { name: "O", exact: true }).check({ force: true });
   await expect(page.locator(".tris-X")).toHaveCount(1);
   await expect(page.getByRole("status")).toHaveText("Tocca a te");
@@ -70,6 +74,7 @@ test("tris: scegliendo O il telefono inizia da solo", async ({ page }) => {
 test("tris: in inglese testi e nomi delle caselle sono tradotti", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("gdt-lingua", "en"));
   await page.goto("/tris");
+  await page.getByRole("button", { name: /One phone/ }).click();
   await expect(page.getByRole("radio", { name: "Two players" })).toBeAttached();
   await expect(page.getByRole("button", { name: "New game" })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Row 1, column 1: empty$/ })).toBeVisible();
