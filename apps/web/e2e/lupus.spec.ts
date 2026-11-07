@@ -158,6 +158,36 @@ test("transizione: tra un ruolo e l'altro compare una schermata uguale, poi la s
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
 });
 
+test("transizione dell'alba: sole e «Il villaggio si risveglia» prima del racconto della notte", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("prova-transizione", "1");
+    localStorage.setItem("gdt-pref-lupus-transizione", "3");
+  });
+  await page.clock.install();
+  await avvia(page);
+  await giraLeCarte(page, 7);
+  const scegliEConferma = async (pulsante: string) => {
+    await page.locator("div.giocatori button").first().click();
+    await page.getByRole("button", { name: pulsante }).click();
+    await page.clock.runFor(3500);
+  };
+  await page.clock.runFor(3500); // dopo l'ultima carta
+  await scegliEConferma("Conferma e torna a dormire"); // lupi
+  await page.locator("div.giocatori button").first().click(); // veggente
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await page.clock.runFor(3500);
+  await page.locator("div.giocatori button").first().click(); // medico
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  // Dopo il medico: transizione del giorno (sole), il racconto della notte non c'è ancora.
+  await expect(page.locator(".transizione-sole")).toBeVisible();
+  await expect(page.locator(".transizione-luna")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Si discute e si vota" })).toHaveCount(0);
+  await schermata(page, "transizione-alba");
+  await page.clock.runFor(3500);
+  await expect(page.getByRole("button", { name: "Si discute e si vota" })).toBeVisible();
+});
+
 test("transizione: con «No» nelle impostazioni del gioco non compare", async ({ page }) => {
   await avvia(page);
   await giraLeCarte(page, 7);

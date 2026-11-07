@@ -9,7 +9,16 @@ const ATTESA_VOCE_MAX = 20;
  * È sempre identica (testo, durata, aspetto), qualunque sia la schermata che segue:
  * chi riapre gli occhi troppo presto non ricava nulla.
  */
-export function Transizione({ secondi, onFine }: { secondi: number; onFine: () => void }) {
+export function Transizione({
+  secondi,
+  giorno = false,
+  onFine,
+}: {
+  secondi: number;
+  /** Alba: sole e «Il villaggio si risveglia» al posto di luna e «Occhi chiusi». */
+  giorno?: boolean;
+  onFine: () => void;
+}) {
   useEffect(() => {
     let intervallo: ReturnType<typeof setInterval> | undefined;
     const timer = setTimeout(() => {
@@ -30,10 +39,20 @@ export function Transizione({ secondi, onFine }: { secondi: number; onFine: () =
 
   return (
     <section className="schermata transizione" aria-live="polite">
-      <span className="transizione-luna" aria-hidden="true" />
-      <h2>Occhi chiusi</h2>
-      <p>Chi ha appena toccato il telefono lo lascia al centro e torna a dormire.</p>
-      <p className="muted">Il narratore sta per chiamare il prossimo.</p>
+      <span className={giorno ? "transizione-sole" : "transizione-luna"} aria-hidden="true" />
+      {giorno ? (
+        <>
+          <h2>Il villaggio si risveglia</h2>
+          <p>Tutti possono aprire gli occhi.</p>
+          <p className="muted">Il narratore sta per raccontare cosa è successo nella notte.</p>
+        </>
+      ) : (
+        <>
+          <h2>Occhi chiusi</h2>
+          <p>Chi ha appena toccato il telefono lo lascia al centro e torna a dormire.</p>
+          <p className="muted">Il narratore sta per chiamare il prossimo.</p>
+        </>
+      )}
       <div className="transizione-barra" aria-hidden="true">
         <span style={{ "--durata": `${secondi}s` } as CSSProperties} />
       </div>

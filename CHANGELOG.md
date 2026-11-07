@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.6.1] - 2026-11-07
+
+### Cambiato
+
+- Lupus: prima del racconto dell'alba la transizione mostra il sole e «Il villaggio si risveglia» (non più luna e «Occhi chiusi»).
+
 ## [0.6.0] - 2026-11-07
 
 ### Aggiunto

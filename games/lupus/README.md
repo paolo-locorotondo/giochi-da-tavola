@@ -42,7 +42,7 @@ Quando il narratore chiama un ruolo, chi ha finito tocca il pulsante e lascia il
 - veggente: «Ho visto, torna a dormire» (il veggente vede la carta del giocatore scelto, poi chiude gli occhi);
 - l'ultima carta della distribuzione resta «Ho visto, passa il telefono».
 
-Dopo ogni pulsante di fine turno (tra un ruolo e l'altro, e tra notte e giorno) compare una **schermata di transizione** sempre uguale, con il testo «Occhi chiusi». Serve a non vedere la schermata del ruolo successivo mentre si torna a dormire. Dura il tempo scelto nelle impostazioni del gioco (ingranaggio → Lupus in fabula → Schermata di transizione: No, 3, 5, 8 o 10 secondi, predefinito 5). Se il narratore sta ancora parlando alla fine della durata, la schermata resta fino alla fine della frase (al massimo altri 20 secondi).
+Dopo ogni pulsante di fine turno tra un ruolo e l'altro compare una **schermata di transizione** sempre uguale, con la luna e il testo «Occhi chiusi». Prima del racconto dell'alba ne compare una diversa, con il sole e «Il villaggio si risveglia»: dice a tutti di aprire gli occhi. Serve a non vedere la schermata del ruolo successivo mentre si torna a dormire. Dura il tempo scelto nelle impostazioni del gioco (ingranaggio → Lupus in fabula → Schermata di transizione: No, 3, 5, 8 o 10 secondi, predefinito 5). Se il narratore sta ancora parlando alla fine della durata, la schermata resta fino alla fine della frase (al massimo altri 20 secondi).
 
 Le impostazioni di gioco sono salvate sul telefono e non fanno parte della partita: si cambiano anche tra una partita e l'altra. Sono dichiarate in `src/impostazioni.ts` (pacchetto `@gdt/preferenze`).
 

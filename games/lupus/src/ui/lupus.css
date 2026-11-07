@@ -86,6 +86,17 @@
   transform: rotate(-20deg);
 }
 
+/* Sole: disco pieno con un anello di raggi tenue */
+.transizione-sole {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 8px auto 0.5rem;
+  border-radius: 50%;
+  background: var(--ac);
+  box-shadow: 0 0 0 8px var(--s2), 0 0 0 11px var(--ac);
+}
+
 .transizione-barra {
   height: 6px;
   margin-top: 1rem;

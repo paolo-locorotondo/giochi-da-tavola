@@ -124,7 +124,7 @@ export function LupusApp() {
   }
 
   const contenuto = (() => {
-    if (inTransizione) return <Transizione secondi={secondi} onFine={fineTransizione} />;
+    if (inTransizione) return <Transizione secondi={secondi} giorno={s.fase === "alba"} onFine={fineTransizione} />;
     switch (s.fase) {
       case "carte":
         return <Carte s={s} dispatch={dispatch} />;
