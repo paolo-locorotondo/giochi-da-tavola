@@ -15,6 +15,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Home: accanto al nome di ogni gioco ci sono le icone delle modalità, le stesse della scelta in Impostore: offline (un solo telefono, oro) e online (ognuno col suo telefono, verde). Tutti i giochi hanno l'offline; l'online c'è solo in Impostore (`online: true` nel `manifest`).
 
+### Corretto
+
+- Su telefono, al tocco di un pulsante non compare più il riquadro azzurro del browser (`-webkit-tap-highlight-color`); il doppio tocco non fa più zoom sui pulsanti e sui link.
+
 ## [0.8.1] - 2026-11-07
 
 ### Aggiunto

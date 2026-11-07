@@ -1,5 +1,16 @@
 * {
   box-sizing: border-box;
+  /* niente riquadro azzurro del browser al tocco: il feedback lo danno gli stati :active dei pulsanti */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+input,
+select,
+summary,
+label {
+  touch-action: manipulation;
 }
 
 body {
