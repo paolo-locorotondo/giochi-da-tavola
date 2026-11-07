@@ -1,7 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fissaCaso, schermata } from "./aiuti";
 
-test.beforeEach(({ page }) => fissaCaso(page));
+test.beforeEach(async ({ page }) => {
+  await fissaCaso(page);
+  // I test del giro di gioco partono senza transizione (si prova a parte); il valore predefinito è 5 s.
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("prova-transizione")) localStorage.setItem("gdt-pref-lupus-transizione", "0");
+  });
+});
 
 const NOMI = "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia";
 
@@ -112,4 +118,48 @@ test("la partita sopravvive al refresh e si può chiudere", async ({ page }) => 
   await page.getByRole("button", { name: "Chiudi la partita" }).click();
   await page.getByRole("button", { name: "Sì, chiudi" }).click();
   await expect(page.getByLabel(/Giocatori/)).toBeVisible();
+});
+
+test("pulsanti di fine turno: lupi e medico «Conferma e torna a dormire», veggente «Ho visto, torna a dormire»", async ({ page }) => {
+  await avvia(page);
+  await giraLeCarte(page, 7);
+  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeDisabled();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await expect(page.getByRole("button", { name: "Ho visto, torna a dormire" })).toBeEnabled();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeDisabled();
+});
+
+test("transizione: tra un ruolo e l'altro compare una schermata uguale, poi la schermata del ruolo", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("prova-transizione", "1");
+    localStorage.setItem("gdt-pref-lupus-transizione", "3");
+  });
+  await page.clock.install();
+  await avvia(page);
+  await giraLeCarte(page, 7);
+
+  // Dopo l'ultima carta: prima la transizione, la schermata dei lupi non c'è ancora.
+  await expect(page.getByRole("heading", { name: "Occhi chiusi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toHaveCount(0);
+  await schermata(page, "transizione");
+  await page.clock.runFor(3500);
+  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
+
+  // Dopo la conferma dei lupi: di nuovo la stessa schermata, non quella del veggente.
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Occhi chiusi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toHaveCount(0);
+  await page.clock.runFor(3500);
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+});
+
+test("transizione: con «No» nelle impostazioni del gioco non compare", async ({ page }) => {
+  await avvia(page);
+  await giraLeCarte(page, 7);
+  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
 });

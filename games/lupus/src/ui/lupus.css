@@ -70,6 +70,47 @@
   color: var(--mu);
 }
 
+/* Transizione tra ruoli e tra notte e giorno: sempre uguale, qualunque cosa venga dopo */
+.transizione {
+  padding-top: 2rem;
+}
+
+/* Falce di luna disegnata con due cerchi: un'ombra del colore di fondo copre parte del disco */
+.transizione-luna {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 0.5rem;
+  border-radius: 50%;
+  box-shadow: inset -18px -6px 0 0 var(--ac);
+  transform: rotate(-20deg);
+}
+
+.transizione-barra {
+  height: 6px;
+  margin-top: 1rem;
+  overflow: hidden;
+  background: var(--s2);
+  border-radius: 999px;
+}
+
+.transizione-barra span {
+  display: block;
+  height: 100%;
+  background: var(--ac2);
+  transform-origin: left;
+  animation: transizione-scorre var(--durata) linear forwards;
+}
+
+@keyframes transizione-scorre {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 /* Disabilitato: forma e colore neutro, non trasparenza (il tema oro si sporcherebbe) */
 .btn:disabled {
   background: var(--s2);

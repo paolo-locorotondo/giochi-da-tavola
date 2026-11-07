@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@gdt/engine": "workspace:*",
+    "@gdt/preferenze": "workspace:*",
     "@gdt/suoni": "workspace:*"
   },
   "peerDependencies": {

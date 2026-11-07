@@ -130,6 +130,89 @@ h1 {
   flex: 1;
 }
 
+/* Dentro un gioco: «App» e poi il nome del gioco separano le due sezioni */
+.impostazioni-sezione {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mu);
+}
+
+.impostazioni-sezione:first-child {
+  margin-top: 0;
+}
+
+/* Impostazione di gioco a scelta singola: titolo, aiuto e una fila di opzioni */
+.scelta {
+  margin: 0;
+  padding: 0.6rem 0.9rem 0.8rem;
+  min-width: 0;
+  background: var(--s2);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 2px);
+}
+
+.scelta-titolo {
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-weight: 600;
+}
+
+.scelta-aiuto {
+  clear: both;
+  margin: 0.25rem 0 0;
+  padding-top: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--mu);
+}
+
+.scelta-opzioni {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(3.5rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.scelta-opzione {
+  position: relative;
+}
+
+/* Il radio vero resta (tastiera e lettori di schermo), coperto dall'etichetta disegnata */
+.scelta-opzione input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.scelta-opzione span {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  font-weight: 700;
+  color: var(--fg);
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 4px);
+}
+
+.scelta-opzione input:checked + span {
+  color: var(--on-ac);
+  background: var(--ac);
+  border-color: var(--ac);
+}
+
+.scelta-opzione input:focus-visible + span {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
 
 /* Interruttore animato: solo transform e colore */
 .interruttore {

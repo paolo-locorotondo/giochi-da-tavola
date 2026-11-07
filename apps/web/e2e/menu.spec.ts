@@ -113,6 +113,27 @@ test("impostazioni dentro un gioco: tema, audio e regolamento di quel gioco", as
   await expect(page.locator("dialog[open]")).toHaveCount(0);
 });
 
+test("impostazioni: nell'elenco solo quelle dell'app, dentro Lupus anche quelle del gioco (modificabili)", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Impostazioni" }).click();
+  await expect(page.getByRole("switch", { name: "Audio" })).toBeVisible();
+  await expect(page.getByText("Schermata di transizione")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await page.goto("/lupus");
+  await page.getByRole("button", { name: "Impostazioni" }).click();
+  await expect(page.getByRole("switch", { name: "Audio" })).toBeVisible();
+  const cinque = page.getByRole("radio", { name: "5 s" });
+  await expect(cinque).toBeChecked();
+  await schermata(page, "impostazioni-lupus");
+  await page.getByRole("radio", { name: "8 s" }).click();
+  await expect(page.getByRole("radio", { name: "8 s" })).toBeChecked();
+  await page.keyboard.press("Escape");
+  await page.reload();
+  await page.getByRole("button", { name: "Impostazioni" }).click();
+  await expect(page.getByRole("radio", { name: "8 s" })).toBeChecked();
+});
+
 test("impostore: indietro dalla modalità torna a «Come giocate?» e solo da lì al menu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: /Impostore/ }).click();

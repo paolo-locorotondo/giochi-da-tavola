@@ -1,12 +1,15 @@
-import { useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 
 import { Icona, type NomeIcona } from "./Icona";
 import { audioAttivo, impostaAudio } from "@gdt/suoni";
+import { scriviPreferenza, usaPreferenza, type ImpostazioneGioco } from "@gdt/preferenze";
 import { impostaTema, temaAttuale, type Tema } from "./tema";
 
 export interface GiocoConRegole {
   id: string;
   nome: string;
+  /** Impostazioni del gioco (non della singola partita), nell'ingranaggio quando si è dentro il gioco. */
+  impostazioni?: readonly ImpostazioneGioco[];
   regolamento: {
     passi: readonly string[];
     note?: readonly string[];
@@ -68,6 +71,35 @@ function Interruttore({
   );
 }
 
+/** Scelta singola fra poche opzioni (es. durata): una fila di pulsanti radio nativi. */
+function SceltaGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneGioco }) {
+  const valore = usaPreferenza(gioco, imp);
+  const id = useId();
+  return (
+    <fieldset className="scelta" aria-describedby={imp.aiuto ? `${id}-aiuto` : undefined}>
+      <legend className="scelta-titolo">{imp.testo}</legend>
+      {imp.aiuto ? (
+        <p id={`${id}-aiuto`} className="scelta-aiuto">
+          {imp.aiuto}
+        </p>
+      ) : null}
+      <div className="scelta-opzioni">
+        {imp.opzioni.map((o) => (
+          <label key={String(o.valore)} className="scelta-opzione">
+            <input
+              type="radio"
+              name={id}
+              checked={o.valore === valore}
+              onChange={() => scriviPreferenza(gioco, imp.chiave, o.valore)}
+            />
+            <span>{o.testo}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 /** Scheda modale (<dialog> nativo): Esc, X o un tocco sullo sfondo la chiudono. */
 function Scheda({
   finestra,
@@ -124,8 +156,8 @@ export function PulsanteRegolamento({ gioco }: { gioco: GiocoConRegole }) {
 }
 
 /**
- * Ingranaggio che apre le impostazioni: tema scuro/chiaro, audio, regolamento di gioco.
- * Il regolamento c'è solo dentro un gioco (`gioco`); nell'elenco ogni gioco ha il suo libro.
+ * Ingranaggio che apre le impostazioni. Nell'elenco dei giochi: solo quelle dell'app (tema, audio).
+ * Dentro un gioco (`gioco`): anche le impostazioni di quel gioco e il suo regolamento.
  */
 export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
   const finestra = useRef<HTMLDialogElement>(null);
@@ -152,39 +184,52 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
         indietro={vista === "regole" ? () => setVista("voci") : undefined}
       >
         {vista === "voci" || !gioco ? (
-          <ul className="impostazioni-voci">
-            <li>
-              <Interruttore
-                icona={scuro ? "luna" : "sole"}
-                testo="Tema scuro"
-                acceso={scuro}
-                onCambia={(v) => {
-                  const nuovo: Tema = v ? "dark" : "light";
-                  impostaTema(nuovo);
-                  setTema(nuovo);
-                }}
-              />
-            </li>
-            <li>
-              <Interruttore
-                icona={audio ? "volume-si" : "volume-no"}
-                testo="Audio"
-                acceso={audio}
-                onCambia={(v) => {
-                  impostaAudio(v);
-                  setAudio(v);
-                }}
-              />
-            </li>
-            {gioco ? (
+          <>
+            {gioco ? <h3 className="impostazioni-sezione">App</h3> : null}
+            <ul className="impostazioni-voci">
               <li>
-                <button type="button" className="impostazioni-voce" onClick={() => setVista("regole")}>
-                  <Icona nome="regolamento" />
-                  <span className="impostazioni-voce-testo">Regolamento di gioco</span>
-                </button>
+                <Interruttore
+                  icona={scuro ? "luna" : "sole"}
+                  testo="Tema scuro"
+                  acceso={scuro}
+                  onCambia={(v) => {
+                    const nuovo: Tema = v ? "dark" : "light";
+                    impostaTema(nuovo);
+                    setTema(nuovo);
+                  }}
+                />
               </li>
+              <li>
+                <Interruttore
+                  icona={audio ? "volume-si" : "volume-no"}
+                  testo="Audio"
+                  acceso={audio}
+                  onCambia={(v) => {
+                    impostaAudio(v);
+                    setAudio(v);
+                  }}
+                />
+              </li>
+            </ul>
+            {gioco ? (
+              <>
+                <h3 className="impostazioni-sezione">{gioco.nome}</h3>
+                <ul className="impostazioni-voci">
+                  {gioco.impostazioni?.map((imp) => (
+                    <li key={imp.chiave}>
+                      <SceltaGioco gioco={gioco.id} imp={imp} />
+                    </li>
+                  ))}
+                  <li>
+                    <button type="button" className="impostazioni-voce" onClick={() => setVista("regole")}>
+                      <Icona nome="regolamento" />
+                      <span className="impostazioni-voce-testo">Regolamento di gioco</span>
+                    </button>
+                  </li>
+                </ul>
+              </>
             ) : null}
-          </ul>
+          </>
         ) : (
           <Regole gioco={gioco} />
         )}

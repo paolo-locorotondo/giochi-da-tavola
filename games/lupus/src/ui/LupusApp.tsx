@@ -1,16 +1,20 @@
-import { useEffect, useReducer, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } from "react";
 import {
   candidatiNotte,
   contaVoti,
   lupiConsigliati,
   riduci,
   statoIniziale,
+  type Fase,
   type Ruolo,
   type Stato,
 } from "../logica";
 import { validaConfigurazione } from "../validazione";
 import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
+import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
+import { Transizione } from "./Transizione";
+import { TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
 
 const NOME_RUOLO: Record<Ruolo, string> = {
@@ -36,6 +40,9 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
 };
 
 const CHIAVE = "gdt-lupus-partita";
+
+/** Si entra in queste fasi con la schermata di transizione: ogni ruolo della notte e l'alba. */
+const FASI_CON_TRANSIZIONE: ReadonlySet<Fase> = new Set<Fase>(["lupi", "veggente", "medico", "alba"]);
 
 function caricaStato(): Stato {
   try {
@@ -95,6 +102,17 @@ export function LupusApp() {
     }
   }, [s.fase]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Transizione: quando la fase cambia verso un ruolo della notte o l'alba, prima della nuova schermata
+  // se ne vede una sempre uguale. Si decide durante il render, così la schermata dopo non compare neanche per un attimo.
+  const secondi = Number(usaPreferenza("lupus", TRANSIZIONE));
+  const [faseVista, setFaseVista] = useState(s.fase);
+  const [inTransizione, setInTransizione] = useState(false);
+  if (faseVista !== s.fase) {
+    setFaseVista(s.fase);
+    setInTransizione(secondi > 0 && FASI_CON_TRANSIZIONE.has(s.fase));
+  }
+  const fineTransizione = useCallback(() => setInTransizione(false), []);
+
   if (s.giocatori.length === 0) {
     return (
       <Configurazione
@@ -106,6 +124,7 @@ export function LupusApp() {
   }
 
   const contenuto = (() => {
+    if (inTransizione) return <Transizione secondi={secondi} onFine={fineTransizione} />;
     switch (s.fase) {
       case "carte":
         return <Carte s={s} dispatch={dispatch} />;
@@ -306,6 +325,13 @@ const TITOLO_NOTTE = {
   medico: "Il medico protegge",
 } as const;
 
+/** Il pulsante che chiude il turno di un ruolo: dice sempre di lasciare il telefono e tornare a dormire. */
+const FINE_TURNO: Record<keyof typeof TITOLO_NOTTE, string> = {
+  lupi: "Conferma e torna a dormire",
+  veggente: "Ho visto, torna a dormire",
+  medico: "Conferma e torna a dormire",
+};
+
 function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const fase = s.fase as keyof typeof TITOLO_NOTTE;
   const scelto = fase === "lupi" ? s.vittima : fase === "veggente" ? s.ispezionato : s.protetto;
@@ -343,7 +369,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
         disabled={scelto === null}
         onClick={() => dispatch({ tipo: "avanti" })}
       >
-        {risultato ? "Ho visto, torna a dormire" : "Conferma"}
+        {FINE_TURNO[fase]}
       </button>
     </section>
   );

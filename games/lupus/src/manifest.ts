@@ -1,8 +1,12 @@
+import { IMPOSTAZIONI } from "./impostazioni";
+
 export const manifest = {
   id: "lupus",
   nome: "Lupus in fabula",
   descrizione: "Il villaggio dorme, i lupi no. Il telefono fa da narratore.",
   minGiocatori: 4,
+  /** Impostazioni del gioco, mostrate nell'ingranaggio quando si è dentro Lupus. */
+  impostazioni: IMPOSTAZIONI,
   // Stesso testo di "Regolamento" in README.md del gioco: se cambi uno, cambia anche l'altro.
   regolamento: {
     passi: [

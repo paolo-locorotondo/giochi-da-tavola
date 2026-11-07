@@ -9,6 +9,17 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.6.0] - 2026-11-07
+
+### Aggiunto
+
+- Lupus: schermata di transizione «Occhi chiusi» tra un ruolo e l'altro e tra notte e giorno, per non vedere la schermata successiva dopo aver toccato il pulsante di fine turno. Durata nelle impostazioni del gioco (No, 3, 5, 8, 10 s; predefinito 5 s); aspetta la fine della voce del narratore (massimo 20 s).
+- Impostazioni di gioco: dentro un gioco l'ingranaggio mostra due sezioni, «App» (tema, audio) e il nome del gioco (impostazioni del gioco). Nel menu restano solo quelle dell'app. Nuovo pacchetto `packages/preferenze` (`@gdt/preferenze`): ogni gioco dichiara le sue impostazioni nel manifest.
+
+### Cambiato
+
+- Lupus: lupi e medico chiudono con «Conferma e torna a dormire», il veggente con «Ho visto, torna a dormire», uguali in tutte le fasi notturne.
+
 ## [0.5.0] - 2026-11-07
 
 ### Aggiunto

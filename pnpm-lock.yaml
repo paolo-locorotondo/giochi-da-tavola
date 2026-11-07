@@ -51,6 +51,9 @@ importers:
       '@gdt/lupus':
         specifier: workspace:*
         version: link:../../games/lupus
+      '@gdt/preferenze':
+        specifier: workspace:*
+        version: link:../../packages/preferenze
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
@@ -119,6 +122,9 @@ importers:
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@gdt/preferenze':
+        specifier: workspace:*
+        version: link:../../packages/preferenze
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
@@ -154,6 +160,18 @@ importers:
 
   packages/engine:
     devDependencies:
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)(terser@5.51.2)
+
+  packages/preferenze:
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@20.19.43)(terser@5.51.2)

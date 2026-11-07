@@ -11,6 +11,11 @@ export function parla(testo: string): void {
   speechSynthesis.speak(u);
 }
 
+/** Se il narratore sta ancora parlando (senza sintesi vocale: no). */
+export function staParlando(): boolean {
+  return typeof speechSynthesis !== "undefined" && speechSynthesis.speaking === true;
+}
+
 export function silenzio(): void {
   if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
 }
