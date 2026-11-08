@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Interno
+
+- `docs/decisioni.md`: «Punti aperti» con FATTO/TODO e architettura aggiornata (server generico, coda, `packages/collegamento` e `packages/i18n`).
+
 ## [0.12.0] - 2026-11-08
 
 ### Aggiunto

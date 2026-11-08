@@ -63,8 +63,11 @@ questo file):
   basta** per la modalità B; può restare per la modalità A (sito statico).
 
 **Come funziona**
-- La logica di partita è un modulo **puro** (`nuovoStato`, `applica(azione)`,
-  `vistaPer(giocatore)`), senza rete: lo usa il server e si testa da solo.
+- La logica di partita è un modulo **puro** (contratto `GiocoOnline` in `@gdt/engine`:
+  `nuovoStato`, `applica(azione)`, `traduci` con i permessi, `vistaPer(giocatore)`), senza
+  rete: lo usa il server e si testa da solo. Il server è **generico**: ogni gioco online si
+  registra in `apps/server/src/giochi.ts` (oggi Impostore e Tris). Un gioco può abilitare
+  anche la «partita veloce» con coda (`coda: { giocatori }`).
 - Il server è **autoritativo**: controlla chi può fare cosa e tiene lo stato **in memoria**.
   Se il processo si riavvia le partite si perdono (accettato: sono brevi). Le stanze
   inattive da 6 ore vengono cancellate.
@@ -126,7 +129,7 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
   versioni sempre allineate, un'unica app "raccolta".
 - **Ogni gioco è un plugin** (`games/*`): esporta un `manifest`, la logica e la UI; l'app
   li carica in lazy loading.
-- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`, `/dadi`.
+- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`, `/dadi`, `/tris`.
 - **Logica di gioco in TypeScript puro e deterministica**, separata dalla UI: testabile e
   identica nel browser (modalità A) e sul server (modalità B).
 - **Fasi come macchina a stati.**
@@ -147,17 +150,19 @@ Struttura attuale:
 giochi-da-tavola/
 ├── apps/
 │   ├── web/        → PWA: menu giochi, indirizzi per gioco
-│   └── server/     → server partite WebSocket (Node), serve anche l'app
+│   └── server/     → server partite WebSocket (Node) generico per gioco, con coda; serve anche l'app
 ├── packages/
-│   ├── engine/     → RNG con seme, codice partita, utilità comuni
+│   ├── engine/     → RNG con seme, codice partita, contratto GiocoOnline, utilità comuni
+│   ├── collegamento/ → hook WebSocket condiviso (rientro con token, coda partita veloce)
+│   ├── i18n/       → lingue it/en con chiavi controllate dal compilatore
 │   ├── suoni/      → suoni sintetizzati e interruttore audio
 │   └── preferenze/ → impostazioni dei giochi salvate sul telefono
 ├── games/
 │   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
 │   ├── lupus/      → regole e UI a un telefono
 │   ├── tabu/       → regole, carte e UI
-│   ├── dadi/       → lancio, modelli di dado e UI
-│   └── tic-tac-toe/ → regole, telefono avversario (minimax) e UI
+│   ├── dadi/       → lancio, modelli di dado (con spiegazione delle facce) e UI
+│   └── tic-tac-toe/ → regole, telefono avversario (minimax), modulo online con partita veloce e UI
 ├── Dockerfile, docker-compose.yml
 └── docs/           → questo file e le guide
 ```
@@ -187,25 +192,36 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-- Test grafici: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Manca un test automatico con più telefoni veri per la partita online.
-- Prova su telefoni veri: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro.
-- Lupus ognuno col suo telefono (ruoli segreti, notte, voto).
-- Prova del server online su Render (condizioni del piano gratuito da verificare).
-- Sul sito statico (Vercel) il pulsante online non ha un server: dopo 8 s avvisa e propone un solo telefono.
-- Tabù: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da
-  discutere.
-- Regole e carte di Tabù e Lupus da verificare dall'utente; originalità delle carte.
-- Licenza del repository (README: "Da definire").
-- Turborepo sì/no (si può decidere più avanti).
-- Vercel: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). Da scollegare anche dalla dashboard di Vercel.
-- Grafica: stile «Tavolo» fatto; altri stili (Argilla, Quiz) solo se richiesti.
-- Stili della carta riusata in "Rivedi la mia carta" (Impostore online): da verificare a schermo.
-- Pulizia: cancellare il ramo locale `archivio/storia-completa` quando non serve più.
-- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`. Piano e scelte in `docs/piano-tris-online.md`. Partita veloce con coda rilasciata in 0.11.0 (idea dal vecchio progetto `../tic-tac-toe`).
-- TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
-- TODO Lupus, nuovi ruoli: i test ora coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-08 (v0.12.0).
+
+### Fatti
+
+- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`. Piano e scelte in `docs/piano-tris-online.md`.
+- FATTO **Tris, partita veloce con coda** (0.11.0): coda in memoria per gioco (`apps/server/src/coda.ts`), abbinamento a coppie, scadenza 2 minuti, nomi uguali distinti col suffisso «(2)». Idea dal vecchio progetto `../tic-tac-toe`.
+- FATTO **Dadi, spiegazione delle facce** (0.12.0): campo facoltativo `info` nei modelli (e nel dado personalizzato), tasto «i» accanto al dado; modello Taboo.
+- FATTO **Sito statico senza server** (es. Vercel): il pulsante online dopo 8 s avvisa che il server non risponde e propone un solo telefono (Impostore e Tris).
+- FATTO **Grafica**: stile «Tavolo» (scuro e chiaro, token CSS). Altri stili (Argilla, Quiz) solo se richiesti.
+- FATTO **Test con più telefoni** per la partita online del Tris: test e2e con più contesti del browser (`tris-online.spec.ts`, `tris-coda.spec.ts`). Per Impostore online resta solo il test del server (vedi sotto).
+
+### Da fare (TODO)
+
+- TODO **Test grafici su Linux/CI**: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Non esiste ancora una CI (nessuna cartella `.github`).
+- TODO **Test e2e con più telefoni per Impostore online** (oggi coperto solo dai test del server in `apps/server`).
+- TODO **Prova su telefoni veri**: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro (anche per Tris online e partita veloce).
+- TODO **Lupus ognuno col suo telefono** (ruoli segreti, notte, voto): Lupus non ha ancora un modulo online; oggi è solo a un telefono. Con il server generico basta scrivere `games/lupus/src/online` e registrarlo; la coda non serve (partita da molti giocatori).
+- TODO **Lupus, nuovi ruoli**: i test coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
   Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo
   notturno ha una sua fase (come veggente e medico) e `risolviNotte` applica gli effetti.
   Per aggiungerne molti conviene trasformare le fasi in una lista di ruoli notturni ordinati,
   invece di scriverle a mano. Da decidere insieme: quali ruoli, a partire da quanti giocatori,
   e come cambiano le condizioni di vittoria.
+- TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` (la cartella oggi non esiste) con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
+- TODO **Prova del server online su Render**: la guida c'è ([guida-deploy-online.md](guida-deploy-online.md), scritta sulla documentazione del 2026-11-04) ma non risulta una prova reale; condizioni del piano gratuito da verificare.
+- TODO **Vercel**: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). `apps/web/vercel.json` c'è ancora e Vercel va scollegato dalla dashboard.
+- TODO **Tabù**: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da discutere.
+- TODO **Regole e carte di Tabù e Lupus** da verificare dall'utente; originalità delle carte.
+- TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
+- TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
+- TODO **Stili della carta riusata in «Rivedi la mia carta»** (Impostore online): da verificare a schermo.
+- TODO **Messaggi di errore del server in italiano**: alcune frasi proprie di `apps/server` («Il server è pieno», «Partita non trovata», permessi di posto…) non sono ancora codici tradotti. Il Tris usa già codici (`errore_<codice>`), Impostore e server no. Da portare a codici per l'inglese completo.
+- TODO **Pulizia branch locali**: cancellare `archivio/storia-completa` quando non serve più; c'è anche un branch locale `riscrittura` da controllare (potrebbe essere già unito a `main`).
