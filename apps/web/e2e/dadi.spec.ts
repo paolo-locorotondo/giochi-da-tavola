@@ -65,3 +65,27 @@ test("dadi: ogni valore ha un massimo di caratteri e il testo resta dentro il da
   expect(dentro).toBe(true);
   await schermata(page, "testo-lungo");
 });
+
+test("dadi: il tasto «i» mostra cosa significano le facce del Taboo", async ({ page }) => {
+  await page.goto("/dadi");
+  await expect(page.getByRole("button", { name: "Cosa significano le facce" })).toHaveCount(0);
+  await page.getByRole("radio", { name: "Taboo" }).check({ force: true });
+  const info = page.getByRole("button", { name: "Cosa significano le facce" });
+  await expect(info).toHaveAttribute("aria-expanded", "false");
+  await info.click();
+  await expect(page.getByRole("region", { name: "Cosa significano le facce" })).toContainText("Statua di sale");
+  await schermata(page, "info-taboo");
+  await info.click();
+  await expect(page.getByRole("region", { name: "Cosa significano le facce" })).toHaveCount(0);
+});
+
+test("dadi: il dado personalizzato ha la sua spiegazione facoltativa", async ({ page }) => {
+  await page.goto("/dadi");
+  await page.getByRole("radio", { name: "Personalizzato" }).check({ force: true });
+  await page.getByLabel("Valori, uno per riga").fill("Sì\nNo");
+  await expect(page.getByRole("button", { name: "Cosa significano le facce" })).toHaveCount(0);
+  await page.getByLabel("Cosa significano le facce (facoltativo)").fill("• Sì: vai avanti\n• No: fermo");
+  await page.getByRole("button", { name: "Cosa significano le facce" }).click();
+  await expect(page.getByRole("region", { name: "Cosa significano le facce" })).toContainText("No: fermo");
+  await schermata(page, "info-personalizzato");
+});

@@ -5,5 +5,6 @@
   {"id": "d8", "nome": "D8", "facce": ["1", "2", "3", "4", "5", "6", "7", "8"]},
   {"id": "d10", "nome": "D10", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]},
   {"id": "d12", "nome": "D12", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]},
-  {"id": "d20", "nome": "D20", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]}
+  {"id": "d20", "nome": "D20", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]},
+  {"id": "t5", "nome": "Taboo", "facce": ["Single guesser", "Double time", "Statue of salt", "Everyone plays", "Classic Taboo"], "info": "• Single guesser: only one player of the team, chosen beforehand, may try to guess the words.\n• Double time: the time on the hourglass is doubled for this turn.\n• Statue of salt: the clue giver must stay perfectly still (like a statue) while talking and gesturing.\n• Everyone plays: the opposing team can also try to guess the word; whoever gets it first scores the point.\n• Classic Taboo: no special rule; play by the normal Taboo rules."}
 ]

@@ -1,8 +1,9 @@
+import { Info } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usaLingua, usaT } from "@gdt/i18n";
 import { generaCasuale } from "../casuale";
 import { dizionari } from "../locales";
-import { MAX_CARATTERI_FACCIA, eMoneta, facceDaTesto, lancia, limitaRighe } from "../logica";
+import { MAX_CARATTERI_FACCIA, MAX_CARATTERI_INFO, eMoneta, facceDaTesto, lancia, limitaInfo, limitaRighe } from "../logica";
 import { modelliDi } from "../modelli";
 import "./dadi.css";
 
@@ -27,6 +28,8 @@ export function DadiApp() {
 
   const [scelto, setScelto] = useState<string>(modelli[2]?.id ?? PERSONALIZZATO);
   const [testo, setTesto] = useState("");
+  const [testoInfo, setTestoInfo] = useState("");
+  const [infoAperta, setInfoAperta] = useState(false);
   const [mostrata, setMostrata] = useState<string | null>(null);
   const [inLancio, setInLancio] = useState(false);
   const [storico, setStorico] = useState<Lancio[]>([]);
@@ -39,6 +42,7 @@ export function DadiApp() {
     if (personalizzato) return facceDaTesto(testo);
     return modelli.find((m) => m.id === scelto)?.facce ?? [];
   }, [personalizzato, testo, modelli, scelto]);
+  const info = (personalizzato ? testoInfo : (modelli.find((m) => m.id === scelto)?.info ?? "")).trim();
   const valido = facce.length >= 2;
   const moneta = eMoneta(facce);
 
@@ -120,6 +124,23 @@ export function DadiApp() {
         </label>
       ) : null}
 
+      {personalizzato ? (
+        <label className="campo">
+          {t("infoPersonalizzata")}
+          <textarea
+            rows={6}
+            value={testoInfo}
+            maxLength={MAX_CARATTERI_INFO}
+            aria-describedby="dadi-info-aiuto"
+            onChange={(e) => setTestoInfo(limitaInfo(e.target.value))}
+          />
+          <span id="dadi-info-aiuto" className="suggerimento">
+            {t("infoAiuto", { n: Array.from(testoInfo).length, max: MAX_CARATTERI_INFO })}
+          </span>
+        </label>
+      ) : null}
+
+      <div className="dado-riga">
       <div
         className={`dado-scena${moneta ? " dado-moneta" : ""}${inLancio ? " dado-gira" : ""}`}
         role="img"
@@ -127,6 +148,25 @@ export function DadiApp() {
       >
         <span className={`dado-faccia${(mostrata ?? "").length > 8 ? " dado-faccia-lunga" : ""}`}>{mostrata ?? "?"}</span>
       </div>
+      {info ? (
+        <button
+          type="button"
+          className="tema-btn dado-info-tasto"
+          aria-expanded={infoAperta}
+          aria-controls="dadi-info"
+          aria-label={t("infoDado")}
+          onClick={() => setInfoAperta((a) => !a)}
+        >
+          <Info size={22} aria-hidden="true" />
+        </button>
+      ) : null}
+      </div>
+
+      {info && infoAperta ? (
+        <div id="dadi-info" className="dado-info" role="region" aria-label={t("infoDado")}>
+          {info}
+        </div>
+      ) : null}
 
       <p className="dado-esito" role="status" aria-live="polite">
         {inLancio ? t("inLancio") : mostrata !== null ? t("risultato", { faccia: mostrata }) : ""}

@@ -7,7 +7,8 @@ Moneta, dadi (D4, D6, D8, D10, D12, D20) e **dado personalizzato**, con un solo 
 1. Scegli la moneta o un dado (D4, D6, D8, D10, D12, D20).
 2. Oppure scrivi un dado personalizzato: un valore per riga, per esempio «Sì», «No», «Forse».
 3. Se i valori sono due, il dado diventa una moneta.
-4. Tocca **Lancia**: il risultato è casuale e il lancio si vede in animazione.
+4. Se il dado ha una spiegazione delle facce (come il **Taboo**) compare accanto al dado il tasto **«i»**: tocca per leggerla. Nel dado personalizzato la scrivi tu, nel campo facoltativo «Cosa significano le facce».
+5. Tocca **Lancia**: il risultato è casuale e il lancio si vede in animazione.
 
 Il lancio usa il generatore casuale del telefono (`crypto.getRandomValues`), con uguale probabilità per ogni faccia: i valori che non dividono esattamente l'intervallo vengono scartati, così nessuna faccia esce più spesso delle altre.
 
@@ -34,6 +35,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 
 - Ogni dado dà solo facce che esistono (D6: da 1 a 6) e dopo molti lanci escono tutte.
 - Nel dado personalizzato: con un solo valore compare l'avviso e **Lancia** resta spento; con due valori il dado diventa tondo (moneta); ogni valore è al massimo di 20 caratteri (il resto viene tagliato); righe vuote e valori ripetuti vengono ignorati.
+- Taboo: il tasto «i» accanto al dado apre e chiude la spiegazione; i modelli senza `info` non hanno il tasto. Nel personalizzato il campo «Cosa significano le facce» (max 1000 caratteri, anche su più righe) fa comparire il tasto solo se non è vuoto.
 - Durante il lancio il tasto è spento e i dadi non si possono cambiare; l'esito si legge anche con il lettore di schermo.
 - Con «riduci movimento» attivo nel telefono non c'è animazione e il risultato è immediato.
 - Cambiando lingua dall'ingranaggio cambiano i nomi dei modelli (Moneta/Coin, Testa/Heads).
@@ -71,6 +73,15 @@ I modelli stanno in `data/it/modelli.json` (e `data/en/modelli.json`), uno per r
 
 - **Modificare o togliere**: cambia o cancella la riga. Attenzione alla virgola tra una riga e l'altra e niente virgola dopo l'ultima.
 - Aggiungi lo stesso `id` in **tutte** le lingue (`it` ed `en`): i test controllano che i modelli siano gli stessi, nello stesso ordine. Se aggiungi un modello cambia anche l'elenco atteso in `src/logica.test.ts`.
+- **Spiegazione delle facce (facoltativa)**: aggiungi `"info"` con un testo libero; gli a capo (`
+`) restano come scritti. Si legge dal tasto «i». Al massimo 1000 caratteri (`MAX_CARATTERI_INFO`). Esempio:
+
+  ```json
+  {"id": "sino", "nome": "Sì / No / Forse", "facce": ["Sì", "No", "Forse"], "info": "• Sì: vai avanti
+• No: fermo
+• Forse: chiedi al gruppo"}
+  ```
+
 - Le facce sono testi: possono essere numeri, parole o frasi brevi, al massimo 20 caratteri (`MAX_CARATTERI_FACCIA` in `src/logica.ts`): oltre, il dado non ci sta.
 
 ## Lingue

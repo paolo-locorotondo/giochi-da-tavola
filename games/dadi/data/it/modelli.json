@@ -5,5 +5,6 @@
   {"id": "d8", "nome": "D8", "facce": ["1", "2", "3", "4", "5", "6", "7", "8"]},
   {"id": "d10", "nome": "D10", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]},
   {"id": "d12", "nome": "D12", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]},
-  {"id": "d20", "nome": "D20", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]}
+  {"id": "d20", "nome": "D20", "facce": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]},
+  {"id": "t5", "nome": "Taboo", "facce": ["Indovino singolo", "Tempo doppio", "Statua di sale", "Tutti in gioco", "Taboo classico"], "info": "• Indovino singolo / Risponde una sola persona: solo un giocatore specifico della squadra, designato in anticipo, può provare a indovinare le parole.\n• Tempo doppio: il tempo a disposizione della clessidra viene raddoppiato per quel turno.\n• Statua di sale: chi dà gli indizi deve restare immobile (come una statua) mentre parla e gesticola.\n• Tutti in gioco: anche i membri della squadra avversaria possono provare a indovinare la parola; chi la azzecca per primo fa guadagnare il punto.\n• Taboo classico: nessuna regola speciale; si gioca con le regole normali del Taboo."}
 ]

@@ -12,7 +12,8 @@
   "dependencies": {
     "@gdt/i18n": "workspace:*",
     "@gdt/engine": "workspace:*",
-    "@gdt/suoni": "workspace:*"
+    "@gdt/suoni": "workspace:*",
+    "lucide-react": "^1.69.0"
   },
   "peerDependencies": {
     "react": "^18.3.1"

@@ -112,6 +112,9 @@ importers:
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
+      lucide-react:
+        specifier: ^1.69.0
+        version: 1.69.0(@types/react@18.3.31)(react@18.3.1)
     devDependencies:
       '@types/react':
         specifier: ^18.3.12

@@ -10,6 +10,8 @@ export interface Modello {
   id: string;
   nome: string;
   facce: string[];
+  /** Facoltativo: cosa significa ogni faccia (testo libero, anche su più righe). Si legge dal pulsante «i». */
+  info?: string;
 }
 
 const MODELLI: Record<Lingua, Modello[]> = { it, en };

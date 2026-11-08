@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.12.0] - 2026-11-08
+
+### Aggiunto
+
+- **Dadi, spiegazione delle facce**: un modello può avere un campo facoltativo `info` (testo libero, max 1000 caratteri) e accanto al dado compare il tasto «i» che apre la spiegazione. Anche il dado «Personalizzato» ha il suo campo «Cosa significano le facce (facoltativo)».
+- **Dadi, modello «Taboo»** (5 facce: Indovino singolo, Tempo doppio, Statua di sale, Tutti in gioco, Taboo classico) in italiano e inglese, con la spiegazione di ogni faccia.
+
 ## [0.11.0] - 2026-11-07
 
 ### Aggiunto

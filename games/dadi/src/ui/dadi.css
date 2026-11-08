@@ -33,6 +33,30 @@
   box-shadow: var(--sh);
 }
 
+/* Il dado con, accanto, il tasto «i» della spiegazione delle facce */
+.dado-riga {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.dado-info-tasto {
+  position: absolute;
+  top: 0;
+  left: calc(50% + 5.5rem + 0.6rem);
+}
+
+.dado-info {
+  padding: 0.9rem 1rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  /* le righe «• …» restano come scritte */
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+
 .dado-moneta {
   border-radius: 50%;
 }
