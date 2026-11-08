@@ -17,6 +17,6 @@ export const GIOCHI_ONLINE: Readonly<Record<string, GiocoQualsiasi>> = {
 /** Il gioco con questo id; quello predefinito (Impostore) se manca, per i client di prima. */
 export function giocoOnline(id: unknown): GiocoQualsiasi {
   const g = GIOCHI_ONLINE[typeof id === "string" ? id : "impostore"];
-  if (!g) throw new Error("Gioco non disponibile online");
+  if (!g) throw new Error("giocoNonDisponibile");
   return g;
 }

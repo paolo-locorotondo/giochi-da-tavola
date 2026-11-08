@@ -102,7 +102,7 @@ describe("occupa", () => {
 
   it("un telefono sceglie un solo nome", () => {
     const s = inSala(2);
-    expect(() => eseguiAzione(s, "host", { tipo: "occupa", posto: 3 })).toThrow("Hai già scelto il tuo nome");
+    expect(() => eseguiAzione(s, "host", { tipo: "occupa", posto: 3 })).toThrow("giaScelto");
   });
 
   it("un nome già preso non si prende", () => {
@@ -121,7 +121,7 @@ describe("occupa", () => {
   it("a partita iniziata non si sceglie più il nome", () => {
     const s = avviata(3);
     s.telefoni.set("t4", null);
-    expect(() => eseguiAzione(s, "t4", { tipo: "occupa", posto: 4 })).toThrow("La partita è già iniziata: aspetta la prossima");
+    expect(() => eseguiAzione(s, "t4", { tipo: "occupa", posto: 4 })).toThrow("giaIniziataAspetta");
   });
 });
 
@@ -135,7 +135,7 @@ describe("libera", () => {
 
   it("in sala non si libera il nome di un altro", () => {
     const s = inSala(3);
-    expect(() => eseguiAzione(s, "t2", { tipo: "libera", posto: 3 })).toThrow("Puoi liberare solo il tuo nome");
+    expect(() => eseguiAzione(s, "t2", { tipo: "libera", posto: 3 })).toThrow("liberaSoloTuo");
   });
 
   it("in sala l'organizzatore libera il nome di chiunque", () => {
@@ -155,7 +155,7 @@ describe("libera", () => {
   it("in partita solo l'organizzatore libera, e il giocatore resta in gioco", () => {
     const s = avviata(4);
     expect(() => eseguiAzione(s, "t2", { tipo: "libera", posto: 2 })).toThrow(
-      "Durante la partita solo l'organizzatore può liberare un posto",
+      "liberaSoloHost",
     );
     eseguiAzione(s, "host", { tipo: "libera", posto: 2 });
     expect(s.telefoni.get("t2")).toBeNull();
@@ -174,19 +174,19 @@ describe("libera", () => {
 describe("riprendi", () => {
   it("chi ha già un posto non può riprenderne un altro", () => {
     const s = avviata(4);
-    expect(() => eseguiAzione(s, "t2", { tipo: "riprendi", posto: 3 })).toThrow("Hai già un posto");
+    expect(() => eseguiAzione(s, "t2", { tipo: "riprendi", posto: 3 })).toThrow("giaHaiPosto");
   });
 
   it("in sala si sceglie dalla lista, non si riprende", () => {
     const s = inSala(2);
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 1 })).toThrow("Scegli il tuo nome dalla lista");
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 1 })).toThrow("scegliDallaLista");
   });
 
   it("non si riprende il posto di chi non gioca", () => {
     const s = avviata(3);
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 4 })).toThrow("Questo giocatore non partecipa");
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 4 })).toThrow("nonPartecipa");
   });
 
   it("senza connessioni note il posto risulta libero e si riprende", () => {
@@ -200,7 +200,7 @@ describe("riprendi", () => {
   it("il messaggio di rifiuto spiega cosa fare se il telefono è collegato", () => {
     const s = avviata(4);
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 3 }, () => true)).toThrow(/chiedi all'organizzatore/);
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 3 }, () => true)).toThrow("altroTelefono");
   });
 
   it("riprendere un posto qualunque non toglie l'organizzazione a chi la ha", () => {
@@ -214,11 +214,11 @@ describe("riprendi", () => {
 describe("azioni riservate all'organizzatore", () => {
   it.each(["avvia", "avanti", "nuova"] as const)("%s: gli altri telefoni sono respinti", (tipo) => {
     const s = inSala(3);
-    expect(() => eseguiAzione(s, "t2", { tipo })).toThrow("Solo chi ha creato la partita può farlo");
+    expect(() => eseguiAzione(s, "t2", { tipo })).toThrow("soloHost");
   });
 
   it("anche un telefono sconosciuto è respinto", () => {
-    expect(() => eseguiAzione(inSala(3), "intruso", { tipo: "avvia" })).toThrow("Solo chi ha creato la partita può farlo");
+    expect(() => eseguiAzione(inSala(3), "intruso", { tipo: "avvia" })).toThrow("soloHost");
   });
 
   it("avvia con troppo pochi seduti dà l'errore del gioco", () => {
@@ -268,7 +268,7 @@ describe("voto", () => {
   it("serve un posto per votare", () => {
     const s = inVoto();
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "vota", posto: 1 })).toThrow("Scegli prima il tuo nome");
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "vota", posto: 1 })).toThrow("scegliPrimaNome");
   });
 
   it("ognuno vota dal proprio telefono, non per sé", () => {
@@ -309,7 +309,7 @@ describe("tenta", () => {
     const { s, scoperto } = aTentativo();
     expect(s.stato.fase).toBe("tentativo");
     const altro = TEL.find((t) => s.telefoni.get(t) !== scoperto)!;
-    expect(() => eseguiAzione(s, altro, { tipo: "tenta", testo: "x" })).toThrow("Solo l'impostore scoperto può tentare");
+    expect(() => eseguiAzione(s, altro, { tipo: "tenta", testo: "x" })).toThrow("soloScoperto");
     expect(() => eseguiAzione(s, telefonoDi(s, scoperto), { tipo: "tenta", testo: "x" })).not.toThrow();
     expect(s.stato.fase).toBe("fine");
   });
@@ -317,7 +317,7 @@ describe("tenta", () => {
   it("senza un posto non si tenta", () => {
     const { s } = aTentativo();
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "tenta", testo: "x" })).toThrow("Solo l'impostore scoperto può tentare");
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "tenta", testo: "x" })).toThrow("soloScoperto");
   });
 
   it("l'organizzatore non può tentare al posto dell'impostore", () => {
@@ -336,7 +336,7 @@ describe("tenta", () => {
 describe("indizio", () => {
   it("serve un posto", () => {
     const s = creaStanza("ABCDE", ["A", "B", "C"], { ...cfg, indiziScritti: true }, "host");
-    expect(() => eseguiAzione(s, "host", { tipo: "indizio", testo: "x" })).toThrow("Scegli prima il tuo nome");
+    expect(() => eseguiAzione(s, "host", { tipo: "indizio", testo: "x" })).toThrow("scegliPrimaNome");
   });
 
   it("un testo mancante diventa un indizio vuoto e viene respinto", () => {

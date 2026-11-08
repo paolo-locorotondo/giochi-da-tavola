@@ -20,7 +20,7 @@ const avviata = () => {
 
 describe("stanza di Tris sul server", () => {
   it("un gioco sconosciuto non si crea; senza gioco è Impostore", () => {
-    expect(() => creaStanza("ABCDE", ["A", "B"], {}, "h", "scacchi")).toThrow("Gioco non disponibile online");
+    expect(() => creaStanza("ABCDE", ["A", "B"], {}, "h", "scacchi")).toThrow("giocoNonDisponibile");
     expect(() => creaStanza("ABCDE", ["A", "B"], {}, "h")).toThrow("pochiGiocatori"); // regole di Impostore
   });
 
@@ -40,7 +40,7 @@ describe("stanza di Tris sul server", () => {
   it("un terzo telefono guarda ma non può muovere né sedersi", () => {
     const s = avviata();
     s.telefoni.set("t3", null);
-    expect(() => eseguiAzione(s, "t3", { tipo: "occupa", posto: 1 })).toThrow("La partita è già iniziata");
+    expect(() => eseguiAzione(s, "t3", { tipo: "occupa", posto: 1 })).toThrow("giaIniziata");
     expect(() => eseguiAzione(s, "t3", { tipo: "muovi", casella: 0 })).toThrow("nonPartecipa");
     expect(vistaDi(s, "t3").io).toBeNull();
     expect(vistaDi(s, "t3").griglia).toEqual(vistaDi(s, "host").griglia);
@@ -60,7 +60,7 @@ describe("stanza di Tris sul server", () => {
 
     // Il telefono di Bruno cade: un telefono nuovo ne riprende il posto, la partita continua.
     s.telefoni.set("nuovo", null);
-    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 2 }, (t) => t === "t2")).toThrow("collegato da un altro telefono");
+    expect(() => eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 2 }, (t) => t === "t2")).toThrow("altroTelefono");
     eseguiAzione(s, "nuovo", { tipo: "riprendi", posto: 2 }, () => false);
     expect(vistaDi(s, "nuovo").mioTurno).toBe(true);
     expect(vistaDi(s, "nuovo").io).toBe(2);

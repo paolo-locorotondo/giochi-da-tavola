@@ -202,6 +202,10 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - FATTO **Sito statico senza server** (es. Vercel): il pulsante online dopo 8 s avvisa che il server non risponde e propone un solo telefono (Impostore e Tris).
 - FATTO **Grafica**: stile «Tavolo» (scuro e chiaro, token CSS). Altri stili (Argilla, Quiz) solo se richiesti.
 - FATTO **Test con più telefoni** per la partita online del Tris: test e2e con più contesti del browser (`tris-online.spec.ts`, `tris-coda.spec.ts`). Per Impostore online resta solo il test del server (vedi sotto).
+- FATTO **Prova del server online su Render**: provato più volte con deploy reali. La pausa del piano gratuito (15 minuti) e cosa fare per risvegliarlo sono in [guida-deploy-online.md](guida-deploy-online.md).
+- FATTO **Stili della carta riusata in «Rivedi la mia carta»** (Impostore online): verificati a schermo dall'utente.
+- FATTO **Messaggi di errore del server a codici**: le frasi di `apps/server`, del modulo Impostore e del Tris sono codici (`errore_<codice>`, anche `codice:n`) tradotti in it/en da `testoMessaggio`.
+- FATTO **Branch `riscrittura`**: era già unito a `main`, cancellato.
 
 ### Da fare (TODO)
 
@@ -216,12 +220,9 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
   invece di scriverle a mano. Da decidere insieme: quali ruoli, a partire da quanti giocatori,
   e come cambiano le condizioni di vittoria.
 - TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` (la cartella oggi non esiste) con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
-- TODO **Prova del server online su Render**: la guida c'è ([guida-deploy-online.md](guida-deploy-online.md), scritta sulla documentazione del 2026-11-04) ma non risulta una prova reale; condizioni del piano gratuito da verificare.
 - TODO **Vercel**: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). `apps/web/vercel.json` c'è ancora e Vercel va scollegato dalla dashboard.
 - TODO **Tabù**: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da discutere.
 - TODO **Regole e carte di Tabù e Lupus** da verificare dall'utente; originalità delle carte.
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
-- TODO **Stili della carta riusata in «Rivedi la mia carta»** (Impostore online): da verificare a schermo.
-- TODO **Messaggi di errore del server in italiano**: alcune frasi proprie di `apps/server` («Il server è pieno», «Partita non trovata», permessi di posto…) non sono ancora codici tradotti. Il Tris usa già codici (`errore_<codice>`), Impostore e server no. Da portare a codici per l'inglese completo.
-- TODO **Pulizia branch locali**: cancellare `archivio/storia-completa` quando non serve più; c'è anche un branch locale `riscrittura` da controllare (potrebbe essere già unito a `main`).
+- TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).

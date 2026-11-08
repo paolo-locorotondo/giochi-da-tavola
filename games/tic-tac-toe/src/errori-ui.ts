@@ -8,7 +8,7 @@ type D = typeof it;
  * `errore_<codice>`; le frasi scritte a mano dal server si mostrano così come sono.
  */
 export function testoMessaggio(t: Traduttore<D>, messaggio: string): string {
-  const codice = /^([A-Za-z]+)(?::\d+)?$/.exec(messaggio)?.[1];
-  if (codice && `errore_${codice}` in it) return t(`errore_${codice}` as keyof D & string);
+  const [, codice, n] = /^([A-Za-z]+)(?::(\d+))?$/.exec(messaggio) ?? [];
+  if (codice && `errore_${codice}` in it) return t(`errore_${codice}` as keyof D & string, { n: Number(n ?? 0) });
   return messaggio || t("errore_sconosciuto");
 }

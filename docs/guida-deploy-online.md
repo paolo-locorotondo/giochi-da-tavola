@@ -15,6 +15,11 @@ Per avere un indirizzo pubblico serve un servizio che tenga acceso un contenitor
 Dalla documentazione ufficiale di Render, letta il 2026-11-04: i servizi gratuiti si **spengono dopo 15 minuti senza traffico**
 e il risveglio richiede circa **un minuto**; hanno 750 ore gratuite al mese; il disco è temporaneo.
 Non ho verificato se il piano gratuito accetti Docker: controlla nella pagina di creazione del servizio.
+**Cosa fare quando il servizio è in pausa**: non serve nessuna azione dalla dashboard di Render. La prima richiesta
+(aprire o ricaricare il sito dal telefono) lo risveglia da sola: aspetta circa un minuto, finché la pagina si carica,
+poi ricarica. Nel frattempo il pulsante online avvisa che il server non risponde. Le partite in corso quando il servizio
+si spegne sono perse (dopo 15 minuti senza traffico non ce ne dovrebbero essere). Se dopo qualche minuto non riparte,
+solo allora guarda i log dalla dashboard (Manual Deploy → Restart).
 Condizioni e prezzi cambiano: verifica sul sito prima di scegliere. Alternative simili: Fly.io, Railway, un VPS.
 
 1. Crea un account su render.com e collega il tuo account GitHub (il repo deve essere stato pubblicato da te con `git push`).

@@ -11,6 +11,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Interno
 
+- Errori del server (Impostore e Tris) come codici `errore_<codice>` tradotti in it/en, invece di frasi italiane scritte a mano.
+- `docs/guida-deploy-online.md`: cosa fare quando Render free è in pausa.
 - `docs/decisioni.md`: «Punti aperti» con FATTO/TODO e architettura aggiornata (server generico, coda, `packages/collegamento` e `packages/i18n`).
 
 ## [0.12.0] - 2026-11-08

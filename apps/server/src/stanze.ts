@@ -98,7 +98,7 @@ export function nomiDistinti(nomi: string[]): string[] {
  */
 export function creaStanzaDaCoda(codice: string, gioco: string, voci: { token: string; nome: string }[]): Stanza {
   const g = giocoOnline(gioco);
-  if (!g.coda || voci.length !== g.coda.giocatori) throw new Error("Questo gioco non ha la partita veloce");
+  if (!g.coda || voci.length !== g.coda.giocatori) throw new Error("noPartitaVeloce");
   const stanza = creaStanza(codice, nomiDistinti(voci.map((v) => v.nome)), {}, voci[0]!.token, gioco);
   voci.forEach((v, i) => {
     stanza.telefoni.set(v.token, null);
@@ -136,27 +136,27 @@ export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, con
 
   switch (a.tipo) {
     case "occupa":
-      if (mio !== null) throw new Error("Hai già scelto il tuo nome");
-      if (momento !== "sala") throw new Error("La partita è già iniziata: aspetta la prossima");
+      if (mio !== null) throw new Error("giaScelto");
+      if (momento !== "sala") throw new Error("giaIniziataAspetta");
       stanza.stato = g.applica(stanza.stato, { tipo: "occupa", posto });
       stanza.telefoni.set(token, posto);
       break;
     case "libera": {
-      if (!host && posto !== mio) throw new Error("Puoi liberare solo il tuo nome");
+      if (!host && posto !== mio) throw new Error("liberaSoloTuo");
       const inCorso = momento === "inCorso";
-      if (inCorso && !host) throw new Error("Durante la partita solo l'organizzatore può liberare un posto");
+      if (inCorso && !host) throw new Error("liberaSoloHost");
       for (const [t, p] of stanza.telefoni) if (p === posto) stanza.telefoni.set(t, null);
       // Partita in corso: il giocatore resta nella partita, cambia solo il telefono che lo rappresenta.
       if (!inCorso) stanza.stato = g.applica(stanza.stato, { tipo: "libera", posto });
       break;
     }
     case "riprendi": {
-      if (mio !== null) throw new Error("Hai già un posto");
-      if (momento === "sala") throw new Error("Scegli il tuo nome dalla lista");
-      if (!g.inGioco(stanza.stato).includes(posto)) throw new Error("Questo giocatore non partecipa");
+      if (mio !== null) throw new Error("giaHaiPosto");
+      if (momento === "sala") throw new Error("scegliDallaLista");
+      if (!g.inGioco(stanza.stato).includes(posto)) throw new Error("nonPartecipa");
       const titolari = [...stanza.telefoni].filter(([, p]) => p === posto).map(([t]) => t);
       if (titolari.some(connesso)) {
-        throw new Error("Quel giocatore risulta collegato da un altro telefono: se è il tuo, chiedi all'organizzatore di liberarlo");
+        throw new Error("altroTelefono");
       }
       for (const t of titolari) stanza.telefoni.set(t, null);
       stanza.telefoni.set(token, posto);

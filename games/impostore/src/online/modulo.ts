@@ -16,7 +16,7 @@ export const impostoreOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
   traduci(s, ctx, a) {
     const mio = ctx.posto;
     const soloHost = () => {
-      if (!ctx.host) throw new Error("Solo chi ha creato la partita può farlo");
+      if (!ctx.host) throw new Error("soloHost");
     };
     switch (a.tipo) {
       case "avvia":
@@ -31,17 +31,17 @@ export const impostoreOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
       case "visto":
         return mio === null ? null : { tipo: "visto", posto: mio };
       case "indizio":
-        if (mio === null) throw new Error("Scegli prima il tuo nome");
+        if (mio === null) throw new Error("scegliPrimaNome");
         return { tipo: "indizio", chi: mio, testo: String(a.testo ?? "") };
       case "vota":
         // Si vota solo dal proprio telefono: nessuno vota per un altro.
-        if (mio === null) throw new Error("Scegli prima il tuo nome");
+        if (mio === null) throw new Error("scegliPrimaNome");
         return { tipo: "vota", chi: mio, posto: a.posto as number };
       case "tenta":
-        if (mio === null || mio !== s.eliminato) throw new Error("Solo l'impostore scoperto può tentare");
+        if (mio === null || mio !== s.eliminato) throw new Error("soloScoperto");
         return { tipo: "tenta", testo: a.testo as string };
       default:
-        throw new Error("Azione non valida");
+        throw new Error("azioneNonValida");
     }
   },
 

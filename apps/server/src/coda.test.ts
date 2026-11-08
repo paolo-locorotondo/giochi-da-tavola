@@ -54,6 +54,6 @@ describe("stanza da coda", () => {
     expect(nomiDistinti([" Anna", "anna"])).toEqual(["Anna", "anna (2)"]);
     const s = creaStanzaDaCoda("ABCDE", "tris", [voce("Anna", {}), voce("ANNA", {})]);
     expect(vistaGenerica(s, "t-Anna").nomi.map((n: { nome: string }) => n.nome)).toEqual(["Anna", "ANNA (2)"]);
-    expect(() => creaStanzaDaCoda("ABCDE", "impostore", [voce("A", {}), voce("B", {})])).toThrow("partita veloce");
+    expect(() => creaStanzaDaCoda("ABCDE", "impostore", [voce("A", {}), voce("B", {})])).toThrow("noPartitaVeloce");
   });
 });

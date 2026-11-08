@@ -165,7 +165,7 @@ export const trisOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
     const mio = ctx.posto;
     switch (a.tipo) {
       case "avvia":
-        if (!ctx.host) throw new Error("Solo chi ha creato la partita può farlo");
+        if (!ctx.host) throw new Error("soloHost");
         return { tipo: "avvia" };
       case "muovi":
         if (mio === null) throw new ErroreTris("nonPartecipa");

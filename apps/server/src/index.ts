@@ -147,8 +147,8 @@ wss.on("connection", (ws) => {
     try {
       switch (m.t) {
         case "crea": {
-          if (stanze.size >= MAX_STANZE) throw new Error("Il server è pieno: riprova tra poco");
-          if (!Array.isArray(m.nomi) || m.nomi.length > MAX_NOMI) throw new Error(`Al massimo ${MAX_NOMI} giocatori`);
+          if (stanze.size >= MAX_STANZE) throw new Error("serverPieno");
+          if (!Array.isArray(m.nomi) || m.nomi.length > MAX_NOMI) throw new Error(`maxGiocatori:${MAX_NOMI}`);
           token = nuovoToken();
           const codice = nuovoCodice(stanze);
           stanza = creaStanza(codice, m.nomi, m.config, token, m.gioco);
@@ -158,7 +158,7 @@ wss.on("connection", (ws) => {
         }
         case "entra": {
           const s = stanze.get(String(m.codice).toUpperCase());
-          if (!s) throw new Error("Partita non trovata: controlla il codice o il link");
+          if (!s) throw new Error("partitaNonTrovata");
           stanza = s;
           // Il token vale solo se la stanza lo conosce: uno sconosciuto ne riceve uno nuovo.
           token = typeof m.token === "string" && s.telefoni.has(m.token) ? m.token : nuovoToken();
@@ -166,13 +166,13 @@ wss.on("connection", (ws) => {
           break;
         }
         case "coda": {
-          if (stanza) throw new Error("Sei già in una partita");
+          if (stanza) throw new Error("giaInPartita");
           const gioco = typeof m.gioco === "string" ? m.gioco : "impostore";
           const g = giocoOnline(gioco);
-          if (!g.coda) throw new Error("Questo gioco non ha la partita veloce");
+          if (!g.coda) throw new Error("noPartitaVeloce");
           const nome = String(m.nome ?? "").trim();
           if (!nome) throw new Error("nomiNonValidi");
-          if (stanze.size >= MAX_STANZE) throw new Error("Il server è pieno: riprova tra poco");
+          if (stanze.size >= MAX_STANZE) throw new Error("serverPieno");
           const gruppo = code.aggiungi(gioco, { token: nuovoToken(), nome, conn: io, dal: Date.now() }, g.coda.giocatori);
           if (!gruppo) {
             invia(ws, { t: "inCoda", in: true });
@@ -188,12 +188,12 @@ wss.on("connection", (ws) => {
           if (code.togli(io)) invia(ws, { t: "inCoda", in: false });
           break;
         case "azione":
-          if (!stanza) throw new Error("Non sei in una partita");
+          if (!stanza) throw new Error("nonInPartita");
           eseguiAzione(stanza, token, m.azione, eConnesso(stanza.codice));
           aggiornaTutti(stanza);
           break;
         case "sollecita": {
-          if (!stanza || token !== stanza.tokenHost) throw new Error("Solo l'organizzatore può sollecitare");
+          if (!stanza || token !== stanza.tokenHost) throw new Error("soloHostSollecita");
           const da = new Set(mancantiDi(stanza));
           for (const [t, socket] of connessioni.get(stanza.codice) ?? []) {
             const p = stanza.telefoni.get(t);
@@ -202,7 +202,7 @@ wss.on("connection", (ws) => {
           break;
         }
         case "chiudi": {
-          if (!stanza || token !== stanza.tokenHost) throw new Error("Solo l'organizzatore può chiudere la partita");
+          if (!stanza || token !== stanza.tokenHost) throw new Error("soloHostChiude");
           const codice = stanza.codice;
           for (const socket of connessioni.get(codice)?.values() ?? []) for (const w of socket) invia(w, { t: "chiusa" });
           stanze.delete(codice);
@@ -212,7 +212,7 @@ wss.on("connection", (ws) => {
         }
       }
     } catch (e) {
-      invia(ws, { t: "errore", messaggio: e instanceof Error ? e.message : "Errore" });
+      invia(ws, { t: "errore", messaggio: e instanceof Error ? e.message : "sconosciuto" });
     }
   });
 
