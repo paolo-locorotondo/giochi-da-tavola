@@ -62,6 +62,6 @@ Per ogni ruolo nuovo: testi nostri in `data/{it,en}/personaggi.json` e `locales/
 - [x] 2. Preparazione (8–24 giocatori, composizione modificabile, veggente prima dei lupi, prima notte senza vittima, Medico = Guardia)
 - [x] 3. Voto ufficiale
 - [x] 4. Indemoniato, Massoni, Medium
-- [ ] 5. Criceto mannaro
+- [x] 5. Criceto mannaro
 - [ ] 6. Gufo
 - [ ] 7. Mitomane

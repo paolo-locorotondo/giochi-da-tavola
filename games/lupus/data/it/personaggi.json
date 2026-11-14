@@ -40,5 +40,11 @@
     "plurale": "Medium",
     "tuo": "Dalla seconda notte sai se l'ultimo linciato era un lupo oppure no.",
     "regolamento": "Dalla seconda notte sa se l'ultimo linciato era un lupo oppure no."
+  },
+  "criceto": {
+    "nome": "Criceto mannaro",
+    "plurale": "criceti mannari",
+    "tuo": "I lupi non possono sbranarti. Vinci da solo se, a fine partita, sei ancora vivo. Occhio al veggente: se ti guarda, muori insieme alla vittima dei lupi.",
+    "regolamento": "Non si può sbranare. Vince da solo se è ancora vivo a fine partita. Se il veggente lo guarda, muore insieme alla vittima dei lupi."
   }
 }

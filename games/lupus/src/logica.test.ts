@@ -116,7 +116,7 @@ describe("notti: simulazione esaustiva", () => {
   const nottePiena = (s: Stato, vittima: number, protetto: number): Stato => {
     let x = s;
     for (let i = 0; i < 8 && ["medium", "massoni", "medico", "veggente", "lupi"].includes(x.fase); i++) {
-      const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : (x.vivi.find((p) => x.ruoli[p] !== "veggente") as number);
+      const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : (x.vivi.find((p) => x.ruoli[p] !== "veggente" && x.ruoli[p] !== "criceto") as number);
       x = scegliEAvanti(x, posto);
     }
     return x;

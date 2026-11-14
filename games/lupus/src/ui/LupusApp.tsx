@@ -46,6 +46,7 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
   indemoniato: "mortoLupo",
   massone: "mortoContadino",
   medium: "mortoVeggente",
+  criceto: "mortoContadino",
 };
 
 const CHIAVE = "gdt-lupus-partita";
@@ -239,6 +240,12 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
       return apertura + t(frase);
     }
     case "alba":
+      if (s.mortiNotte.length > 1) {
+        return t("vAlbaMorti", {
+          nomi: s.mortiNotte.map((p) => nomeDi(s, p)).join(", "),
+          ruolo: s.mortiNotte.map((p) => ruoloDetto(s, p, t, lingua)).join(""),
+        });
+      }
       return s.mortiNotte.length
         ? t("vAlbaMorto", { nome: nomeDi(s, s.mortiNotte[0] ?? null), ruolo: ruoloDetto(s, s.mortiNotte[0], t, lingua) })
         : t("vAlbaNessuno");
@@ -253,7 +260,7 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
     case "esito":
       return t("vLinciato", { nome: nomeDi(s, s.eliminato), ruolo: ruoloDetto(s, s.eliminato, t, lingua) });
     case "fine":
-      return s.vincitore === "villaggio" ? t("vFineVillaggio") : t("vFineLupi");
+      return s.vincitore === "villaggio" ? t("vFineVillaggio") : s.vincitore === "criceto" ? t("vFineCriceto") : t("vFineLupi");
     default:
       return null;
   }
@@ -453,7 +460,9 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
     fase === "veggente" && s.ispezionato !== null
       ? s.ruoli[s.ispezionato] === "lupo"
         ? t("eUnLupo")
-        : t("nonELupo")
+        : s.ruoli[s.ispezionato] === "criceto"
+          ? t("eUnCriceto")
+          : t("nonELupo")
       : fase === "medium" && s.linciato !== null && ruoloAttivo(s, d)
         ? t(linciatoEraLupo(s) ? "mediumLupo" : "mediumNonLupo", { nome: nomeDi(s, s.linciato) })
         : fase === "massoni" && ruoloAttivo(s, d)
@@ -493,16 +502,17 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
 function Alba({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
   const lingua = usaLingua();
-  const morto = s.mortiNotte[0];
+  const morti = s.mortiNotte;
+  // I nomi dei morti in grassetto dentro la frase tradotta (uno o più).
+  const grassetti = morti.flatMap((p, i) => [i > 0 ? ", " : "", <strong key={p}>{nomeDi(s, p)}</strong>]);
+  const frase = morti.length > 1 ? t("albaMorti", { nomi: SEGNO }) : t("albaMorto", { nome: SEGNO });
   return (
     <section className="schermata">
       <h2>{t("albaTitolo")}</h2>
-      {morto !== undefined ? (
+      {morti.length > 0 ? (
         <p>
-          {t("albaMorto", { nome: SEGNO })
-            .split(SEGNO)
-            .flatMap((pezzo, i) => (i === 0 ? [pezzo] : [<strong key="nome">{nomeDi(s, morto)}</strong>, pezzo]))}
-          {ruoloDetto(s, morto, t, lingua)}
+          {frase.split(SEGNO).flatMap((pezzo, i) => (i === 0 ? [pezzo] : [...grassetti, pezzo]))}
+          {morti.map((p) => ruoloDetto(s, p, t, lingua)).join("")}
         </p>
       ) : (
         <p>{t("albaNessuno")}</p>
@@ -659,11 +669,11 @@ function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
   const lingua = usaLingua();
   useEffect(() => {
-    suona(s.vincitore === "villaggio" ? "fineContadini" : "fineLupi");
+    suona(s.vincitore === "lupi" ? "fineLupi" : "fineContadini");
   }, [s.vincitore]);
   return (
     <section className="schermata">
-      <h2>{s.vincitore === "villaggio" ? t("vinceVillaggio") : t("vinconoLupi")}</h2>
+      <h2>{s.vincitore === "villaggio" ? t("vinceVillaggio") : s.vincitore === "criceto" ? t("vinceCriceto") : t("vinconoLupi")}</h2>
       <ul className="elenco-ruoli">
         {s.giocatori.map((g) => (
           <li key={g.posto} className={s.vivi.includes(g.posto) ? "" : "morto"}>

@@ -11,9 +11,9 @@ export const en: Dizionario<typeof it> = {
   regPasso3: "Day: the village learns who died, then discusses. First round: everyone votes, the dead (ghosts) too; the two most voted are the suspects and each makes a plea.",
   regPasso4: "Second round: only the living who are not suspects vote, in secret; the one with most votes is lynched. Ties go to whoever sits closest, clockwise, to the holder of the «Welcome!» (the last to die, the narrator on the first day). The dead no longer speak.",
   regPasso5:
-    "The villagers win when all the werewolves are dead; the werewolves win when they are at least as many as the other living players.",
+    "The villagers win when all the werewolves are dead; the werewolves win when they are at least as many as the other living players. The werehamster, if still alive at the end, wins alone.",
   regNota1:
-    "For 8 to 24 players. Roles: 2 werewolves (3 from 16 players), 1 seer, then, from a minimum number of players and removable or addable before starting: medium (9), possessed (10), doctor (11), two freemasons (13); the rest villagers.",
+    "For 8 to 24 players. Roles: 2 werewolves (3 from 16 players), 1 seer, then, from a minimum number of players and removable or addable before starting: medium (9), possessed (10), doctor (11), two freemasons (13), werehamster (15); the rest villagers.",
   regNota2: "These are the rules of the classic game: there are many variants.",
 
   impTransizione: "Transition screen",
@@ -38,9 +38,11 @@ export const en: Dizionario<typeof it> = {
   vMedico: "The doctor wakes up and chooses who to protect.",
   vAlbaMorto: "The village wakes up. Last night {nome} died.{ruolo}",
   vAlbaNessuno: "The village wakes up. Nobody died last night.",
+  vAlbaMorti: "The village wakes up. Last night {nomi} died.{ruolo}",
   vVoto: "First round: everyone votes, ghosts too. The two most voted will be the suspects.",
   vFineVillaggio: "The village has won!",
   vFineLupi: "The werewolves have won!",
+  vFineCriceto: "The werehamster has won, alone!",
 
 
   giocatoriLabel: "Players (one per line, {min} to {max})",
@@ -83,6 +85,7 @@ export const en: Dizionario<typeof it> = {
   soloChiHaRuolo: "Only the player with this role touches the phone.",
   eUnLupo: "A werewolf!",
   nonELupo: "Not a werewolf.",
+  eUnCriceto: "A werehamster: it will die along with whoever the werewolves devour.",
 
   titoloMedium: "The medium listens to the spirit",
   fineMedium: "Understood, go back to sleep",
@@ -98,6 +101,7 @@ export const en: Dizionario<typeof it> = {
   albaTitolo: "The village wakes up",
   albaMorto: "Last night {nome} died.",
   albaNessuno: "Nobody died last night.",
+  albaMorti: "Last night {nomi} died.",
   vediRisultato: "See the result",
   discuteVota: "Discuss and vote",
 
@@ -132,6 +136,7 @@ export const en: Dizionario<typeof it> = {
   scendeNotte: "Night falls",
   vinceVillaggio: "The village wins!",
   vinconoLupi: "The werewolves win!",
+  vinceCriceto: "The werehamster wins!",
   ruoloDi: "{nome}: {ruolo}",
   nuovaPartita: "New game",
 

@@ -57,6 +57,8 @@ describe("composizione: speciali per numero di giocatori", () => {
     expect(specialiPredefiniti(11)).toEqual(["medium", "indemoniato", "medico"]);
     expect(specialiPredefiniti(12)).toEqual(["medium", "indemoniato", "medico"]);
     expect(specialiPredefiniti(13)).toEqual(["medium", "indemoniato", "medico", "massone"]);
+    expect(specialiPredefiniti(14)).not.toContain("criceto");
+    expect(specialiPredefiniti(15)).toEqual(["medium", "indemoniato", "medico", "massone", "criceto"]);
   });
 
   it("i massoni sono sempre due", () => {
@@ -87,8 +89,16 @@ describe("distribuisciRuoli: composizione per numero di giocatori", () => {
         expect(conta("medium")).toBe(n >= 9 ? 1 : 0);
         expect(conta("indemoniato")).toBe(n >= 10 ? 1 : 0);
         expect(conta("massone")).toBe(n >= 13 ? 2 : 0);
+        expect(conta("criceto")).toBe(n >= 15 ? 1 : 0);
         expect(conta("contadino")).toBe(
-          n - conta("lupo") - conta("veggente") - conta("medico") - conta("medium") - conta("indemoniato") - conta("massone"),
+          n -
+            conta("lupo") -
+            conta("veggente") -
+            conta("medico") -
+            conta("medium") -
+            conta("indemoniato") -
+            conta("massone") -
+            conta("criceto"),
         );
         expect(conta("lupo")).toBeLessThan(n - conta("lupo"));
       }
@@ -683,5 +693,121 @@ describe("Indemoniato, Massoni e Medium", () => {
       }
       expect(s.fase, `seme ${seme}`).toBe("fine");
     }
+  });
+});
+
+describe("Criceto mannaro", () => {
+  /** 15 giocatori con tutti gli speciali, portati alla notte data. */
+  const piena = (notte: number): Stato => ({ ...avvia(15, 7, { primaNotteSenzaVittima: false }), notte });
+  const alla = (s: Stato, fase: Stato["fase"]): Stato => ({ ...s, fase });
+
+  it("compare da 15 giocatori e sta da solo", () => {
+    expect(fazione("criceto")).toBe("criceto");
+    expect(postiCon(piena(2), "criceto")).toHaveLength(1);
+  });
+
+  it("i lupi non lo possono sbranare: se lo scelgono nessuno muore", () => {
+    let s = alla(piena(2), "lupi");
+    const c = postiCon(s, "criceto")[0]!;
+    s = riduci(s, { tipo: "scegli", posto: c });
+    s = riduci(s, { tipo: "avanti" });
+    expect(s.fase).toBe("alba");
+    expect(s.mortiNotte).toEqual([]);
+    expect(s.vivi).toContain(c);
+  });
+
+  it("il veggente che lo guarda lo fa morire insieme allo sbranato", () => {
+    let s = alla(piena(2), "veggente");
+    const c = postiCon(s, "criceto")[0]!;
+    const civile = postiCon(s, "contadino")[0]!;
+    s = riduci(s, { tipo: "scegli", posto: c });
+    s = riduci(s, { tipo: "avanti" });
+    // Nelle notti con medico e medium si arriva ai lupi saltando le altre fasi.
+    while (s.fase !== "lupi") s = riduci(s, { tipo: "avanti" });
+    s = riduci(s, { tipo: "scegli", posto: civile });
+    s = riduci(s, { tipo: "avanti" });
+    expect(s.mortiNotte).toEqual([civile, c]);
+    expect(s.benvenuto).toBe(civile);
+  });
+
+  it("se quella notte nessuno muore (medico), il criceto guardato sopravvive", () => {
+    let s = alla(piena(2), "medico");
+    const c = postiCon(s, "criceto")[0]!;
+    const civile = postiCon(s, "contadino")[0]!;
+    s = riduci(s, { tipo: "scegli", posto: civile });
+    s = riduci(s, { tipo: "avanti" });
+    s = riduci(s, { tipo: "scegli", posto: c });
+    s = riduci(s, { tipo: "avanti" });
+    s = riduci(s, { tipo: "scegli", posto: civile });
+    s = riduci(s, { tipo: "avanti" });
+    expect(s.mortiNotte).toEqual([]);
+  });
+
+  it("il medico può proteggere il criceto, ma non serve: non si sbrana comunque", () => {
+    const s = alla(piena(2), "medico");
+    const c = postiCon(s, "criceto")[0]!;
+    expect(candidatiNotte(s)).toContain(c);
+  });
+
+  it("il medium sente «non lupo» se il criceto è stato linciato", () => {
+    const s = piena(3);
+    const c = postiCon(s, "criceto")[0]!;
+    expect(linciatoEraLupo({ ...s, linciato: c })).toBe(false);
+  });
+
+  it("per chi conta i lupi il criceto è umano; se è vivo alla fine vince lui da solo", () => {
+    const s = piena(2);
+    const lupi = postiCon(s, "lupo");
+    const c = postiCon(s, "criceto")[0]!;
+    const contadini = postiCon(s, "contadino");
+    // Morti tutti i lupi: il villaggio avrebbe vinto, ma il criceto vivo vince da solo.
+    expect(vincitore(s.ruoli, [c, ...contadini])).toBe("criceto");
+    // Lupi in pari con gli altri vivi (criceto compreso): il criceto vince lo stesso.
+    expect(vincitore(s.ruoli, [...lupi, c])).toBe("criceto");
+    expect(vincitore(s.ruoli, [...lupi, c, ...contadini.slice(0, 3)])).toBeNull();
+    // Se il criceto è morto, vince la fazione di sempre.
+    expect(vincitore(s.ruoli, contadini)).toBe("villaggio");
+    expect(vincitore(s.ruoli, [...lupi])).toBe("lupi");
+  });
+
+  it("quando vince il criceto, vince solo lui: né villaggio né lupi, né l'Indemoniato", () => {
+    const s = piena(2);
+    const c = postiCon(s, "criceto")[0]!;
+    const contadini = postiCon(s, "contadino");
+    const vivi = [c, ...contadini];
+    expect(postiVincitori({ ...s, vivi, vincitore: "criceto" })).toEqual([c]);
+    // Anche se morto non vince: vince solo se vivo a fine partita.
+    expect(postiVincitori({ ...s, vivi: contadini, vincitore: "villaggio" })).not.toContain(c);
+    expect(postiVincitori({ ...s, vivi: postiCon(s, "lupo"), vincitore: "lupi" })).not.toContain(c);
+  });
+
+  it("il criceto non vince mai se è morto, anche se muoiono tutti i lupi", () => {
+    const s = piena(2);
+    const c = postiCon(s, "criceto")[0]!;
+    const vivi = s.vivi.filter((p) => s.ruoli[p] !== "lupo" && p !== c);
+    expect(vincitore(s.ruoli, vivi)).toBe("villaggio");
+  });
+
+  it("partite complete con il criceto arrivano a una fine (20 semi)", () => {
+    let criceto = 0;
+    for (let seme = 1; seme <= 20; seme++) {
+      let s = distribuisci(avvia(16, seme, { primaNotteSenzaVittima: false }));
+      for (let i = 0; i < 400 && s.fase !== "fine"; i++) {
+        if (["medium", "massoni", "medico", "veggente", "lupi"].includes(s.fase)) {
+          const c = candidatiNotte(s);
+          s = riduci(s, { tipo: "scegli", posto: c[0] ?? -1 });
+          s = riduci(s, { tipo: "avanti" });
+        } else if (s.fase === "voto" || s.fase === "voto2") {
+          s = riduci(s, { tipo: "chiudiVoto", voti: {} });
+        } else if (s.fase === "esito" || (s.fase === "alba" && s.vincitore)) {
+          s = riduci(s, { tipo: "dopoVoto" });
+        } else {
+          s = riduci(s, { tipo: "avanti" });
+        }
+      }
+      expect(s.fase, `seme ${seme}`).toBe("fine");
+      if (s.vincitore === "criceto") criceto++;
+    }
+    expect(criceto).toBeGreaterThanOrEqual(0);
   });
 });

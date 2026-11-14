@@ -178,6 +178,42 @@ test("con 9 giocatori il medium non c'è la prima notte", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
 });
 
+test("con 15 giocatori c'è il criceto mannaro: il veggente lo guarda e all'alba muore con lo sbranato", async ({ page }) => {
+  const NOMI_15 = NOMI_13 + "\nOlga\nPino";
+  await page.goto("/lupus");
+  await page.getByLabel(/Giocatori/).fill(NOMI_15);
+  await expect(page.getByText(/1 criceto mannaro/)).toBeVisible();
+  await page.getByRole("button", { name: "Inizia" }).click();
+  await giraLeCarte(page, 15);
+  // Notte 1 (massoni, poi veggente): il nome del criceto si legge dall'elenco del narratore.
+  await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await page.locator("summary", { hasText: "Giocatori e ruoli" }).click();
+  const riga = page.locator("ul.ruoli-narratore li", { hasText: "Criceto mannaro" });
+  const nomeCriceto = (await riga.locator(".nome-g").innerText()).trim();
+  await page.locator("summary", { hasText: "Giocatori e ruoli" }).click();
+  await page.locator("div.giocatori button", { hasText: new RegExp(`^${nomeCriceto}$`) }).click();
+  await expect(page.getByText("È un criceto mannaro: morirà insieme allo sbranato dai lupi.")).toBeVisible();
+  await schermata(page, "notte-veggente-criceto");
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  // La prima notte nessuno muore (i lupi si riconoscono): si vota, poi alla seconda notte i lupi sbranano.
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await votaTutto(page, "terzo");
+  await page.getByRole("button", { name: "Scende la notte" }).click();
+  // Seconda notte: medium, medico, veggente (guarda di nuovo il criceto), lupi.
+  await page.getByRole("button", { name: "Ho capito, torna a dormire" }).click();
+  await page.locator("div.giocatori button").last().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.locator("div.giocatori button", { hasText: new RegExp(`^${nomeCriceto}$`) }).click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  // I lupi sbranano il primo che non è il criceto (e non è il protetto dal medico, che è l'ultimo).
+  await page.locator("div.giocatori button", { hasNotText: new RegExp(`^${nomeCriceto}$`) }).first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
+  await expect(page.getByText(/Questa notte sono morti/)).toBeVisible();
+  await expect(page.locator("section strong")).toHaveCount(2);
+  await schermata(page, "alba-due-morti");
+});
+
 test("la partita sopravvive al refresh e si può chiudere", async ({ page }) => {
   await avvia(page);
   await giraLeCarte(page, 3);

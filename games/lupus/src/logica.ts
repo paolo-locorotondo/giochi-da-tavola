@@ -1,9 +1,10 @@
 import { creaGiocatori, creaRng, type Giocatore } from "@gdt/engine";
 
-export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium";
+export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium" | "criceto";
 
 /** Da che parte sta un ruolo. Con un ruolo nuovo il compilatore chiede qui la sua fazione. */
-export type Fazione = "lupi" | "villaggio";
+/** Il criceto mannaro è una fazione a sé: vince da solo se è vivo a fine partita. */
+export type Fazione = "lupi" | "villaggio" | "criceto";
 
 const FAZIONE: Record<Ruolo, Fazione> = {
   lupo: "lupi",
@@ -14,6 +15,7 @@ const FAZIONE: Record<Ruolo, Fazione> = {
   indemoniato: "lupi",
   massone: "villaggio",
   medium: "villaggio",
+  criceto: "criceto",
 };
 
 export function fazione(ruolo: Ruolo): Fazione {
@@ -37,6 +39,7 @@ export const SPECIALI: readonly { ruolo: Ruolo; da: number; quanti: number }[] =
   { ruolo: "indemoniato", da: 10, quanti: 1 },
   { ruolo: "medico", da: 11, quanti: 1 },
   { ruolo: "massone", da: 13, quanti: 2 },
+  { ruolo: "criceto", da: 15, quanti: 1 },
 ];
 
 /** Gli speciali che compaiono da soli con `n` giocatori. */
@@ -171,9 +174,11 @@ export function finePartita(
   vivi: readonly number[],
 ): { fine: boolean; vincitori: Fazione[] } {
   const lupi = vivi.filter((p) => ruoli[p] === "lupo").length;
-  if (lupi === 0) return { fine: true, vincitori: ["villaggio"] };
-  if (lupi >= vivi.length - lupi) return { fine: true, vincitori: ["lupi"] };
-  return { fine: false, vincitori: [] };
+  const criceto = vivi.some((p) => ruoli[p] === "criceto");
+  // Il criceto conta come umano; se è vivo alla fine, vince lui da solo.
+  const chi: Fazione | null = lupi === 0 ? "villaggio" : lupi >= vivi.length - lupi ? "lupi" : null;
+  if (chi === null) return { fine: false, vincitori: [] };
+  return { fine: true, vincitori: [criceto ? "criceto" : chi] };
 }
 
 export function vincitore(ruoli: Record<number, Ruolo>, vivi: readonly number[]): Stato["vincitore"] {
@@ -262,7 +267,11 @@ export const FASI_NOTTE: readonly DescrittoreNotte[] = [
     unaSolaScelta: true,
     puoiScegliere: (s, p) => s.ruoli[p] !== "veggente",
     ordineEffetto: 3,
-    effetto: (_s, e) => e,
+    // Se guarda il criceto mannaro, questi muore insieme allo sbranato (se quella notte nessuno muore, non muore nemmeno lui).
+    effetto: (s, e) =>
+      s.ispezionato !== null && s.ruoli[s.ispezionato] === "criceto" && e.sbranato !== null
+        ? { ...e, altri: [...e.altri, s.ispezionato] }
+        : e,
   },
   {
     fase: "lupi",
@@ -273,7 +282,8 @@ export const FASI_NOTTE: readonly DescrittoreNotte[] = [
     unaSolaScelta: false,
     puoiScegliere: (s, p) => s.ruoli[p] !== "lupo",
     ordineEffetto: 1,
-    effetto: (s, e) => ({ ...e, sbranato: s.vittima }),
+    // Il criceto mannaro non si può sbranare: se lo scelgono, nessuno muore.
+    effetto: (s, e) => ({ ...e, sbranato: s.vittima !== null && s.ruoli[s.vittima] === "criceto" ? null : s.vittima }),
   },
 ];
 

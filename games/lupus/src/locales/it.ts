@@ -8,9 +8,9 @@ export const it = {
     "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). Dalla seconda notte il medium sente se l'ultimo linciato era un lupo; la prima notte i massoni si riconoscono. La prima notte nessuno muore: i lupi si riconoscono soltanto.",
   regPasso3: "Giorno: si scopre chi è morto, poi si discute. Primo turno: votano tutti, anche i morti (fantasmi); i due più votati sono gli indiziati e fanno un'arringa.",
   regPasso4: "Secondo turno: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto, il primo giorno il narratore). I morti non parlano più.",
-  regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi.",
+  regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi. Il criceto mannaro, se è vivo alla fine, vince da solo.",
   regNota1:
-    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, poi, dal numero minimo di giocatori e togliendoli o aggiungendoli prima di iniziare: medium (9), indemoniato (10), medico (11), due massoni (13); il resto contadini.",
+    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, poi, dal numero minimo di giocatori e togliendoli o aggiungendoli prima di iniziare: medium (9), indemoniato (10), medico (11), due massoni (13), criceto mannaro (15); il resto contadini.",
   regNota2: "Regole del gioco classico: esistono varianti.",
 
   // Impostazioni del gioco
@@ -38,9 +38,11 @@ export const it = {
   vMedico: "Il medico si risveglia e sceglie chi proteggere.",
   vAlbaMorto: "Il villaggio si risveglia. Questa notte è morto {nome}.{ruolo}",
   vAlbaNessuno: "Il villaggio si risveglia. Questa notte non è morto nessuno.",
+  vAlbaMorti: "Il villaggio si risveglia. Questa notte sono morti {nomi}.{ruolo}",
   vVoto: "Primo turno: votano tutti, anche i fantasmi. I due più votati saranno gli indiziati.",
   vFineVillaggio: "Il villaggio ha vinto!",
   vFineLupi: "I lupi hanno vinto!",
+  vFineCriceto: "Il criceto mannaro ha vinto, da solo!",
 
   // Configurazione
   giocatoriLabel: "Giocatori (uno per riga, da {min} a {max})",
@@ -85,6 +87,7 @@ export const it = {
   soloChiHaRuolo: "Solo chi ha il ruolo tocca il telefono.",
   eUnLupo: "È un lupo!",
   nonELupo: "Non è un lupo.",
+  eUnCriceto: "È un criceto mannaro: morirà insieme allo sbranato dai lupi.",
 
   // Medium e massoni
   titoloMedium: "Il medium ascolta lo spirito",
@@ -102,6 +105,7 @@ export const it = {
   albaTitolo: "Il villaggio si risveglia",
   albaMorto: "Questa notte è morto {nome}.",
   albaNessuno: "Questa notte non è morto nessuno.",
+  albaMorti: "Questa notte sono morti {nomi}.",
   vediRisultato: "Vedi il risultato",
   discuteVota: "Si discute e si vota",
 
@@ -139,6 +143,7 @@ export const it = {
   scendeNotte: "Scende la notte",
   vinceVillaggio: "Vince il villaggio!",
   vinconoLupi: "Vincono i lupi!",
+  vinceCriceto: "Vince il criceto mannaro!",
   ruoloDi: "{nome}: {ruolo}",
   nuovaPartita: "Nuova partita",
 
