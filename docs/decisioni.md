@@ -196,7 +196,7 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 
 ### Fatti
 
-- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`. Piano e scelte in `docs/piano-tris-online.md`.
+- FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`.
 - FATTO **Tris, partita veloce con coda** (0.11.0): coda in memoria per gioco (`apps/server/src/coda.ts`), abbinamento a coppie, scadenza 2 minuti, nomi uguali distinti col suffisso «(2)». Idea dal vecchio progetto `../tic-tac-toe`.
 - FATTO **Dadi, spiegazione delle facce** (0.12.0): campo facoltativo `info` nei modelli (e nel dado personalizzato), tasto «i» accanto al dado; modello Taboo.
 - FATTO **Sito statico senza server** (es. Vercel): il pulsante online dopo 8 s avvisa che il server non risponde e propone un solo telefono (Impostore e Tris).
