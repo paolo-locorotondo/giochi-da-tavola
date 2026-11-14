@@ -1,6 +1,6 @@
 import { creaGiocatori, creaRng, type Giocatore } from "@gdt/engine";
 
-export type Ruolo = "lupo" | "contadino" | "veggente" | "medico";
+export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium";
 
 /** Da che parte sta un ruolo. Con un ruolo nuovo il compilatore chiede qui la sua fazione. */
 export type Fazione = "lupi" | "villaggio";
@@ -10,6 +10,10 @@ const FAZIONE: Record<Ruolo, Fazione> = {
   contadino: "villaggio",
   veggente: "villaggio",
   medico: "villaggio",
+  // L'Indemoniato è umano per chi conta i lupi e per il veggente, ma vince con i lupi.
+  indemoniato: "lupi",
+  massone: "villaggio",
+  medium: "villaggio",
 };
 
 export function fazione(ruolo: Ruolo): Fazione {
@@ -28,7 +32,12 @@ export function lupiPer(n: number): number {
 }
 
 /** Personaggi speciali che si possono togliere o aggiungere, con il numero di giocatori da cui compaiono da soli. */
-export const SPECIALI: readonly { ruolo: Ruolo; da: number; quanti: number }[] = [{ ruolo: "medico", da: 11, quanti: 1 }];
+export const SPECIALI: readonly { ruolo: Ruolo; da: number; quanti: number }[] = [
+  { ruolo: "medium", da: 9, quanti: 1 },
+  { ruolo: "indemoniato", da: 10, quanti: 1 },
+  { ruolo: "medico", da: 11, quanti: 1 },
+  { ruolo: "massone", da: 13, quanti: 2 },
+];
 
 /** Gli speciali che compaiono da soli con `n` giocatori. */
 export function specialiPredefiniti(n: number): Ruolo[] {
@@ -59,6 +68,8 @@ export function distribuisciRuoli(n: number, seme: number, speciali: readonly Ru
 
 export type Fase =
   | "carte"
+  | "medium"
+  | "massoni"
   | "veggente"
   | "medico"
   | "lupi"
@@ -71,7 +82,7 @@ export type Fase =
   | "fine";
 
 /** Fasi in cui un ruolo si sveglia di notte. */
-export type FaseNotte = "medico" | "veggente" | "lupi";
+export type FaseNotte = "medium" | "massoni" | "medico" | "veggente" | "lupi";
 
 export interface Stato {
   versione: number;
@@ -97,6 +108,8 @@ export interface Stato {
   benvenuto: number | null;
   /** Chi è stato linciato nell'ultimo voto. */
   eliminato: number | null;
+  /** L'ultimo linciato, che resta fino al voto successivo: il Medium lo interroga la notte dopo. */
+  linciato: number | null;
   /** La fazione che ha vinto, se la partita è finita. */
   vincitore: Fazione | null;
   /** Se il narratore dice il ruolo di chi muore (di notte o al voto); a fine partita si vedono comunque tutti. */
@@ -144,6 +157,7 @@ export function statoIniziale(): Stato {
     indiziati: null,
     benvenuto: null,
     eliminato: null,
+    linciato: null,
     vincitore: null,
     svelaRuoli: false,
     narratoreGioca: false,
@@ -188,7 +202,7 @@ export interface DescrittoreNotte {
   /** Se in questa notte la fase si gioca (es. il medico dalla seconda notte). */
   quando: (s: Stato) => boolean;
   /** Campo dello stato dove finisce la scelta. */
-  campo: "vittima" | "ispezionato" | "protetto";
+  campo: "vittima" | "ispezionato" | "protetto" | null;
   /** Se questa notte si sceglie qualcuno (es. la prima notte i lupi si riconoscono soltanto). */
   sceglie: (s: Stato) => boolean;
   /** Se la scelta, una volta fatta, non si cambia più. */
@@ -203,6 +217,30 @@ export interface DescrittoreNotte {
 
 /** Ordine in cui si svegliano i ruoli della notte. Ogni fase si gioca anche se chi ha il ruolo è morto. */
 export const FASI_NOTTE: readonly DescrittoreNotte[] = [
+  {
+    // Dalla seconda notte sente lo spirito dell'ultimo linciato: lupo o no. Nessuna scelta.
+    fase: "medium",
+    ruolo: "medium",
+    quando: (s) => s.notte >= 2,
+    campo: null,
+    sceglie: () => false,
+    unaSolaScelta: false,
+    puoiScegliere: () => false,
+    ordineEffetto: 4,
+    effetto: (_s, e) => e,
+  },
+  {
+    // Solo la prima notte i due massoni si riconoscono. Nessuna scelta.
+    fase: "massoni",
+    ruolo: "massone",
+    quando: (s) => s.notte === 1,
+    campo: null,
+    sceglie: () => false,
+    unaSolaScelta: false,
+    puoiScegliere: () => false,
+    ordineEffetto: 5,
+    effetto: (_s, e) => e,
+  },
   {
     fase: "medico",
     ruolo: "medico",
@@ -245,7 +283,17 @@ export function descrittoreNotte(fase: Fase): DescrittoreNotte | undefined {
 
 /** La scelta già fatta in questa notte per il descrittore (null = nessuna). */
 export function sceltaNotte(s: Stato, d: DescrittoreNotte): number | null {
-  return s[d.campo];
+  return d.campo === null ? null : s[d.campo];
+}
+
+/** I massoni della partita (dalle carte ricevute), per mostrarli la prima notte. */
+export function massoni(s: Stato): number[] {
+  return s.giocatori.map((g) => g.posto).filter((p) => s.ruoliIniziali[p] === "massone");
+}
+
+/** Il Medium sente «lupo» solo se l'ultimo linciato lo era davvero: l'Indemoniato e gli altri contano come umani. */
+export function linciatoEraLupo(s: Stato): boolean {
+  return s.linciato !== null && s.ruoli[s.linciato] === "lupo";
 }
 
 /** Se qualcuno con il ruolo della fase è vivo: altrimenti la fase si gioca per finta, senza risultati. */
@@ -362,7 +410,7 @@ export function riduci(s: Stato, a: Azione): Stato {
     }
     case "scegli": {
       const d = descrittoreNotte(s.fase);
-      if (!d || !candidatiNotte(s).includes(a.posto)) return s;
+      if (!d || d.campo === null || !candidatiNotte(s).includes(a.posto)) return s;
       if (d.unaSolaScelta && sceltaNotte(s, d) !== null) return s;
       return { ...s, [d.campo]: a.posto };
     }
@@ -384,7 +432,7 @@ export function riduci(s: Stato, a: Azione): Stato {
         const [eliminato] = classificaVoti(s, s.indiziati ?? [], a.voti);
         if (eliminato === undefined) return s;
         const vivi = s.vivi.filter((p) => p !== eliminato);
-        return { ...s, vivi, fase: "esito", eliminato, benvenuto: eliminato, vincitore: vincitore(s.ruoli, vivi) };
+        return { ...s, vivi, fase: "esito", eliminato, linciato: eliminato, benvenuto: eliminato, vincitore: vincitore(s.ruoli, vivi) };
       }
       return s;
     }

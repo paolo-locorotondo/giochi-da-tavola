@@ -1,22 +1,44 @@
 {
   "lupo": {
     "nome": "Werewolf",
+    "plurale": "werewolves",
     "tuo": "At night you choose, with the other werewolves, who to devour. By day you pretend to be innocent.",
     "regolamento": "At night, chooses with the other werewolves who to devour. By day, pretends to be innocent."
   },
   "contadino": {
     "nome": "Villager",
+    "plurale": "villagers",
     "tuo": "You have no powers: help find the werewolves by talking and voting.",
     "regolamento": "Has no powers: helps find the werewolves by talking and voting."
   },
   "veggente": {
     "nome": "Seer",
+    "plurale": "seers",
     "tuo": "Every night you find out whether a player is a werewolf.",
     "regolamento": "Every night, finds out whether a player is a werewolf."
   },
   "medico": {
     "nome": "Doctor",
+    "plurale": "doctors",
     "tuo": "From the second night you protect one player from the werewolves, never yourself.",
     "regolamento": "From the second night, protects one player from the werewolves, never themselves."
+  },
+  "indemoniato": {
+    "nome": "Possessed",
+    "plurale": "Possessed",
+    "tuo": "You are human but you root for the werewolves: you win with them. You don't know who they are, and the seer sees you as innocent.",
+    "regolamento": "Is human but wins with the werewolves, whom they do not know. The seer sees them as innocent."
+  },
+  "massone": {
+    "nome": "Freemason",
+    "plurale": "Freemasons",
+    "tuo": "You are a villager. On the first night you and the other freemason recognise each other: you can trust one another.",
+    "regolamento": "Two villagers who recognise each other on the first night: they can trust one another."
+  },
+  "medium": {
+    "nome": "Medium",
+    "plurale": "Mediums",
+    "tuo": "From the second night you learn whether the last lynched player was a werewolf or not.",
+    "regolamento": "From the second night, learns whether the last lynched player was a werewolf or not."
   }
 }

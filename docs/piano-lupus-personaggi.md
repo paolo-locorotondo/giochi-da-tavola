@@ -1,6 +1,6 @@
 # Piano: Lupus, personaggi e regole ufficiali
 
-Stato: in corso (passi 1 e 2 fatti). Data piano: 2026-11-14. Riferimento se il contesto si riempie: decisioni, ordine di lavoro, avanzamento.
+Stato: in corso (passi 1-4 fatti). Data piano: 2026-11-14. Riferimento se il contesto si riempie: decisioni, ordine di lavoro, avanzamento.
 
 Fonte: il regolamento cartaceo del gioco da tavola che l'utente possiede. **Non è nel repo** (testo protetto): qui ci sono solo le regole, spiegate con parole nostre. I testi dei personaggi e del regolamento in `data/` e `locales/` si scrivono da zero.
 
@@ -61,7 +61,7 @@ Per ogni ruolo nuovo: testi nostri in `data/{it,en}/personaggi.json` e `locales/
 - [x] 1. Motore a descrittori (`FASI_NOTTE`, `fazione`, `finePartita`, `ruoliIniziali` in `logica.ts`; la UI della notte ne deriva; le frasi del narratore restano per fase)
 - [x] 2. Preparazione (8–24 giocatori, composizione modificabile, veggente prima dei lupi, prima notte senza vittima, Medico = Guardia)
 - [x] 3. Voto ufficiale
-- [ ] 4. Indemoniato, Massoni, Medium
+- [x] 4. Indemoniato, Massoni, Medium
 - [ ] 5. Criceto mannaro
 - [ ] 6. Gufo
 - [ ] 7. Mitomane

@@ -13,6 +13,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Lupus (passo 2 del piano): da 8 a 24 giocatori; 2 lupi (3 da 16), un veggente, il Medico da 11 giocatori (con casella per toglierlo o aggiungerlo), il resto contadini. Il veggente si sveglia prima dei lupi; la prima notte nessuno viene sbranato (opzione attiva). Il Medico agisce dalla seconda notte, non può proteggere sé stesso ma può ripetere la stessa persona. Il ruolo di chi muore non si dice più di default. Le partite salvate di versioni precedenti si scartano.
 - Lupus (passo 3 del piano): voto ufficiale a due turni. Dopo la discussione (timer facoltativo) votano tutti, anche i morti; i due più votati sono gli indiziati e fanno l'arringa; al secondo turno votano in segreto i vivi non indiziati e il più votato è linciato. I pareggi li decide il «Benvenuto!» (l'ultimo morto, il primo giorno il narratore). Il ballottaggio non c'è più.
+- Lupus (passo 4 del piano): nuovi personaggi. Il **Medium** (da 9 giocatori, dalla seconda notte sente se l'ultimo linciato era un lupo), l'**Indemoniato** (da 10, umano ma vince con i lupi; per il veggente è innocente) e i due **Massoni** (da 13, si riconoscono la prima notte). Le fasi si giocano anche se chi ha il ruolo è morto, senza risultati.
+
 
 ### Interno
 

@@ -5,6 +5,8 @@ import type { Ruolo } from "./logica";
 
 interface TestiRuolo {
   nome: string;
+  /** Il nome al plurale, per l'elenco della composizione («2 massoni»). */
+  plurale: string;
   /** Cosa legge il giocatore sulla propria carta (seconda persona). */
   tuo: string;
   /** La voce di «I personaggi» nel regolamento (terza persona). */
@@ -20,6 +22,10 @@ export const PERSONAGGI: Record<Lingua, Record<Ruolo, TestiRuolo>> = { it, en };
 
 export function nomeRuolo(ruolo: Ruolo, lingua: Lingua): string {
   return PERSONAGGI[lingua][ruolo].nome;
+}
+
+export function pluraleRuolo(ruolo: Ruolo, lingua: Lingua): string {
+  return PERSONAGGI[lingua][ruolo].plurale;
 }
 
 /** Cosa legge il giocatore sulla propria carta. */

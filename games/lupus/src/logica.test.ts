@@ -12,7 +12,7 @@ const scegliEAvanti = (s: Stato, posto: number) => riduci(riduci(s, { tipo: "sce
 const civileNonVeggente = (s: Stato) => s.vivi.find((p) => s.ruoli[p] === "contadino") as number;
 
 describe("ruoli", () => {
-  it("2 lupi e 1 veggente fino a 15 giocatori, medico da 11", () => {
+  it("2 lupi e 1 veggente fino a 15 giocatori, medico da 11, medium da 9", () => {
     const r = distribuisciRuoli(8, 1);
     expect(r.filter((x) => x === "lupo")).toHaveLength(2);
     expect(r).toContain("veggente");
@@ -70,10 +70,12 @@ describe("partita", () => {
     expect(s.mortiNotte).toEqual([civile]);
   });
 
-  it("l'ordine della notte 2 con medico: medico, veggente, lupi", () => {
+  it("l'ordine della notte 2 con tutti: medium, medico, veggente, lupi", () => {
     let s = { ...distribuisci(avvia(12)), notte: 1 };
     s = riduci({ ...s, fase: "esito" }, { tipo: "dopoVoto" });
     expect(s.notte).toBe(2);
+    expect(s.fase).toBe("medium");
+    s = riduci(s, { tipo: "avanti" });
     expect(s.fase).toBe("medico");
     const bersaglio = s.vivi.find((p) => s.ruoli[p] === "contadino") as number;
     s = scegliEAvanti(s, bersaglio);
@@ -113,7 +115,7 @@ describe("notti: simulazione esaustiva", () => {
   /** Una notte intera: ogni fase che compare sceglie qualcuno. */
   const nottePiena = (s: Stato, vittima: number, protetto: number): Stato => {
     let x = s;
-    for (let i = 0; i < 6 && ["medico", "veggente", "lupi"].includes(x.fase); i++) {
+    for (let i = 0; i < 8 && ["medium", "massoni", "medico", "veggente", "lupi"].includes(x.fase); i++) {
       const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : (x.vivi.find((p) => x.ruoli[p] !== "veggente") as number);
       x = scegliEAvanti(x, posto);
     }

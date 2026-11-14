@@ -10,7 +10,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 const NOMI = "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia\nMatteo";
+const NOMI_9 = NOMI + "\nChiara";
 const NOMI_11 = NOMI + "\nChiara\nDavide\nIrene";
+const NOMI_13 = NOMI_11 + "\nFabio\nNadia";
 
 async function avvia(page: Page, nomi = NOMI) {
   await page.goto("/lupus");
@@ -19,15 +21,19 @@ async function avvia(page: Page, nomi = NOMI) {
 }
 
 /** Dal racconto dell'alba al linciaggio: discussione, primo turno, arringhe, secondo turno. */
-async function votaTutto(page: Page) {
+async function votaTutto(page: Page, quale: "primo" | "terzo" = "primo") {
+  const bottone = () => {
+    const piu = page.getByRole("button", { name: "+" });
+    return quale === "primo" ? piu.first() : piu.nth(3);
+  };
   await page.getByRole("button", { name: "Si discute e si vota" }).click();
   await page.getByRole("button", { name: "Al primo turno di voto" }).click();
-  const piu = page.getByRole("button", { name: "+" }).first();
-  while (await piu.isEnabled()) await piu.click();
+  while (await bottone().isEnabled()) await bottone().click();
   await page.getByRole("button", { name: "Scopri gli indiziati" }).click();
   await page.getByRole("button", { name: "Al secondo turno di voto" }).click();
-  const piu2 = page.getByRole("button", { name: "+" }).first();
-  while (await piu2.isEnabled()) await piu2.click();
+  // Al secondo turno restano solo i due indiziati: il primo è il più votato.
+  const primo = page.getByRole("button", { name: "+" }).first();
+  while (await primo.isEnabled()) await primo.click();
   await page.getByRole("button", { name: "Chiudi la votazione" }).click();
 }
 
@@ -58,10 +64,12 @@ test("configurazione: la composizione cresce con i giocatori e si può cambiare"
   await campo.fill(NOMI);
   await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 5 contadini.")).toBeVisible();
   await campo.fill(NOMI_11);
-  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 1 medico, 7 contadini.")).toBeVisible();
+  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 1 medium, 1 indemoniato, 1 medico, 5 contadini.")).toBeVisible();
   await schermata(page, "configurazione-composizione");
   await page.getByLabel("Con il Medico").uncheck();
-  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 8 contadini.")).toBeVisible();
+  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 1 medium, 1 indemoniato, 6 contadini.")).toBeVisible();
+  await campo.fill(NOMI_13);
+  await expect(page.getByText(/2 massoni/)).toBeVisible();
 });
 
 test("distribuzione delle carte e prima notte (veggente, poi lupi che si riconoscono)", async ({ page }) => {
@@ -140,11 +148,34 @@ test("dalla seconda notte il medico (11 giocatori) si sveglia per primo e non pu
   await page.locator("div.giocatori button").first().click();
   await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
   await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
-  await votaTutto(page);
+  await votaTutto(page, "terzo");
   await page.getByRole("button", { name: "Scende la notte" }).click();
+  // Dalla seconda notte il medium ascolta lo spirito dell'ultimo linciato, poi il medico.
+  await expect(page.getByRole("heading", { name: "Il medium ascolta lo spirito" })).toBeVisible();
+  await expect(page.getByText(/Lo spirito di .* (non )?era un lupo\./)).toBeVisible();
+  await schermata(page, "notte-medium");
+  await page.getByRole("button", { name: "Ho capito, torna a dormire" }).click();
   await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
   expect(await page.locator("div.giocatori button").count()).toBeLessThanOrEqual(10);
   await schermata(page, "notte-medico");
+});
+
+test("la prima notte i massoni (13 giocatori) si riconoscono, prima del veggente", async ({ page }) => {
+  await avvia(page, NOMI_13);
+  await giraLeCarte(page, 13);
+  await expect(page.getByRole("heading", { name: "I massoni si riconoscono" })).toBeVisible();
+  await expect(page.getByText(/I massoni sono: .+, .+\./)).toBeVisible();
+  await expect(page.locator("div.giocatori button")).toHaveCount(0);
+  await schermata(page, "notte-massoni");
+  await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+});
+
+test("con 9 giocatori il medium non c'è la prima notte", async ({ page }) => {
+  await avvia(page, NOMI_9);
+  await giraLeCarte(page, 9);
+  await expect(page.getByRole("heading", { name: "Il medium ascolta lo spirito" })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
 });
 
 test("la partita sopravvive al refresh e si può chiudere", async ({ page }) => {

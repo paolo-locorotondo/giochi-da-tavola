@@ -5,12 +5,12 @@ export const it = {
   descrizioneGioco: "Il villaggio dorme, i lupi no. Il telefono fa da narratore.",
   regPasso1: "Ognuno vede in segreto il proprio ruolo. I lupi vedono i compagni.",
   regPasso2:
-    "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). La prima notte nessuno muore: i lupi si riconoscono soltanto.",
+    "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). Dalla seconda notte il medium sente se l'ultimo linciato era un lupo; la prima notte i massoni si riconoscono. La prima notte nessuno muore: i lupi si riconoscono soltanto.",
   regPasso3: "Giorno: si scopre chi è morto, poi si discute. Primo turno: votano tutti, anche i morti (fantasmi); i due più votati sono gli indiziati e fanno un'arringa.",
   regPasso4: "Secondo turno: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto, il primo giorno il narratore). I morti non parlano più.",
   regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi.",
   regNota1:
-    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, il medico da 11 giocatori (si può togliere o aggiungere prima di iniziare), il resto contadini.",
+    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, poi, dal numero minimo di giocatori e togliendoli o aggiungendoli prima di iniziare: medium (9), indemoniato (10), medico (11), due massoni (13); il resto contadini.",
   regNota2: "Regole del gioco classico: esistono varianti.",
 
   // Impostazioni del gioco
@@ -85,6 +85,18 @@ export const it = {
   soloChiHaRuolo: "Solo chi ha il ruolo tocca il telefono.",
   eUnLupo: "È un lupo!",
   nonELupo: "Non è un lupo.",
+
+  // Medium e massoni
+  titoloMedium: "Il medium ascolta lo spirito",
+  fineMedium: "Ho capito, torna a dormire",
+  mediumLupo: "Lo spirito di {nome} era un lupo.",
+  mediumNonLupo: "Lo spirito di {nome} non era un lupo.",
+  titoloMassoni: "I massoni si riconoscono",
+  fineMassoni: "Ho visto, tornate a dormire",
+  massoniSono: "I massoni sono: {nomi}.",
+  massoniNessuno: "In questa partita non ci sono massoni vivi da mostrare.",
+  vMedium: "Il medium si risveglia e ascolta lo spirito dell'ultimo linciato.",
+  vMassoni: "I massoni si risvegliano e si riconoscono.",
 
   // Alba
   albaTitolo: "Il villaggio si risveglia",

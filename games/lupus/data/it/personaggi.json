@@ -1,22 +1,44 @@
 {
   "lupo": {
     "nome": "Lupo",
+    "plurale": "lupi",
     "tuo": "Di notte scegli con gli altri lupi chi sbranare. Di giorno fingi di essere innocente.",
     "regolamento": "Di notte sceglie con gli altri lupi chi sbranare. Di giorno finge di essere innocente."
   },
   "contadino": {
     "nome": "Contadino",
+    "plurale": "contadini",
     "tuo": "Non hai poteri: scopri i lupi parlando e votando.",
     "regolamento": "Non ha poteri: scopre i lupi parlando e votando."
   },
   "veggente": {
     "nome": "Veggente",
+    "plurale": "veggenti",
     "tuo": "Ogni notte scopri se un giocatore è un lupo.",
     "regolamento": "Ogni notte scopre se un giocatore è un lupo."
   },
   "medico": {
     "nome": "Medico",
+    "plurale": "medici",
     "tuo": "Dalla seconda notte proteggi un giocatore dai lupi, mai te stesso.",
     "regolamento": "Dalla seconda notte protegge un giocatore dai lupi, mai se stesso."
+  },
+  "indemoniato": {
+    "nome": "Indemoniato",
+    "plurale": "Indemoniati",
+    "tuo": "Sei umano, ma tifi per i lupi: vinci con loro. Non sai chi siano, e per il veggente sei innocente.",
+    "regolamento": "È umano, ma vince con i lupi, che non conosce. Per il veggente è innocente."
+  },
+  "massone": {
+    "nome": "Massone",
+    "plurale": "Massoni",
+    "tuo": "Sei un contadino. La prima notte tu e l'altro massone vi riconoscete: potete fidarvi uno dell'altro.",
+    "regolamento": "Sono due contadini che si riconoscono la prima notte: possono fidarsi uno dell'altro."
+  },
+  "medium": {
+    "nome": "Medium",
+    "plurale": "Medium",
+    "tuo": "Dalla seconda notte sai se l'ultimo linciato era un lupo oppure no.",
+    "regolamento": "Dalla seconda notte sa se l'ultimo linciato era un lupo oppure no."
   }
 }

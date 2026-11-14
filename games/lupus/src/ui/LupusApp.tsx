@@ -15,6 +15,9 @@ import {
   lupiPer,
   riduci,
   sceltaNotte,
+  ruoloAttivo,
+  linciatoEraLupo,
+  massoni,
   votantiSecondoTurno,
   statoIniziale,
   type Fase,
@@ -30,7 +33,7 @@ import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
 import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
 import { Transizione } from "./Transizione";
-import { descrizioneRuolo, nomeRuolo } from "../personaggi";
+import { descrizioneRuolo, nomeRuolo, pluraleRuolo } from "../personaggi";
 import { TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
 
@@ -40,6 +43,9 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
   contadino: "mortoContadino",
   veggente: "mortoVeggente",
   medico: "mortoMedico",
+  indemoniato: "mortoLupo",
+  massone: "mortoContadino",
+  medium: "mortoVeggente",
 };
 
 const CHIAVE = "gdt-lupus-partita";
@@ -137,6 +143,8 @@ export function LupusApp() {
       case "lupi":
       case "veggente":
       case "medico":
+      case "medium":
+      case "massoni":
         return <Notte s={s} dispatch={dispatch} />;
       case "alba":
         return <Alba s={s} dispatch={dispatch} />;
@@ -212,9 +220,23 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
   switch (s.fase) {
     case "lupi":
     case "veggente":
-    case "medico": {
+    case "medico":
+    case "medium":
+    case "massoni": {
       const apertura = primaFaseDellaNotte(s, s.fase) ? t("vNotte", { notte: s.notte }) + " " : "";
-      return apertura + t(s.fase === "lupi" ? (s.notte === 1 && s.primaNotteSenzaVittima ? "vLupiPrima" : "vLupi") : s.fase === "veggente" ? "vVeggente" : "vMedico");
+      const frase =
+        s.fase === "lupi"
+          ? s.notte === 1 && s.primaNotteSenzaVittima
+            ? "vLupiPrima"
+            : "vLupi"
+          : s.fase === "veggente"
+            ? "vVeggente"
+            : s.fase === "medium"
+              ? "vMedium"
+              : s.fase === "massoni"
+                ? "vMassoni"
+                : "vMedico";
+      return apertura + t(frase);
     }
     case "alba":
       return s.mortiNotte.length
@@ -314,7 +336,11 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
               elenco: [
                 t("ruoliLupi", { n: lupiPer(n) }),
                 `1 ${nomeRuolo("veggente", lingua).toLowerCase()}`,
-                ...speciali.map((r) => `1 ${nomeRuolo(r, lingua).toLowerCase()}`),
+                ...SPECIALI.filter((x) => speciali.includes(x.ruolo)).map((x) =>
+                  x.quanti > 1
+                    ? `${x.quanti} ${pluraleRuolo(x.ruolo, lingua).toLowerCase()}`
+                    : `1 ${nomeRuolo(x.ruolo, lingua).toLowerCase()}`,
+                ),
                 t("ruoliContadini", { n: Math.max(0, contadini) }),
               ].join(", "),
             })}
@@ -397,7 +423,15 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
 }
 
 /** Chiavi del dizionario per ogni fase della notte: titolo e pulsante che chiude il turno (dice sempre di tornare a dormire). */
-const TESTI_NOTTE: Record<FaseNotte, { titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico"; fine: "fineLupi" | "fineVeggente" | "fineMedico" }> = {
+const TESTI_NOTTE: Record<
+  FaseNotte,
+  {
+    titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico" | "titoloMedium" | "titoloMassoni";
+    fine: "fineLupi" | "fineVeggente" | "fineMedico" | "fineMedium" | "fineMassoni";
+  }
+> = {
+  medium: { titolo: "titoloMedium", fine: "fineMedium" },
+  massoni: { titolo: "titoloMassoni", fine: "fineMassoni" },
   lupi: { titolo: "titoloLupi", fine: "fineLupi" },
   veggente: { titolo: "titoloVeggente", fine: "fineVeggente" },
   medico: { titolo: "titoloMedico", fine: "fineMedico" },
@@ -420,14 +454,18 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
       ? s.ruoli[s.ispezionato] === "lupo"
         ? t("eUnLupo")
         : t("nonELupo")
-      : null;
+      : fase === "medium" && s.linciato !== null && ruoloAttivo(s, d)
+        ? t(linciatoEraLupo(s) ? "mediumLupo" : "mediumNonLupo", { nome: nomeDi(s, s.linciato) })
+        : fase === "massoni" && ruoloAttivo(s, d)
+          ? t("massoniSono", { nomi: massoni(s).map((p) => nomeDi(s, p)).join(", ") })
+          : null;
 
   return (
     <section className="schermata">
       <p className="muted">{t("notteOcchiChiusi", { notte: s.notte })}</p>
       <h2>{t(TESTI_NOTTE[fase].titolo)}</h2>
       <p className="muted">{t("soloChiHaRuolo")}</p>
-      {senzaScelta && <p>{t("lupiSiRiconoscono")}</p>}
+      {senzaScelta && fase === "lupi" && <p>{t("lupiSiRiconoscono")}</p>}
       <div className="giocatori">
         {candidati.map((p) => (
           <button

@@ -5,12 +5,12 @@ import { PERSONAGGI, descrizioneRuolo, nomeRuolo, personaggiRegolamento } from "
 describe.each(LINGUE)("personaggi (data/%s/personaggi.json)", (lingua) => {
   const dati = PERSONAGGI[lingua];
 
-  it("ci sono i quattro ruoli del gioco", () => {
-    expect(Object.keys(dati).sort()).toEqual(["contadino", "lupo", "medico", "veggente"]);
+  it("ci sono i sette ruoli del gioco", () => {
+    expect(Object.keys(dati).sort()).toEqual(["contadino", "indemoniato", "lupo", "massone", "medico", "medium", "veggente"]);
   });
 
   it.each(Object.entries(dati))("%s: tutti i testi compilati e senza spazi ai bordi", (_, p) => {
-    for (const testo of [p.nome, p.tuo, p.regolamento]) {
+    for (const testo of [p.nome, p.plurale, p.tuo, p.regolamento]) {
       expect(testo).not.toBe("");
       expect(testo).toBe(testo.trim());
     }
@@ -19,7 +19,7 @@ describe.each(LINGUE)("personaggi (data/%s/personaggi.json)", (lingua) => {
   it("le funzioni usano i testi del file", () => {
     expect(nomeRuolo("lupo", lingua)).toBe(dati.lupo.nome);
     expect(descrizioneRuolo("medico", lingua)).toBe(dati.medico.tuo);
-    expect(personaggiRegolamento(lingua)).toHaveLength(4);
+    expect(personaggiRegolamento(lingua)).toHaveLength(7);
   });
 });
 

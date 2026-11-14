@@ -1,19 +1,29 @@
 # Lupus in fabula
 
-Il villaggio dorme, i lupi no. Un telefono al centro del tavolo fa da **narratore a voce** (sintesi vocale, funziona offline). Servono **almeno 4 persone**.
+Il villaggio dorme, i lupi no. Un telefono al centro del tavolo fa da **narratore a voce** (sintesi vocale, funziona offline). Servono **da 8 a 24 persone**.
 
 ## Regolamento
 
 > Regole scritte dalla conoscenza del gioco classico (esistono varianti), non copiate da un regolamento ufficiale: controllale e dimmi cosa cambiare.
 
 1. Ognuno vede in segreto il proprio **ruolo**. I lupi vedono i compagni.
-2. **Notte**: tutti chiudono gli occhi. Il narratore chiama i lupi (scelgono una vittima, non un lupo), poi il veggente (scopre se un giocatore è lupo), poi il medico (protegge qualcuno, non lo stesso due notti di fila).
+2. **Notte**: tutti chiudono gli occhi. Il narratore chiama, nell'ordine: il medium (dalla seconda notte: sente se l'ultimo linciato era un lupo), i massoni (solo la prima notte: si riconoscono), il medico (protegge qualcuno, non sé stesso; può ripetere la stessa persona), il veggente (scopre se un giocatore è lupo), i lupi (scelgono una vittima, non un lupo). Ogni ruolo si sveglia anche se è morto, senza mostrare nulla.
 3. **Giorno**: si scopre chi è morto, si discute (timer facoltativo di 3 minuti; i morti non parlano).
 4. **Primo turno**: votano tutti, anche i morti (fantasmi); i voti si segnano con + e −. I due più votati sono gli **indiziati** e fanno un'arringa.
 5. **Secondo turno**: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto; il primo giorno il narratore, quindi il primo nome dell'elenco).
 5. Vincono i **contadini** se muoiono tutti i lupi, i **lupi** quando sono almeno quanti gli altri vivi.
 
-Ruoli: 1 lupo ogni 4 giocatori (arrotondato), veggente da 5 giocatori, medico da 7, il resto contadini.
+Ruoli: 2 lupi da 8 a 15 giocatori, 3 da 16; un veggente; poi gli speciali dal numero minimo (si possono togliere o aggiungere prima di iniziare): medium da 9, indemoniato da 10, medico da 11, due massoni da 13. Il resto contadini.
+
+| Ruolo | Dove sta | Cosa fa |
+|---|---|---|
+| Lupo | con i lupi | di notte sceglie una vittima, non un lupo |
+| Contadino | villaggio | niente di speciale: vota e basta |
+| Veggente | villaggio | di notte scopre se un giocatore è lupo |
+| Medico | villaggio | di notte protegge un giocatore (non sé stesso); se i lupi scelgono lui, nessuno muore |
+| Indemoniato | con i lupi | è umano per il veggente e per il conteggio, ma vince con i lupi (non sa chi siano) |
+| Massone | villaggio | i due massoni si riconoscono la prima notte |
+| Medium | villaggio | dalla seconda notte sa se l'ultimo linciato era un lupo (un Indemoniato o un contadino conta come «non lupo») |
 
 ## Modalità di gioco
 
@@ -39,7 +49,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 
 Quando il narratore chiama un ruolo, chi ha finito tocca il pulsante e lascia il telefono al centro:
 
-- lupi e medico: «Conferma e torna a dormire»;
+- lupi e medico: «Conferma e torna a dormire»; medium e massoni: «Ho capito, torna a dormire» e «Ho visto, tornate a dormire» (nessuna scelta da fare);
 - veggente: «Ho visto, torna a dormire» (il veggente vede la carta del giocatore scelto, poi chiude gli occhi);
 - l'ultima carta della distribuzione resta «Ho visto, passa il telefono».
 
@@ -51,8 +61,11 @@ Le impostazioni di gioco sono salvate sul telefono e non fanno parte della parti
 
 - Ogni ruolo chiude con lo stesso gesto: «Conferma e torna a dormire» (o «Ho visto, torna a dormire» per il veggente), poi la transizione. Con «No» la transizione non compare.
 - La voce italiana parla a ogni fase. Serve l'audio acceso (ingranaggio → Audio, spento di default); spegnerlo ferma subito la voce. La casella "Voce del narratore" spegne solo la voce.
-- Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Sono sintetizzati: se non convincono, si ritoccano in `packages/suoni/src/index.ts`. Se non si sente: volume e voci italiane installate.
-- Lupi non scelgono un lupo; il medico non protegge due volte di fila la stessa persona.
+- Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico; indemoniato, massone e medium riusano quelli di lupo, contadino e veggente) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Sono sintetizzati: se non convincono, si ritoccano in `packages/suoni/src/index.ts`. Se non si sente: volume e voci italiane installate.
+- Lupi non scelgono un lupo; il medico non protegge sé stesso ma può proteggere la stessa persona due notti di fila.
+- Con 9 giocatori il medium compare dalla seconda notte; con 13 i massoni si riconoscono la prima notte (e non appaiono più dopo). Con 10 l'Indemoniato non è lupo per il veggente: «non è un lupo».
+- Medium: il messaggio «era un lupo» compare solo se il linciato era davvero un lupo (non l'Indemoniato). Se il medium è morto, la sua fase si gioca senza messaggi.
+- Fine partita: l'Indemoniato vince con i lupi, non con i contadini.
 - Si lincia sempre qualcuno: i pareggi li decide il «Benvenuto!», non c'è più il ballottaggio. I nomi vanno inseriti in ordine orario.
 - Fine partita: l'elenco mostra i ruoli di tutti.
 
@@ -82,7 +95,7 @@ In Lupus le «carte» sono i **personaggi**. Un personaggio ha due parti:
 5. Aggiungi il suo verso di morte in `SUONO_MORTO` (e il suono in `packages/suoni`).
 6. Aggiorna il regolamento («Ruoli: …») qui e in `src/locales/{it,en}.ts` (regolamento, e anche le frasi del narratore e dell'interfaccia del nuovo ruolo), e scrivi i test in `src/logica.test.ts`.
 
-La fase di notte per ora è una sequenza scritta nel codice (lupi → veggente → medico): renderla un elenco ordinato nei dati è un lavoro futuro, da fare quando arriverà il primo ruolo nuovo.
+La fase di notte è un elenco ordinato di descrittori in `src/logica.ts` (`FASI_NOTTE`: chi si sveglia, chi può scegliere, effetto). Un ruolo notturno nuovo si aggiunge lì, e la UI della notte ne deriva.
 
 ## Lingue
 
@@ -96,7 +109,7 @@ Italiano e inglese. La lingua si sceglie dall'ingranaggio dell'app; il narratore
 
 Il compilatore segnala una lingua o una chiave mancante.
 
-**Tradurre o cambiare un personaggio**: modifica `nome`, `tuo` e `regolamento` in `data/<lingua>/personaggi.json`, senza toccare il codice. Le chiavi (`lupo`, `contadino`, `veggente`, `medico`) sono i ruoli del codice e non si traducono.
+**Tradurre o cambiare un personaggio**: modifica `nome`, `tuo` e `regolamento` in `data/<lingua>/personaggi.json`, senza toccare il codice. Le chiavi (`lupo`, `contadino`, `veggente`, `medico`, `indemoniato`, `massone`, `medium`) sono i ruoli del codice e non si traducono. Ogni ruolo ha anche `plurale` (per l'elenco della composizione, «2 massoni»).
 
 ## Deploy
 
