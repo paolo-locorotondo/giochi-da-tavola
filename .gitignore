@@ -8,3 +8,6 @@ coverage/
 *.tsbuildinfo
 playwright-report/
 test-results/
+
+# Trascrizione di un regolamento protetto da copyright: non va nel repo pubblico
+games/lupus/regolamento_lupus_in_tabula.md
