@@ -6,8 +6,8 @@ export const it = {
   regPasso1: "Ognuno vede in segreto il proprio ruolo. I lupi vedono i compagni.",
   regPasso2:
     "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). La prima notte nessuno muore: i lupi si riconoscono soltanto.",
-  regPasso3: "Giorno: si scopre chi è morto (e il suo ruolo). Si discute e si vota: devono votare tutti i vivi.",
-  regPasso4: "Pareggio: ballottaggio tra i pari merito; se pareggiano ancora nessuno viene eliminato.",
+  regPasso3: "Giorno: si scopre chi è morto, poi si discute. Primo turno: votano tutti, anche i morti (fantasmi); i due più votati sono gli indiziati e fanno un'arringa.",
+  regPasso4: "Secondo turno: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto, il primo giorno il narratore). I morti non parlano più.",
   regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi.",
   regNota1:
     "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, il medico da 11 giocatori (si può togliere o aggiungere prima di iniziare), il resto contadini.",
@@ -38,15 +38,9 @@ export const it = {
   vMedico: "Il medico si risveglia e sceglie chi proteggere.",
   vAlbaMorto: "Il villaggio si risveglia. Questa notte è morto {nome}.{ruolo}",
   vAlbaNessuno: "Il villaggio si risveglia. Questa notte non è morto nessuno.",
-  vBallottaggio: "Ballottaggio. Votate tra i giocatori in parità.",
-  vVoto: "È ora di discutere e votare chi eliminare.",
-  vEliminato: "{nome} è stato eliminato.{ruolo}",
+  vVoto: "Primo turno: votano tutti, anche i fantasmi. I due più votati saranno gli indiziati.",
   vFineVillaggio: "Il villaggio ha vinto!",
   vFineLupi: "I lupi hanno vinto!",
-
-  // Esito del voto senza eliminati
-  esitoPareggio: "Pareggio: ballottaggio tra i pari merito.",
-  esitoAncoraPari: "Ancora pari: nessuno viene eliminato.",
 
   // Configurazione
   giocatoriLabel: "Giocatori (uno per riga, da {min} a {max})",
@@ -100,13 +94,31 @@ export const it = {
   discuteVota: "Si discute e si vota",
 
   // Voto
-  ballottaggio: "Ballottaggio",
   votazione: "Votazione",
-  votoIstruzioni:
-    "Ognuno vota a voce un giocatore; segna i voti qui sotto. Devono votare tutti i vivi ({totale}/{vivi}).",
-  paritaTra: "Pareggio tra {nomi}.",
-  vaiBallottaggio: "Vai al ballottaggio",
-  chiudiVotazione: "Chiudi la votazione",
+  votoIstruzioni: "Ognuno, vivo o fantasma, vota a voce un giocatore vivo; segna i voti qui sotto ({totale}/{votanti}).",
+  // Giorno: discussione, due turni di voto
+  discussioneTitolo: "Si discute",
+  discussioneTesto: "I vivi discutono su chi possa essere un lupo. I morti non parlano.",
+  avviaTimer: "Avvia il timer di 3 minuti",
+  tempoRimasto: "Tempo rimasto: {tempo}",
+  tempoFinito: "Tempo scaduto: si vota.",
+  vaiAlVoto: "Al primo turno di voto",
+  primoTurno: "Primo turno",
+  chiudiPrimoTurno: "Scopri gli indiziati",
+  arringheTitolo: "Gli indiziati",
+  arringheTesto: "{a} e {b} fanno ciascuno la propria arringa. Poi si vota.",
+  arringheUno: "{a} fa la propria arringa. Poi si vota.",
+  vaiSecondoTurno: "Al secondo turno di voto",
+  secondoTurno: "Secondo turno",
+  secondoIstruzioni:
+    "Votano solo i vivi non indiziati: insieme, in segreto (es. a occhi chiusi, alzando la mano). Il narratore segna i voti ({totale}/{votanti}).",
+  chiudiSecondoTurno: "Chiudi la votazione",
+  paritaBenvenuto: "Pareggio: vince chi è più vicino al «Benvenuto!» ({nome}).",
+  narratoreBenvenuto: "il narratore",
+  vDiscussione: "Il villaggio si risveglia e discute.",
+  vArringhe: "Gli indiziati sono {nomi}. A voi la parola.",
+  vSecondoTurno: "Secondo turno. Votano solo i vivi non indiziati, tutti insieme.",
+  vLinciato: "{nome} viene linciato.{ruolo}",
   meno: "−",
   piu: "+",
 

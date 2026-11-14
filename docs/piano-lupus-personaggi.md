@@ -60,7 +60,7 @@ Per ogni ruolo nuovo: testi nostri in `data/{it,en}/personaggi.json` e `locales/
 
 - [x] 1. Motore a descrittori (`FASI_NOTTE`, `fazione`, `finePartita`, `ruoliIniziali` in `logica.ts`; la UI della notte ne deriva; le frasi del narratore restano per fase)
 - [x] 2. Preparazione (8–24 giocatori, composizione modificabile, veggente prima dei lupi, prima notte senza vittima, Medico = Guardia)
-- [ ] 3. Voto ufficiale
+- [x] 3. Voto ufficiale
 - [ ] 4. Indemoniato, Massoni, Medium
 - [ ] 5. Criceto mannaro
 - [ ] 6. Gufo

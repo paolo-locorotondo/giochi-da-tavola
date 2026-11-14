@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } from "react";
 import {
   candidatiNotte,
-  contaVoti,
+  classificaVoti,
+
   descrittoreNotte,
   FASI_NOTTE,
   MAX_GIOCATORI,
@@ -14,6 +15,7 @@ import {
   lupiPer,
   riduci,
   sceltaNotte,
+  votantiSecondoTurno,
   statoIniziale,
   type Fase,
   type FaseNotte,
@@ -92,7 +94,7 @@ export function LupusApp() {
     const testo = frasePerFase(s, lingua);
     if (testo) parla(testo, lingua);
     return silenzio;
-  }, [s.fase, s.notte, s.ballottaggio, s.eliminato, voce, audio, s.giocatori.length, lingua]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [s.fase, s.notte, s.eliminato, voce, audio, s.giocatori.length, lingua]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Suoni di scena: ululato quando scende la notte, gallo all'alba. Il verso del morto solo se il narratore ne dice il ruolo.
   const faseSuoni = useRef(s.fase);
@@ -138,8 +140,13 @@ export function LupusApp() {
         return <Notte s={s} dispatch={dispatch} />;
       case "alba":
         return <Alba s={s} dispatch={dispatch} />;
+      case "discussione":
+        return <Discussione dispatch={dispatch} />;
       case "voto":
+      case "voto2":
         return <Voto s={s} dispatch={dispatch} />;
+      case "arringhe":
+        return <Arringhe s={s} dispatch={dispatch} />;
       case "esito":
         return <Esito s={s} dispatch={dispatch} />;
       case "fine":
@@ -199,13 +206,6 @@ function ruoloDetto(s: Stato, posto: number | null | undefined, t: T, lingua: Li
   return " " + t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[posto] ?? "contadino", lingua) });
 }
 
-/** Il messaggio del voto senza eliminato, dal codice della logica. */
-function testoEsito(esito: Stato["esitoVoto"], t: T): string | null {
-  if (esito === "ballottaggio") return t("esitoPareggio");
-  if (esito === "ancora-pari") return t("esitoAncoraPari");
-  return null;
-}
-
 /** Cosa dice il narratore a voce in ogni fase, nella lingua scelta. */
 function frasePerFase(s: Stato, lingua: Lingua): string | null {
   const t = traduttore(dizionari, lingua);
@@ -220,12 +220,16 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
       return s.mortiNotte.length
         ? t("vAlbaMorto", { nome: nomeDi(s, s.mortiNotte[0] ?? null), ruolo: ruoloDetto(s, s.mortiNotte[0], t, lingua) })
         : t("vAlbaNessuno");
+    case "discussione":
+      return t("vDiscussione");
     case "voto":
-      return s.ballottaggio ? t("vBallottaggio") : t("vVoto");
+      return t("vVoto");
+    case "arringhe":
+      return t("vArringhe", { nomi: (s.indiziati ?? []).map((p) => nomeDi(s, p)).join(", ") });
+    case "voto2":
+      return t("vSecondoTurno");
     case "esito":
-      return s.eliminato !== null
-        ? t("vEliminato", { nome: nomeDi(s, s.eliminato), ruolo: ruoloDetto(s, s.eliminato, t, lingua) })
-        : testoEsito(s.esitoVoto, t);
+      return t("vLinciato", { nome: nomeDi(s, s.eliminato), ruolo: ruoloDetto(s, s.eliminato, t, lingua) });
     case "fine":
       return s.vincitore === "villaggio" ? t("vFineVillaggio") : t("vFineLupi");
     default:
@@ -475,50 +479,123 @@ function Alba({ s, dispatch }: { s: Stato; dispatch: D }) {
   );
 }
 
+const SECONDI_DISCUSSIONE = 180;
+
+function Discussione({ dispatch }: { dispatch: D }) {
+  const t = usaT(dizionari);
+  // Il timer è facoltativo e non blocca nulla: parte solo se lo si avvia.
+  const [scadenza, setScadenza] = useState<number | null>(null);
+  const [rimasti, setRimasti] = useState(SECONDI_DISCUSSIONE);
+  useEffect(() => {
+    if (scadenza === null) return;
+    const id = setInterval(() => {
+      const r = Math.max(0, Math.ceil((scadenza - Date.now()) / 1000));
+      setRimasti(r);
+      if (r === 0) {
+        clearInterval(id);
+        navigator.vibrate?.(400);
+        suona("fineTurno");
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [scadenza]);
+  const tempo = `${Math.floor(rimasti / 60)}:${String(rimasti % 60).padStart(2, "0")}`;
+
+  return (
+    <section className="schermata">
+      <h2>{t("discussioneTitolo")}</h2>
+      <p className="muted">{t("discussioneTesto")}</p>
+      {scadenza === null ? (
+        <button
+          className="btn"
+          onClick={() => {
+            setRimasti(SECONDI_DISCUSSIONE);
+            setScadenza(Date.now() + SECONDI_DISCUSSIONE * 1000);
+          }}
+        >
+          {t("avviaTimer")}
+        </button>
+      ) : (
+        <p className="grande" role="timer">
+          {rimasti > 0 ? t("tempoRimasto", { tempo }) : t("tempoFinito")}
+        </p>
+      )}
+      <button className="btn primario" onClick={() => dispatch({ tipo: "avanti" })}>
+        {t("vaiAlVoto")}
+      </button>
+    </section>
+  );
+}
+
+function Arringhe({ s, dispatch }: { s: Stato; dispatch: D }) {
+  const t = usaT(dizionari);
+  const [a, b] = (s.indiziati ?? []).map((p) => nomeDi(s, p));
+  return (
+    <section className="schermata">
+      <h2>{t("arringheTitolo")}</h2>
+      <p>{b === undefined ? t("arringheUno", { a: a ?? "" }) : t("arringheTesto", { a: a ?? "", b })}</p>
+      <button className="btn primario" onClick={() => dispatch({ tipo: "avanti" })}>
+        {t("vaiSecondoTurno")}
+      </button>
+    </section>
+  );
+}
+
 function Voto({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
+  const secondo = s.fase === "voto2";
   const [voti, setVoti] = useState<Record<number, number>>({});
-  const candidati = s.ballottaggio ?? s.vivi;
+  // Primo turno: votano tutti (vivi e fantasmi) e si vota tra i vivi. Secondo: solo i vivi non indiziati, tra i due indiziati.
+  const candidati = secondo ? (s.indiziati ?? []) : s.vivi;
+  const votanti = secondo ? votantiSecondoTurno(s) : s.giocatori.length;
   const totale = Object.values(voti).reduce((a, b) => a + b, 0);
-  const cambia = (p: number, d: number) =>
-    setVoti((v) => ({ ...v, [p]: Math.max(0, (v[p] ?? 0) + d) }));
+  const cambia = (p: number, d: number) => setVoti((v) => ({ ...v, [p]: Math.max(0, (v[p] ?? 0) + d) }));
 
-  // Quando parte il ballottaggio i contatori ripartono da zero.
-  useEffect(() => setVoti({}), [s.ballottaggio]);
+  // Passando dal primo al secondo turno i contatori ripartono da zero.
+  useEffect(() => setVoti({}), [s.fase]);
 
-  const { eliminato, pari } = contaVoti(voti);
-  const pronto = totale === s.vivi.length;
+  const pronto = totale === votanti;
+  const classifica = classificaVoti(s, candidati, voti);
+  const [primo, secondoPosto] = classifica;
+  // Pareggio tra i primi due (primo turno: il secondo posto) o tra gli indiziati: lo decide il «Benvenuto!».
+  const pari =
+    pronto &&
+    primo !== undefined &&
+    secondoPosto !== undefined &&
+    (voti[primo] ?? 0) === (voti[secondoPosto] ?? 0) &&
+    (secondo || candidati.length > 2);
+  const nomeBenvenuto = s.benvenuto === null ? t("narratoreBenvenuto") : nomeDi(s, s.benvenuto);
 
   return (
     <section className="schermata allineata">
-      <h2>{s.ballottaggio ? t("ballottaggio") : t("votazione")}</h2>
-      {testoEsito(s.esitoVoto, t) && <p className="muted">{testoEsito(s.esitoVoto, t)}</p>}
+      <h2>{secondo ? t("secondoTurno") : t("primoTurno")}</h2>
       <p className="muted">
-        {t("votoIstruzioni", { totale, vivi: s.vivi.length })}
+        {secondo ? t("secondoIstruzioni", { totale, votanti }) : t("votoIstruzioni", { totale, votanti })}
       </p>
       {candidati.map((p) => (
         <div key={p} className="riga-voto">
           <span>{nomeDi(s, p)}</span>
-          <button className="btn" onClick={() => cambia(p, -1)}>
+          <button className="btn" onClick={() => cambia(p, -1)} aria-label={`${t("meno")} ${nomeDi(s, p)}`}>
             {t("meno")}
           </button>
           <strong>{voti[p] ?? 0}</strong>
-          <button className="btn" disabled={totale >= s.vivi.length} onClick={() => cambia(p, 1)}>
+          <button
+            className="btn"
+            disabled={totale >= votanti}
+            onClick={() => cambia(p, 1)}
+            aria-label={`${t("piu")} ${nomeDi(s, p)}`}
+          >
             {t("piu")}
           </button>
         </div>
       ))}
-      {pronto && pari.length > 1 && (
-        <p className="muted">{t("paritaTra", { nomi: pari.map((p) => nomeDi(s, p)).join(", ") })}</p>
-      )}
+      {pari && <p className="muted">{t("paritaBenvenuto", { nome: nomeBenvenuto })}</p>}
       <button
         className="btn primario"
         disabled={!pronto}
         onClick={() => dispatch({ tipo: "chiudiVoto", voti })}
       >
-        {eliminato === null && pari.length > 1 && !s.ballottaggio
-          ? t("vaiBallottaggio")
-          : t("chiudiVotazione")}
+        {secondo ? t("chiudiSecondoTurno") : t("chiudiPrimoTurno")}
       </button>
     </section>
   );
@@ -529,13 +606,9 @@ function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
   const lingua = usaLingua();
   return (
     <section className="schermata">
-      {s.eliminato !== null ? (
-        <>
-          <h2>{t("eliminatoTitolo", { nome: nomeDi(s, s.eliminato) })}</h2>
-          {s.svelaRuoli && <p>{t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[s.eliminato] ?? "contadino", lingua) })}</p>}
-        </>
-      ) : (
-        <h2>{testoEsito(s.esitoVoto, t)}</h2>
+      <h2>{t("eliminatoTitolo", { nome: nomeDi(s, s.eliminato) })}</h2>
+      {s.svelaRuoli && s.eliminato !== null && (
+        <p>{t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[s.eliminato] ?? "contadino", lingua) })}</p>
       )}
       <button className="btn primario" onClick={() => dispatch({ tipo: "dopoVoto" })}>
         {s.vincitore ? t("vediRisultato") : t("scendeNotte")}

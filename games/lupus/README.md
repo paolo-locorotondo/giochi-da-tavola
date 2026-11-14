@@ -8,8 +8,9 @@ Il villaggio dorme, i lupi no. Un telefono al centro del tavolo fa da **narrator
 
 1. Ognuno vede in segreto il proprio **ruolo**. I lupi vedono i compagni.
 2. **Notte**: tutti chiudono gli occhi. Il narratore chiama i lupi (scelgono una vittima, non un lupo), poi il veggente (scopre se un giocatore è lupo), poi il medico (protegge qualcuno, non lo stesso due notti di fila).
-3. **Giorno**: si scopre chi è morto (e il suo ruolo). Si discute e si **vota**: devono votare tutti i vivi, i voti si segnano con + e −.
-4. **Pareggio**: ballottaggio tra i pari merito; se pareggiano ancora nessuno viene eliminato.
+3. **Giorno**: si scopre chi è morto, si discute (timer facoltativo di 3 minuti; i morti non parlano).
+4. **Primo turno**: votano tutti, anche i morti (fantasmi); i voti si segnano con + e −. I due più votati sono gli **indiziati** e fanno un'arringa.
+5. **Secondo turno**: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto; il primo giorno il narratore, quindi il primo nome dell'elenco).
 5. Vincono i **contadini** se muoiono tutti i lupi, i **lupi** quando sono almeno quanti gli altri vivi.
 
 Ruoli: 1 lupo ogni 4 giocatori (arrotondato), veggente da 5 giocatori, medico da 7, il resto contadini.
@@ -52,14 +53,14 @@ Le impostazioni di gioco sono salvate sul telefono e non fanno parte della parti
 - La voce italiana parla a ogni fase. Serve l'audio acceso (ingranaggio → Audio, spento di default); spegnerlo ferma subito la voce. La casella "Voce del narratore" spegne solo la voce.
 - Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Sono sintetizzati: se non convincono, si ritoccano in `packages/suoni/src/index.ts`. Se non si sente: volume e voci italiane installate.
 - Lupi non scelgono un lupo; il medico non protegge due volte di fila la stessa persona.
-- Il ballottaggio parte dal primo pareggio, il secondo pareggio non elimina nessuno.
+- Si lincia sempre qualcuno: i pareggi li decide il «Benvenuto!», non c'è più il ballottaggio. I nomi vanno inseriti in ordine orario.
 - Fine partita: l'elenco mostra i ruoli di tutti.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
 
 ## Struttura
 
-- `src/logica.ts`: regole pure (ruoli, candidati della notte, voto, vittoria); non produce frasi, solo codici (es. `esitoVoto`). `src/validazione.ts`: controllo dei nomi, restituisce un codice d'errore.
+- `src/logica.ts`: regole pure (ruoli, candidati della notte, voto, vittoria); non produce frasi, solo codici (es. gli `indiziati`). `src/validazione.ts`: controllo dei nomi, restituisce un codice d'errore.
 - `src/ui/LupusApp.tsx`: schermate e narratore; `src/ui/voce.ts`: sintesi vocale nella lingua dell'app (`it-IT`, `en-US`).
 - `data/<lingua>/personaggi.json`: i testi dei personaggi per lingua; `src/personaggi.ts` li legge.
 - `src/locales/<lingua>.ts` (`it.ts` è il riferimento) e `src/locales/index.ts`: tutti gli altri testi visibili (schermate, frasi del narratore, regolamento, impostazioni).

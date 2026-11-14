@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contaVoti, distribuisciRuoli, riduci, statoIniziale, vincitore, type Stato } from "./logica";
+import { classificaVoti, distribuisciRuoli, riduci, statoIniziale, vincitore, type Stato } from "./logica";
 
 const nomiDi = (n: number) => Array.from({ length: n }, (_, i) => `G${i + 1}`);
 const avvia = (n = 9, seme = 7, extra: Partial<Extract<Parameters<typeof riduci>[1], { tipo: "avvia" }>> = {}): Stato =>
@@ -26,9 +26,19 @@ describe("ruoli", () => {
 });
 
 describe("voti", () => {
-  it("trova il più votato o i pari merito", () => {
-    expect(contaVoti({ 1: 3, 2: 1 })).toEqual({ eliminato: 1, pari: [] });
-    expect(contaVoti({ 1: 2, 2: 2, 3: 0 })).toEqual({ eliminato: null, pari: [1, 2] });
+  const giocatori = [1, 2, 3, 4].map((posto) => ({ posto, nome: `G${posto}` }));
+
+  it("ordina i candidati dal più votato", () => {
+    expect(classificaVoti({ giocatori, benvenuto: null }, [1, 2, 3], { 1: 1, 2: 3, 3: 2 })).toEqual([2, 3, 1]);
+  });
+
+  it("a parità vince chi è primo nell'elenco se il Benvenuto è del narratore", () => {
+    expect(classificaVoti({ giocatori, benvenuto: null }, [3, 2, 4], { 2: 2, 3: 2, 4: 2 })).toEqual([2, 3, 4]);
+  });
+
+  it("a parità vince chi è più vicino, in senso orario, a chi ha il Benvenuto", () => {
+    // Il Benvenuto è del posto 3: dopo di lui vengono 4, poi 1, poi 2.
+    expect(classificaVoti({ giocatori, benvenuto: 3 }, [1, 2, 4], { 1: 1, 2: 1, 4: 1 })).toEqual([4, 1, 2]);
   });
 });
 
@@ -62,8 +72,7 @@ describe("partita", () => {
 
   it("l'ordine della notte 2 con medico: medico, veggente, lupi", () => {
     let s = { ...distribuisci(avvia(12)), notte: 1 };
-    s = { ...s, fase: "voto" };
-    s = riduci(riduci(s, { tipo: "chiudiVoto", voti: {} }), { tipo: "dopoVoto" });
+    s = riduci({ ...s, fase: "esito" }, { tipo: "dopoVoto" });
     expect(s.notte).toBe(2);
     expect(s.fase).toBe("medico");
     const bersaglio = s.vivi.find((p) => s.ruoli[p] === "contadino") as number;

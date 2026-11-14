@@ -8,8 +8,8 @@ export const en: Dizionario<typeof it> = {
   regPasso1: "Everyone secretly sees their own role. The werewolves see their pack.",
   regPasso2:
     "Night: everyone closes their eyes. The narrator calls the doctor (from the second night, protects someone but never themselves), then the seer (finds out whether a player is a werewolf), then the werewolves (they pick a victim). On the first night nobody dies: the werewolves only get to know each other.",
-  regPasso3: "Day: the village learns who died (and their role). Discuss and vote: every living player must vote.",
-  regPasso4: "Tie: runoff between the tied players; if they tie again, nobody is eliminated.",
+  regPasso3: "Day: the village learns who died, then discusses. First round: everyone votes, the dead (ghosts) too; the two most voted are the suspects and each makes a plea.",
+  regPasso4: "Second round: only the living who are not suspects vote, in secret; the one with most votes is lynched. Ties go to whoever sits closest, clockwise, to the holder of the «Welcome!» (the last to die, the narrator on the first day). The dead no longer speak.",
   regPasso5:
     "The villagers win when all the werewolves are dead; the werewolves win when they are at least as many as the other living players.",
   regNota1:
@@ -38,14 +38,10 @@ export const en: Dizionario<typeof it> = {
   vMedico: "The doctor wakes up and chooses who to protect.",
   vAlbaMorto: "The village wakes up. Last night {nome} died.{ruolo}",
   vAlbaNessuno: "The village wakes up. Nobody died last night.",
-  vBallottaggio: "Runoff. Vote among the tied players.",
-  vVoto: "Time to discuss and vote on who to eliminate.",
-  vEliminato: "{nome} has been eliminated.{ruolo}",
+  vVoto: "First round: everyone votes, ghosts too. The two most voted will be the suspects.",
   vFineVillaggio: "The village has won!",
   vFineLupi: "The werewolves have won!",
 
-  esitoPareggio: "Tie: runoff between the tied players.",
-  esitoAncoraPari: "Tied again: nobody is eliminated.",
 
   giocatoriLabel: "Players (one per line, {min} to {max})",
   placeholderNomi: "Anna\nLuke\nMark\nSara\nEllen\nPaul\nJulia\nMatt",
@@ -94,13 +90,30 @@ export const en: Dizionario<typeof it> = {
   vediRisultato: "See the result",
   discuteVota: "Discuss and vote",
 
-  ballottaggio: "Runoff",
   votazione: "Vote",
-  votoIstruzioni:
-    "Everyone votes aloud for one player; tally the votes below. Every living player must vote ({totale}/{vivi}).",
-  paritaTra: "Tie between {nomi}.",
-  vaiBallottaggio: "Go to the runoff",
-  chiudiVotazione: "Close the vote",
+  votoIstruzioni: "Everyone, living or ghost, votes aloud for a living player; tally the votes below ({totale}/{votanti}).",
+  discussioneTitolo: "Discussion",
+  discussioneTesto: "The living discuss who might be a werewolf. The dead do not speak.",
+  avviaTimer: "Start the 3-minute timer",
+  tempoRimasto: "Time left: {tempo}",
+  tempoFinito: "Time is up: vote.",
+  vaiAlVoto: "To the first round of voting",
+  primoTurno: "First round",
+  chiudiPrimoTurno: "Reveal the suspects",
+  arringheTitolo: "The suspects",
+  arringheTesto: "{a} and {b} each make their plea. Then vote.",
+  arringheUno: "{a} makes their plea. Then vote.",
+  vaiSecondoTurno: "To the second round of voting",
+  secondoTurno: "Second round",
+  secondoIstruzioni:
+    "Only the living who are not suspects vote: together, in secret (e.g. eyes closed, raising a hand). The narrator tallies the votes ({totale}/{votanti}).",
+  chiudiSecondoTurno: "Close the vote",
+  paritaBenvenuto: "Tie: it goes to whoever is closest to the «Welcome!» ({nome}).",
+  narratoreBenvenuto: "the narrator",
+  vDiscussione: "The village wakes up and discusses.",
+  vArringhe: "The suspects are {nomi}. The floor is yours.",
+  vSecondoTurno: "Second round. Only the living who are not suspects vote, all together.",
+  vLinciato: "{nome} is lynched.{ruolo}",
   meno: "−",
   piu: "+",
 

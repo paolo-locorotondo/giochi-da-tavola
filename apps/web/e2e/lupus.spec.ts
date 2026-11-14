@@ -18,6 +18,19 @@ async function avvia(page: Page, nomi = NOMI) {
   await page.getByRole("button", { name: "Inizia" }).click();
 }
 
+/** Dal racconto dell'alba al linciaggio: discussione, primo turno, arringhe, secondo turno. */
+async function votaTutto(page: Page) {
+  await page.getByRole("button", { name: "Si discute e si vota" }).click();
+  await page.getByRole("button", { name: "Al primo turno di voto" }).click();
+  const piu = page.getByRole("button", { name: "+" }).first();
+  while (await piu.isEnabled()) await piu.click();
+  await page.getByRole("button", { name: "Scopri gli indiziati" }).click();
+  await page.getByRole("button", { name: "Al secondo turno di voto" }).click();
+  const piu2 = page.getByRole("button", { name: "+" }).first();
+  while (await piu2.isEnabled()) await piu2.click();
+  await page.getByRole("button", { name: "Chiudi la votazione" }).click();
+}
+
 async function giraLeCarte(page: Page, quante: number) {
   for (let i = 0; i < quante; i++) {
     await page.getByRole("button", { name: "Mostra il mio ruolo" }).click();
@@ -91,17 +104,30 @@ test("un giro completo: prima notte, alba, voto e seconda notte", async ({ page 
   await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
   await schermata(page, "alba");
   await page.getByRole("button", { name: "Si discute e si vota" }).click();
+  await expect(page.getByRole("heading", { name: "Si discute" })).toBeVisible();
+  await schermata(page, "discussione");
+  await page.getByRole("button", { name: "Al primo turno di voto" }).click();
 
-  await expect(page.getByRole("heading", { name: "Votazione" })).toBeVisible();
-  const chiudi = page.getByRole("button", { name: /Chiudi la votazione|Vai al ballottaggio/ });
-  await expect(chiudi).toBeDisabled();
-  await schermata(page, "votazione");
-  // Tutti i vivi votano lo stesso candidato.
+  await expect(page.getByRole("heading", { name: "Primo turno" })).toBeVisible();
+  const scopri = page.getByRole("button", { name: "Scopri gli indiziati" });
+  await expect(scopri).toBeDisabled();
+  await schermata(page, "voto-primo-turno");
   const piu = page.getByRole("button", { name: "+" }).first();
   while (await piu.isEnabled()) await piu.click();
-  await expect(chiudi).toBeEnabled();
-  await schermata(page, "votazione-compilata");
-  await chiudi.click();
+  await expect(scopri).toBeEnabled();
+  await schermata(page, "voto-primo-turno-compilato");
+  await scopri.click();
+
+  await expect(page.getByRole("heading", { name: "Gli indiziati" })).toBeVisible();
+  await schermata(page, "arringhe");
+  await page.getByRole("button", { name: "Al secondo turno di voto" }).click();
+
+  await expect(page.getByRole("heading", { name: "Secondo turno" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "+" })).toHaveCount(2);
+  await schermata(page, "voto-secondo-turno");
+  const piu2 = page.getByRole("button", { name: "+" }).first();
+  while (await piu2.isEnabled()) await piu2.click();
+  await page.getByRole("button", { name: "Chiudi la votazione" }).click();
   await expect(page.getByRole("heading", { name: /è eliminato/ })).toBeVisible();
   await schermata(page, "esito");
 });
@@ -114,10 +140,7 @@ test("dalla seconda notte il medico (11 giocatori) si sveglia per primo e non pu
   await page.locator("div.giocatori button").first().click();
   await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
   await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
-  await page.getByRole("button", { name: "Si discute e si vota" }).click();
-  const piu = page.getByRole("button", { name: "+" }).first();
-  while (await piu.isEnabled()) await piu.click();
-  await page.getByRole("button", { name: /Chiudi la votazione|Vai al ballottaggio/ }).click();
+  await votaTutto(page);
   await page.getByRole("button", { name: "Scende la notte" }).click();
   await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
   expect(await page.locator("div.giocatori button").count()).toBeLessThanOrEqual(10);

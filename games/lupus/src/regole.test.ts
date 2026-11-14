@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   candidatiNotte,
-  contaVoti,
+  classificaVoti,
+  votantiSecondoTurno,
   distribuisciRuoli,
   haRuoloVivo,
   contadiniRestanti,
@@ -324,24 +325,20 @@ describe("risoluzione della notte", () => {
     expect(riduci(dopo, { tipo: "dopoVoto" }).fase).toBe("fine");
   });
 
-  it("dall'alba si va al voto, senza ballottaggio", () => {
-    const voto = riduci(alla(avvia(8), "alba", { ballottaggio: [1, 2], esitoVoto: "ballottaggio" }), { tipo: "avanti" });
+  it("dall'alba si va alla discussione, poi al primo turno di voto", () => {
+    const disc = riduci(alla(avvia(8), "alba", { indiziati: [1, 2] }), { tipo: "avanti" });
+    expect(disc.fase).toBe("discussione");
+    const voto = riduci(disc, { tipo: "avanti" });
     expect(voto.fase).toBe("voto");
-    expect(voto.ballottaggio).toBeNull();
-    expect(voto.esitoVoto).toBeNull();
+    expect(voto.indiziati).toBeNull();
   });
-});
 
-describe("contaVoti", () => {
-  it.each([
-    [{}, { eliminato: null, pari: [] }],
-    [{ 1: 0, 2: 0 }, { eliminato: null, pari: [] }],
-    [{ 3: 4 }, { eliminato: 3, pari: [] }],
-    [{ 1: 2, 2: 3, 3: 1 }, { eliminato: 2, pari: [] }],
-    [{ 1: 2, 2: 2, 3: 1 }, { eliminato: null, pari: [1, 2] }],
-    [{ 1: 1, 2: 1, 3: 1 }, { eliminato: null, pari: [1, 2, 3] }],
-  ])("%j", (voti, atteso) => {
-    expect(contaVoti(voti as Record<number, number>)).toEqual(atteso);
+  it("il Benvenuto passa all'ultimo morto della notte", () => {
+    const base = alla(avvia(8), "lupi", { notte: 2 });
+    const vittima = candidatiNotte(base)[0]!;
+    expect(scegliEAvanti(base, vittima).benvenuto).toBe(vittima);
+    // Senza morti il Benvenuto resta dov'era.
+    expect(riduci({ ...base, benvenuto: 5 }, { tipo: "avanti" }).benvenuto).toBe(5);
   });
 });
 
@@ -374,90 +371,111 @@ describe("haRuoloVivo", () => {
   });
 });
 
-describe("votazione", () => {
-  const voto = (n = 8): Stato => alla(avvia(n, 3), "voto");
+describe("votazione ufficiale a due turni", () => {
+  const primo = (n = 8): Stato => alla(avvia(n, 3), "voto");
+  /** Al secondo turno con indiziati dati. */
+  const secondo = (n: number, indiziati: number[], extra: Partial<Stato> = {}): Stato =>
+    alla(avvia(n, 3), "voto2", { indiziati, ...extra });
 
-  it("il più votato è eliminato e la fase passa all'esito", () => {
-    const s = riduci(voto(), { tipo: "chiudiVoto", voti: { 2: 5, 3: 2 } });
+  it("primo turno: i due più votati sono gli indiziati e si passa alle arringhe", () => {
+    const s = riduci(primo(), { tipo: "chiudiVoto", voti: { 2: 5, 4: 3, 6: 1 } });
+    expect(s.fase).toBe("arringhe");
+    expect(s.indiziati).toEqual([2, 4]);
+    expect(s.vivi).toHaveLength(8);
+  });
+
+  it("primo turno: pareggio per il secondo posto, vince chi è più vicino al Benvenuto del narratore", () => {
+    const s = riduci(primo(), { tipo: "chiudiVoto", voti: { 5: 3, 2: 2, 7: 2 } });
+    expect(s.indiziati).toEqual([5, 2]);
+  });
+
+  it("primo turno: pareggio con il Benvenuto di un morto", () => {
+    // Il Benvenuto è del posto 6: dopo di lui 7, 8, 1, 2...
+    const s = riduci({ ...primo(), benvenuto: 6 }, { tipo: "chiudiVoto", voti: { 2: 3, 7: 3, 8: 3 } });
+    expect(s.indiziati).toEqual([7, 8]);
+  });
+
+  it("primo turno: senza nessun voto gli indiziati sono i primi due dopo il Benvenuto", () => {
+    expect(riduci(primo(), { tipo: "chiudiVoto", voti: {} }).indiziati).toEqual([1, 2]);
+  });
+
+  it("dalle arringhe si va al secondo turno", () => {
+    const s = riduci(alla(avvia(8), "arringhe", { indiziati: [1, 2] }), { tipo: "avanti" });
+    expect(s.fase).toBe("voto2");
+  });
+
+  it("al secondo turno votano solo i vivi non indiziati", () => {
+    const s = secondo(8, [1, 2]);
+    expect(votantiSecondoTurno(s)).toBe(6);
+    expect(votantiSecondoTurno({ ...s, vivi: s.vivi.filter((p) => p !== 5) })).toBe(5);
+  });
+
+  it("il più votato tra gli indiziati è linciato e prende il Benvenuto", () => {
+    const s = riduci(secondo(8, [1, 2]), { tipo: "chiudiVoto", voti: { 1: 2, 2: 4 } });
     expect(s.fase).toBe("esito");
     expect(s.eliminato).toBe(2);
     expect(s.vivi).not.toContain(2);
-    expect(s.esitoVoto).toBeNull();
+    expect(s.benvenuto).toBe(2);
   });
 
-  it("eliminato l'ultimo lupo vince il villaggio", () => {
-    const pieno = voto(8);
+  it("secondo turno in pareggio: lo decide il Benvenuto", () => {
+    expect(riduci(secondo(8, [1, 2]), { tipo: "chiudiVoto", voti: { 1: 3, 2: 3 } }).eliminato).toBe(1);
+    expect(riduci(secondo(8, [1, 2], { benvenuto: 1 }), { tipo: "chiudiVoto", voti: { 1: 3, 2: 3 } }).eliminato).toBe(2);
+  });
+
+  it("senza voti il linciato è comunque il primo dopo il Benvenuto: si lincia sempre", () => {
+    expect(riduci(secondo(8, [4, 6]), { tipo: "chiudiVoto", voti: {} }).eliminato).toBe(4);
+  });
+
+  it("linciato l'ultimo lupo vince il villaggio", () => {
+    const pieno = secondo(8, [1, 2]);
     const [lupo, altroLupo] = postiCon(pieno, "lupo") as [number, number];
-    const base = { ...pieno, vivi: pieno.vivi.filter((p) => p !== altroLupo) };
+    const base = { ...pieno, indiziati: [lupo, 99], vivi: pieno.vivi.filter((p) => p !== altroLupo) };
     const s = riduci(base, { tipo: "chiudiVoto", voti: { [lupo]: 5 } });
     expect(s.vincitore).toBe("villaggio");
     expect(riduci(s, { tipo: "dopoVoto" }).fase).toBe("fine");
   });
 
-  it("eliminato un civile che porta alla parità vincono i lupi", () => {
-    const base = voto(8);
+  it("linciato un civile che porta alla parità vincono i lupi", () => {
+    const base = primo(8);
     const lupi = postiCon(base, "lupo");
     const civili = base.vivi.filter((p) => !lupi.includes(p));
-    const ridotto = { ...base, vivi: [...lupi, civili[0]!, civili[1]!, civili[2]!] };
+    const ridotto = { ...base, fase: "voto2" as const, indiziati: [civili[0]!, civili[1]!], vivi: [...lupi, civili[0]!, civili[1]!, civili[2]!] };
     const s = riduci(ridotto, { tipo: "chiudiVoto", voti: { [civili[0]!]: 3 } });
     expect(s.vincitore).toBe("lupi");
   });
 
-  it("senza vincitore dopo il voto comincia una nuova notte pulita", () => {
-    const base = { ...voto(), vittima: 3, protetto: 4, ispezionato: 5, mortiNotte: [6] };
+  it("dopo il linciaggio comincia una nuova notte pulita", () => {
+    const base = secondo(8, [1, 2], { vittima: 3, protetto: 4, ispezionato: 5, mortiNotte: [6] });
     const s = riduci(riduci(base, { tipo: "chiudiVoto", voti: { 2: 5 } }), { tipo: "dopoVoto" });
     expect(s.fase).toBe("veggente");
     expect(s.notte).toBe(base.notte + 1);
     expect(s.eliminato).toBeNull();
+    expect(s.indiziati).toBeNull();
     expect(s.mortiNotte).toEqual([]);
     expect(s.vittima).toBeNull();
     expect(s.protetto).toBeNull();
     expect(s.ispezionato).toBeNull();
   });
 
-  it("primo pareggio: ballottaggio tra i pari merito, si resta in voto", () => {
-    const s = riduci(voto(), { tipo: "chiudiVoto", voti: { 1: 2, 2: 2, 3: 1 } });
-    expect(s.fase).toBe("voto");
-    expect(s.ballottaggio).toEqual([1, 2]);
-    expect(s.esitoVoto).toBe("ballottaggio");
-    expect(s.vivi).toHaveLength(8);
+  it("i morti votano al primo turno ma non sono candidati", () => {
+    const base = { ...primo(8), vivi: [1, 2, 3, 4, 5, 6] };
+    const s = riduci(base, { tipo: "chiudiVoto", voti: { 7: 4, 3: 2, 5: 1 } });
+    // 7 è morto: i voti sono dati ai vivi, quelli ai morti non contano.
+    expect(s.indiziati).toEqual([3, 5]);
   });
+});
 
-  it("ballottaggio risolto: chi ha più voti esce", () => {
-    let s = riduci(voto(), { tipo: "chiudiVoto", voti: { 1: 2, 2: 2 } });
-    s = riduci(s, { tipo: "chiudiVoto", voti: { 1: 1, 2: 4 } });
-    expect(s.fase).toBe("esito");
-    expect(s.eliminato).toBe(2);
-    expect(s.ballottaggio).toBeNull();
-  });
-
-  it("secondo pareggio: nessuno eliminato", () => {
-    let s = riduci(voto(), { tipo: "chiudiVoto", voti: { 1: 2, 2: 2 } });
-    s = riduci(s, { tipo: "chiudiVoto", voti: { 1: 3, 2: 3 } });
-    expect(s.fase).toBe("esito");
-    expect(s.eliminato).toBeNull();
-    expect(s.vivi).toHaveLength(8);
-    expect(s.esitoVoto).toBe("ancora-pari");
-    expect(s.vincitore).toBeNull();
-  });
-
-  it("nessun voto: nessuno eliminato", () => {
-    const s = riduci(voto(), { tipo: "chiudiVoto", voti: {} });
-    expect(s.fase).toBe("esito");
-    expect(s.eliminato).toBeNull();
-  });
-
-  it("dopo un voto senza eliminati la notte riparte senza ballottaggio", () => {
-    let s = riduci(voto(), { tipo: "chiudiVoto", voti: { 1: 2, 2: 2 } });
-    s = riduci(riduci(s, { tipo: "chiudiVoto", voti: { 1: 3, 2: 3 } }), { tipo: "dopoVoto" });
-    expect(s.ballottaggio).toBeNull();
-    expect(s.fase).toBe("veggente");
+describe("classificaVoti: candidati fuori elenco", () => {
+  it("ignora chi non è tra i candidati", () => {
+    const s = avvia(8);
+    expect(classificaVoti(s, [1, 2], { 3: 9, 1: 1 })).toEqual([1, 2]);
   });
 });
 
 describe("azioni fuori fase", () => {
-  it("avanti in carte, voto, esito o fine non cambia lo stato", () => {
-    for (const fase of ["carte", "voto", "esito", "fine"] as const) {
+  it("avanti in carte, nei voti, esito o fine non cambia lo stato", () => {
+    for (const fase of ["carte", "voto", "voto2", "esito", "fine"] as const) {
       const s = alla(avvia(8), fase);
       expect(riduci(s, { tipo: "avanti" })).toEqual(s);
     }
@@ -481,9 +499,14 @@ describe("partite complete", () => {
         s = c.length ? scegliEAvanti(s, c[passo % c.length]!) : riduci(s, { tipo: "avanti" });
       } else if (s.fase === "alba") {
         s = riduci(s, { tipo: s.vincitore ? "dopoVoto" : "avanti" });
+      } else if (s.fase === "discussione" || s.fase === "arringhe") {
+        s = riduci(s, { tipo: "avanti" });
       } else if (s.fase === "voto") {
         const lupo = postiCon(s, "lupo")[0] ?? s.vivi[0]!;
-        s = riduci(s, { tipo: "chiudiVoto", voti: { [lupo]: s.vivi.length } });
+        s = riduci(s, { tipo: "chiudiVoto", voti: { [lupo]: s.giocatori.length } });
+      } else if (s.fase === "voto2") {
+        const lupo = (s.indiziati ?? []).find((p) => s.ruoli[p] === "lupo") ?? s.indiziati![0]!;
+        s = riduci(s, { tipo: "chiudiVoto", voti: { [lupo]: votantiSecondoTurno(s) } });
       } else if (s.fase === "esito") {
         s = riduci(s, { tipo: "dopoVoto" });
       }

@@ -20,7 +20,7 @@ export const MIN_GIOCATORI = 8;
 export const MAX_GIOCATORI = 24;
 
 /** Versione della forma dello stato salvato: le partite salvate con un'altra versione si scartano. */
-export const VERSIONE_STATO = 2;
+export const VERSIONE_STATO = 3;
 
 /** Lupi: 2 da 8 a 15 giocatori, 3 da 16. */
 export function lupiPer(n: number): number {
@@ -63,7 +63,10 @@ export type Fase =
   | "medico"
   | "lupi"
   | "alba"
+  | "discussione"
   | "voto"
+  | "arringhe"
+  | "voto2"
   | "esito"
   | "fine";
 
@@ -88,15 +91,12 @@ export interface Stato {
   ispezionato: number | null;
   /** Chi è morto nell'ultima notte (vuoto = nessuno). */
   mortiNotte: number[];
-  /** Candidati del ballottaggio; null = primo turno di voto. */
-  ballottaggio: number[] | null;
-  /** Esito dell'ultimo voto, per mostrarlo. */
+  /** Gli indiziati del giorno (i due più votati al primo turno); null = il primo turno non c'è ancora stato. */
+  indiziati: number[] | null;
+  /** Chi ha il «Benvenuto!» (l'ultimo morto); null = il narratore, quindi vince chi è primo nell'elenco. */
+  benvenuto: number | null;
+  /** Chi è stato linciato nell'ultimo voto. */
   eliminato: number | null;
-  /**
-   * Perché non c'è un eliminato, come codice (la UI lo traduce): "ballottaggio" = primo pareggio,
-   * "ancora-pari" = secondo pareggio o nessun voto. null = nulla da dire.
-   */
-  esitoVoto: "ballottaggio" | "ancora-pari" | null;
   /** La fazione che ha vinto, se la partita è finita. */
   vincitore: Fazione | null;
   /** Se il narratore dice il ruolo di chi muore (di notte o al voto); a fine partita si vedono comunque tutti. */
@@ -141,9 +141,9 @@ export function statoIniziale(): Stato {
     protetto: null,
     ispezionato: null,
     mortiNotte: [],
-    ballottaggio: null,
+    indiziati: null,
+    benvenuto: null,
     eliminato: null,
-    esitoVoto: null,
     vincitore: null,
     svelaRuoli: false,
     narratoreGioca: false,
@@ -266,13 +266,29 @@ export function haRuoloVivo(s: Stato, ruolo: Ruolo): boolean {
   return s.vivi.some((p) => s.ruoli[p] === ruolo);
 }
 
-/** Primo e unico posto con il massimo dei voti, oppure l'elenco dei pari merito. */
-export function contaVoti(voti: Record<number, number>): { eliminato: number | null; pari: number[] } {
-  const righe = Object.entries(voti).map(([p, v]) => [Number(p), v] as const);
-  const max = Math.max(0, ...righe.map(([, v]) => v));
-  if (max === 0) return { eliminato: null, pari: [] };
-  const primi = righe.filter(([, v]) => v === max).map(([p]) => p);
-  return primi.length === 1 ? { eliminato: primi[0] ?? null, pari: [] } : { eliminato: null, pari: primi };
+/**
+ * Distanza in senso orario da chi ha il «Benvenuto!» (1 = il primo dopo di lui). I nomi sono in ordine orario:
+ * senza un morto che lo tiene, il Benvenuto è del narratore, che siede prima del primo nome.
+ */
+export function distanzaBenvenuto(s: Pick<Stato, "giocatori" | "benvenuto">, posto: number): number {
+  const n = s.giocatori.length;
+  const indice = s.giocatori.findIndex((g) => g.posto === posto);
+  if (s.benvenuto === null) return indice + 1;
+  const da = s.giocatori.findIndex((g) => g.posto === s.benvenuto);
+  const d = (indice - da + n) % n;
+  return d === 0 ? n : d;
+}
+
+/** I candidati dal più votato; a parità di voti prima chi è più vicino, in senso orario, al «Benvenuto!». */
+export function classificaVoti(s: Pick<Stato, "giocatori" | "benvenuto">, candidati: readonly number[], voti: Record<number, number>): number[] {
+  return [...candidati].sort(
+    (x, y) => (voti[y] ?? 0) - (voti[x] ?? 0) || distanzaBenvenuto(s, x) - distanzaBenvenuto(s, y),
+  );
+}
+
+/** Quante persone votano al secondo turno: i vivi che non sono indiziati. */
+export function votantiSecondoTurno(s: Stato): number {
+  return s.vivi.filter((p) => !(s.indiziati ?? []).includes(p)).length;
 }
 
 /** La fase si gioca in questa partita e in questa notte? */
@@ -303,7 +319,15 @@ function risolviNotte(s: Stato): Stato {
   );
   const morti = [...(esito.sbranato === null ? [] : [esito.sbranato]), ...esito.altri.filter((p) => p !== esito.sbranato)];
   const vivi = s.vivi.filter((p) => !morti.includes(p));
-  return { ...s, vivi, mortiNotte: morti, fase: "alba", vincitore: vincitore(s.ruoli, vivi) };
+  return {
+    ...s,
+    vivi,
+    mortiNotte: morti,
+    // Il «Benvenuto!» passa all'ultimo morto: se muore qualcuno nella notte, a lui (prima lo sbranato).
+    benvenuto: morti[0] ?? s.benvenuto,
+    fase: "alba",
+    vincitore: vincitore(s.ruoli, vivi),
+  };
 }
 
 export function riduci(s: Stato, a: Azione): Stato {
@@ -344,19 +368,25 @@ export function riduci(s: Stato, a: Azione): Stato {
     }
     case "avanti": {
       if (descrittoreNotte(s.fase)) return prossimaFaseNotte(s, s.fase);
-      if (s.fase === "alba") return { ...s, fase: "voto", ballottaggio: null, esitoVoto: null };
+      if (s.fase === "alba") return { ...s, fase: "discussione" };
+      if (s.fase === "discussione") return { ...s, fase: "voto", indiziati: null };
+      if (s.fase === "arringhe") return { ...s, fase: "voto2" };
       return s;
     }
     case "chiudiVoto": {
-      const { eliminato, pari } = contaVoti(a.voti);
-      if (eliminato === null && pari.length > 1 && s.ballottaggio === null) {
-        return { ...s, ballottaggio: pari, esitoVoto: "ballottaggio" };
+      if (s.fase === "voto") {
+        // Primo turno: i due più votati tra i vivi sono gli indiziati.
+        const indiziati = classificaVoti(s, s.vivi, a.voti).slice(0, 2);
+        return { ...s, fase: "arringhe", indiziati };
       }
-      if (eliminato === null) {
-        return { ...s, fase: "esito", eliminato: null, ballottaggio: null, esitoVoto: "ancora-pari" };
+      if (s.fase === "voto2") {
+        // Secondo turno: tra gli indiziati, il più votato è linciato.
+        const [eliminato] = classificaVoti(s, s.indiziati ?? [], a.voti);
+        if (eliminato === undefined) return s;
+        const vivi = s.vivi.filter((p) => p !== eliminato);
+        return { ...s, vivi, fase: "esito", eliminato, benvenuto: eliminato, vincitore: vincitore(s.ruoli, vivi) };
       }
-      const vivi = s.vivi.filter((p) => p !== eliminato);
-      return { ...s, vivi, fase: "esito", eliminato, ballottaggio: null, esitoVoto: null, vincitore: vincitore(s.ruoli, vivi) };
+      return s;
     }
     case "dopoVoto":
       return s.vincitore ? { ...s, fase: "fine" } : nuovaNotte(s);
@@ -373,8 +403,7 @@ function nuovaNotte(s: Stato): Stato {
       ispezionato: null,
       mortiNotte: [],
       eliminato: null,
-      esitoVoto: null,
-      ballottaggio: null,
+      indiziati: null,
     },
     null,
   );
