@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 import { MIN_GIOCATORI, validaConfigurazione } from "./validazione";
 
 describe("validaConfigurazione (Lupus)", () => {
-  it("accetta da 4 giocatori in su", () => {
-    expect(validaConfigurazione(["A", "B", "C", "D"])).toBeNull();
-    expect(validaConfigurazione(Array.from({ length: 20 }, (_, i) => `G${i}`))).toBeNull();
+  it("accetta da 8 a 24 giocatori", () => {
+    expect(validaConfigurazione(Array.from({ length: 8 }, (_, i) => `G${i}`))).toBeNull();
+    expect(validaConfigurazione(Array.from({ length: 24 }, (_, i) => `G${i}`))).toBeNull();
   });
 
-  it.each([[0], [1], [2], [3]])("rifiuta %i giocatori", (n) => {
+  it("rifiuta più di 24 giocatori", () => {
+    expect(validaConfigurazione(Array.from({ length: 25 }, (_, i) => `G${i}`))).toEqual({ codice: "tanti", massimo: 24 });
+  });
+
+  it.each([[0], [1], [4], [7]])("rifiuta %i giocatori", (n) => {
     const nomi = Array.from({ length: n }, (_, i) => `G${i}`);
     expect(validaConfigurazione(nomi)).toEqual({ codice: "pochi", minimo: MIN_GIOCATORI });
   });

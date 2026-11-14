@@ -4,7 +4,14 @@ import {
   contaVoti,
   descrittoreNotte,
   FASI_NOTTE,
-  lupiConsigliati,
+  MAX_GIOCATORI,
+  MIN_GIOCATORI,
+  contadiniRestanti,
+  primaFaseDellaNotte,
+  specialiPredefiniti,
+  SPECIALI,
+  VERSIONE_STATO,
+  lupiPer,
   riduci,
   sceltaNotte,
   statoIniziale,
@@ -43,9 +50,9 @@ function caricaStato(): Stato {
     const raw = localStorage.getItem(CHIAVE);
     if (raw) {
       const s = JSON.parse(raw) as Stato;
-      if (Array.isArray(s.giocatori) && s.ruoli && Array.isArray(s.vivi)) {
-        // Partite salvate prima di `ruoliIniziali`: si parte dai ruoli attuali.
-        return { ...statoIniziale(), ...s, ruoliIniziali: s.ruoliIniziali ?? s.ruoli };
+      // Le partite salvate con un'altra versione della forma dello stato si scartano.
+      if (s.versione === VERSIONE_STATO && Array.isArray(s.giocatori) && s.ruoli && Array.isArray(s.vivi)) {
+        return { ...statoIniziale(), ...s };
       }
     }
   } catch {
@@ -115,9 +122,7 @@ export function LupusApp() {
   if (s.giocatori.length === 0) {
     return (
       <Configurazione
-        onAvvia={(nomi, svelaRuoli, narratoreGioca) =>
-          dispatch({ tipo: "avvia", nomi, seme: Math.floor(Math.random() * 2 ** 32), svelaRuoli, narratoreGioca })
-        }
+        onAvvia={(opzioni) => dispatch({ tipo: "avvia", seme: Math.floor(Math.random() * 2 ** 32), ...opzioni })}
       />
     );
   }
@@ -206,11 +211,11 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
   const t = traduttore(dizionari, lingua);
   switch (s.fase) {
     case "lupi":
-      return t("vLupi", { notte: s.notte });
     case "veggente":
-      return t("vVeggente");
-    case "medico":
-      return t("vMedico");
+    case "medico": {
+      const apertura = primaFaseDellaNotte(s, s.fase) ? t("vNotte", { notte: s.notte }) + " " : "";
+      return apertura + t(s.fase === "lupi" ? (s.notte === 1 && s.primaNotteSenzaVittima ? "vLupiPrima" : "vLupi") : s.fase === "veggente" ? "vVeggente" : "vMedico");
+    }
     case "alba":
       return s.mortiNotte.length
         ? t("vAlbaMorto", { nome: nomeDi(s, s.mortiNotte[0] ?? null), ruolo: ruoloDetto(s, s.mortiNotte[0], t, lingua) })
@@ -242,19 +247,37 @@ function testoErrore(e: ErroreConfigurazione, t: T): string {
       return t("errNomeDuplicato", { nome: e.nome });
     case "pochi":
       return t("errPochi", { minimo: e.minimo });
+    case "tanti":
+      return t("errTanti", { massimo: e.massimo });
   }
 }
 
-function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boolean, narratoreGioca: boolean) => void }) {
+interface OpzioniPartita {
+  nomi: string[];
+  speciali: Ruolo[];
+  svelaRuoli: boolean;
+  narratoreGioca: boolean;
+  primaNotteSenzaVittima: boolean;
+}
+
+function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
   const t = usaT(dizionari);
+  const lingua = usaLingua();
   const [testo, setTesto] = useState("");
-  const [svela, setSvela] = useState(true);
+  const [svela, setSvela] = useState(false);
   const [narratoreGioca, setNarratoreGioca] = useState(false);
+  const [primaSenza, setPrimaSenza] = useState(true);
+  // Scelte dell'utente sugli speciali; quelle non toccate seguono il numero di giocatori.
+  const [scelti, setScelti] = useState<Partial<Record<Ruolo, boolean>>>({});
   const [errore, setErrore] = useState<ErroreConfigurazione | null>(null);
   const nomi = testo
     .split("\n")
     .map((r) => r.trim())
     .filter(Boolean);
+  const n = nomi.length;
+  const predefiniti = specialiPredefiniti(n);
+  const speciali = SPECIALI.map((x) => x.ruolo).filter((r) => scelti[r] ?? predefiniti.includes(r));
+  const contadini = contadiniRestanti(n, speciali);
 
   function invia(e: FormEvent) {
     e.preventDefault();
@@ -264,13 +287,13 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
       return;
     }
     setErrore(null);
-    onAvvia(nomi, svela, narratoreGioca);
+    onAvvia({ nomi, speciali, svelaRuoli: svela, narratoreGioca, primaNotteSenzaVittima: primaSenza });
   }
 
   return (
     <form className="schermata allineata" onSubmit={invia}>
       <label className="campo">
-        {t("giocatoriLabel")}
+        {t("giocatoriLabel", { min: MIN_GIOCATORI, max: MAX_GIOCATORI })}
         <textarea
           rows={8}
           value={testo}
@@ -278,17 +301,38 @@ function Configurazione({ onAvvia }: { onAvvia: (nomi: string[], svelaRuoli: boo
           placeholder={t("placeholderNomi")}
         />
       </label>
-      <p className="suggerimento">
-        {nomi.length >= 4
-          ? t("ruoliElenco", {
+      <p className="suggerimento">{t("ordineOrario")}</p>
+      {n >= MIN_GIOCATORI ? (
+        <fieldset className="composizione">
+          <legend>{t("composizioneTitolo")}</legend>
+          <p className="suggerimento">
+            {t("ruoliElenco", {
               elenco: [
-                t("ruoliLupi", { n: lupiConsigliati(nomi.length) }),
-                ...(nomi.length >= 5 ? [t("ruoliVeggente")] : []),
-                ...(nomi.length >= 7 ? [t("ruoliMedico")] : []),
+                t("ruoliLupi", { n: lupiPer(n) }),
+                `1 ${nomeRuolo("veggente", lingua).toLowerCase()}`,
+                ...speciali.map((r) => `1 ${nomeRuolo(r, lingua).toLowerCase()}`),
+                t("ruoliContadini", { n: Math.max(0, contadini) }),
               ].join(", "),
-            })
-          : t("ruoliAutomatici")}
-      </p>
+            })}
+          </p>
+          {SPECIALI.map((x) => (
+            <label key={x.ruolo} className="spunta">
+              <input
+                type="checkbox"
+                checked={speciali.includes(x.ruolo)}
+                onChange={(e) => setScelti((v) => ({ ...v, [x.ruolo]: e.target.checked }))}
+              />
+              {t("conSpeciale", { ruolo: nomeRuolo(x.ruolo, lingua) })}
+            </label>
+          ))}
+        </fieldset>
+      ) : (
+        <p className="suggerimento">{t("ruoliAutomatici")}</p>
+      )}
+      <label className="spunta">
+        <input type="checkbox" checked={primaSenza} onChange={(e) => setPrimaSenza(e.target.checked)} />
+        {t("primaNotteSenzaVittima")}
+      </label>
       <label className="spunta">
         <input type="checkbox" checked={svela} onChange={(e) => setSvela(e.target.checked)} />
         {t("svelaRuoli")}
@@ -363,6 +407,8 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const scelto = sceltaNotte(s, d);
   // I lupi non possono sbranarsi tra loro e il veggente non indaga su di sé; il medico non può ripetere la stessa protezione.
   const candidati = candidatiNotte(s);
+  // La prima notte i lupi si riconoscono soltanto: nessuna scelta.
+  const senzaScelta = !d.sceglie(s);
   // Chi guarda una sola persona (il veggente): scelta fatta, gli altri nomi si bloccano.
   const bloccato = (p: number) => d.unaSolaScelta && scelto !== null && scelto !== p;
   const risultato =
@@ -377,6 +423,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
       <p className="muted">{t("notteOcchiChiusi", { notte: s.notte })}</p>
       <h2>{t(TESTI_NOTTE[fase].titolo)}</h2>
       <p className="muted">{t("soloChiHaRuolo")}</p>
+      {senzaScelta && <p>{t("lupiSiRiconoscono")}</p>}
       <div className="giocatori">
         {candidati.map((p) => (
           <button
@@ -392,7 +439,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
       {risultato && <p className="grande">{risultato}</p>}
       <button
         className="btn primario"
-        disabled={scelto === null}
+        disabled={scelto === null && !senzaScelta}
         onClick={() => dispatch({ tipo: "avanti" })}
       >
         {t(TESTI_NOTTE[fase].fine)}

@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Modificato
+
+- Lupus (passo 2 del piano): da 8 a 24 giocatori; 2 lupi (3 da 16), un veggente, il Medico da 11 giocatori (con casella per toglierlo o aggiungerlo), il resto contadini. Il veggente si sveglia prima dei lupi; la prima notte nessuno viene sbranato (opzione attiva). Il Medico agisce dalla seconda notte, non può proteggere sé stesso ma può ripetere la stessa persona. Il ruolo di chi muore non si dice più di default. Le partite salvate di versioni precedenti si scartano.
+
 ### Interno
 
 - Lupus, motore a descrittori (passo 1 di `docs/piano-lupus-personaggi.md`): le fasi della notte sono un elenco ordinato `FASI_NOTTE` (chi si sveglia, chi può scegliere, effetto) al posto di `dopoLupi`/`dopoVeggente`; aggiunti `fazione(ruolo)`, `finePartita` (fine e vincitori) e `ruoliIniziali`. Il gioco non cambia, i 135 test restano verdi.

@@ -38,7 +38,7 @@ test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }
 test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
   for (const [percorso, testo] of [
     ["/impostore", "Come giocate?"],
-    ["/lupus", "Giocatori (uno per riga, almeno 4)"],
+    ["/lupus", "Giocatori (uno per riga, da 8 a 24)"],
     ["/tabu", "Prima squadra"],
     ["/dadi", "Che cosa lanci?"],
   ] as const) {
@@ -99,10 +99,10 @@ test("audio: spegnerlo interrompe subito la voce del narratore e acceso la fa ri
     localStorage.setItem("gdt-audio", "on");
   });
   await page.goto("/lupus");
-  await page.getByLabel(/Giocatori/).fill(["Anna", "Luca", "Marco", "Sara"].join("\n"));
+  await page.getByLabel(/Giocatori/).fill(["Anna", "Luca", "Marco", "Sara", "Elena", "Paolo", "Giulia", "Matteo"].join("\n"));
   await page.getByRole("button", { name: "Inizia" }).click();
-  // Il narratore parla dalla prima notte: prima si guardano le 4 carte.
-  for (let i = 0; i < 4; i++) {
+  // Il narratore parla dalla prima notte: prima si guardano le 8 carte.
+  for (let i = 0; i < 8; i++) {
     await page.getByRole("button", { name: "Mostra il mio ruolo" }).click();
     await page.getByRole("button", { name: "Ho visto, passa il telefono" }).click();
   }

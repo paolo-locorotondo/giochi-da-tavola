@@ -16,7 +16,7 @@
   },
   "medico": {
     "nome": "Medico",
-    "tuo": "Ogni notte proteggi un giocatore dai lupi (non lo stesso due notti di fila).",
-    "regolamento": "Ogni notte protegge un giocatore dai lupi (non lo stesso due notti di fila)."
+    "tuo": "Dalla seconda notte proteggi un giocatore dai lupi, mai te stesso.",
+    "regolamento": "Dalla seconda notte protegge un giocatore dai lupi, mai se stesso."
   }
 }

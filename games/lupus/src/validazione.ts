@@ -1,10 +1,13 @@
-export const MIN_GIOCATORI = 4;
+import { MAX_GIOCATORI, MIN_GIOCATORI } from "./logica";
+
+export { MAX_GIOCATORI, MIN_GIOCATORI };
 
 /** Problema trovato nei nomi: un codice, non una frase (la UI lo traduce nella lingua scelta). */
 export type ErroreConfigurazione =
   | { codice: "nome-vuoto"; posto: number }
   | { codice: "nome-duplicato"; nome: string }
-  | { codice: "pochi"; minimo: number };
+  | { codice: "pochi"; minimo: number }
+  | { codice: "tanti"; massimo: number };
 
 /**
  * Controlla i nomi prima di avviare la partita; restituisce il problema o null.
@@ -21,5 +24,6 @@ export function validaConfigurazione(nomi: readonly string[]): ErroreConfigurazi
     visti.add(chiave);
   }
   if (nomi.length < MIN_GIOCATORI) return { codice: "pochi", minimo: MIN_GIOCATORI };
+  if (nomi.length > MAX_GIOCATORI) return { codice: "tanti", massimo: MAX_GIOCATORI };
   return null;
 }

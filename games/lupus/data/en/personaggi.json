@@ -16,7 +16,7 @@
   },
   "medico": {
     "nome": "Doctor",
-    "tuo": "Every night you protect one player from the werewolves (never the same one two nights in a row).",
-    "regolamento": "Every night, protects one player from the werewolves (never the same one two nights in a row)."
+    "tuo": "From the second night you protect one player from the werewolves, never yourself.",
+    "regolamento": "From the second night, protects one player from the werewolves, never themselves."
   }
 }

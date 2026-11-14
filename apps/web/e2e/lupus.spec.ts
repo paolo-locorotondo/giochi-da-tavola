@@ -9,7 +9,8 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-const NOMI = "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia";
+const NOMI = "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia\nMatteo";
+const NOMI_11 = NOMI + "\nChiara\nDavide\nIrene";
 
 async function avvia(page: Page, nomi = NOMI) {
   await page.goto("/lupus");
@@ -30,7 +31,7 @@ test("configurazione: validazione dei campi", async ({ page }) => {
 
   await page.getByLabel(/Giocatori/).fill("Anna\nLuca\nMarco");
   await page.getByRole("button", { name: "Inizia" }).click();
-  await expect(page.locator("p.errore")).toHaveText("Servono almeno 4 giocatori");
+  await expect(page.locator("p.errore")).toHaveText("Servono almeno 8 giocatori");
   await schermata(page, "configurazione-errore");
 
   await page.getByLabel(/Giocatori/).fill("Anna\nLuca\nMarco\nanna");
@@ -38,54 +39,54 @@ test("configurazione: validazione dei campi", async ({ page }) => {
   await expect(page.locator("p.errore")).toBeVisible();
 });
 
-test("configurazione: il suggerimento sui ruoli cresce con i giocatori", async ({ page }) => {
+test("configurazione: la composizione cresce con i giocatori e si può cambiare", async ({ page }) => {
   await page.goto("/lupus");
   const campo = page.getByLabel(/Giocatori/);
-  await campo.fill("A\nB\nC\nD");
-  await expect(page.getByText("Ruoli: 1 lupo/i, il resto contadini.")).toBeVisible();
-  await campo.fill("A\nB\nC\nD\nE");
-  await expect(page.getByText(/1 veggente/)).toBeVisible();
   await campo.fill(NOMI);
-  await expect(page.getByText(/1 medico/)).toBeVisible();
+  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 5 contadini.")).toBeVisible();
+  await campo.fill(NOMI_11);
+  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 1 medico, 7 contadini.")).toBeVisible();
+  await schermata(page, "configurazione-composizione");
+  await page.getByLabel("Con il Medico").uncheck();
+  await expect(page.getByText("Ruoli: 2 lupi, 1 veggente, 8 contadini.")).toBeVisible();
 });
 
-test("distribuzione delle carte e prima notte", async ({ page }) => {
+test("distribuzione delle carte e prima notte (veggente, poi lupi che si riconoscono)", async ({ page }) => {
   await avvia(page);
-  await expect(page.getByText("Carta 1 di 7")).toBeVisible();
+  await expect(page.getByText("Carta 1 di 8")).toBeVisible();
   await schermata(page, "carta-coperta");
   await page.getByRole("button", { name: "Mostra il mio ruolo" }).click();
   await schermata(page, "carta-scoperta");
   await page.getByRole("button", { name: "Ho visto, passa il telefono" }).click();
-  await giraLeCarte(page, 6);
+  await giraLeCarte(page, 7);
+
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
 
   await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
-  const conferma = page.getByRole("button", { name: "Conferma" });
-  await expect(conferma).toBeDisabled();
+  // La prima notte nessuno viene sbranato: nessun nome da scegliere, si prosegue subito.
+  await expect(page.locator("div.giocatori button")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeEnabled();
   await schermata(page, "notte-lupi");
 });
 
 test("la notte non offre candidati vietati", async ({ page }) => {
   await avvia(page);
-  await giraLeCarte(page, 7);
-  // I lupi non possono sbranarsi tra loro: i candidati sono meno dei giocatori.
-  expect(await page.locator("div.giocatori button").count()).toBeLessThan(7);
+  await giraLeCarte(page, 8);
+  // Il veggente non indaga su di sé: i candidati sono meno dei giocatori.
+  expect(await page.locator("div.giocatori button").count()).toBe(7);
 });
 
-test("un giro completo: notte, alba, voto e nuova notte", async ({ page }) => {
+test("un giro completo: prima notte, alba, voto e seconda notte", async ({ page }) => {
   await avvia(page);
-  await giraLeCarte(page, 7);
+  await giraLeCarte(page, 8);
 
-  // Lupi, veggente, medico: si sceglie il primo candidato e si conferma.
-  await page.locator("div.giocatori button").first().click();
-  await page.getByRole("button", { name: "Conferma" }).click();
-  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
   await page.locator("div.giocatori button").first().click();
   await expect(page.getByText(/È un lupo!|Non è un lupo\./)).toBeVisible();
   await schermata(page, "notte-veggente");
   await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
-  await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
-  await page.locator("div.giocatori button").first().click();
-  await page.getByRole("button", { name: "Conferma" }).click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
 
   await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
   await schermata(page, "alba");
@@ -105,32 +106,47 @@ test("un giro completo: notte, alba, voto e nuova notte", async ({ page }) => {
   await schermata(page, "esito");
 });
 
+test("dalla seconda notte il medico (11 giocatori) si sveglia per primo e non può scegliere sé stesso", async ({ page }) => {
+  await avvia(page, NOMI_11);
+  await giraLeCarte(page, 11);
+  // Prima notte: veggente e lupi, nessun medico.
+  await expect(page.getByRole("heading", { name: "Il medico protegge" })).toHaveCount(0);
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.getByRole("button", { name: "Si discute e si vota" }).click();
+  const piu = page.getByRole("button", { name: "+" }).first();
+  while (await piu.isEnabled()) await piu.click();
+  await page.getByRole("button", { name: /Chiudi la votazione|Vai al ballottaggio/ }).click();
+  await page.getByRole("button", { name: "Scende la notte" }).click();
+  await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
+  expect(await page.locator("div.giocatori button").count()).toBeLessThanOrEqual(10);
+  await schermata(page, "notte-medico");
+});
+
 test("la partita sopravvive al refresh e si può chiudere", async ({ page }) => {
   await avvia(page);
   await giraLeCarte(page, 3);
   await page.reload();
-  await expect(page.getByText("Carta 4 di 7")).toBeVisible();
+  await expect(page.getByText("Carta 4 di 8")).toBeVisible();
 
   await page.getByRole("button", { name: "Chiudi la partita" }).click();
   await schermata(page, "chiudi-conferma");
   await page.getByRole("button", { name: "No, continua" }).click();
-  await expect(page.getByText("Carta 4 di 7")).toBeVisible();
+  await expect(page.getByText("Carta 4 di 8")).toBeVisible();
   await page.getByRole("button", { name: "Chiudi la partita" }).click();
   await page.getByRole("button", { name: "Sì, chiudi" }).click();
   await expect(page.getByLabel(/Giocatori/)).toBeVisible();
 });
 
-test("pulsanti di fine turno: lupi e medico «Conferma e torna a dormire», veggente «Ho visto, torna a dormire»", async ({ page }) => {
+test("pulsanti di fine turno: lupi «Conferma e torna a dormire», veggente «Ho visto, torna a dormire»", async ({ page }) => {
   await avvia(page);
-  await giraLeCarte(page, 7);
-  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeDisabled();
-  await page.locator("div.giocatori button").first().click();
-  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await giraLeCarte(page, 8);
+  await expect(page.getByRole("button", { name: "Ho visto, torna a dormire" })).toBeDisabled();
   await page.locator("div.giocatori button").first().click();
   await expect(page.getByRole("button", { name: "Ho visto, torna a dormire" })).toBeEnabled();
   await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
-  await expect(page.getByRole("heading", { name: "Il medico protegge" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeEnabled();
 });
 
 test("transizione: tra un ruolo e l'altro compare una schermata uguale, poi la schermata del ruolo", async ({ page }) => {
@@ -140,22 +156,22 @@ test("transizione: tra un ruolo e l'altro compare una schermata uguale, poi la s
   });
   await page.clock.install();
   await avvia(page);
-  await giraLeCarte(page, 7);
+  await giraLeCarte(page, 8);
 
-  // Dopo l'ultima carta: prima la transizione, la schermata dei lupi non c'è ancora.
-  await expect(page.getByRole("heading", { name: "Occhi chiusi" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toHaveCount(0);
-  await schermata(page, "transizione");
-  await page.clock.runFor(3500);
-  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
-
-  // Dopo la conferma dei lupi: di nuovo la stessa schermata, non quella del veggente.
-  await page.locator("div.giocatori button").first().click();
-  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  // Dopo l'ultima carta: prima la transizione, la schermata del veggente non c'è ancora.
   await expect(page.getByRole("heading", { name: "Occhi chiusi" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toHaveCount(0);
+  await schermata(page, "transizione");
   await page.clock.runFor(3500);
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+
+  // Dopo il veggente: di nuovo la stessa schermata, non quella dei lupi.
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Occhi chiusi" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toHaveCount(0);
+  await page.clock.runFor(3500);
+  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
 });
 
 test("transizione dell'alba: sole e «Il villaggio si risveglia» prima del racconto della notte", async ({ page }) => {
@@ -165,20 +181,13 @@ test("transizione dell'alba: sole e «Il villaggio si risveglia» prima del racc
   });
   await page.clock.install();
   await avvia(page);
-  await giraLeCarte(page, 7);
-  const scegliEConferma = async (pulsante: string) => {
-    await page.locator("div.giocatori button").first().click();
-    await page.getByRole("button", { name: pulsante }).click();
-    await page.clock.runFor(3500);
-  };
+  await giraLeCarte(page, 8);
   await page.clock.runFor(3500); // dopo l'ultima carta
-  await scegliEConferma("Conferma e torna a dormire"); // lupi
   await page.locator("div.giocatori button").first().click(); // veggente
   await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
   await page.clock.runFor(3500);
-  await page.locator("div.giocatori button").first().click(); // medico
-  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
-  // Dopo il medico: transizione del giorno (sole), il racconto della notte non c'è ancora.
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click(); // lupi
+  // Dopo i lupi: transizione del giorno (sole), il racconto della notte non c'è ancora.
   await expect(page.locator(".transizione-sole")).toBeVisible();
   await expect(page.locator(".transizione-luna")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
@@ -190,6 +199,6 @@ test("transizione dell'alba: sole e «Il villaggio si risveglia» prima del racc
 
 test("transizione: con «No» nelle impostazioni del gioco non compare", async ({ page }) => {
   await avvia(page);
-  await giraLeCarte(page, 7);
-  await expect(page.getByRole("heading", { name: "I lupi scelgono la vittima" })).toBeVisible();
+  await giraLeCarte(page, 8);
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
 });

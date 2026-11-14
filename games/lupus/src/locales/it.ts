@@ -5,12 +5,12 @@ export const it = {
   descrizioneGioco: "Il villaggio dorme, i lupi no. Il telefono fa da narratore.",
   regPasso1: "Ognuno vede in segreto il proprio ruolo. I lupi vedono i compagni.",
   regPasso2:
-    "Notte: tutti chiudono gli occhi. Il narratore chiama i lupi (scelgono una vittima, non un lupo), poi il veggente (scopre se un giocatore è lupo), poi il medico (protegge qualcuno, non lo stesso due notti di fila).",
+    "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). La prima notte nessuno muore: i lupi si riconoscono soltanto.",
   regPasso3: "Giorno: si scopre chi è morto (e il suo ruolo). Si discute e si vota: devono votare tutti i vivi.",
   regPasso4: "Pareggio: ballottaggio tra i pari merito; se pareggiano ancora nessuno viene eliminato.",
   regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi.",
   regNota1:
-    "Ruoli: 1 lupo ogni 4 giocatori (arrotondato), veggente da 5 giocatori, medico da 7, il resto contadini. Servono almeno 4 persone.",
+    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, il medico da 11 giocatori (si può togliere o aggiungere prima di iniziare), il resto contadini.",
   regNota2: "Regole del gioco classico: esistono varianti.",
 
   // Impostazioni del gioco
@@ -31,10 +31,11 @@ export const it = {
   eraRuolo: "Era {ruolo}.",
 
   // Cosa dice il narratore a voce
-  vLupi:
-    "Notte {notte}. Il villaggio si addormenta. Tutti chiudono gli occhi. I lupi si risvegliano e scelgono chi sbranare.",
-  vVeggente: "I lupi tornano a dormire. Il veggente si risveglia e indica un giocatore da esaminare.",
-  vMedico: "Il veggente torna a dormire. Il medico si risveglia e sceglie chi proteggere.",
+  vNotte: "Notte {notte}. Il villaggio si addormenta. Tutti chiudono gli occhi.",
+  vLupi: "I lupi si risvegliano e scelgono chi sbranare.",
+  vLupiPrima: "I lupi si risvegliano e si riconoscono. Questa notte nessuno viene sbranato.",
+  vVeggente: "Il veggente si risveglia e indica un giocatore da esaminare.",
+  vMedico: "Il medico si risveglia e sceglie chi proteggere.",
   vAlbaMorto: "Il villaggio si risveglia. Questa notte è morto {nome}.{ruolo}",
   vAlbaNessuno: "Il villaggio si risveglia. Questa notte non è morto nessuno.",
   vBallottaggio: "Ballottaggio. Votate tra i giocatori in parità.",
@@ -48,13 +49,17 @@ export const it = {
   esitoAncoraPari: "Ancora pari: nessuno viene eliminato.",
 
   // Configurazione
-  giocatoriLabel: "Giocatori (uno per riga, almeno 4)",
-  placeholderNomi: "Anna\nLuca\nMarco\nSara",
-  ruoliLupi: "{n} lupo/i",
-  ruoliVeggente: "1 veggente",
-  ruoliMedico: "1 medico",
-  ruoliElenco: "Ruoli: {elenco}, il resto contadini.",
+  giocatoriLabel: "Giocatori (uno per riga, da {min} a {max})",
+  placeholderNomi: "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia\nMatteo",
+  ordineOrario:
+    "Scrivi i nomi in senso orario, partendo da chi siede dopo il narratore: in caso di parità vince chi è più vicino a lui.",
+  ruoliLupi: { one: "{n} lupo", other: "{n} lupi" },
+  ruoliContadini: { one: "{n} contadino", other: "{n} contadini" },
+  ruoliElenco: "Ruoli: {elenco}.",
+  composizioneTitolo: "Personaggi della partita",
+  conSpeciale: "Con il {ruolo}",
   ruoliAutomatici: "I ruoli vengono assegnati in automatico in base al numero di giocatori.",
+  primaNotteSenzaVittima: "La prima notte nessuno muore (i lupi si riconoscono soltanto)",
   svelaRuoli: "Il narratore dice il ruolo di chi muore",
   narratoreGioca:
     "Il narratore gioca (il telefono resta al centro e non compare l'elenco dei giocatori con ruoli e stato vivo/morto)",
@@ -64,6 +69,7 @@ export const it = {
   errNomeVuoto: "Il giocatore al posto {posto} non ha un nome",
   errNomeDuplicato: "Nome duplicato: {nome}",
   errPochi: "Servono almeno {minimo} giocatori",
+  errTanti: "Al massimo {massimo} giocatori",
 
   // Distribuzione delle carte
   cartaDi: "Carta {n} di {tot}",
@@ -80,6 +86,7 @@ export const it = {
   fineLupi: "Conferma e torna a dormire",
   fineVeggente: "Ho visto, torna a dormire",
   fineMedico: "Conferma e torna a dormire",
+  lupiSiRiconoscono: "Prima notte: i lupi si guardano e si riconoscono. Nessuno viene sbranato.",
   notteOcchiChiusi: "Notte {notte} — tutti a occhi chiusi",
   soloChiHaRuolo: "Solo chi ha il ruolo tocca il telefono.",
   eUnLupo: "È un lupo!",

@@ -5,7 +5,7 @@ import { personaggiRegolamento } from "./personaggi";
 
 export const manifest = {
   id: "lupus",
-  minGiocatori: 4,
+  minGiocatori: 8,
   /** Testi che l'app mostra fuori dal gioco (elenco, regolamento, impostazioni) nella lingua scelta. */
   testi(lingua: Lingua): TestiGioco {
     const t = traduttore(dizionari, lingua);
