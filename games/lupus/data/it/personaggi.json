@@ -46,5 +46,11 @@
     "plurale": "criceti mannari",
     "tuo": "I lupi non possono sbranarti. Vinci da solo se, a fine partita, sei ancora vivo. Occhio al veggente: se ti guarda, muori insieme alla vittima dei lupi.",
     "regolamento": "Non si può sbranare. Vince da solo se è ancora vivo a fine partita. Se il veggente lo guarda, muore insieme alla vittima dei lupi."
+  },
+  "gufo": {
+    "nome": "Gufo",
+    "plurale": "gufi",
+    "tuo": "Ogni notte indichi un giocatore. Con meno di 20 giocatori, di giorno sarà tra gli indiziati; con 20 o più (Gufo Letale) muore all'alba, a meno che sia un lupo o un criceto mannaro.",
+    "regolamento": "Ogni notte indica un giocatore: con meno di 20 giocatori sarà tra gli indiziati; con 20 o più (Gufo Letale) muore all'alba, a meno che sia un lupo o un criceto mannaro."
   }
 }

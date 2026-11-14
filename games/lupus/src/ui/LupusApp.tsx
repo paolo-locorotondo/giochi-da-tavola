@@ -17,6 +17,7 @@ import {
   sceltaNotte,
   ruoloAttivo,
   linciatoEraLupo,
+  gufoLetale,
   massoni,
   votantiSecondoTurno,
   statoIniziale,
@@ -47,6 +48,7 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
   massone: "mortoContadino",
   medium: "mortoVeggente",
   criceto: "mortoContadino",
+  gufo: "mortoContadino",
 };
 
 const CHIAVE = "gdt-lupus-partita";
@@ -144,6 +146,7 @@ export function LupusApp() {
       case "lupi":
       case "veggente":
       case "medico":
+      case "gufo":
       case "medium":
       case "massoni":
         return <Notte s={s} dispatch={dispatch} />;
@@ -222,6 +225,7 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
     case "lupi":
     case "veggente":
     case "medico":
+    case "gufo":
     case "medium":
     case "massoni": {
       const apertura = primaFaseDellaNotte(s, s.fase) ? t("vNotte", { notte: s.notte }) + " " : "";
@@ -236,7 +240,9 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
               ? "vMedium"
               : s.fase === "massoni"
                 ? "vMassoni"
-                : "vMedico";
+                : s.fase === "gufo"
+                  ? "vGufo"
+                  : "vMedico";
       return apertura + t(frase);
     }
     case "alba":
@@ -433,12 +439,13 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
 const TESTI_NOTTE: Record<
   FaseNotte,
   {
-    titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico" | "titoloMedium" | "titoloMassoni";
-    fine: "fineLupi" | "fineVeggente" | "fineMedico" | "fineMedium" | "fineMassoni";
+    titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico" | "titoloMedium" | "titoloMassoni" | "titoloGufo";
+    fine: "fineLupi" | "fineVeggente" | "fineMedico" | "fineMedium" | "fineMassoni" | "fineGufo";
   }
 > = {
   medium: { titolo: "titoloMedium", fine: "fineMedium" },
   massoni: { titolo: "titoloMassoni", fine: "fineMassoni" },
+  gufo: { titolo: "titoloGufo", fine: "fineGufo" },
   lupi: { titolo: "titoloLupi", fine: "fineLupi" },
   veggente: { titolo: "titoloVeggente", fine: "fineVeggente" },
   medico: { titolo: "titoloMedico", fine: "fineMedico" },
@@ -475,6 +482,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
       <h2>{t(TESTI_NOTTE[fase].titolo)}</h2>
       <p className="muted">{t("soloChiHaRuolo")}</p>
       {senzaScelta && fase === "lupi" && <p>{t("lupiSiRiconoscono")}</p>}
+      {fase === "gufo" && <p>{t(gufoLetale(s) ? "gufoLetaleNota" : "gufoNota")}</p>}
       <div className="giocatori">
         {candidati.map((p) => (
           <button
@@ -577,11 +585,13 @@ function Discussione({ dispatch }: { dispatch: D }) {
 
 function Arringhe({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
-  const [a, b] = (s.indiziati ?? []).map((p) => nomeDi(s, p));
+  const nomi = (s.indiziati ?? []).map((p) => nomeDi(s, p));
+  const gufato = s.gufato !== null && (s.indiziati ?? []).includes(s.gufato) && !gufoLetale(s) ? s.gufato : null;
   return (
     <section className="schermata">
       <h2>{t("arringheTitolo")}</h2>
-      <p>{b === undefined ? t("arringheUno", { a: a ?? "" }) : t("arringheTesto", { a: a ?? "", b })}</p>
+      <p>{nomi.length < 2 ? t("arringheUno", { a: nomi[0] ?? "" }) : t("arringheTesto", { nomi: nomi.join(", ") })}</p>
+      {gufato !== null && <p className="muted">{t("arringheGufato", { nome: nomeDi(s, gufato) })}</p>}
       <button className="btn primario" onClick={() => dispatch({ tipo: "avanti" })}>
         {t("vaiSecondoTurno")}
       </button>

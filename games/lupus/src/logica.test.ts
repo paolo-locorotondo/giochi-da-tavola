@@ -76,6 +76,8 @@ describe("partita", () => {
     expect(s.notte).toBe(2);
     expect(s.fase).toBe("medium");
     s = riduci(s, { tipo: "avanti" });
+    expect(s.fase).toBe("gufo");
+    s = scegliEAvanti(s, s.vivi.find((p) => s.ruoli[p] === "contadino") as number);
     expect(s.fase).toBe("medico");
     const bersaglio = s.vivi.find((p) => s.ruoli[p] === "contadino") as number;
     s = scegliEAvanti(s, bersaglio);
@@ -115,8 +117,8 @@ describe("notti: simulazione esaustiva", () => {
   /** Una notte intera: ogni fase che compare sceglie qualcuno. */
   const nottePiena = (s: Stato, vittima: number, protetto: number): Stato => {
     let x = s;
-    for (let i = 0; i < 8 && ["medium", "massoni", "medico", "veggente", "lupi"].includes(x.fase); i++) {
-      const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : (x.vivi.find((p) => x.ruoli[p] !== "veggente" && x.ruoli[p] !== "criceto") as number);
+    for (let i = 0; i < 8 && ["medium", "massoni", "gufo", "medico", "veggente", "lupi"].includes(x.fase); i++) {
+      const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : x.fase === "gufo" ? (x.vivi.find((p) => x.ruoli[p] === "lupo") as number) : (x.vivi.find((p) => x.ruoli[p] !== "veggente" && x.ruoli[p] !== "criceto") as number);
       x = scegliEAvanti(x, posto);
     }
     return x;

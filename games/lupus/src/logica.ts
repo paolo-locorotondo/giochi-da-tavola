@@ -1,6 +1,6 @@
 import { creaGiocatori, creaRng, type Giocatore } from "@gdt/engine";
 
-export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium" | "criceto";
+export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium" | "criceto" | "gufo";
 
 /** Da che parte sta un ruolo. Con un ruolo nuovo il compilatore chiede qui la sua fazione. */
 /** Il criceto mannaro è una fazione a sé: vince da solo se è vivo a fine partita. */
@@ -16,6 +16,7 @@ const FAZIONE: Record<Ruolo, Fazione> = {
   massone: "villaggio",
   medium: "villaggio",
   criceto: "criceto",
+  gufo: "villaggio",
 };
 
 export function fazione(ruolo: Ruolo): Fazione {
@@ -25,8 +26,11 @@ export function fazione(ruolo: Ruolo): Fazione {
 export const MIN_GIOCATORI = 8;
 export const MAX_GIOCATORI = 24;
 
+/** Da questo numero di giocatori il Gufo è letale: il gufato muore all'alba se non è un mannaro. */
+export const MIN_GUFO_LETALE = 20;
+
 /** Versione della forma dello stato salvato: le partite salvate con un'altra versione si scartano. */
-export const VERSIONE_STATO = 3;
+export const VERSIONE_STATO = 4;
 
 /** Lupi: 2 da 8 a 15 giocatori, 3 da 16. */
 export function lupiPer(n: number): number {
@@ -38,6 +42,7 @@ export const SPECIALI: readonly { ruolo: Ruolo; da: number; quanti: number }[] =
   { ruolo: "medium", da: 9, quanti: 1 },
   { ruolo: "indemoniato", da: 10, quanti: 1 },
   { ruolo: "medico", da: 11, quanti: 1 },
+  { ruolo: "gufo", da: 12, quanti: 1 },
   { ruolo: "massone", da: 13, quanti: 2 },
   { ruolo: "criceto", da: 15, quanti: 1 },
 ];
@@ -73,6 +78,7 @@ export type Fase =
   | "carte"
   | "medium"
   | "massoni"
+  | "gufo"
   | "veggente"
   | "medico"
   | "lupi"
@@ -85,7 +91,7 @@ export type Fase =
   | "fine";
 
 /** Fasi in cui un ruolo si sveglia di notte. */
-export type FaseNotte = "medium" | "massoni" | "medico" | "veggente" | "lupi";
+export type FaseNotte = "medium" | "massoni" | "gufo" | "medico" | "veggente" | "lupi";
 
 export interface Stato {
   versione: number;
@@ -101,6 +107,8 @@ export interface Stato {
   cartaMostrata: boolean;
   vittima: number | null;
   protetto: number | null;
+  /** Chi il Gufo ha indicato questa notte (null = nessuno). */
+  gufato: number | null;
   /** Posto ispezionato dal veggente questa notte (il risultato resta visibile finché si prosegue). */
   ispezionato: number | null;
   /** Chi è morto nell'ultima notte (vuoto = nessuno). */
@@ -155,6 +163,7 @@ export function statoIniziale(): Stato {
     cartaMostrata: false,
     vittima: null,
     protetto: null,
+    gufato: null,
     ispezionato: null,
     mortiNotte: [],
     indiziati: null,
@@ -207,7 +216,7 @@ export interface DescrittoreNotte {
   /** Se in questa notte la fase si gioca (es. il medico dalla seconda notte). */
   quando: (s: Stato) => boolean;
   /** Campo dello stato dove finisce la scelta. */
-  campo: "vittima" | "ispezionato" | "protetto" | null;
+  campo: "vittima" | "ispezionato" | "protetto" | "gufato" | null;
   /** Se questa notte si sceglie qualcuno (es. la prima notte i lupi si riconoscono soltanto). */
   sceglie: (s: Stato) => boolean;
   /** Se la scelta, una volta fatta, non si cambia più. */
@@ -245,6 +254,22 @@ export const FASI_NOTTE: readonly DescrittoreNotte[] = [
     puoiScegliere: () => false,
     ordineEffetto: 5,
     effetto: (_s, e) => e,
+  },
+  {
+    // Indica uno a ogni notte. Letale (20+ giocatori): il gufato muore all'alba se non è un mannaro.
+    // Non letale: il gufato va tra gli indiziati del primo turno (vedi `chiudiVoto`).
+    fase: "gufo",
+    ruolo: "gufo",
+    quando: () => true,
+    campo: "gufato",
+    sceglie: () => true,
+    unaSolaScelta: false,
+    puoiScegliere: (s, p) => s.ruoli[p] !== "gufo",
+    ordineEffetto: 6,
+    effetto: (s, e) =>
+      gufoLetale(s) && s.gufato !== null && !eMannaro(s.ruoli[s.gufato])
+        ? { ...e, altri: [...e.altri, s.gufato] }
+        : e,
   },
   {
     fase: "medico",
@@ -294,6 +319,16 @@ export function descrittoreNotte(fase: Fase): DescrittoreNotte | undefined {
 /** La scelta già fatta in questa notte per il descrittore (null = nessuna). */
 export function sceltaNotte(s: Stato, d: DescrittoreNotte): number | null {
   return d.campo === null ? null : s[d.campo];
+}
+
+/** Il Gufo è letale nelle partite con 20 o più giocatori. */
+export function gufoLetale(s: Pick<Stato, "giocatori">): boolean {
+  return s.giocatori.length >= MIN_GUFO_LETALE;
+}
+
+/** Mannari: lupi e criceto. Il Gufo Letale non li uccide. */
+function eMannaro(ruolo: Ruolo | undefined): boolean {
+  return ruolo === "lupo" || ruolo === "criceto";
 }
 
 /** I massoni della partita (dalle carte ricevute), per mostrarli la prima notte. */
@@ -435,6 +470,10 @@ export function riduci(s: Stato, a: Azione): Stato {
       if (s.fase === "voto") {
         // Primo turno: i due più votati tra i vivi sono gli indiziati.
         const indiziati = classificaVoti(s, s.vivi, a.voti).slice(0, 2);
+        // Gufo non letale (e vivo): anche il gufato è indiziato, se ancora vivo e non lo è già.
+        if (!gufoLetale(s) && haRuoloVivo(s, "gufo") && s.gufato !== null && s.vivi.includes(s.gufato) && !indiziati.includes(s.gufato)) {
+          indiziati.push(s.gufato);
+        }
         return { ...s, fase: "arringhe", indiziati };
       }
       if (s.fase === "voto2") {
@@ -458,6 +497,7 @@ function nuovaNotte(s: Stato): Stato {
       notte: s.notte + 1,
       vittima: null,
       protetto: null,
+      gufato: null,
       ispezionato: null,
       mortiNotte: [],
       eliminato: null,

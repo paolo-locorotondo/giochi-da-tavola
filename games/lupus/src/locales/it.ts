@@ -5,12 +5,12 @@ export const it = {
   descrizioneGioco: "Il villaggio dorme, i lupi no. Il telefono fa da narratore.",
   regPasso1: "Ognuno vede in segreto il proprio ruolo. I lupi vedono i compagni.",
   regPasso2:
-    "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). Dalla seconda notte il medium sente se l'ultimo linciato era un lupo; la prima notte i massoni si riconoscono. La prima notte nessuno muore: i lupi si riconoscono soltanto.",
+    "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il gufo (indica un giocatore: sarà indiziato, o muore se il gufo è letale), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). Dalla seconda notte il medium sente se l'ultimo linciato era un lupo; la prima notte i massoni si riconoscono. La prima notte nessuno muore: i lupi si riconoscono soltanto.",
   regPasso3: "Giorno: si scopre chi è morto, poi si discute. Primo turno: votano tutti, anche i morti (fantasmi); i due più votati sono gli indiziati e fanno un'arringa.",
   regPasso4: "Secondo turno: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto, il primo giorno il narratore). I morti non parlano più.",
   regPasso5: "Vincono i contadini se muoiono tutti i lupi, i lupi quando sono almeno quanti gli altri vivi. Il criceto mannaro, se è vivo alla fine, vince da solo.",
   regNota1:
-    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, poi, dal numero minimo di giocatori e togliendoli o aggiungendoli prima di iniziare: medium (9), indemoniato (10), medico (11), due massoni (13), criceto mannaro (15); il resto contadini.",
+    "Si gioca da 8 a 24 persone. Ruoli: 2 lupi (3 da 16 giocatori), 1 veggente, poi, dal numero minimo di giocatori e togliendoli o aggiungendoli prima di iniziare: medium (9), indemoniato (10), medico (11), gufo (12; letale da 20), due massoni (13), criceto mannaro (15); il resto contadini.",
   regNota2: "Regole del gioco classico: esistono varianti.",
 
   // Impostazioni del gioco
@@ -90,6 +90,12 @@ export const it = {
   eUnCriceto: "È un criceto mannaro: morirà insieme allo sbranato dai lupi.",
 
   // Medium e massoni
+  titoloGufo: "Il gufo indica",
+  fineGufo: "Conferma e torna a dormire",
+  gufoNota: "Chi indichi sarà tra gli indiziati del primo turno.",
+  gufoLetaleNota: "Gufo Letale: chi indichi muore all'alba, a meno che sia un lupo o un criceto mannaro.",
+  vGufo: "Il gufo si risveglia e indica un giocatore.",
+  arringheGufato: "{nome} è stato gufato.",
   titoloMedium: "Il medium ascolta lo spirito",
   fineMedium: "Ho capito, torna a dormire",
   mediumLupo: "Lo spirito di {nome} era un lupo.",
@@ -122,7 +128,7 @@ export const it = {
   primoTurno: "Primo turno",
   chiudiPrimoTurno: "Scopri gli indiziati",
   arringheTitolo: "Gli indiziati",
-  arringheTesto: "{a} e {b} fanno ciascuno la propria arringa. Poi si vota.",
+  arringheTesto: "{nomi} fanno ciascuno la propria arringa. Poi si vota.",
   arringheUno: "{a} fa la propria arringa. Poi si vota.",
   vaiSecondoTurno: "Al secondo turno di voto",
   secondoTurno: "Secondo turno",

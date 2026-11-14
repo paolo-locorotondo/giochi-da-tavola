@@ -12,7 +12,9 @@ test.beforeEach(async ({ page }) => {
 const NOMI = "Anna\nLuca\nMarco\nSara\nElena\nPaolo\nGiulia\nMatteo";
 const NOMI_9 = NOMI + "\nChiara";
 const NOMI_11 = NOMI + "\nChiara\nDavide\nIrene";
-const NOMI_13 = NOMI_11 + "\nFabio\nNadia";
+const NOMI_12 = NOMI_11 + "\nFabio";
+const NOMI_13 = NOMI_12 + "\nNadia";
+const NOMI_20 = NOMI_13 + "\nOlga\nPino\nRita\nSilvia\nTeo\nUgo\nVera";
 
 async function avvia(page: Page, nomi = NOMI) {
   await page.goto("/lupus");
@@ -168,7 +170,31 @@ test("la prima notte i massoni (13 giocatori) si riconoscono, prima del veggente
   await expect(page.locator("div.giocatori button")).toHaveCount(0);
   await schermata(page, "notte-massoni");
   await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il gufo indica" })).toBeVisible();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+});
+
+test("con 12 giocatori il gufo indica uno; non è letale", async ({ page }) => {
+  await avvia(page, NOMI_12);
+  await giraLeCarte(page, 12);
+  await expect(page.getByRole("heading", { name: "Il gufo indica" })).toBeVisible();
+  await expect(page.getByText("Chi indichi sarà tra gli indiziati del primo turno.")).toBeVisible();
+  await schermata(page, "notte-gufo");
+  await expect(page.getByRole("button", { name: "Conferma e torna a dormire" })).toBeDisabled();
+  await page.locator("div.giocatori button").last().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
+});
+
+test("con 20 giocatori il gufo è letale", async ({ page }) => {
+  await avvia(page, NOMI_20);
+  await giraLeCarte(page, 20);
+  await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il gufo indica" })).toBeVisible();
+  await expect(page.getByText(/Gufo Letale: chi indichi muore all'alba/)).toBeVisible();
+  await schermata(page, "notte-gufo-letale");
 });
 
 test("con 9 giocatori il medium non c'è la prima notte", async ({ page }) => {
@@ -185,8 +211,10 @@ test("con 15 giocatori c'è il criceto mannaro: il veggente lo guarda e all'alba
   await expect(page.getByText(/1 criceto mannaro/)).toBeVisible();
   await page.getByRole("button", { name: "Inizia" }).click();
   await giraLeCarte(page, 15);
-  // Notte 1 (massoni, poi veggente): il nome del criceto si legge dall'elenco del narratore.
+  // Notte 1 (massoni, gufo, poi veggente): il nome del criceto si legge dall'elenco del narratore.
   await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
   await page.locator("summary", { hasText: "Giocatori e ruoli" }).click();
   const riga = page.locator("ul.ruoli-narratore li", { hasText: "Criceto mannaro" });
   const nomeCriceto = (await riga.locator(".nome-g").innerText()).trim();
@@ -199,8 +227,10 @@ test("con 15 giocatori c'è il criceto mannaro: il veggente lo guarda e all'alba
   await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
   await votaTutto(page, "terzo");
   await page.getByRole("button", { name: "Scende la notte" }).click();
-  // Seconda notte: medium, medico, veggente (guarda di nuovo il criceto), lupi.
+  // Seconda notte: medium, gufo, medico, veggente (guarda di nuovo il criceto), lupi.
   await page.getByRole("button", { name: "Ho capito, torna a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
   await page.locator("div.giocatori button").last().click();
   await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
   await page.locator("div.giocatori button", { hasText: new RegExp(`^${nomeCriceto}$`) }).click();
