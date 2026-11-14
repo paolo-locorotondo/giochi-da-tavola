@@ -2,10 +2,14 @@ import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } 
 import {
   candidatiNotte,
   contaVoti,
+  descrittoreNotte,
+  FASI_NOTTE,
   lupiConsigliati,
   riduci,
+  sceltaNotte,
   statoIniziale,
   type Fase,
+  type FaseNotte,
   type Ruolo,
   type Stato,
 } from "../logica";
@@ -32,14 +36,17 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
 const CHIAVE = "gdt-lupus-partita";
 
 /** Si entra in queste fasi con la schermata di transizione: ogni ruolo della notte e l'alba. */
-const FASI_CON_TRANSIZIONE: ReadonlySet<Fase> = new Set<Fase>(["lupi", "veggente", "medico", "alba"]);
+const FASI_CON_TRANSIZIONE: ReadonlySet<Fase> = new Set<Fase>([...FASI_NOTTE.map((d) => d.fase), "alba"]);
 
 function caricaStato(): Stato {
   try {
     const raw = localStorage.getItem(CHIAVE);
     if (raw) {
       const s = JSON.parse(raw) as Stato;
-      if (Array.isArray(s.giocatori) && s.ruoli && Array.isArray(s.vivi)) return { ...statoIniziale(), ...s };
+      if (Array.isArray(s.giocatori) && s.ruoli && Array.isArray(s.vivi)) {
+        // Partite salvate prima di `ruoliIniziali`: si parte dai ruoli attuali.
+        return { ...statoIniziale(), ...s, ruoliIniziali: s.ruoliIniziali ?? s.ruoli };
+      }
     }
   } catch {
     /* storage non disponibile o dati rovinati: si riparte da zero */
@@ -341,20 +348,23 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
   );
 }
 
-type FaseNotte = "lupi" | "veggente" | "medico";
-
-/** Chiavi del dizionario: titolo della fase e pulsante che chiude il turno (dice sempre di tornare a dormire). */
-const TITOLO_NOTTE = { lupi: "titoloLupi", veggente: "titoloVeggente", medico: "titoloMedico" } as const;
-const FINE_TURNO = { lupi: "fineLupi", veggente: "fineVeggente", medico: "fineMedico" } as const;
+/** Chiavi del dizionario per ogni fase della notte: titolo e pulsante che chiude il turno (dice sempre di tornare a dormire). */
+const TESTI_NOTTE: Record<FaseNotte, { titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico"; fine: "fineLupi" | "fineVeggente" | "fineMedico" }> = {
+  lupi: { titolo: "titoloLupi", fine: "fineLupi" },
+  veggente: { titolo: "titoloVeggente", fine: "fineVeggente" },
+  medico: { titolo: "titoloMedico", fine: "fineMedico" },
+};
 
 function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
   const fase = s.fase as FaseNotte;
-  const scelto = fase === "lupi" ? s.vittima : fase === "veggente" ? s.ispezionato : s.protetto;
+  const d = descrittoreNotte(fase);
+  if (!d) return null;
+  const scelto = sceltaNotte(s, d);
   // I lupi non possono sbranarsi tra loro e il veggente non indaga su di sé; il medico non può ripetere la stessa protezione.
   const candidati = candidatiNotte(s);
-  // Il veggente vede una sola persona: scelta fatta, gli altri nomi si bloccano.
-  const bloccato = (p: number) => fase === "veggente" && s.ispezionato !== null && s.ispezionato !== p;
+  // Chi guarda una sola persona (il veggente): scelta fatta, gli altri nomi si bloccano.
+  const bloccato = (p: number) => d.unaSolaScelta && scelto !== null && scelto !== p;
   const risultato =
     fase === "veggente" && s.ispezionato !== null
       ? s.ruoli[s.ispezionato] === "lupo"
@@ -365,7 +375,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
   return (
     <section className="schermata">
       <p className="muted">{t("notteOcchiChiusi", { notte: s.notte })}</p>
-      <h2>{t(TITOLO_NOTTE[fase])}</h2>
+      <h2>{t(TESTI_NOTTE[fase].titolo)}</h2>
       <p className="muted">{t("soloChiHaRuolo")}</p>
       <div className="giocatori">
         {candidati.map((p) => (
@@ -385,7 +395,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
         disabled={scelto === null}
         onClick={() => dispatch({ tipo: "avanti" })}
       >
-        {t(FINE_TURNO[fase])}
+        {t(TESTI_NOTTE[fase].fine)}
       </button>
     </section>
   );

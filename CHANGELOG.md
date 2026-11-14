@@ -11,6 +11,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Interno
 
+- Lupus, motore a descrittori (passo 1 di `docs/piano-lupus-personaggi.md`): le fasi della notte sono un elenco ordinato `FASI_NOTTE` (chi si sveglia, chi può scegliere, effetto) al posto di `dopoLupi`/`dopoVeggente`; aggiunti `fazione(ruolo)`, `finePartita` (fine e vincitori) e `ruoliIniziali`. Il gioco non cambia, i 135 test restano verdi.
 - Errori del server (Impostore e Tris) come codici `errore_<codice>` tradotti in it/en, invece di frasi italiane scritte a mano.
 - `docs/guida-deploy-online.md`: cosa fare quando Render free è in pausa.
 - `docs/decisioni.md`: «Punti aperti» con FATTO/TODO e architettura aggiornata (server generico, coda, `packages/collegamento` e `packages/i18n`).

@@ -2,6 +2,20 @@ import { creaGiocatori, creaRng, type Giocatore } from "@gdt/engine";
 
 export type Ruolo = "lupo" | "contadino" | "veggente" | "medico";
 
+/** Da che parte sta un ruolo. Con un ruolo nuovo il compilatore chiede qui la sua fazione. */
+export type Fazione = "lupi" | "villaggio";
+
+const FAZIONE: Record<Ruolo, Fazione> = {
+  lupo: "lupi",
+  contadino: "villaggio",
+  veggente: "villaggio",
+  medico: "villaggio",
+};
+
+export function fazione(ruolo: Ruolo): Fazione {
+  return FAZIONE[ruolo];
+}
+
 export type Fase =
   | "carte"
   | "lupi"
@@ -12,9 +26,15 @@ export type Fase =
   | "esito"
   | "fine";
 
+/** Fasi in cui un ruolo si sveglia di notte. */
+export type FaseNotte = "lupi" | "veggente" | "medico";
+
 export interface Stato {
   giocatori: Giocatore[];
+  /** Ruolo attuale di ogni posto. */
   ruoli: Record<number, Ruolo>;
+  /** Ruolo ricevuto all'inizio, che non cambia mai. */
+  ruoliIniziali: Record<number, Ruolo>;
   vivi: number[];
   fase: Fase;
   notte: number;
@@ -36,7 +56,8 @@ export interface Stato {
    * "ancora-pari" = secondo pareggio o nessun voto. null = nulla da dire.
    */
   esitoVoto: "ballottaggio" | "ancora-pari" | null;
-  vincitore: "lupi" | "villaggio" | null;
+  /** La fazione che ha vinto, se la partita è finita. */
+  vincitore: Fazione | null;
   /** Se il narratore dice il ruolo di chi muore (di notte o al voto); a fine partita si vedono comunque tutti. */
   svelaRuoli: boolean;
   /** Se il narratore è anche un giocatore: il telefono sta al centro e i ruoli non si mostrano mai. */
@@ -72,6 +93,7 @@ export function statoIniziale(): Stato {
   return {
     giocatori: [],
     ruoli: {},
+    ruoliIniziali: {},
     vivi: [],
     fase: "carte",
     notte: 0,
@@ -91,24 +113,85 @@ export function statoIniziale(): Stato {
   };
 }
 
+/** Fine partita e fazioni che vincono (la lista, non il singolo vincitore: pronta per più fazioni). */
+export function finePartita(
+  ruoli: Record<number, Ruolo>,
+  vivi: readonly number[],
+): { fine: boolean; vincitori: Fazione[] } {
+  const lupi = vivi.filter((p) => ruoli[p] !== undefined && fazione(ruoli[p]) === "lupi").length;
+  if (lupi === 0) return { fine: true, vincitori: ["villaggio"] };
+  if (lupi >= vivi.length - lupi) return { fine: true, vincitori: ["lupi"] };
+  return { fine: false, vincitori: [] };
+}
+
 export function vincitore(ruoli: Record<number, Ruolo>, vivi: readonly number[]): Stato["vincitore"] {
-  const lupi = vivi.filter((p) => ruoli[p] === "lupo").length;
-  if (lupi === 0) return "villaggio";
-  if (lupi >= vivi.length - lupi) return "lupi";
-  return null;
+  return finePartita(ruoli, vivi).vincitori[0] ?? null;
+}
+
+/** Descrittore di una fase notturna: chi si sveglia, chi può scegliere, dove va la scelta e come incide sui morti. */
+export interface DescrittoreNotte {
+  fase: FaseNotte;
+  ruolo: Ruolo;
+  /** Campo dello stato dove finisce la scelta. */
+  campo: "vittima" | "ispezionato" | "protetto";
+  /** Se la scelta, una volta fatta, non si cambia più. */
+  unaSolaScelta: boolean;
+  /** Chi si può scegliere tra i vivi. */
+  puoiScegliere: (s: Stato, posto: number) => boolean;
+  /** Ordine di applicazione degli effetti sui morti della notte (crescente). */
+  ordineEffetto: number;
+  /** Effetto sui morti: riceve l'elenco finora e restituisce il nuovo. */
+  effetto: (s: Stato, morti: number[]) => number[];
+}
+
+/** Ordine in cui si svegliano i ruoli della notte. Un ruolo assente dalla partita viene saltato. */
+export const FASI_NOTTE: readonly DescrittoreNotte[] = [
+  {
+    fase: "lupi",
+    ruolo: "lupo",
+    campo: "vittima",
+    unaSolaScelta: false,
+    puoiScegliere: (s, p) => s.ruoli[p] !== "lupo",
+    ordineEffetto: 1,
+    effetto: (s, morti) => (s.vittima === null ? morti : [...morti, s.vittima]),
+  },
+  {
+    fase: "veggente",
+    ruolo: "veggente",
+    campo: "ispezionato",
+    unaSolaScelta: true,
+    puoiScegliere: (s, p) => s.ruoli[p] !== "veggente",
+    ordineEffetto: 0,
+    effetto: (_s, morti) => morti,
+  },
+  {
+    fase: "medico",
+    ruolo: "medico",
+    campo: "protetto",
+    unaSolaScelta: false,
+    puoiScegliere: (s, p) => p !== s.ultimoProtetto,
+    ordineEffetto: 2,
+    // Con il medico morto la fase si fa lo stesso (per non svelare nulla), ma la scelta è finta e non salva nessuno.
+    effetto: (s, morti) => (haRuoloVivo(s, "medico") ? morti.filter((p) => p !== s.protetto) : morti),
+  },
+];
+
+export function descrittoreNotte(fase: Fase): DescrittoreNotte | undefined {
+  return FASI_NOTTE.find((d) => d.fase === fase);
+}
+
+/** La scelta già fatta in questa notte per il descrittore (null = nessuna). */
+export function sceltaNotte(s: Stato, d: DescrittoreNotte): number | null {
+  return s[d.campo];
 }
 
 /**
- * Chi si può scegliere nella fase notturna `fase`: solo i vivi; i lupi non sbranano altri lupi,
- * il veggente non indaga su di sé e il medico non protegge due notti di fila la stessa persona.
+ * Chi si può scegliere nella fase notturna `fase`: solo i vivi che il descrittore ammette.
+ * Fuori dalla notte la lista è vuota.
  */
 export function candidatiNotte(s: Stato, fase: Fase = s.fase): number[] {
-  return s.vivi.filter((p) => {
-    if (fase === "lupi") return s.ruoli[p] !== "lupo";
-    if (fase === "veggente") return s.ruoli[p] !== "veggente";
-    if (fase === "medico") return p !== s.ultimoProtetto;
-    return false;
-  });
+  const d = descrittoreNotte(fase);
+  return d ? s.vivi.filter((p) => d.puoiScegliere(s, p)) : [];
 }
 
 export function haRuoloVivo(s: Stato, ruolo: Ruolo): boolean {
@@ -125,30 +208,26 @@ export function contaVoti(voti: Record<number, number>): { eliminato: number | n
 }
 
 /**
- * Fase notturna successiva: salta i ruoli che non esistono nella partita.
- * Quando la notte è finita (nessun altro ruolo da svegliare) la risolve, così
- * la vittima muore anche nelle partite senza veggente o senza medico.
+ * Fase notturna successiva a `dopo` (null = dall'inizio della notte): salta i ruoli che non esistono
+ * nella partita. Quando la notte è finita la risolve, così la vittima muore anche senza veggente o medico.
  */
-function dopoLupi(s: Stato): Stato {
-  return Object.values(s.ruoli).includes("veggente") ? { ...s, fase: "veggente" } : dopoVeggente(s);
-}
-function dopoVeggente(s: Stato): Stato {
-  return Object.values(s.ruoli).includes("medico") ? { ...s, fase: "medico" } : risolviNotte(s);
+function prossimaFaseNotte(s: Stato, dopo: Fase | null): Stato {
+  const da = dopo === null ? 0 : FASI_NOTTE.findIndex((d) => d.fase === dopo) + 1;
+  const prossima = FASI_NOTTE.slice(da).find((d) => Object.values(s.ruoli).includes(d.ruolo));
+  return prossima ? { ...s, fase: prossima.fase } : risolviNotte(s);
 }
 
 function risolviNotte(s: Stato): Stato {
-  // Con il medico morto la fase si fa lo stesso (per non svelare nulla), ma la scelta è finta e non salva nessuno.
-  const protezione = haRuoloVivo(s, "medico") ? s.protetto : null;
-  const morto = s.vittima !== null && s.vittima !== protezione ? s.vittima : null;
-  const vivi = s.vivi.filter((p) => p !== morto);
-  const v = vincitore(s.ruoli, vivi);
+  const ordine = [...FASI_NOTTE].sort((x, y) => x.ordineEffetto - y.ordineEffetto);
+  const morti = ordine.reduce<number[]>((m, d) => d.effetto(s, m), []);
+  const vivi = s.vivi.filter((p) => !morti.includes(p));
   return {
     ...s,
     vivi,
-    mortiNotte: morto === null ? [] : [morto],
-    ultimoProtetto: protezione,
+    mortiNotte: morti,
+    ultimoProtetto: haRuoloVivo(s, "medico") ? s.protetto : null,
     fase: "alba",
-    vincitore: v,
+    vincitore: vincitore(s.ruoli, vivi),
   };
 }
 
@@ -165,6 +244,7 @@ export function riduci(s: Stato, a: Azione): Stato {
         ...statoIniziale(),
         giocatori,
         ruoli: mappa,
+        ruoliIniziali: { ...mappa },
         vivi: giocatori.map((g) => g.posto),
         svelaRuoli: a.svelaRuoli ?? true,
         narratoreGioca: a.narratoreGioca ?? false,
@@ -181,17 +261,13 @@ export function riduci(s: Stato, a: Azione): Stato {
       return nuovaNotte({ ...s, cartaMostrata: false });
     }
     case "scegli": {
-      if (!candidatiNotte(s).includes(a.posto)) return s;
-      if (s.fase === "lupi") return { ...s, vittima: a.posto };
-      // Il veggente guarda una sola persona a notte: dopo la prima scelta non si cambia.
-      if (s.fase === "veggente") return s.ispezionato === null ? { ...s, ispezionato: a.posto } : s;
-      if (s.fase === "medico") return { ...s, protetto: a.posto };
-      return s;
+      const d = descrittoreNotte(s.fase);
+      if (!d || !candidatiNotte(s).includes(a.posto)) return s;
+      if (d.unaSolaScelta && sceltaNotte(s, d) !== null) return s;
+      return { ...s, [d.campo]: a.posto };
     }
     case "avanti": {
-      if (s.fase === "lupi") return dopoLupi(s);
-      if (s.fase === "veggente") return dopoVeggente(s);
-      if (s.fase === "medico") return risolviNotte(s);
+      if (descrittoreNotte(s.fase)) return prossimaFaseNotte(s, s.fase);
       if (s.fase === "alba") return { ...s, fase: "voto", ballottaggio: null, esitoVoto: null };
       return s;
     }
@@ -213,16 +289,18 @@ export function riduci(s: Stato, a: Azione): Stato {
 }
 
 function nuovaNotte(s: Stato): Stato {
-  return {
-    ...s,
-    fase: "lupi",
-    notte: s.notte + 1,
-    vittima: null,
-    protetto: null,
-    ispezionato: null,
-    mortiNotte: [],
-    eliminato: null,
-    esitoVoto: null,
-    ballottaggio: null,
-  };
+  return prossimaFaseNotte(
+    {
+      ...s,
+      notte: s.notte + 1,
+      vittima: null,
+      protetto: null,
+      ispezionato: null,
+      mortiNotte: [],
+      eliminato: null,
+      esitoVoto: null,
+      ballottaggio: null,
+    },
+    null,
+  );
 }

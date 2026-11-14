@@ -1,6 +1,6 @@
 # Piano: Lupus, personaggi e regole ufficiali
 
-Stato: da fare (nessun passo iniziato). Data piano: 2026-11-14. Riferimento se il contesto si riempie: decisioni, ordine di lavoro, avanzamento.
+Stato: in corso (passo 1 fatto). Data piano: 2026-11-14. Riferimento se il contesto si riempie: decisioni, ordine di lavoro, avanzamento.
 
 Fonte: il regolamento cartaceo del gioco da tavola che l'utente possiede. **Non è nel repo** (testo protetto): qui ci sono solo le regole, spiegate con parole nostre. I testi dei personaggi e del regolamento in `data/` e `locales/` si scrivono da zero.
 
@@ -58,7 +58,7 @@ Per ogni ruolo nuovo: testi nostri in `data/{it,en}/personaggi.json` e `locales/
 
 ## Stato di avanzamento
 
-- [ ] 1. Motore a descrittori
+- [x] 1. Motore a descrittori (`FASI_NOTTE`, `fazione`, `finePartita`, `ruoliIniziali` in `logica.ts`; la UI della notte ne deriva; le frasi del narratore restano per fase)
 - [ ] 2. Preparazione
 - [ ] 3. Voto ufficiale
 - [ ] 4. Indemoniato, Massoni, Medium
