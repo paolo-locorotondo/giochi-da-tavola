@@ -64,4 +64,4 @@ Per ogni ruolo nuovo: testi nostri in `data/{it,en}/personaggi.json` e `locales/
 - [x] 4. Indemoniato, Massoni, Medium
 - [x] 5. Criceto mannaro
 - [x] 6. Gufo
-- [ ] 7. Mitomane
+- [x] 7. Mitomane

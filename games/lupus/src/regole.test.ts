@@ -61,6 +61,7 @@ describe("composizione: speciali per numero di giocatori", () => {
     expect(specialiPredefiniti(13)).toEqual(["medium", "indemoniato", "medico", "gufo", "massone"]);
     expect(specialiPredefiniti(14)).not.toContain("criceto");
     expect(specialiPredefiniti(15)).toEqual(["medium", "indemoniato", "medico", "gufo", "massone", "criceto"]);
+    expect(specialiPredefiniti(16)).toContain("mitomane");
   });
 
   it("i massoni sono sempre due", () => {
@@ -93,6 +94,7 @@ describe("distribuisciRuoli: composizione per numero di giocatori", () => {
         expect(conta("massone")).toBe(n >= 13 ? 2 : 0);
         expect(conta("criceto")).toBe(n >= 15 ? 1 : 0);
         expect(conta("gufo")).toBe(n >= 12 ? 1 : 0);
+        expect(conta("mitomane")).toBe(n >= 16 ? 1 : 0);
         expect(conta("contadino")).toBe(
           n -
             conta("lupo") -
@@ -102,7 +104,8 @@ describe("distribuisciRuoli: composizione per numero di giocatori", () => {
             conta("indemoniato") -
             conta("massone") -
             conta("criceto") -
-            conta("gufo"),
+            conta("gufo") -
+            conta("mitomane"),
         );
         expect(conta("lupo")).toBeLessThan(n - conta("lupo"));
       }
@@ -535,7 +538,7 @@ describe("partite complete", () => {
   function gioca(n: number, seme: number): Stato {
     let s = distribuisci(avvia(n, seme));
     for (let passo = 0; passo < 600 && s.fase !== "fine"; passo++) {
-      if (["lupi", "veggente", "medico", "medium", "massoni", "gufo"].includes(s.fase)) {
+      if (["lupi", "veggente", "medico", "medium", "massoni", "gufo", "mitomane"].includes(s.fase)) {
         const c = candidatiNotte(s);
         s = c.length ? scegliEAvanti(s, c[passo % c.length]!) : riduci(s, { tipo: "avanti" });
       } else if (s.fase === "alba") {
@@ -685,7 +688,7 @@ describe("Indemoniato, Massoni e Medium", () => {
     for (let seme = 1; seme <= 20; seme++) {
       let s = distribuisci(avvia(15, seme, { primaNotteSenzaVittima: false }));
       for (let i = 0; i < 300 && s.fase !== "fine"; i++) {
-        if (["medium", "massoni", "gufo", "medico", "veggente", "lupi"].includes(s.fase)) {
+        if (["medium", "massoni", "gufo", "medico", "veggente", "lupi", "mitomane"].includes(s.fase)) {
           const c = candidatiNotte(s);
           s = riduci(s, { tipo: "scegli", posto: c[0] ?? -1 });
           s = riduci(s, { tipo: "avanti" });
@@ -803,7 +806,7 @@ describe("Criceto mannaro", () => {
     for (let seme = 1; seme <= 20; seme++) {
       let s = distribuisci(avvia(16, seme, { primaNotteSenzaVittima: false }));
       for (let i = 0; i < 400 && s.fase !== "fine"; i++) {
-        if (["medium", "massoni", "gufo", "medico", "veggente", "lupi"].includes(s.fase)) {
+        if (["medium", "massoni", "gufo", "medico", "veggente", "lupi", "mitomane"].includes(s.fase)) {
           const c = candidatiNotte(s);
           s = riduci(s, { tipo: "scegli", posto: c[0] ?? -1 });
           s = riduci(s, { tipo: "avanti" });
@@ -975,7 +978,7 @@ describe("Gufo e Gufo Letale", () => {
       for (let seme = 1; seme <= 10; seme++) {
         let s = distribuisci(avvia(n, seme, { primaNotteSenzaVittima: false }));
         for (let i = 0; i < 400 && s.fase !== "fine"; i++) {
-          if (["medium", "massoni", "gufo", "medico", "veggente", "lupi"].includes(s.fase)) {
+          if (["medium", "massoni", "gufo", "medico", "veggente", "lupi", "mitomane"].includes(s.fase)) {
             const c = candidatiNotte(s);
             s = riduci(s, { tipo: "scegli", posto: c[0] ?? -1 });
             s = riduci(s, { tipo: "avanti" });
@@ -992,5 +995,82 @@ describe("Gufo e Gufo Letale", () => {
         expect(s.fase, `n=${n} seme=${seme}`).toBe("fine");
       }
     }
+  });
+});
+
+describe("Mitomane", () => {
+  const piena = (): Stato => ({ ...avvia(16, 3, { primaNotteSenzaVittima: false }), notte: 2 });
+  const alMitomane = (s: Stato): Stato => ({ ...s, fase: "mitomane" });
+  const mit = (s: Stato) => postiCon(s, "mitomane")[0]!;
+
+  it("compare da 16 giocatori ed è umano", () => {
+    expect(specialiPredefiniti(15)).not.toContain("mitomane");
+    expect(specialiPredefiniti(16)).toContain("mitomane");
+    expect(fazione("mitomane")).toBe("villaggio");
+    expect(postiCon(piena(), "mitomane")).toHaveLength(1);
+  });
+
+  it("si sveglia solo alla fine della seconda notte", () => {
+    const fasi = (notte: number) => {
+      let s: Stato = { ...riduci({ ...avvia(16, 3), fase: "voto", notte: notte - 1 }, { tipo: "dopoVoto" }) };
+      const f: Fase[] = [];
+      while (s.fase !== "alba" && f.length < 12) {
+        f.push(s.fase);
+        const c = candidatiNotte(s);
+        s = c.length ? scegliEAvanti(s, c[0]!) : riduci(s, { tipo: "avanti" });
+      }
+      return f;
+    };
+    expect(fasi(1)).not.toContain("mitomane");
+    expect(fasi(2).at(-1)).toBe("mitomane");
+    expect(fasi(3)).not.toContain("mitomane");
+  });
+
+  it("non può imitare sé stesso", () => {
+    const s = alMitomane(piena());
+    expect(candidatiNotte(s)).not.toContain(mit(s));
+  });
+
+  it("imitando un lupo diventa lupo, con la fazione dei lupi", () => {
+    const s = alMitomane(piena());
+    const lupo = postiCon(s, "lupo")[0]!;
+    const dopo = scegliEAvanti(s, lupo);
+    expect(dopo.fase).toBe("alba");
+    expect(dopo.ruoli[mit(s)]).toBe("lupo");
+    expect(dopo.ruoliIniziali[mit(s)]).toBe("mitomane");
+  });
+
+  it("imitando il veggente diventa veggente", () => {
+    const s = alMitomane(piena());
+    const dopo = scegliEAvanti(s, postiCon(s, "veggente")[0]!);
+    expect(dopo.ruoli[mit(s)]).toBe("veggente");
+  });
+
+  it("imitando altri resta mitomane (umano)", () => {
+    const s = alMitomane(piena());
+    const civile = postiCon(s, "contadino")[0]!;
+    expect(scegliEAvanti(s, civile).ruoli[mit(s)]).toBe("mitomane");
+  });
+
+  it("se muore nella notte non cambia nulla", () => {
+    const base = piena();
+    const m = mit(base);
+    const lupo = postiCon(base, "lupo")[0]!;
+    const morto = scegliEAvanti({ ...base, fase: "mitomane", vittima: m }, lupo);
+    expect(morto.vivi).not.toContain(m);
+    expect(morto.ruoli[m]).toBe("mitomane");
+  });
+
+  it("dopo il cambio il mitomane-lupo conta come lupo per la vittoria", () => {
+    const s = alMitomane(piena());
+    const lupi = postiCon(s, "lupo");
+    const dopo = scegliEAvanti(s, lupi[0]!);
+    expect(postiCon(dopo, "lupo")).toHaveLength(lupi.length + 1);
+  });
+
+  it("la scelta si fa una volta sola", () => {
+    const s = alMitomane(piena());
+    const [a, b] = candidatiNotte(s);
+    expect(riduci(riduci(s, { tipo: "scegli", posto: a! }), { tipo: "scegli", posto: b! }).imitato).toBe(a);
   });
 });

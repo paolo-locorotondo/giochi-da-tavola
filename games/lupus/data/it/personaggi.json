@@ -52,5 +52,11 @@
     "plurale": "gufi",
     "tuo": "Ogni notte indichi un giocatore. Con meno di 20 giocatori, di giorno sarà tra gli indiziati; con 20 o più (Gufo Letale) muore all'alba, a meno che sia un lupo o un criceto mannaro.",
     "regolamento": "Ogni notte indica un giocatore: con meno di 20 giocatori sarà tra gli indiziati; con 20 o più (Gufo Letale) muore all'alba, a meno che sia un lupo o un criceto mannaro."
+  },
+  "mitomane": {
+    "nome": "Mitomane",
+    "plurale": "mitomani",
+    "tuo": "Alla fine della seconda notte indichi un giocatore: se è un lupo diventi lupo, se è il veggente diventi veggente, altrimenti resti un umano senza poteri. Poi ti svegli con il nuovo ruolo.",
+    "regolamento": "Una sola volta, alla fine della seconda notte, indica un giocatore: se è lupo o veggente ne prende il ruolo, altrimenti resta umano."
   }
 }

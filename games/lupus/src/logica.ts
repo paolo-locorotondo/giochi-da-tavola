@@ -1,6 +1,6 @@
 import { creaGiocatori, creaRng, type Giocatore } from "@gdt/engine";
 
-export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium" | "criceto" | "gufo";
+export type Ruolo = "lupo" | "contadino" | "veggente" | "medico" | "indemoniato" | "massone" | "medium" | "criceto" | "gufo" | "mitomane";
 
 /** Da che parte sta un ruolo. Con un ruolo nuovo il compilatore chiede qui la sua fazione. */
 /** Il criceto mannaro è una fazione a sé: vince da solo se è vivo a fine partita. */
@@ -17,6 +17,8 @@ const FAZIONE: Record<Ruolo, Fazione> = {
   medium: "villaggio",
   criceto: "criceto",
   gufo: "villaggio",
+  // Il Mitomane parte dal villaggio; se imita un lupo il suo ruolo diventa «lupo» e con esso la fazione.
+  mitomane: "villaggio",
 };
 
 export function fazione(ruolo: Ruolo): Fazione {
@@ -30,7 +32,7 @@ export const MAX_GIOCATORI = 24;
 export const MIN_GUFO_LETALE = 20;
 
 /** Versione della forma dello stato salvato: le partite salvate con un'altra versione si scartano. */
-export const VERSIONE_STATO = 4;
+export const VERSIONE_STATO = 5;
 
 /** Lupi: 2 da 8 a 15 giocatori, 3 da 16. */
 export function lupiPer(n: number): number {
@@ -45,6 +47,7 @@ export const SPECIALI: readonly { ruolo: Ruolo; da: number; quanti: number }[] =
   { ruolo: "gufo", da: 12, quanti: 1 },
   { ruolo: "massone", da: 13, quanti: 2 },
   { ruolo: "criceto", da: 15, quanti: 1 },
+  { ruolo: "mitomane", da: 16, quanti: 1 },
 ];
 
 /** Gli speciali che compaiono da soli con `n` giocatori. */
@@ -82,6 +85,7 @@ export type Fase =
   | "veggente"
   | "medico"
   | "lupi"
+  | "mitomane"
   | "alba"
   | "discussione"
   | "voto"
@@ -91,7 +95,7 @@ export type Fase =
   | "fine";
 
 /** Fasi in cui un ruolo si sveglia di notte. */
-export type FaseNotte = "medium" | "massoni" | "gufo" | "medico" | "veggente" | "lupi";
+export type FaseNotte = "medium" | "massoni" | "gufo" | "medico" | "veggente" | "lupi" | "mitomane";
 
 export interface Stato {
   versione: number;
@@ -109,6 +113,8 @@ export interface Stato {
   protetto: number | null;
   /** Chi il Gufo ha indicato questa notte (null = nessuno). */
   gufato: number | null;
+  /** Chi il Mitomane ha scelto di imitare (null = nessuno). */
+  imitato: number | null;
   /** Posto ispezionato dal veggente questa notte (il risultato resta visibile finché si prosegue). */
   ispezionato: number | null;
   /** Chi è morto nell'ultima notte (vuoto = nessuno). */
@@ -164,6 +170,7 @@ export function statoIniziale(): Stato {
     vittima: null,
     protetto: null,
     gufato: null,
+    imitato: null,
     ispezionato: null,
     mortiNotte: [],
     indiziati: null,
@@ -206,6 +213,8 @@ export interface EsitoNotte {
   sbranato: number | null;
   /** Gli altri morti della notte, nell'ordine in cui si annunciano. */
   altri: number[];
+  /** Cambi di ruolo a fine notte (posto → nuovo ruolo). */
+  cambi: Record<number, Ruolo>;
 }
 
 /** Descrittore di una fase notturna: quando si sveglia, chi può scegliere, dove va la scelta, che effetto ha. */
@@ -216,7 +225,7 @@ export interface DescrittoreNotte {
   /** Se in questa notte la fase si gioca (es. il medico dalla seconda notte). */
   quando: (s: Stato) => boolean;
   /** Campo dello stato dove finisce la scelta. */
-  campo: "vittima" | "ispezionato" | "protetto" | "gufato" | null;
+  campo: "vittima" | "ispezionato" | "protetto" | "gufato" | "imitato" | null;
   /** Se questa notte si sceglie qualcuno (es. la prima notte i lupi si riconoscono soltanto). */
   sceglie: (s: Stato) => boolean;
   /** Se la scelta, una volta fatta, non si cambia più. */
@@ -309,6 +318,25 @@ export const FASI_NOTTE: readonly DescrittoreNotte[] = [
     ordineEffetto: 1,
     // Il criceto mannaro non si può sbranare: se lo scelgono, nessuno muore.
     effetto: (s, e) => ({ ...e, sbranato: s.vittima !== null && s.ruoli[s.vittima] === "criceto" ? null : s.vittima }),
+  },
+  {
+    // Una volta sola, alla fine della seconda notte: indica un vivo. Lupo → diventa lupo, veggente → veggente,
+    // altrimenti resta umano. Da lì si sveglia con il nuovo ruolo. Se muore nella notte, non cambia nulla.
+    fase: "mitomane",
+    ruolo: "mitomane",
+    quando: (s) => s.notte === 2,
+    campo: "imitato",
+    sceglie: () => true,
+    unaSolaScelta: true,
+    puoiScegliere: (s, p) => s.ruoli[p] !== "mitomane",
+    ordineEffetto: 7,
+    effetto: (s, e) => {
+      const chi = s.vivi.find((p) => s.ruoli[p] === "mitomane");
+      if (chi === undefined || s.imitato === null) return e;
+      if (e.sbranato === chi || e.altri.includes(chi)) return e;
+      const nuovo = s.ruoli[s.imitato];
+      return nuovo === "lupo" || nuovo === "veggente" ? { ...e, cambi: { ...e.cambi, [chi]: nuovo } } : e;
+    },
   },
 ];
 
@@ -408,19 +436,27 @@ function risolviNotte(s: Stato): Stato {
   const ordine = [...FASI_NOTTE].sort((x, y) => x.ordineEffetto - y.ordineEffetto);
   const esito = ordine.reduce<EsitoNotte>(
     (e, d) => (siGioca(s, d) && d.sceglie(s) && ruoloAttivo(s, d) ? d.effetto(s, e) : e),
-    { sbranato: null, altri: [] },
+    { sbranato: null, altri: [], cambi: {} },
   );
+  const ruoli = { ...s.ruoli, ...esito.cambi };
   const morti = [...(esito.sbranato === null ? [] : [esito.sbranato]), ...esito.altri.filter((p) => p !== esito.sbranato)];
   const vivi = s.vivi.filter((p) => !morti.includes(p));
   return {
     ...s,
+    ruoli,
     vivi,
     mortiNotte: morti,
     // Il «Benvenuto!» passa all'ultimo morto: se muore qualcuno nella notte, a lui (prima lo sbranato).
     benvenuto: morti[0] ?? s.benvenuto,
     fase: "alba",
-    vincitore: vincitore(s.ruoli, vivi),
+    vincitore: vincitore(ruoli, vivi),
   };
+}
+
+/** Il ruolo che il Mitomane diventerebbe imitando `posto`: lupo, veggente, oppure resta Mitomane (umano). */
+export function ruoloImitato(s: Stato, posto: number | null): Ruolo {
+  const r = posto === null ? undefined : s.ruoli[posto];
+  return r === "lupo" || r === "veggente" ? r : "mitomane";
 }
 
 export function riduci(s: Stato, a: Azione): Stato {
@@ -498,6 +534,7 @@ function nuovaNotte(s: Stato): Stato {
       vittima: null,
       protetto: null,
       gufato: null,
+      imitato: null,
       ispezionato: null,
       mortiNotte: [],
       eliminato: null,

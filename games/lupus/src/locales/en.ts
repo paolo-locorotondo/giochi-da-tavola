@@ -7,13 +7,13 @@ export const en: Dizionario<typeof it> = {
   descrizioneGioco: "The village sleeps, the wolves don't. The phone is the narrator.",
   regPasso1: "Everyone secretly sees their own role. The werewolves see their pack.",
   regPasso2:
-    "Night: everyone closes their eyes. The narrator calls the doctor (from the second night, protects someone but never themselves), then the owl (points at a player: they become a suspect, or die if the owl is deadly), then the seer (finds out whether a player is a werewolf), then the werewolves (they pick a victim). From the second night the medium learns whether the last lynched player was a werewolf; on the first night the freemasons recognise each other. On the first night nobody dies: the werewolves only get to know each other.",
+    "Night: everyone closes their eyes. The narrator calls the doctor (from the second night, protects someone but never themselves), then the owl (points at a player: they become a suspect, or die if the owl is deadly), then the seer (finds out whether a player is a werewolf), then the werewolves (they pick a victim). At the end of the second night the mythomaniac points at a player and takes their role if they are a werewolf or the seer. From the second night the medium learns whether the last lynched player was a werewolf; on the first night the freemasons recognise each other. On the first night nobody dies: the werewolves only get to know each other.",
   regPasso3: "Day: the village learns who died, then discusses. First round: everyone votes, the dead (ghosts) too; the two most voted are the suspects and each makes a plea.",
   regPasso4: "Second round: only the living who are not suspects vote, in secret; the one with most votes is lynched. Ties go to whoever sits closest, clockwise, to the holder of the «Welcome!» (the last to die, the narrator on the first day). The dead no longer speak.",
   regPasso5:
     "The villagers win when all the werewolves are dead; the werewolves win when they are at least as many as the other living players. The werehamster, if still alive at the end, wins alone.",
   regNota1:
-    "For 8 to 24 players. Roles: 2 werewolves (3 from 16 players), 1 seer, then, from a minimum number of players and removable or addable before starting: medium (9), possessed (10), doctor (11), owl (12; deadly from 20), two freemasons (13), werehamster (15); the rest villagers.",
+    "For 8 to 24 players. Roles: 2 werewolves (3 from 16 players), 1 seer, then, from a minimum number of players and removable or addable before starting: medium (9), possessed (10), doctor (11), owl (12; deadly from 20), two freemasons (13), werehamster (15), mythomaniac (16); the rest villagers.",
   regNota2: "These are the rules of the classic game: there are many variants.",
 
   impTransizione: "Transition screen",
@@ -93,6 +93,13 @@ export const en: Dizionario<typeof it> = {
   gufoLetaleNota: "Deadly Owl: whoever you point at dies at dawn, unless they are a werewolf or a werehamster.",
   vGufo: "The owl wakes up and points at a player.",
   arringheGufato: "{nome} was pointed at by the owl.",
+  titoloMitomane: "The mythomaniac chooses whom to imitate",
+  fineMitomane: "Understood, go back to sleep",
+  mitomaneNota: "Only once: point at a werewolf and you become a werewolf, point at the seer and you become the seer, otherwise you stay human.",
+  mitomaneLupo: "You are now a werewolf.",
+  mitomaneVeggente: "You are now the seer.",
+  mitomaneUmano: "Nothing changes: you stay a powerless human.",
+  vMitomane: "The mythomaniac wakes up and chooses whom to imitate.",
   titoloMedium: "The medium listens to the spirit",
   fineMedium: "Understood, go back to sleep",
   mediumLupo: "The spirit of {nome} was a werewolf.",

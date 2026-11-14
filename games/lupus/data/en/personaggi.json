@@ -52,5 +52,11 @@
     "plurale": "owls",
     "tuo": "Each night you point at a player. With fewer than 20 players that player becomes a suspect the next day; with 20 or more (Deadly Owl) they die at dawn, unless they are a werewolf or a werehamster.",
     "regolamento": "Each night points at a player: with fewer than 20 players they become a suspect; with 20 or more (Deadly Owl) they die at dawn, unless they are a werewolf or a werehamster."
+  },
+  "mitomane": {
+    "nome": "Mythomaniac",
+    "plurale": "mythomaniacs",
+    "tuo": "At the end of the second night you point at a player: if they are a werewolf you become a werewolf, if they are the seer you become the seer, otherwise you stay a powerless human. Then you wake up with the new role.",
+    "regolamento": "Once, at the end of the second night, points at a player: if they are a werewolf or the seer, takes their role; otherwise stays human."
   }
 }

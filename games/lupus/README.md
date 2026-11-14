@@ -13,7 +13,7 @@ Il villaggio dorme, i lupi no. Un telefono al centro del tavolo fa da **narrator
 5. **Secondo turno**: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto; il primo giorno il narratore, quindi il primo nome dell'elenco).
 5. Vincono i **contadini** se muoiono tutti i lupi, i **lupi** quando sono almeno quanti gli altri vivi. Il **criceto mannaro**, se è vivo alla fine, vince da solo.
 
-Ruoli: 2 lupi da 8 a 15 giocatori, 3 da 16; un veggente; poi gli speciali dal numero minimo (si possono togliere o aggiungere prima di iniziare): medium da 9, indemoniato da 10, medico da 11, gufo da 12 (letale da 20), due massoni da 13, criceto mannaro da 15. Il resto contadini.
+Ruoli: 2 lupi da 8 a 15 giocatori, 3 da 16; un veggente; poi gli speciali dal numero minimo (si possono togliere o aggiungere prima di iniziare): medium da 9, indemoniato da 10, medico da 11, gufo da 12 (letale da 20), due massoni da 13, criceto mannaro da 15, mitomane da 16. Il resto contadini.
 
 | Ruolo | Dove sta | Cosa fa |
 |---|---|---|
@@ -25,6 +25,7 @@ Ruoli: 2 lupi da 8 a 15 giocatori, 3 da 16; un veggente; poi gli speciali dal nu
 | Massone | villaggio | i due massoni si riconoscono la prima notte |
 | Medium | villaggio | dalla seconda notte sa se l'ultimo linciato era un lupo (un Indemoniato o un contadino conta come «non lupo») |
 | Gufo | villaggio | ogni notte indica uno: sotto i 20 giocatori sarà tra gli indiziati del primo turno; da 20 (Gufo Letale) muore all'alba, salvo lupi e criceto. Il medico non lo ferma |
+| Mitomane | villaggio | una volta, alla fine della seconda notte, indica un vivo: se è lupo diventa lupo, se è il veggente diventa veggente, altrimenti resta umano; poi si sveglia con il nuovo ruolo. Se muore quella notte non cambia nulla |
 | Criceto mannaro | a sé | i lupi non possono sbranarlo; se il veggente lo guarda muore insieme allo sbranato; vince da solo se è vivo a fine partita (per il conteggio è umano) |
 
 ## Modalità di gioco
@@ -69,6 +70,7 @@ Le impostazioni di gioco sono salvate sul telefono e non fanno parte della parti
 - Medium: il messaggio «era un lupo» compare solo se il linciato era davvero un lupo (non l'Indemoniato). Se il medium è morto, la sua fase si gioca senza messaggi.
 - Fine partita: l'Indemoniato vince con i lupi, non con i contadini.
 - Gufo (12 giocatori): di notte indica uno; con 12–19 giocatori compare tra gli indiziati; con 20+ muore all'alba (se non è lupo o criceto).
+- Mitomane (16 giocatori): si sveglia per ultimo, solo la seconda notte; il risultato dice «Ora sei un lupo / il veggente» o «Non cambia nulla».
 - Criceto (15 giocatori): se i lupi lo scelgono, nessuno muore; se il veggente lo guarda compare «È un criceto mannaro…» e all'alba muoiono due persone (lo sbranato e il criceto); se è vivo a fine partita vince solo lui («Vince il criceto mannaro!»).
 - Si lincia sempre qualcuno: i pareggi li decide il «Benvenuto!», non c'è più il ballottaggio. I nomi vanno inseriti in ordine orario.
 - Fine partita: l'elenco mostra i ruoli di tutti.
@@ -113,7 +115,7 @@ Italiano e inglese. La lingua si sceglie dall'ingranaggio dell'app; il narratore
 
 Il compilatore segnala una lingua o una chiave mancante.
 
-**Tradurre o cambiare un personaggio**: modifica `nome`, `tuo` e `regolamento` in `data/<lingua>/personaggi.json`, senza toccare il codice. Le chiavi (`lupo`, `contadino`, `veggente`, `medico`, `indemoniato`, `massone`, `medium`, `criceto`, `gufo`) sono i ruoli del codice e non si traducono. Ogni ruolo ha anche `plurale` (per l'elenco della composizione, «2 massoni»).
+**Tradurre o cambiare un personaggio**: modifica `nome`, `tuo` e `regolamento` in `data/<lingua>/personaggi.json`, senza toccare il codice. Le chiavi (`lupo`, `contadino`, `veggente`, `medico`, `indemoniato`, `massone`, `medium`, `criceto`, `gufo`, `mitomane`) sono i ruoli del codice e non si traducono. Ogni ruolo ha anche `plurale` (per l'elenco della composizione, «2 massoni»).
 
 ## Deploy
 

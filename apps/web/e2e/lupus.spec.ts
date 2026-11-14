@@ -244,6 +244,39 @@ test("con 15 giocatori c'è il criceto mannaro: il veggente lo guarda e all'alba
   await schermata(page, "alba-due-morti");
 });
 
+test("con 16 giocatori il mitomane sceglie chi imitare alla fine della seconda notte", async ({ page }) => {
+  const NOMI_16 = NOMI_13 + "\nOlga\nPino\nRita";
+  await avvia(page, NOMI_16);
+  await giraLeCarte(page, 16);
+  // Notte 1: massoni, gufo, veggente, lupi (il mitomane non c'è ancora).
+  await page.getByRole("button", { name: "Ho visto, tornate a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await votaTutto(page, "terzo");
+  await page.getByRole("button", { name: "Scende la notte" }).click();
+  // Notte 2: medium, gufo, medico, veggente, lupi, poi il mitomane.
+  await page.getByRole("button", { name: "Ho capito, torna a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.locator("div.giocatori button").last().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await page.locator("div.giocatori button").first().click();
+  await page.getByRole("button", { name: "Ho visto, torna a dormire" }).click();
+  await page.locator("div.giocatori button").last().click();
+  await page.getByRole("button", { name: "Conferma e torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il mitomane sceglie chi imitare" })).toBeVisible();
+  await expect(page.getByText(/Una volta sola: se indichi un lupo/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ho capito, torna a dormire" })).toBeDisabled();
+  await schermata(page, "notte-mitomane");
+  await page.locator("div.giocatori button").first().click();
+  await expect(page.locator("p.grande")).toContainText(/Ora sei|Non cambia nulla/);
+  await page.getByRole("button", { name: "Ho capito, torna a dormire" }).click();
+  await expect(page.getByRole("heading", { name: "Il villaggio si risveglia" })).toBeVisible();
+});
+
 test("la partita sopravvive al refresh e si può chiudere", async ({ page }) => {
   await avvia(page);
   await giraLeCarte(page, 3);

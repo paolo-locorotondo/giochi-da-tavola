@@ -117,7 +117,7 @@ describe("notti: simulazione esaustiva", () => {
   /** Una notte intera: ogni fase che compare sceglie qualcuno. */
   const nottePiena = (s: Stato, vittima: number, protetto: number): Stato => {
     let x = s;
-    for (let i = 0; i < 8 && ["medium", "massoni", "gufo", "medico", "veggente", "lupi"].includes(x.fase); i++) {
+    for (let i = 0; i < 8 && ["medium", "massoni", "gufo", "medico", "veggente", "lupi", "mitomane"].includes(x.fase); i++) {
       const posto = x.fase === "lupi" ? vittima : x.fase === "medico" ? protetto : x.fase === "gufo" ? (x.vivi.find((p) => x.ruoli[p] === "lupo") as number) : (x.vivi.find((p) => x.ruoli[p] !== "veggente" && x.ruoli[p] !== "criceto") as number);
       x = scegliEAvanti(x, posto);
     }

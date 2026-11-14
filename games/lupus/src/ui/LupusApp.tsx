@@ -18,6 +18,7 @@ import {
   ruoloAttivo,
   linciatoEraLupo,
   gufoLetale,
+  ruoloImitato,
   massoni,
   votantiSecondoTurno,
   statoIniziale,
@@ -49,6 +50,7 @@ const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
   medium: "mortoVeggente",
   criceto: "mortoContadino",
   gufo: "mortoContadino",
+  mitomane: "mortoContadino",
 };
 
 const CHIAVE = "gdt-lupus-partita";
@@ -147,6 +149,7 @@ export function LupusApp() {
       case "veggente":
       case "medico":
       case "gufo":
+      case "mitomane":
       case "medium":
       case "massoni":
         return <Notte s={s} dispatch={dispatch} />;
@@ -226,6 +229,7 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
     case "veggente":
     case "medico":
     case "gufo":
+    case "mitomane":
     case "medium":
     case "massoni": {
       const apertura = primaFaseDellaNotte(s, s.fase) ? t("vNotte", { notte: s.notte }) + " " : "";
@@ -242,7 +246,9 @@ function frasePerFase(s: Stato, lingua: Lingua): string | null {
                 ? "vMassoni"
                 : s.fase === "gufo"
                   ? "vGufo"
-                  : "vMedico";
+                  : s.fase === "mitomane"
+                    ? "vMitomane"
+                    : "vMedico";
       return apertura + t(frase);
     }
     case "alba":
@@ -439,13 +445,14 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
 const TESTI_NOTTE: Record<
   FaseNotte,
   {
-    titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico" | "titoloMedium" | "titoloMassoni" | "titoloGufo";
-    fine: "fineLupi" | "fineVeggente" | "fineMedico" | "fineMedium" | "fineMassoni" | "fineGufo";
+    titolo: "titoloLupi" | "titoloVeggente" | "titoloMedico" | "titoloMedium" | "titoloMassoni" | "titoloGufo" | "titoloMitomane";
+    fine: "fineLupi" | "fineVeggente" | "fineMedico" | "fineMedium" | "fineMassoni" | "fineGufo" | "fineMitomane";
   }
 > = {
   medium: { titolo: "titoloMedium", fine: "fineMedium" },
   massoni: { titolo: "titoloMassoni", fine: "fineMassoni" },
   gufo: { titolo: "titoloGufo", fine: "fineGufo" },
+  mitomane: { titolo: "titoloMitomane", fine: "fineMitomane" },
   lupi: { titolo: "titoloLupi", fine: "fineLupi" },
   veggente: { titolo: "titoloVeggente", fine: "fineVeggente" },
   medico: { titolo: "titoloMedico", fine: "fineMedico" },
@@ -472,6 +479,12 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
           : t("nonELupo")
       : fase === "medium" && s.linciato !== null && ruoloAttivo(s, d)
         ? t(linciatoEraLupo(s) ? "mediumLupo" : "mediumNonLupo", { nome: nomeDi(s, s.linciato) })
+        : fase === "mitomane" && s.imitato !== null && ruoloAttivo(s, d)
+          ? t(
+              ({ lupo: "mitomaneLupo", veggente: "mitomaneVeggente" } as Record<string, "mitomaneLupo" | "mitomaneVeggente">)[
+                ruoloImitato(s, s.imitato)
+              ] ?? "mitomaneUmano",
+            )
         : fase === "massoni" && ruoloAttivo(s, d)
           ? t("massoniSono", { nomi: massoni(s).map((p) => nomeDi(s, p)).join(", ") })
           : null;
@@ -482,6 +495,7 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
       <h2>{t(TESTI_NOTTE[fase].titolo)}</h2>
       <p className="muted">{t("soloChiHaRuolo")}</p>
       {senzaScelta && fase === "lupi" && <p>{t("lupiSiRiconoscono")}</p>}
+      {fase === "mitomane" && <p>{t("mitomaneNota")}</p>}
       {fase === "gufo" && <p>{t(gufoLetale(s) ? "gufoLetaleNota" : "gufoNota")}</p>}
       <div className="giocatori">
         {candidati.map((p) => (
