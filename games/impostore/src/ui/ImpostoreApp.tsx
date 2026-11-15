@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
-import { suona } from "@gdt/suoni";
+import { suonoFine } from "../suoni";
 import { usaLingua, usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoProblema } from "../errori-ui";
@@ -362,7 +362,7 @@ function Fine({
   const vincitore = esito?.vincitore;
   // Un suono diverso per chi ha vinto, una volta sola quando compare la schermata finale.
   useEffect(() => {
-    if (vincitore) suona(vincitore === "civili" ? "civili" : "impostori");
+    if (vincitore) suonoFine(vincitore);
   }, [vincitore]);
   if (!esito) return null;
   const impostori = partita.impostori.map((p) => nomeDi(partita, p)).join(", ");

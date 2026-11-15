@@ -33,7 +33,7 @@ Ogni gioco ha la sua guida con cosa controllare e come provarlo: vedi la cartell
 apps/web/        app contenitore: menu dei giochi
 apps/server/     server di gioco WebSocket (serve anche l'app)
 packages/engine/ motore condiviso: numeri casuali con seme, giocatori, codice partita, fasi
-packages/suoni/  audio: interruttore unico (spento di default) e suoni sintetizzati dei giochi
+packages/suoni/  audio: interruttore unico (spento di default) e motore per suoni sintetizzati o file; i suoni di ogni gioco stanno in `games/<gioco>/src/suoni`
 games/           un gioco per cartella, ognuno con la sua guida
 apps/web/e2e/    test grafici (Playwright, 375 px, tema scuro e chiaro)
 docs/            guide e decisioni di progetto

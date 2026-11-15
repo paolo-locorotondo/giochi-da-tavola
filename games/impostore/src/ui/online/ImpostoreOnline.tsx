@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
-import { suona } from "@gdt/suoni";
+import { suonoFine } from "../../suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
 import { NOME_LINGUA, usaLingua, usaT, type Lingua } from "@gdt/i18n";
@@ -717,7 +717,7 @@ function Fine({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number | nu
   const f = v.fine;
   const vincitore = f?.vincitore;
   useEffect(() => {
-    if (vincitore) suona(vincitore === "civili" ? "civili" : "impostori");
+    if (vincitore) suonoFine(vincitore);
   }, [vincitore]);
   if (!f) return null;
   const e = v.ultimoEsito;

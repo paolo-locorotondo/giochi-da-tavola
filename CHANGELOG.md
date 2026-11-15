@@ -9,6 +9,11 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Modificato
+
+- Lupus in fabula: ululato e gallo sono ora registrazioni mp3 (offline, con ripiego sulla sintesi se non partono).
+- Audio: `packages/suoni` è generico; i suoni di ogni gioco stanno in `games/<gioco>/src/suoni`.
+
 ## [0.13.0] - 2026-11-14
 
 ### Aggiunto

@@ -48,7 +48,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 Per ora c'è solo il click dei pulsanti, uguale a quello degli altri giochi (è globale, in `apps/web/src/main.tsx`, e segue l'interruttore Audio). Non ci sono suoni propri del lancio.
 
-I suoni personalizzati (lancio del dado, caduta della moneta) arriveranno con file audio **registrati** con licenza che permetta di pubblicarli nel repo (CC0): vanno messi in `packages/suoni/audio/` con la fonte in `CREDITI.md` e i formati aggiunti a `globPatterns` di `apps/web/vite.config.ts`, perché funzionino offline.
+I suoni personalizzati (lancio del dado, caduta della moneta) arriveranno con file audio **registrati** con licenza che permetta di pubblicarli nel repo (CC0): vanno messi in `games/dadi/src/suoni/` (importati dal codice, come per Lupus) con la fonte in `CREDITI.md` e i formati aggiunti a `globPatterns` di `apps/web/vite.config.ts`, perché funzionino offline.
 
 ## Struttura
 

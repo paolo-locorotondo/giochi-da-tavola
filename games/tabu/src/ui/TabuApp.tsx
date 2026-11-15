@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { suona } from "@gdt/suoni";
+import { suonoIndovinata, suonoPassa, suonoVietata } from "../suoni";
 import { usaLingua, usaT, type Traduttore } from "@gdt/i18n";
 import { carteDi, type Carta } from "../carte";
 import { dizionari } from "../locales";
@@ -262,7 +263,7 @@ function Gioco({
           className="btn primario"
           data-suono="no"
           onClick={() => {
-            suona("indovinata");
+            suonoIndovinata();
             onCambia({ ...turno, corrette: [...turno.corrette, c.parola] });
           }}
         >
@@ -272,7 +273,7 @@ function Gioco({
           className="btn pericolo"
           data-suono="no"
           onClick={() => {
-            suona("vietata");
+            suonoVietata();
             onCambia({ ...turno, errori: [...turno.errori, c.parola] });
           }}
         >
@@ -282,7 +283,7 @@ function Gioco({
           className="btn passa"
           data-suono="no"
           onClick={() => {
-            suona("passa");
+            suonoPassa();
             onCambia({ ...turno, saltate: [...turno.saltate, c.parola] });
           }}
         >

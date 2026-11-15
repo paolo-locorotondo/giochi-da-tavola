@@ -64,7 +64,7 @@ Le impostazioni di gioco sono salvate sul telefono e non fanno parte della parti
 
 - Ogni ruolo chiude con lo stesso gesto: «Conferma e torna a dormire» (o «Ho visto, torna a dormire» per il veggente), poi la transizione. Con «No» la transizione non compare.
 - La voce italiana parla a ogni fase. Serve l'audio acceso (ingranaggio → Audio, spento di default); spegnerlo ferma subito la voce. La casella "Voce del narratore" spegne solo la voce.
-- Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico; indemoniato, massone, medium e criceto riusano quelli di lupo, contadino e veggente) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Sono sintetizzati: se non convincono, si ritoccano in `packages/suoni/src/index.ts`. Se non si sente: volume e voci italiane installate.
+- Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico; indemoniato, massone, medium e criceto riusano quelli di lupo, contadino e veggente) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Gallo e ululato sono file mp3 in `games/lupus/src/suoni/` (si sostituiscono rimpiazzando i file, stesso nome; se non partono suona la versione sintetizzata); gli altri sono sintetizzati e si ritoccano in `games/lupus/src/suoni/index.ts`. Se non si sente: volume e voci italiane installate.
 - Lupi non scelgono un lupo; il medico non protegge sé stesso ma può proteggere la stessa persona due notti di fila.
 - Con 9 giocatori il medium compare dalla seconda notte; con 13 i massoni si riconoscono la prima notte (e non appaiono più dopo). Con 10 l'Indemoniato non è lupo per il veggente: «non è un lupo».
 - Medium: il messaggio «era un lupo» compare solo se il linciato era davvero un lupo (non l'Indemoniato). Se il medium è morto, la sua fase si gioca senza messaggi.
@@ -98,7 +98,7 @@ In Lupus le «carte» sono i **personaggi**. Un personaggio ha due parti:
 2. Scrivi i suoi testi in **ogni** `data/<lingua>/personaggi.json` (`it`, `en`); il compilatore segnala dove manca.
 3. Decidi in `distribuisciRuoli` da quanti giocatori compare.
 4. Se agisce di notte: aggiungi la fase, il candidato (`candidatiNotte`), l'azione e la risoluzione in `riduci`, e la schermata in `src/ui/LupusApp.tsx` (titolo, testo del narratore, `FINE_TURNO`, e la fase in `FASI_CON_TRANSIZIONE`).
-5. Aggiungi il suo verso di morte in `SUONO_MORTO` (e il suono in `packages/suoni`).
+5. Aggiungi il suo verso di morte in `VERSO_MORTE` di `games/lupus/src/suoni/index.ts`.
 6. Aggiorna il regolamento («Ruoli: …») qui e in `src/locales/{it,en}.ts` (regolamento, e anche le frasi del narratore e dell'interfaccia del nuovo ruolo), e scrivi i test in `src/logica.test.ts`.
 
 La fase di notte è un elenco ordinato di descrittori in `src/logica.ts` (`FASI_NOTTE`: chi si sveglia, chi può scegliere, effetto). Un ruolo notturno nuovo si aggiunge lì, e la UI della notte ne deriva.

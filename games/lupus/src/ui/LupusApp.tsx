@@ -31,27 +31,14 @@ import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
 import { traduttore, usaLingua, usaT, type Lingua, type Traduttore } from "@gdt/i18n";
 import { validaConfigurazione, type ErroreConfigurazione } from "../validazione";
 import { dizionari } from "../locales";
-import { audioAttivo, seguiAudio, suona, type NomeSuono } from "@gdt/suoni";
+import { audioAttivo, seguiAudio, suona } from "@gdt/suoni";
+import { suonoFine, suonoGallo, suonoMorte, suonoUlulato } from "../suoni";
 import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
 import { Transizione } from "./Transizione";
 import { descrizioneRuolo, nomeRuolo, pluraleRuolo } from "../personaggi";
 import { TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
-
-/** Il verso di chi muore, uno per ruolo: con un ruolo nuovo il compilatore chiede il suo suono. */
-const SUONO_MORTO: Record<Ruolo, NomeSuono> = {
-  lupo: "mortoLupo",
-  contadino: "mortoContadino",
-  veggente: "mortoVeggente",
-  medico: "mortoMedico",
-  indemoniato: "mortoLupo",
-  massone: "mortoContadino",
-  medium: "mortoVeggente",
-  criceto: "mortoContadino",
-  gufo: "mortoContadino",
-  mitomane: "mortoContadino",
-};
 
 const CHIAVE = "gdt-lupus-partita";
 
@@ -114,10 +101,10 @@ export function LupusApp() {
     faseSuoni.current = s.fase;
     if (prima === s.fase) return;
     const morto = s.fase === "alba" ? s.mortiNotte[0] : s.fase === "esito" ? s.eliminato : null;
-    if (s.fase === "lupi") suona("ululato");
-    else if (s.fase === "alba") suona("gallo");
+    if (s.fase === "lupi") suonoUlulato();
+    else if (s.fase === "alba") suonoGallo();
     if (s.svelaRuoli && morto !== null && morto !== undefined) {
-      suona(SUONO_MORTO[s.ruoli[morto] ?? "contadino"], s.fase === "alba" ? 1.5 : 0);
+      suonoMorte(s.ruoli[morto] ?? "contadino", s.fase === "alba" ? 1.5 : 0);
     }
   }, [s.fase]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -693,7 +680,7 @@ function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
   const t = usaT(dizionari);
   const lingua = usaLingua();
   useEffect(() => {
-    suona(s.vincitore === "lupi" ? "fineLupi" : "fineContadini");
+    suonoFine(s.vincitore === "lupi" ? "lupi" : "villaggio");
   }, [s.vincitore]);
   return (
     <section className="schermata">

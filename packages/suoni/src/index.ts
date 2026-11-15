@@ -1,29 +1,14 @@
 /**
  * Audio dell'app: un solo interruttore (impostazioni) per voce del narratore e suoni.
  * Spento di default. La scelta sta su `<html data-audio="on|off">` e in localStorage (`gdt-audio`).
- * I suoni sono sintetizzati con Web Audio: nessun file, funzionano offline.
+ * Il pacchetto è generico: sa suonare un `Disegno` (note sintetizzate con Web Audio) o un file registrato,
+ * e conosce solo i pochi suoni comuni a tutta l'app. I suoni di ogni gioco stanno nel gioco (`games/<gioco>/src/suoni`).
  */
 const CHIAVE = "gdt-audio";
 const EVENTO = "gdt-audio";
 
-export type NomeSuono =
-  | "click"
-  | "indovinata"
-  | "vietata"
-  | "passa"
-  | "fineTurno"
-  | "sollecito"
-  | "civili"
-  | "impostori"
-  | "gallo"
-  | "ululato"
-  | "rintocco"
-  | "mortoLupo"
-  | "mortoContadino"
-  | "mortoVeggente"
-  | "mortoMedico"
-  | "fineContadini"
-  | "fineLupi";
+/** Suoni comuni a più parti dell'app (pulsanti, fine turno, sollecito online). */
+export type NomeSuono = "click" | "fineTurno" | "sollecito";
 
 export function audioAttivo(): boolean {
   return typeof document !== "undefined" && document.documentElement.getAttribute("data-audio") === "on";
@@ -62,8 +47,8 @@ export function ripristinaAudio(): void {
  * Nota: frequenza (Hz), inizio (s), durata (s). Con il quarto valore la frequenza scivola fino a quella
  * finale (versi, ululati) e il volume resta pieno fino al rilascio, invece di spegnersi subito.
  */
-type Nota = readonly [number, number, number] | readonly [number, number, number, number];
-interface Disegno {
+export type Nota = readonly [number, number, number] | readonly [number, number, number, number];
+export interface Disegno {
   onda: OscillatorType;
   volume: number;
   note: readonly Nota[];
@@ -71,54 +56,47 @@ interface Disegno {
 
 const SUONI: Record<NomeSuono, Disegno> = {
   click: { onda: "sine", volume: 0.08, note: [[880, 0, 0.04]] },
-  indovinata: { onda: "sine", volume: 0.2, note: [[523, 0, 0.09], [659, 0.09, 0.09], [784, 0.18, 0.16]] },
-  vietata: { onda: "square", volume: 0.12, note: [[165, 0, 0.14], [117, 0.15, 0.26]] },
-  passa: { onda: "triangle", volume: 0.18, note: [[600, 0, 0.08], [440, 0.08, 0.12]] },
   fineTurno: { onda: "sine", volume: 0.22, note: [[784, 0, 0.15], [784, 0.22, 0.15], [1047, 0.44, 0.3]] },
   sollecito: { onda: "sine", volume: 0.25, note: [[988, 0, 0.14], [988, 0.22, 0.14], [1319, 0.44, 0.2]] },
-  civili: { onda: "triangle", volume: 0.22, note: [[523, 0, 0.14], [659, 0.14, 0.14], [784, 0.28, 0.14], [1047, 0.42, 0.4]] },
-  impostori: { onda: "sawtooth", volume: 0.1, note: [[392, 0, 0.2], [311, 0.2, 0.2], [262, 0.4, 0.2], [196, 0.6, 0.45]] },
-  // Lupus. Il gallo: «chi chi ri chi», sillabe che salgono e un ultimo «chi» lungo che scende.
-  gallo: {
-    onda: "sawtooth",
-    volume: 0.07,
-    note: [[700, 0, 0.14, 1100], [750, 0.2, 0.14, 1150], [800, 0.4, 0.16, 1250], [1000, 0.62, 0.55, 1300]],
-  },
-  // L'ululato: sale piano, tiene, poi scende.
-  ululato: {
-    onda: "triangle",
-    volume: 0.2,
-    note: [[280, 0, 0.9, 560], [560, 0.8, 0.6, 520], [520, 1.3, 1, 260]],
-  },
-  rintocco: { onda: "sine", volume: 0.25, note: [[196, 0, 0.9], [196, 1.1, 0.9]] },
-  mortoLupo: { onda: "triangle", volume: 0.2, note: [[420, 0, 0.3, 680], [680, 0.3, 0.45, 340]] },
-  mortoContadino: { onda: "sine", volume: 0.3, note: [[110, 0, 0.5], [82, 0.55, 0.9]] },
-  mortoVeggente: { onda: "sine", volume: 0.18, note: [[1319, 0, 0.3], [988, 0.25, 0.3], [740, 0.5, 0.3], [494, 0.75, 0.7]] },
-  mortoMedico: { onda: "sine", volume: 0.25, note: [[90, 0, 0.12], [90, 0.3, 0.12], [440, 0.7, 1.1]] },
-  fineContadini: {
-    onda: "triangle",
-    volume: 0.22,
-    note: [[392, 0, 0.18], [523, 0.18, 0.18], [659, 0.36, 0.18], [784, 0.54, 0.18], [1047, 0.72, 0.6]],
-  },
-  fineLupi: {
-    onda: "triangle",
-    volume: 0.2,
-    note: [[250, 0, 1, 520], [520, 0.9, 0.6, 500], [500, 1.4, 1.3, 230]],
-  },
 };
 
 let contesto: AudioContext | null = null;
 
-/** Suona solo se l'audio è acceso (con `ritardo` in secondi, se serve). Non dà mai errori: senza Web Audio resta muto. */
-export function suona(nome: NomeSuono, ritardo = 0): void {
+/**
+ * Suona un suono comune o un disegno del gioco, solo se l'audio è acceso (con `ritardo` in secondi, se serve).
+ * Non dà mai errori: senza Web Audio resta muto.
+ */
+export function suona(suono: NomeSuono | Disegno, ritardo = 0): void {
   if (!audioAttivo()) return;
+  sintetizza(typeof suono === "string" ? SUONI[suono] : suono, ritardo);
+}
+
+/**
+ * Riproduce un file registrato (l'indirizzo lo dà il bundler: `import url from "./x.mp3"`). Se non parte
+ * (per esempio il telefono blocca la riproduzione) suona `riserva`, se c'è.
+ */
+export function suonaFile(url: string, riserva?: Disegno, ritardo = 0): void {
+  if (!audioAttivo()) return;
+  const parti = () => {
+    if (!audioAttivo()) return;
+    try {
+      new Audio(url).play().catch(() => riserva && sintetizza(riserva, 0));
+    } catch {
+      if (riserva) sintetizza(riserva, 0);
+    }
+  };
+  if (ritardo > 0) setTimeout(parti, ritardo * 1000);
+  else parti();
+}
+
+function sintetizza(disegno: Disegno, ritardo: number): void {
   try {
     const Ctx =
       window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return;
     contesto ??= new Ctx();
     void contesto.resume();
-    const { onda, volume, note } = SUONI[nome];
+    const { onda, volume, note } = disegno;
     const t0 = contesto.currentTime + 0.01 + ritardo;
     for (const [freq, inizio, durata, fine] of note) {
       const osc = contesto.createOscillator();
