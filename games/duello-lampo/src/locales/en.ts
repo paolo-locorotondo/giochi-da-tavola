@@ -41,6 +41,14 @@ export const en: Dizionario<typeof it> = {
   mg_stop_nome: "Stop at the center",
   mg_stop_regola: "Tap to stop the marker as close to the center as you can.",
 
+  mg_colore_nome: "Right color",
+  mg_colore_regola:
+    "The name of a color shows up written in another color: tap the color it is written in, not the one it says. If you get it wrong, you lose the round.",
+  mg_panda_nome: "Find the panda",
+  mg_panda_regola: "A grid of colorful animals: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
+  mg_memoria_nome: "Flash memory",
+  mg_memoria_regola: "Watch the squares light up and repeat the sequence in the same order. Whoever repeats it correctly first wins.",
+
   campo: "{nome}'s play area",
   round: "Round {n} of {tot}",
   spareggio: "Tiebreaker",
@@ -56,6 +64,20 @@ export const en: Dizionario<typeof it> = {
   tocchiTuoi: { one: "{n} tap", other: "{n} taps" },
   secondiRimasti: "{s} s",
   inizioRaffica: "Tap!",
+
+  c_rosso: "Red",
+  c_blu: "Blue",
+  c_verde: "Green",
+  c_giallo: "Yellow",
+  coloreDomanda: "Tap the color of the text",
+  casellaN: "Square {n}",
+  aspettaPanda: "Wait for the panda…",
+  trovato: "Found!",
+  sbagliato: "Wrong!",
+  guarda: "Watch…",
+  ripeti: "Repeat! {fatte} of {tot}",
+  completata: "Done!",
+  valSbagliato: "wrong",
 
   haiVinto: "Point for you!",
   haiPerso: "Point for {nome}",

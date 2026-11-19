@@ -9,6 +9,20 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.17.0] - 2026-11-19
+
+### Aggiunto
+
+- Duello Lampo: tre nuovi mini giochi.
+  - **Colore giusto**: il nome di un colore scritto con un altro colore, si tocca il colore della scritta (effetto Stroop).
+  - **Trova il panda**: griglia di animali colorati girati in direzioni casuali, vince chi tocca per primo il panda quando compare.
+  - **Memoria lampo**: si ripete una sequenza di quattro caselle che si accendono.
+- Colori di gioco come token del tema (`--c-rosso`, `--c-blu`, `--c-verde`, `--c-giallo`, `--c-viola`), con contrasto ≥ 4,5:1 nei due temi.
+
+### Modificato
+
+- Duello Lampo: tolto `docs/piano-duello-lampo.md`, il contenuto è nel README del gioco, in `docs/decisioni.md` e nella guida per aggiungere un mini gioco.
+
 ## [0.16.2] - 2026-11-19
 
 ### Modificato

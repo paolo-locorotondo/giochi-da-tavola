@@ -19,8 +19,11 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Via!** | Lo schermo diventa verde (con la scritta «ORA!») dopo 1,5–5 secondi: vince chi tocca per primo. Chi tocca prima del via perde il round. |
 | **Raffica** | Per 5 secondi si tocca il più possibile: vince chi tocca di più. |
 | **Stop al centro** | Un indicatore scorre avanti e indietro su una barra: vince chi lo ferma più vicino al centro. |
+| **Colore giusto** | Compare il nome di un colore scritto con un altro colore (es. «Verde» scritto in rosso): si tocca il colore **della scritta**. Vince chi risponde giusto per primo; chi sbaglia perde il round. |
+| **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. A un certo punto un animale diventa un panda: vince chi lo tocca per primo. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
+| **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
 
-Mini giochi previsti più avanti: Colore giusto (effetto Stroop), Bersagli, Il più grande, Memoria lampo (vedi [piano](../../docs/piano-duello-lampo.md)).
+Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande).
 
 ## Modalità di gioco
 
@@ -57,6 +60,9 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - **Via!**: toccare prima del verde dà il punto all'altro; il tempo mostrato è plausibile (200–400 ms); con due tocchi quasi insieme vince chi è davvero primo.
 - **Raffica**: i tocchi si contano uno per uno e il round si chiude da solo dopo 5 secondi.
 - **Stop al centro**: i due giocatori vedono lo stesso movimento e vince chi è più vicino al centro (si legge anche lo scarto in %).
+- **Colore giusto**: la parola e il colore della scritta non coincidono mai; ogni tasto ha il nome del colore oltre al pallino (si gioca anche senza distinguere i colori).
+- **Trova il panda**: le due metà hanno la stessa griglia e il panda compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
+- **Memoria lampo**: la casella accesa si riconosce anche dal numero; durante la dimostrazione i tocchi non contano.
 - Nello spareggio compare «Spareggio» al posto del numero del round.
 - «Esci» sta nella barra centrale (non c'è durante conto alla rovescia e mini gioco, per non toccarlo per sbaglio) e chiede conferma.
 - «Avanti» resta spento per un attimo dopo l'esito, così un tocco in ritardo del round non lo salta.

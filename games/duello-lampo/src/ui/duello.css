@@ -360,3 +360,160 @@
     transform: none;
   }
 }
+
+/* Colori di gioco: solo token del tema (--c-*), con contrasto verificato su --s1 e --s2 */
+.dl-c-rosso { color: var(--c-rosso); }
+.dl-c-blu { color: var(--c-blu); }
+.dl-c-verde { color: var(--c-verde); }
+.dl-c-giallo { color: var(--c-giallo); }
+.dl-c-viola { color: var(--c-viola); }
+.dl-sfondo-rosso { background: var(--c-rosso); }
+.dl-sfondo-blu { background: var(--c-blu); }
+.dl-sfondo-verde { background: var(--c-verde); }
+.dl-sfondo-giallo { background: var(--c-giallo); }
+
+/* Le zone fatte di più pulsanti non sono un pulsante unico: niente puntatore sull'intera zona */
+div.dl-zona {
+  cursor: default;
+}
+
+/* Colore giusto */
+.dl-colore-parola-riga {
+  margin: 0;
+  min-height: 3.2rem;
+  display: grid;
+  place-items: center;
+}
+
+.dl-colore-parola {
+  font-family: var(--font-titoli);
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dl-colore-msg {
+  font-family: var(--font-titoli);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.dl-colore-domanda {
+  margin: 0;
+}
+
+.dl-colore-tasti {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.dl-colore-tasto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-inline: 0.5rem;
+  font-weight: 700;
+  touch-action: none;
+}
+
+/* Il nome dei tasti è sempre scritto con il colore del testo: il campione dà il colore, il nome lo conferma */
+.dl-campione {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--bd-ctrl);
+}
+
+.dl-colore-tasto[aria-disabled="true"],
+.dl-panda-casella[aria-disabled="true"],
+.dl-memoria-casella[aria-disabled="true"] {
+  cursor: default;
+}
+
+/* Trova il panda: griglia 4×4 di animali, ognuno girato a modo suo */
+/* La zona misura sé stessa: la griglia (quadrata) sta nell'altezza disponibile, anche su telefoni bassi */
+.dl-panda {
+  container-type: size;
+}
+
+.dl-panda-griglia {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.3rem;
+  width: min(100%, 17rem, calc(100cqh - 3.5rem));
+}
+
+.dl-panda-casella {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 44px;
+  aspect-ratio: 1;
+  padding: 0;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: calc(var(--r) - 6px);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-panda-casella:focus-visible,
+.dl-memoria-casella:focus-visible,
+.dl-colore-tasto:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.dl-animale {
+  width: 70%;
+  height: 70%;
+}
+
+.dl-panda-stato,
+.dl-memoria-stato {
+  margin: 0;
+  min-height: 1.5em;
+  font-weight: 700;
+}
+
+/* Memoria lampo: quattro caselle grandi; quella accesa si riconosce anche dal bordo e dal numero */
+.dl-memoria-griglia {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: min(100%, 15rem);
+}
+
+.dl-memoria-casella {
+  min-width: 0;
+  min-height: 44px;
+  aspect-ratio: 2 / 1;
+  font: inherit;
+  font-family: var(--font-titoli);
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-variant-numeric: lining-nums;
+  color: var(--mu);
+  background: var(--s1);
+  border: 2px solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 4px);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-memoria-casella--accesa {
+  color: var(--on-ac);
+  background: var(--ac);
+  border-color: var(--ac);
+}
+
+.dl-memoria-casella:active:not([aria-disabled="true"]) {
+  background: var(--s2);
+  border-color: var(--ac);
+}

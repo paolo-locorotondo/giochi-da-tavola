@@ -33,6 +33,12 @@ html[data-stile="tavolo"][data-tema="dark"] {
   --errore: #ff8a8a;
   --pericolo: #e5484d;
   --on-pericolo: #1a0505;
+  /* Colori «di gioco» (Duello Lampo): contrasto ≥ 4,5:1 su --s1 e --s2 */
+  --c-rosso: #ff7a7a;
+  --c-blu: #7ab8ff;
+  --c-verde: #6ddb8f;
+  --c-giallo: #f2d04b;
+  --c-viola: #d69cff;
   --r: 14px;
   --bw: 1px;
   --sh: 0 1px 0 #ffffff12 inset, 0 6px 16px #0006;
@@ -55,6 +61,12 @@ html[data-stile="tavolo"][data-tema="light"] {
   --errore: #a32020;
   --pericolo: #a32020;
   --on-pericolo: #ffffff;
+  /* Colori «di gioco» (Duello Lampo): contrasto ≥ 4,5:1 su --s1 e --s2 */
+  --c-rosso: #b3261e;
+  --c-blu: #1f5bb8;
+  --c-verde: #17733a;
+  --c-giallo: #7a5c00;
+  --c-viola: #7a3db8;
   --r: 14px;
   --bw: 1px;
   --sh: 0 1px 0 #fff inset, 0 4px 12px #3a2f1018;

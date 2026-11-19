@@ -39,6 +39,13 @@ export const it = {
   mg_raffica_regola: "Tocca più volte che puoi in 5 secondi.",
   mg_stop_nome: "Stop al centro",
   mg_stop_regola: "Tocca per fermare l'indicatore il più vicino possibile al centro.",
+  mg_colore_nome: "Colore giusto",
+  mg_colore_regola:
+    "Compare il nome di un colore scritto con un altro colore: tocca il colore con cui è scritto, non quello che dice. Se sbagli, perdi il round.",
+  mg_panda_nome: "Trova il panda",
+  mg_panda_regola: "Una griglia di animali colorati: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
+  mg_memoria_nome: "Memoria lampo",
+  mg_memoria_regola: "Guarda le caselle che si accendono e ripeti la sequenza nello stesso ordine. Vince chi la ripete giusta per primo.",
 
   // Partita
   campo: "Campo di gioco di {nome}",
@@ -56,6 +63,20 @@ export const it = {
   tocchiTuoi: { one: "{n} tocco", other: "{n} tocchi" },
   secondiRimasti: "{s} s",
   inizioRaffica: "Tocca!",
+
+  c_rosso: "Rosso",
+  c_blu: "Blu",
+  c_verde: "Verde",
+  c_giallo: "Giallo",
+  coloreDomanda: "Tocca il colore della scritta",
+  casellaN: "Casella {n}",
+  aspettaPanda: "Aspetta il panda…",
+  trovato: "Trovato!",
+  sbagliato: "Sbagliato!",
+  guarda: "Guarda…",
+  ripeti: "Ripeti! {fatte} di {tot}",
+  completata: "Completata!",
+  valSbagliato: "sbagliato",
 
   // Esito del round
   haiVinto: "Punto per te!",

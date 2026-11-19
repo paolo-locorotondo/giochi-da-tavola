@@ -17,6 +17,9 @@ import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco } from "./minigiochi";
 import { ATTESA_MAX_MS, ATTESA_MIN_MS, via } from "./minigiochi/via";
 import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
+import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, colore } from "./minigiochi/colore";
+import { ANIMALI, CASELLE as CASELLE_PANDA, NUMERO_COLORI, panda } from "./minigiochi/panda";
+import { CASELLE as CASELLE_MEMORIA, LUNGHEZZA as LUNGHEZZA_MEMORIA, fineDimostrazione, memoria } from "./minigiochi/memoria";
 
 const codice = (f: () => unknown) => {
   try {
@@ -235,5 +238,83 @@ describe("Stop al centro", () => {
       expect(cfg.faseMs).toBeLessThan(cfg.periodoMs);
       expect(stop.durataMassima(cfg)).toBe(cfg.periodoMs * CICLI_MASSIMI);
     }
+  });
+});
+
+describe("Colore giusto", () => {
+  it("la parola e il colore dell'inchiostro sono sempre diversi, e tra i colori previsti", () => {
+    for (let seme = 0; seme < 300; seme++) {
+      const c = colore.prepara(creaRng(seme));
+      expect(c.parola).not.toBe(c.inchiostro);
+      expect(COLORI).toContain(c.parola);
+      expect(COLORI).toContain(c.inchiostro);
+      expect(c.attesaMs).toBeGreaterThanOrEqual(ATTESA_MIN_COLORE);
+      expect(c.attesaMs).toBeLessThanOrEqual(ATTESA_MAX_COLORE);
+    }
+  });
+  const c = colore.prepara(creaRng(1));
+  it("vince chi risponde giusto, e tra due risposte giuste il più veloce", () => {
+    expect(colore.vincitore(c, [{ giusto: true, ms: 600 }, { giusto: true, ms: 700 }])).toBe(0);
+    expect(colore.vincitore(c, [{ giusto: true, ms: 900 }, { giusto: false, ms: 300 }])).toBe(0);
+    expect(colore.vincitore(c, [{ giusto: false, ms: 300 }, { giusto: true, ms: 900 }])).toBe(1);
+  });
+  it("chi sbaglia perde anche contro chi non risponde", () => {
+    expect(colore.vincitore(c, [{ giusto: false, ms: 300 }, NESSUNO])).toBe(1);
+    expect(colore.vincitore(c, [NESSUNO, { giusto: true, ms: 300 }])).toBe(1);
+  });
+  it("due errori, due assenze o due tempi uguali sono pari", () => {
+    expect(colore.vincitore(c, [{ giusto: false, ms: 1 }, { giusto: false, ms: 2 }])).toBeNull();
+    expect(colore.vincitore(c, [NESSUNO, NESSUNO])).toBeNull();
+    expect(colore.vincitore(c, [{ giusto: true, ms: 500 }, { giusto: true, ms: 500 }])).toBeNull();
+  });
+});
+
+describe("Trova il panda", () => {
+  it("griglia piena di animali (nessun panda finto), panda in una casella valida", () => {
+    for (let seme = 0; seme < 200; seme++) {
+      const c = panda.prepara(creaRng(seme));
+      expect(c.caselle).toHaveLength(CASELLE_PANDA);
+      for (const k of c.caselle) {
+        expect(ANIMALI).toContain(k.animale);
+        expect(k.gradi % 45).toBe(0);
+        expect(k.colore).toBeGreaterThanOrEqual(0);
+        expect(k.colore).toBeLessThan(NUMERO_COLORI);
+      }
+      expect(c.posizionePanda).toBeGreaterThanOrEqual(0);
+      expect(c.posizionePanda).toBeLessThan(CASELLE_PANDA);
+    }
+  });
+  const c = panda.prepara(creaRng(2));
+  it("vince chi trova il panda per primo; chi tocca un altro animale perde", () => {
+    expect(panda.vincitore(c, [{ trovato: true, ms: 800 }, { trovato: true, ms: 650 }])).toBe(1);
+    expect(panda.vincitore(c, [{ trovato: false, ms: 100 }, { trovato: true, ms: 2000 }])).toBe(1);
+    expect(panda.vincitore(c, [{ trovato: true, ms: 2000 }, NESSUNO])).toBe(0);
+    expect(panda.vincitore(c, [{ trovato: false, ms: 100 }, NESSUNO])).toBe(1);
+    expect(panda.vincitore(c, [NESSUNO, NESSUNO])).toBeNull();
+  });
+});
+
+describe("Memoria lampo", () => {
+  it("sequenza della lunghezza prevista, caselle valide, mai la stessa due volte di fila", () => {
+    for (let seme = 0; seme < 300; seme++) {
+      const { sequenza } = memoria.prepara(creaRng(seme));
+      expect(sequenza).toHaveLength(LUNGHEZZA_MEMORIA);
+      for (let i = 0; i < sequenza.length; i++) {
+        expect(sequenza[i]).toBeGreaterThanOrEqual(0);
+        expect(sequenza[i]).toBeLessThan(CASELLE_MEMORIA);
+        if (i > 0) expect(sequenza[i]).not.toBe(sequenza[i - 1]);
+      }
+    }
+  });
+  const c = memoria.prepara(creaRng(3));
+  it("il round dura almeno quanto la dimostrazione", () => {
+    expect(memoria.durataMassima(c)).toBeGreaterThan(fineDimostrazione(c));
+  });
+  it("vince chi ripete giusto per primo; chi sbaglia perde", () => {
+    expect(memoria.vincitore(c, [{ giusta: true, ms: 1800 }, { giusta: true, ms: 2100 }])).toBe(0);
+    expect(memoria.vincitore(c, [{ giusta: false, ms: 300 }, { giusta: true, ms: 3000 }])).toBe(1);
+    expect(memoria.vincitore(c, [{ giusta: false, ms: 300 }, NESSUNO])).toBe(1);
+    expect(memoria.vincitore(c, [{ giusta: true, ms: 3000 }, NESSUNO])).toBe(0);
+    expect(memoria.vincitore(c, [{ giusta: false, ms: 1 }, { giusta: false, ms: 9 }])).toBeNull();
   });
 });

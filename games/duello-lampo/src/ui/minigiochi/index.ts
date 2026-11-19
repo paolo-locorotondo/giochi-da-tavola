@@ -1,4 +1,7 @@
 import type { ComponentType } from "react";
+import { ColoreVista, descriviColore } from "./ColoreVista";
+import { MemoriaVista, descriviMemoria } from "./MemoriaVista";
+import { PandaVista, descriviPanda } from "./PandaVista";
 import { RafficaVista, descriviRaffica } from "./RafficaVista";
 import { StopVista, descriviStop } from "./StopVista";
 import { ViaVista, descriviVia } from "./ViaVista";
@@ -17,6 +20,9 @@ export const VISTE: Readonly<Record<string, VoceVista>> = {
   via: { Vista: ViaVista, descrivi: descriviVia },
   raffica: { Vista: RafficaVista, descrivi: descriviRaffica },
   stop: { Vista: StopVista, descrivi: descriviStop },
+  colore: { Vista: ColoreVista, descrivi: descriviColore },
+  panda: { Vista: PandaVista, descrivi: descriviPanda },
+  memoria: { Vista: MemoriaVista, descrivi: descriviMemoria },
 };
 
 export type { T, VistaProps } from "./tipi";
