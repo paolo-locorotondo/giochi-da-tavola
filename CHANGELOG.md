@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.16.2] - 2026-11-19
+
+### Modificato
+
+- Duello Lampo: il nome inglese diventa **Flash Duel** (prima «Lightning Duel»).
+
 ## [0.16.1] - 2026-11-19
 
 ### Corretto

@@ -2,7 +2,7 @@ import type { Dizionario } from "@gdt/i18n";
 import type { it } from "./it";
 
 export const en: Dizionario<typeof it> = {
-  nome: "Lightning Duel",
+  nome: "Flash Duel",
   descrizione: "A reflex challenge for two: quick mini games on one phone, face to face.",
   regolamentoPassi: [
     "Put the phone in the middle of the table: each player uses the half of the screen in front of them.",
