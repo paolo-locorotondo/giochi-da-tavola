@@ -13,7 +13,7 @@ Esempio: «Tocco lento», vince chi aspetta di più prima di toccare dopo il via
 
 ### 1. Le regole
 
-Crea `src/minigiochi/lento.ts` con un oggetto `MiniGioco<Config, Risultato>`:
+Crea `src/minigiochi/lento.ts` con un oggetto `MiniGioco<Config, Risultato>` (`prepara` riceve anche le impostazioni, qui nessuna):
 
 ```ts
 import { confronta, type MiniGioco } from "./tipi";
@@ -23,7 +23,7 @@ export interface RisultatoLento { ms: number }
 
 export const lento: MiniGioco<ConfigLento, RisultatoLento> = {
   id: "lento",
-  prepara: (rng) => ({ dopoMs: 2000 + rng.intero(2000) }), // tutta la casualità passa da qui
+  prepara: (rng, _imp) => ({ dopoMs: 2000 + rng.intero(2000) }), // tutta la casualità passa da qui
   durataMassima: (c) => c.dopoMs + 3000,
   chiudeAlPrimo: false,
   vincitore: (_c, [a, b]) =>
@@ -36,6 +36,29 @@ export const lento: MiniGioco<ConfigLento, RisultatoLento> = {
 - `chiudeAlPrimo`: `true` se il round finisce appena uno dei due ha un risultato (come «Via!»); `false` se si aspettano entrambi o il tempo massimo.
 - `vincitore(config, [basso, alto])`: restituisce `0` (chi sta in basso), `1` (chi sta in alto) o `null` (pari). Chi non ha finito in tempo vale `NESSUNO`: va sempre considerato.
 - `confronta(a, b, "minore" | "maggiore", soglia?)` aiuta a confrontare due numeri; sotto la soglia il risultato è pari.
+
+### Impostazioni (facoltative)
+
+Un mini gioco può avere delle impostazioni, scelte nella preparazione. Si dichiarano nell'oggetto e arrivano a `prepara` già complete e valide:
+
+```ts
+export const lento: MiniGioco<ConfigLento, RisultatoLento> = {
+  id: "lento",
+  impostazioni: [
+    { tipo: "scelta", chiave: "attesa", valori: [2, 3, 5], base: 3, formato: "secondi" },
+    { tipo: "interruttore", chiave: "difficile", base: false },
+  ],
+  prepara: (rng, imp) => ({ dopoMs: numero(imp, "attesa") * 1000 + rng.intero(2000) }),
+  …
+};
+```
+
+- `scelta`: un numero tra `valori` (`formato`: `"numero"`, `"secondi"` o `"griglia"` per «n×n»). Con `massimo(valori)` il limite dipende da un'altra impostazione (es. le caselle che cambiano non superano quelle della griglia).
+- `interruttore`: sì/no. Con `disattivo(valori)` si spegne quando un'altra impostazione lo rende inutile.
+- **Metti nel `Config` tutto ciò che serve alla vista** (es. `durataMs`, `caselle`): la vista non legge mai le impostazioni.
+- Il valore `base` deve dare lo stesso gioco di prima, così le sfide già salvate non cambiano.
+- Testi: `mg_<id>_imp_<chiave>` per il titolo (per le impostazioni a livelli, come la velocità, anche `mg_<id>_imp_<chiave>_<valore>`).
+- Test: `prepara` con ogni valore ammesso dà un `Config` coerente.
 
 ### 2. Il registro delle regole
 

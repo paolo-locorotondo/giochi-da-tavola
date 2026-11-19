@@ -217,6 +217,14 @@ for (const [id, nome, attesa] of [
     const bersaglioAlto = alto(page).locator('.dl-trova-casella[data-bersaglio="true"]');
     await expect(bersaglioAlto).toBeVisible({ timeout: 10_000 });
     await schermata(page, id);
+    // Dopo la comparsa le figure continuano a cambiare (il fermo direbbe che il bersaglio è uscito),
+    // mentre il bersaglio resta nella sua casella.
+    const figure = () =>
+      basso(page).locator(".dl-trova-casella svg").evaluateAll((l) => l.map((e) => `${e.getAttribute("class")}|${(e as SVGElement).style.transform}`).join(";"));
+    const prima = await figure();
+    const casellaBersaglio = await basso(page).locator(".dl-trova-casella").evaluateAll((l) => l.findIndex((e) => e.hasAttribute("data-bersaglio")));
+    await expect.poll(figure, { timeout: 3_000 }).not.toBe(prima);
+    await expect(basso(page).locator(".dl-trova-casella").nth(casellaBersaglio)).toHaveAttribute("data-bersaglio", "true");
     // In basso si tocca una figura che non è il bersaglio: perde.
     await basso(page).locator(".dl-trova-casella:not([data-bersaglio])").first().dispatchEvent("pointerdown");
     await bersaglioAlto.dispatchEvent("pointerdown");
@@ -267,4 +275,91 @@ test("duello lampo: Memoria lampo, si ripete la sequenza", async ({ page }) => {
   await alto(page).locator(`.dl-memoria-casella[data-casella="${(prima + 1) % 4}"]`).dispatchEvent("pointerdown");
   await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
   await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: sbagliato");
+});
+
+const pannello = (page: Page, nome: string) => page.locator(".dl-mg-riga", { hasText: nome }).locator("details.dl-imp");
+
+test("duello lampo: impostazioni di ogni mini gioco, in un pannello a scomparsa", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  // Solo i mini giochi con impostazioni hanno il pannello: tutti e otto ne hanno almeno una.
+  await expect(page.locator("details.dl-imp")).toHaveCount(8);
+  await expect(page.locator("details.dl-imp[open]")).toHaveCount(0);
+
+  const memoria = pannello(page, "Memoria lampo");
+  await memoria.locator("summary").click();
+  await expect(memoria.getByRole("radio", { name: "6" }).first()).toBeVisible();
+  await memoria.getByRole("group", { name: "Impostazioni di Memoria lampo" }).getByRole("radio", { name: "9" }).first().check({ force: true });
+  await expect(memoria.locator("summary")).toContainText("1 modificate");
+  await schermata(page, "impostazioni-memoria");
+
+  await memoria.getByRole("button", { name: "Valori di base" }).click();
+  await expect(memoria.locator("summary")).not.toContainText("modificate");
+  await expect(memoria.getByRole("button", { name: "Valori di base" })).toBeDisabled();
+});
+
+test("duello lampo: impostazioni di Trova il panda, griglia, cambi e figure dritte", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  const panda = pannello(page, "Trova il panda");
+  await panda.locator("summary").click();
+  const gruppo = panda.getByRole("group", { name: "Impostazioni di Trova il panda" });
+  await schermata(page, "impostazioni-panda");
+
+  // Griglia 3×3: i cambi possibili arrivano al massimo a 9.
+  await gruppo.getByRole("radio", { name: "3×3" }).check({ force: true });
+  await expect(gruppo.getByRole("radio", { name: "9", exact: true })).toBeVisible();
+  await expect(gruppo.getByRole("radio", { name: "10", exact: true })).toHaveCount(0);
+  // Con griglia 6×6 si arriva a 36.
+  await gruppo.getByRole("radio", { name: "6×6" }).check({ force: true });
+  await expect(gruppo.getByRole("radio", { name: "36", exact: true })).toBeVisible();
+  await gruppo.getByRole("radio", { name: "36", exact: true }).check({ force: true });
+  // Restringere la griglia riporta i cambi al massimo permesso.
+  await gruppo.getByRole("radio", { name: "3×3" }).check({ force: true });
+  await expect(gruppo.getByRole("radio", { name: "9", exact: true })).toBeChecked();
+
+  // «Tutte dritte» spegne «ruotano».
+  const ruotano = gruppo.getByRole("switch", { name: /ruotano/ });
+  await expect(ruotano).toBeChecked();
+  await gruppo.getByRole("switch", { name: /Tutte dritte/ }).check();
+  await expect(ruotano).toBeDisabled();
+  await expect(ruotano).not.toBeChecked();
+  await expect(gruppo.getByText("Spento perché le figure sono tutte dritte")).toBeVisible();
+});
+
+test("duello lampo: le impostazioni cambiano il round e si ricordano sul telefono", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { memoria: 1 });
+  const memoria = pannello(page, "Memoria lampo");
+  await memoria.locator("summary").click();
+  const gruppo = memoria.getByRole("group", { name: "Impostazioni di Memoria lampo" });
+  await gruppo.getByRole("radio", { name: "6" }).first().check({ force: true });
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await pronti(page);
+  await expect(basso(page).locator(".dl-memoria-casella")).toHaveCount(6, { timeout: 10_000 });
+  await expect(basso(page).locator(".dl-memoria-griglia")).toHaveCSS("grid-template-columns", /px .*px .*px$/);
+  await schermata(page, "memoria-6", { maschera: [".dl-memoria-casella"] });
+
+  // Dopo un ricaricamento la scelta c'è ancora e il pannello mostra «modificate».
+  await page.reload();
+  await expect(pannello(page, "Memoria lampo").locator("summary")).toContainText("1 modificate");
+});
+
+test("duello lampo: Trova il panda 6×6 con cambi diversi", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { panda: 1 });
+  const panda = pannello(page, "Trova il panda");
+  await panda.locator("summary").click();
+  const gruppo = panda.getByRole("group", { name: "Impostazioni di Trova il panda" });
+  await gruppo.getByRole("radio", { name: "6×6" }).check({ force: true });
+  await gruppo.getByRole("radio", { name: "0,5 s" }).check({ force: true });
+  await gruppo.getByRole("switch", { name: /Tutte dritte/ }).check();
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await pronti(page);
+  await expect(basso(page).locator(".dl-trova-casella")).toHaveCount(36, { timeout: 10_000 });
+  const bersaglio = alto(page).locator('.dl-trova-casella[data-bersaglio="true"]');
+  await expect(bersaglio).toBeVisible({ timeout: 15_000 });
+  await schermata(page, "panda-6x6");
+  await bersaglio.dispatchEvent("pointerdown");
+  // Il round si chiude quando hanno risposto tutti e due: in basso si sbaglia.
+  await basso(page).locator(".dl-trova-casella:not([data-bersaglio])").first().dispatchEvent("pointerdown");
+  await expect(alto(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
 });

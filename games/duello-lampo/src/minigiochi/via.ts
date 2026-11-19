@@ -1,4 +1,4 @@
-import { confronta, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /** «Via!»: lo schermo diventa verde dopo un'attesa casuale e vince chi tocca per primo. */
 export interface ConfigVia {
@@ -10,7 +10,9 @@ export interface ConfigVia {
 export type RisultatoVia = { ms: number } | { anticipo: true };
 
 export const ATTESA_MIN_MS = 1500;
-export const ATTESA_MAX_MS = 5000;
+/** Impostazione «attesa massima», in secondi. */
+export const ATTESE_MAX_S = [3, 5, 8] as const;
+export const ATTESA_MAX_BASE_S = 5;
 /** Dopo il via si aspetta al massimo questo tempo, poi il round si chiude senza vincitore. */
 export const MARGINE_MS = 3000;
 /** Sotto questa differenza (ms) i due tocchi contano come pari. */
@@ -25,7 +27,11 @@ function grado(r: RisultatoVia | Nessuno): 0 | 1 | 2 {
 
 export const via: MiniGioco<ConfigVia, RisultatoVia> = {
   id: "via",
-  prepara: (rng) => ({ attesaMs: ATTESA_MIN_MS + rng.intero(ATTESA_MAX_MS - ATTESA_MIN_MS + 1) }),
+  impostazioni: [{ tipo: "scelta", chiave: "attesaMax", valori: ATTESE_MAX_S, base: ATTESA_MAX_BASE_S, formato: "secondi" }],
+  prepara(rng, imp) {
+    const max = numero(imp, "attesaMax") * 1000;
+    return { attesaMs: ATTESA_MIN_MS + rng.intero(max - ATTESA_MIN_MS + 1) };
+  },
   durataMassima: (c) => c.attesaMs + MARGINE_MS,
   chiudeAlPrimo: true,
   vincitore(_config, [a, b]): Lato | null {

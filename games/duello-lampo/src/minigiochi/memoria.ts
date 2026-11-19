@@ -1,19 +1,26 @@
-import { confronta, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Memoria lampo»: si accende una breve sequenza di caselle, poi va ripetuta toccandole nello
  * stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round.
  * I due giocatori vedono la stessa sequenza, ognuno sulla sua metà.
  */
+/** Impostazioni: quante caselle e quanto è lunga la sequenza. */
+export const CASELLE_SCELTE = [4, 6, 9] as const;
 export const CASELLE = 4;
+export const LUNGHEZZE = [3, 4, 5, 6, 7, 8] as const;
 export const LUNGHEZZA = 4;
+/** Colonne della griglia per ogni numero di caselle. */
+export const colonne = (caselle: number): number => (caselle === 4 ? 2 : 3);
 /** Quanto resta accesa ogni casella nella dimostrazione, e la pausa tra una e l'altra. */
 export const ACCESA_MS = 550;
 export const PAUSA_MS = 250;
 export const ATTESA_INIZIALE_MS = 600;
 
 export interface ConfigMemoria {
-  /** Le caselle da ripetere, nell'ordine (da 0 a `CASELLE - 1`). */
+  /** Quante caselle ha la griglia. */
+  caselle: number;
+  /** Le caselle da ripetere, nell'ordine (da 0 a `caselle - 1`). */
   sequenza: readonly number[];
 }
 
@@ -39,14 +46,20 @@ function grado(r: RisultatoMemoria | Nessuno): 0 | 1 | 2 {
 
 export const memoria: MiniGioco<ConfigMemoria, RisultatoMemoria> = {
   id: "memoria",
-  prepara(rng) {
+  impostazioni: [
+    { tipo: "scelta", chiave: "caselle", valori: CASELLE_SCELTE, base: CASELLE, formato: "numero" },
+    { tipo: "scelta", chiave: "lunghezza", valori: LUNGHEZZE, base: LUNGHEZZA, formato: "numero" },
+  ],
+  prepara(rng, imp) {
+    const caselle = numero(imp, "caselle");
+    const lunghezza = numero(imp, "lunghezza");
     const sequenza: number[] = [];
     // Mai la stessa casella due volte di fila: la dimostrazione sarebbe poco chiara.
-    while (sequenza.length < LUNGHEZZA) {
-      const n = rng.intero(CASELLE);
+    while (sequenza.length < lunghezza) {
+      const n = rng.intero(caselle);
       if (n !== sequenza[sequenza.length - 1]) sequenza.push(n);
     }
-    return { sequenza };
+    return { caselle, sequenza };
   },
   durataMassima: (c) => fineDimostrazione(c) + MARGINE_MS,
   chiudeAlPrimo: false,

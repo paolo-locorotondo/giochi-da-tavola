@@ -1,4 +1,4 @@
-import { confronta, type MiniGioco, type Nessuno } from "./tipi";
+import { confronta, numero, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Stop al centro»: un indicatore scorre avanti e indietro su una barra; si tocca quando è
@@ -17,8 +17,12 @@ export interface RisultatoStop {
   distanza: number;
 }
 
-export const PERIODO_MIN_MS = 1600;
-export const PERIODO_MAX_MS = 2600;
+/** Impostazione «velocità»: 1 lenta, 2 media, 3 veloce. Per ognuna, il periodo minimo e massimo (ms). */
+export const VELOCITA = [1, 2, 3] as const;
+export const VELOCITA_BASE = 2;
+export const PERIODI: Readonly<Record<number, readonly [number, number]>> = { 1: [2600, 3400], 2: [1600, 2600], 3: [1000, 1500] };
+export const PERIODO_MIN_MS = 1000;
+export const PERIODO_MAX_MS = 3400;
 /** Quanti cicli si lasciano al massimo prima di chiudere il round. */
 export const CICLI_MASSIMI = 2;
 /** Sotto questa differenza di distanza (frazione della barra) i due contano come pari. */
@@ -37,8 +41,10 @@ const distanza = (r: RisultatoStop | Nessuno): number => ("distanza" in r ? r.di
 
 export const stop: MiniGioco<ConfigStop, RisultatoStop> = {
   id: "stop",
-  prepara(rng) {
-    const periodoMs = PERIODO_MIN_MS + rng.intero(PERIODO_MAX_MS - PERIODO_MIN_MS + 1);
+  impostazioni: [{ tipo: "scelta", chiave: "velocita", valori: VELOCITA, base: VELOCITA_BASE, formato: "numero" }],
+  prepara(rng, imp) {
+    const [min, max] = PERIODI[numero(imp, "velocita")] ?? (PERIODI[VELOCITA_BASE] as readonly [number, number]);
+    const periodoMs = min + rng.intero(max - min + 1);
     return { periodoMs, faseMs: rng.intero(periodoMs) };
   },
   durataMassima: (c) => c.periodoMs * CICLI_MASSIMI,

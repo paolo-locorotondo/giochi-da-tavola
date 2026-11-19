@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { creaRng, type Rng } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { assegna, finita, idCorrente, nuovaPartita, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
+import { assegna, finita, idCorrente, impostazioniDi, nuovaPartita, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
 import { NESSUNO, miniGioco, type Lato } from "../minigiochi";
 import { suonoConto, suonoFine, suonoPari, suonoPunto } from "../suoni";
 import { VISTE } from "./minigiochi";
@@ -32,7 +32,7 @@ const LATI: readonly Lato[] = [1, 0]; // in alto prima, come sullo schermo
 
 function preparaRound(partita: DatiPartita, rng: Rng): unknown {
   const id = idCorrente(partita);
-  return id ? miniGioco(id).prepara(rng) : null;
+  return id ? miniGioco(id).prepara(rng, impostazioniDi(partita, id)) : null;
 }
 
 /** Tiene lo schermo acceso mentre si gioca, dove il telefono lo permette. */

@@ -28,5 +28,5 @@ export function miniGioco(id: string): MiniGiocoQualsiasi {
 /** Quello dello spareggio: serve solo il tempo di reazione, che non lascia pari. */
 export const ID_SPAREGGIO = via.id;
 
-export { NESSUNO, confronta } from "./tipi";
-export type { Lato, MiniGioco, Nessuno } from "./tipi";
+export { NESSUNO, confronta, numero, sceltePermesse, sino, tuttiBase, valoriBase, valoriCompleti } from "./tipi";
+export type { ImpostazioneMiniGioco, Lato, MiniGioco, Nessuno, ValoreImpostazione, ValoriImpostazioni } from "./tipi";

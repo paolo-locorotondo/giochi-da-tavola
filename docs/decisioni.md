@@ -194,7 +194,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.18.1).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.19.0).
 
 ### Fatti
 
@@ -212,6 +212,8 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 
 - FATTO **Duello Lampo, versione a un telefono** (0.15.0): sfida di riflessi per due con schermo diviso (metà in alto ruotata), mini giochi Via!, Raffica e Stop al centro, scelta dei mini giochi e dei round, spareggio. I mini giochi sono moduli (regole + vista + registro): aggiungerne uno costa un file di regole, una vista e una riga per registro (guida nel README del gioco).
 
+- FATTO **Duello Lampo, impostazioni dei mini giochi** (0.19.0): pannello «Impostazioni» sotto ogni mini gioco nella preparazione, salvate sul telefono con la sfida; griglia dei «trova» fino a 6×6 (più grande da valutare sui tablet).
+
 ### Da fare (TODO)
 
 - TODO **Test grafici su Linux/CI**: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Non esiste ancora una CI (nessuna cartella `.github`).
@@ -226,5 +228,4 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
 - TODO **Aggiungere gioco di carte «Ultima!»** (in stile UNO, nome neutro per i marchi): solo online, regole ufficiali, bot su richiesta dell'organizzatore. Piano rivisto: [piano-ultima.md](piano-ultima.md). Indirizzo `/ultima`.
-- TODO **Duello Lampo: impostazioni di ogni mini gioco** (piano da rivedere: `games/duello-lampo/docs/piano-impostazioni-minigiochi.md`).
 - TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), prova su telefoni veri del doppio tocco e, più avanti, la versione online (vedi README del gioco).

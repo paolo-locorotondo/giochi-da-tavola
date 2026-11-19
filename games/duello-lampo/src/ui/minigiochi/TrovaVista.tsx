@@ -38,19 +38,23 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
 
     const [passo, setPasso] = useState(0);
     const [esito, setEsito] = useState<RisultatoTrova | null>(null);
-    // Passo 0 = griglia iniziale; passo n = dopo n cambi; l'ultimo porta il bersaglio.
-    const ultimo = config.passi.length;
-    const griglie = useMemo(() => Array.from({ length: ultimo + 1 }, (_, n) => grigliaAlPasso(config, n)), [config, ultimo]);
+    // Passo 0 = griglia iniziale; passo n = dopo n cambi. Il bersaglio arriva al passo `indiceComparsa`,
+    // ma i cambi continuano: se la griglia si fermasse, il fermo direbbe che il bersaglio è uscito.
+    const comparsaAl = config.indiceComparsa;
+    const griglie = useMemo(
+      () => Array.from({ length: config.passi.length + 1 }, (_, n) => grigliaAlPasso(config, n)),
+      [config],
+    );
     const èComparso = useRef(false);
     const tComparso = useRef<number | null>(null);
 
-    // La griglia si rimescola a ogni passo; all'ultimo c'è il bersaglio.
+    // A ogni passo cambiano alcune caselle, per tutto il round (anche dopo il proprio tocco).
     useEffect(() => {
       const ora = performance.now() - inizio;
       const ids = config.passi.map((_, k) => {
         const n = k + 1;
         return window.setTimeout(() => {
-          if (n === ultimo) {
+          if (n === comparsaAl) {
             èComparso.current = true;
             tComparso.current = performance.now();
           }
@@ -58,16 +62,16 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
         }, Math.max(0, n * config.passoMs - ora));
       });
       return () => ids.forEach((id) => window.clearTimeout(id));
-    }, [config, inizio, ultimo]);
+    }, [config, inizio, comparsaAl]);
 
     // Il tempo parte dal fotogramma in cui il bersaglio è stato disegnato.
     useEffect(() => {
-      if (passo !== ultimo) return;
+      if (passo !== comparsaAl) return;
       const f = requestAnimationFrame(() => {
         tComparso.current = performance.now();
       });
       return () => cancelAnimationFrame(f);
-    }, [passo, ultimo]);
+    }, [passo, comparsaAl]);
 
     const tocca = (indice: number, istante: number) => {
       if (esito) return;
@@ -78,7 +82,7 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
       rif.current(r);
     };
 
-    const comparso = passo === ultimo;
+    const comparso = passo >= comparsaAl;
     const stato = esito ? (esito.trovato ? t("trovato") : t("sbagliato")) : comparso ? "" : t(attesa);
     const griglia = griglie[passo] ?? [];
 

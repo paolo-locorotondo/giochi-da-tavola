@@ -13,14 +13,16 @@ import {
   totaleRound,
   vincitorePartita,
 } from "./logica";
-import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco } from "./minigiochi";
-import { ATTESA_MAX_MS, ATTESA_MIN_MS, via } from "./minigiochi/via";
+import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco, sceltePermesse, tuttiBase, valoriBase, valoriCompleti } from "./minigiochi";
+import { ATTESA_MIN_MS, ATTESE_MAX_S, via } from "./minigiochi/via";
 import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
-import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, colore } from "./minigiochi/colore";
-import { ANIMALI, NUMERO_COLORI, PARAMETRI_BASE, PASSI_MAX, PASSI_MIN, comparsa, creaTrova, grigliaAlPasso, panda, smile } from "./minigiochi/trova";
-import { PAROLE_MAX, PAROLE_MIN, comparsaGiusta, nomi } from "./minigiochi/nomi";
-import { CASELLE as CASELLE_MEMORIA, LUNGHEZZA as LUNGHEZZA_MEMORIA, fineDimostrazione, memoria } from "./minigiochi/memoria";
+import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, NUMERI_COLORI, coloriDa, colore } from "./minigiochi/colore";
+import { ANIMALI, IMPOSTAZIONI_TROVA, LATI, MARGINE_MS, NUMERO_COLORI, PARAMETRI_BASE, PASSI_MAX, PASSI_MIN, PASSI_S, comparsa, creaTrova, grigliaAlPasso, panda, parametriDa, passiDopo, smile } from "./minigiochi/trova";
+import { PAROLE_MAX, PAROLE_MIN, PASSI_S as PASSI_NOMI_S, comparsaGiusta, nomi } from "./minigiochi/nomi";
+import { CASELLE as CASELLE_MEM_BASE, CASELLE_SCELTE, LUNGHEZZE, LUNGHEZZA as LUNGHEZZA_MEMORIA, colonne, fineDimostrazione, memoria } from "./minigiochi/memoria";
+import { DURATE_S } from "./minigiochi/raffica";
+import { PERIODI, VELOCITA } from "./minigiochi/stop";
 
 const codice = (f: () => unknown) => {
   try {
@@ -30,6 +32,9 @@ const codice = (f: () => unknown) => {
   }
   return null;
 };
+
+/** I valori di base delle impostazioni di un mini gioco. */
+const base = (mg: { impostazioni?: Parameters<typeof valoriCompleti>[0] }) => valoriCompleti(mg.impostazioni);
 
 describe("creaScaletta", () => {
   it("gioca ogni mini gioco per le sue mani di fila, nell'ordine del registro", () => {
@@ -144,8 +149,8 @@ describe("registro", () => {
 
   it("ogni mini gioco prepara lo stesso round con lo stesso seme e ha una durata positiva", () => {
     for (const m of MINIGIOCHI) {
-      const a = m.prepara(creaRng(3));
-      expect(m.prepara(creaRng(3))).toEqual(a);
+      const a = m.prepara(creaRng(3), base(m));
+      expect(m.prepara(creaRng(3), base(m))).toEqual(a);
       expect(m.durataMassima(a)).toBeGreaterThan(0);
     }
   });
@@ -153,11 +158,13 @@ describe("registro", () => {
 
 describe("Via!", () => {
   const c = { attesaMs: 2000 };
-  it("l'attesa sta nei limiti", () => {
-    for (let seme = 0; seme < 200; seme++) {
-      const { attesaMs } = via.prepara(creaRng(seme));
-      expect(attesaMs).toBeGreaterThanOrEqual(ATTESA_MIN_MS);
-      expect(attesaMs).toBeLessThanOrEqual(ATTESA_MAX_MS);
+  it("l'attesa sta nei limiti, per ogni valore dell'impostazione", () => {
+    for (const max of ATTESE_MAX_S) {
+      for (let seme = 0; seme < 100; seme++) {
+        const { attesaMs } = via.prepara(creaRng(seme), valoriCompleti(via.impostazioni, { attesaMax: max }));
+        expect(attesaMs).toBeGreaterThanOrEqual(ATTESA_MIN_MS);
+        expect(attesaMs).toBeLessThanOrEqual(max * 1000);
+      }
     }
   });
   it("vince chi reagisce prima", () => {
@@ -186,7 +193,7 @@ describe("Via!", () => {
 });
 
 describe("Raffica", () => {
-  const c = raffica.prepara(creaRng(1));
+  const c = raffica.prepara(creaRng(1), base(raffica));
   it("vince chi tocca di più", () => {
     expect(raffica.vincitore(c, [{ tocchi: 31 }, { tocchi: 28 }])).toBe(0);
     expect(raffica.vincitore(c, [{ tocchi: 10 }, { tocchi: 12 }])).toBe(1);
@@ -234,7 +241,7 @@ describe("Stop al centro", () => {
   });
   it("il round dura al massimo qualche ciclo e parametri restano nei limiti", () => {
     for (let seme = 0; seme < 100; seme++) {
-      const cfg = stop.prepara(creaRng(seme));
+      const cfg = stop.prepara(creaRng(seme), base(stop));
       expect(cfg.faseMs).toBeGreaterThanOrEqual(0);
       expect(cfg.faseMs).toBeLessThan(cfg.periodoMs);
       expect(stop.durataMassima(cfg)).toBe(cfg.periodoMs * CICLI_MASSIMI);
@@ -245,7 +252,7 @@ describe("Stop al centro", () => {
 describe("Colore giusto", () => {
   it("la parola e il colore dell'inchiostro sono sempre diversi, e tra i colori previsti", () => {
     for (let seme = 0; seme < 300; seme++) {
-      const c = colore.prepara(creaRng(seme));
+      const c = colore.prepara(creaRng(seme), base(colore));
       expect(c.parola).not.toBe(c.inchiostro);
       expect(COLORI).toContain(c.parola);
       expect(COLORI).toContain(c.inchiostro);
@@ -253,7 +260,7 @@ describe("Colore giusto", () => {
       expect(c.attesaMs).toBeLessThanOrEqual(ATTESA_MAX_COLORE);
     }
   });
-  const c = colore.prepara(creaRng(1));
+  const c = colore.prepara(creaRng(1), base(colore));
   it("vince chi risponde giusto, e tra due risposte giuste il più veloce", () => {
     expect(colore.vincitore(c, [{ giusto: true, ms: 600 }, { giusto: true, ms: 700 }])).toBe(0);
     expect(colore.vincitore(c, [{ giusto: true, ms: 900 }, { giusto: false, ms: 300 }])).toBe(0);
@@ -278,16 +285,22 @@ describe("Trova il panda e Trova lo smile", () => {
     [panda, "panda", ANIMALI as readonly string[]],
     [smile, "felice", ["triste"]],
   ] as const) {
-    it(`${mg.id}: a ogni passo cambiano poche caselle e il bersaglio compare solo all'ultimo, tra quelle`, () => {
+    it(`${mg.id}: cambiano poche caselle a ogni passo, il bersaglio compare una volta e la griglia non si ferma dopo`, () => {
       for (let seme = 0; seme < 200; seme++) {
-        const c = mg.prepara(creaRng(seme));
+        const c = mg.prepara(creaRng(seme), base(mg));
         expect(c.iniziale).toHaveLength(caselle);
-        expect(c.passi.length).toBeGreaterThanOrEqual(PASSI_MIN + 1);
-        expect(c.passi.length).toBeLessThanOrEqual(PASSI_MAX + 1);
+        expect(c.indiceComparsa).toBeGreaterThanOrEqual(PASSI_MIN + 1);
+        expect(c.indiceComparsa).toBeLessThanOrEqual(PASSI_MAX + 1);
+        // I cambi continuano per tutto il margine dopo la comparsa.
+        expect(c.passi.length).toBe(c.indiceComparsa + passiDopo(c.passoMs));
+        expect(c.passi.length * c.passoMs).toBeGreaterThan(comparsa(c) + MARGINE_MS);
+
         for (let n = 0; n <= c.passi.length; n++) {
           const g = grigliaAlPasso(c, n);
           expect(g).toHaveLength(caselle);
-          expect(g.filter((k) => k.figura === bersaglio).length).toBe(n === c.passi.length ? 1 : 0);
+          // Prima della comparsa nessun bersaglio; dopo, sempre uno solo, sempre nella stessa casella.
+          const bersagli = g.map((k, i) => (k.figura === bersaglio ? i : -1)).filter((i) => i >= 0);
+          expect(bersagli).toEqual(n >= c.indiceComparsa ? [c.posizione] : []);
           for (const k of g) {
             if (k.figura !== bersaglio) expect(distrattori).toContain(k.figura);
             expect(k.gradi % 45).toBe(0);
@@ -297,43 +310,50 @@ describe("Trova il panda e Trova lo smile", () => {
           if (n > 0) {
             // Cambiano esattamente le caselle del passo, e ognuna cambia davvero.
             const prima = grigliaAlPasso(c, n - 1);
-            expect(c.passi[n - 1]).toHaveLength(PARAMETRI_BASE.cambi);
+            const passo = c.passi[n - 1]!;
+            expect(passo).toHaveLength(PARAMETRI_BASE.cambi);
             expect(g.filter((k, i) => !uguali(k, prima[i])).length).toBe(PARAMETRI_BASE.cambi);
+            // Dopo la comparsa la casella del bersaglio non è mai tra quelle che cambiano.
+            if (n > c.indiceComparsa) expect(passo.map((x) => x.posizione)).not.toContain(c.posizione);
           }
         }
-        const ultimo = c.passi[c.passi.length - 1]!;
-        expect(ultimo.map((x) => x.posizione)).toContain(c.posizione);
-        expect(grigliaAlPasso(c, c.passi.length)[c.posizione]?.figura).toBe(bersaglio);
-        expect(comparsa(c)).toBe(c.passi.length * PARAMETRI_BASE.passoMs);
+        const alComparire = c.passi[c.indiceComparsa - 1]!;
+        expect(alComparire.map((x) => x.posizione)).toContain(c.posizione);
+        expect(comparsa(c)).toBe(c.indiceComparsa * PARAMETRI_BASE.passoMs);
         expect(mg.durataMassima(c)).toBeGreaterThan(comparsa(c));
       }
     });
   }
 
   it("con figure dritte nessuna è ruotata", () => {
-    const dritto = creaTrova("x", "panda", ANIMALI, { ...PARAMETRI_BASE, dritte: true });
+    const dritto = creaTrova("x", "panda", ANIMALI);
     for (let seme = 0; seme < 50; seme++) {
-      const c = dritto.prepara(creaRng(seme));
+      const c = dritto.prepara(creaRng(seme), valoriCompleti(IMPOSTAZIONI_TROVA, { dritte: true }));
       for (let n = 0; n <= c.passi.length; n++) for (const k of grigliaAlPasso(c, n)) expect(k.gradi).toBe(0);
     }
   });
 
   it("senza rotazione le figure che cambiano tengono la direzione di prima", () => {
-    const fermo = creaTrova("y", "panda", ANIMALI, { ...PARAMETRI_BASE, ruotano: false });
+    const fermo = creaTrova("y", "panda", ANIMALI);
     for (let seme = 0; seme < 50; seme++) {
-      const c = fermo.prepara(creaRng(seme));
-      for (let n = 1; n < c.passi.length; n++) {
+      const c = fermo.prepara(creaRng(seme), valoriCompleti(IMPOSTAZIONI_TROVA, { ruotano: false }));
+      for (let n = 1; n <= c.passi.length; n++) {
         const prima = grigliaAlPasso(c, n - 1);
-        for (const { posizione, casella } of c.passi[n - 1]!) expect(casella.gradi).toBe(prima[posizione]!.gradi);
+        for (const { posizione, casella } of c.passi[n - 1]!) {
+          // Il bersaglio prende una direzione sua quando compare; tutte le altre figure tengono quella di prima.
+          if (n === c.indiceComparsa && posizione === c.posizione) continue;
+          expect(casella.gradi).toBe(prima[posizione]!.gradi);
+        }
       }
     }
   });
 
-  it("griglia di altro lato; cambi oltre il massimo diventano tutte le caselle", () => {
-    const g3 = creaTrova("z", "panda", ANIMALI, { ...PARAMETRI_BASE, lato: 3, cambi: 99 });
-    const c = g3.prepara(creaRng(7));
+  it("griglia 3×3 con tutte le caselle che cambiano", () => {
+    const g3 = creaTrova("z", "panda", ANIMALI);
+    const c = g3.prepara(creaRng(7), valoriCompleti(IMPOSTAZIONI_TROVA, { lato: 3, cambi: 9 }));
     expect(c.iniziale).toHaveLength(9);
-    for (const p of c.passi) expect(p).toHaveLength(9);
+    // Fino alla comparsa cambiano tutte; dopo, tutte tranne quella del bersaglio.
+    c.passi.forEach((p, k) => expect(p).toHaveLength(k + 1 <= c.indiceComparsa ? 9 : 8));
   });
 
   it("creaTrova rifiuta distrattori vuoti o che contengono il bersaglio", () => {
@@ -341,7 +361,7 @@ describe("Trova il panda e Trova lo smile", () => {
     expect(() => creaTrova("x", "a", ["a", "b"])).toThrow();
   });
 
-  const c = panda.prepara(creaRng(2));
+  const c = panda.prepara(creaRng(2), base(panda));
   it("vince chi trova per primo; chi tocca un'altra figura perde", () => {
     expect(panda.vincitore(c, [{ trovato: true, ms: 800 }, { trovato: true, ms: 650 }])).toBe(1);
     expect(panda.vincitore(c, [{ trovato: false, ms: 100 }, { trovato: true, ms: 2000 }])).toBe(1);
@@ -354,7 +374,7 @@ describe("Trova il panda e Trova lo smile", () => {
 describe("Colori e nomi", () => {
   it("solo l'ultima parola ha nome e colore uguali; mai la stessa parola di fila", () => {
     for (let seme = 0; seme < 300; seme++) {
-      const { parole } = nomi.prepara(creaRng(seme));
+      const { parole } = nomi.prepara(creaRng(seme), base(nomi));
       expect(parole.length).toBeGreaterThanOrEqual(PAROLE_MIN);
       expect(parole.length).toBeLessThanOrEqual(PAROLE_MAX);
       parole.forEach((p, i) => {
@@ -363,7 +383,7 @@ describe("Colori e nomi", () => {
       });
     }
   });
-  const c = nomi.prepara(creaRng(5));
+  const c = nomi.prepara(creaRng(5), base(nomi));
   it("come Via!: vince chi tocca prima sulla parola giusta, chi anticipa perde", () => {
     expect(nomi.chiudeAlPrimo).toBe(true);
     expect(nomi.durataMassima(c)).toBeGreaterThan(comparsaGiusta(c));
@@ -378,16 +398,16 @@ describe("Colori e nomi", () => {
 describe("Memoria lampo", () => {
   it("sequenza della lunghezza prevista, caselle valide, mai la stessa due volte di fila", () => {
     for (let seme = 0; seme < 300; seme++) {
-      const { sequenza } = memoria.prepara(creaRng(seme));
+      const { sequenza } = memoria.prepara(creaRng(seme), base(memoria));
       expect(sequenza).toHaveLength(LUNGHEZZA_MEMORIA);
       for (let i = 0; i < sequenza.length; i++) {
         expect(sequenza[i]).toBeGreaterThanOrEqual(0);
-        expect(sequenza[i]).toBeLessThan(CASELLE_MEMORIA);
+        expect(sequenza[i]).toBeLessThan(CASELLE_MEM_BASE);
         if (i > 0) expect(sequenza[i]).not.toBe(sequenza[i - 1]);
       }
     }
   });
-  const c = memoria.prepara(creaRng(3));
+  const c = memoria.prepara(creaRng(3), base(memoria));
   it("il round dura almeno quanto la dimostrazione", () => {
     expect(memoria.durataMassima(c)).toBeGreaterThan(fineDimostrazione(c));
   });
@@ -397,5 +417,147 @@ describe("Memoria lampo", () => {
     expect(memoria.vincitore(c, [{ giusta: false, ms: 300 }, NESSUNO])).toBe(1);
     expect(memoria.vincitore(c, [{ giusta: true, ms: 3000 }, NESSUNO])).toBe(0);
     expect(memoria.vincitore(c, [{ giusta: false, ms: 1 }, { giusta: false, ms: 9 }])).toBeNull();
+  });
+});
+
+describe("impostazioni dei mini giochi", () => {
+  it("valoriCompleti: base se mancano, scarta valori non ammessi o di tipo sbagliato", () => {
+    expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5 });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 8 })).toEqual({ attesaMax: 8 });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 7 })).toEqual({ attesaMax: 5 });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: "8" })).toEqual({ attesaMax: 5 });
+    expect(valoriCompleti(via.impostazioni, { sconosciuta: 1 })).toEqual({ attesaMax: 5 });
+    expect(valoriCompleti(undefined)).toEqual({});
+  });
+
+  it("valoriBase e tuttiBase", () => {
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4 });
+    expect(tuttiBase(memoria.impostazioni, { caselle: 4, lunghezza: 4 })).toBe(true);
+    expect(tuttiBase(memoria.impostazioni, { caselle: 6, lunghezza: 4 })).toBe(false);
+  });
+
+  it("i valori di base sono quelli di prima (le partite non cambiano)", () => {
+    expect(valoriBase(via.impostazioni)).toEqual({ attesaMax: 5 });
+    expect(valoriBase(raffica.impostazioni)).toEqual({ durata: 5 });
+    expect(valoriBase(stop.impostazioni)).toEqual({ velocita: 2 });
+    expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4 });
+    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3 });
+    expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false });
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4 });
+  });
+
+  it("ogni valore base è tra i valori ammessi", () => {
+    for (const m of MINIGIOCHI) {
+      for (const i of m.impostazioni ?? []) {
+        if (i.tipo === "scelta") expect(i.valori).toContain(i.base);
+      }
+    }
+  });
+
+  it("Raffica: la durata scelta arriva nel round", () => {
+    for (const d of DURATE_S) expect(raffica.prepara(creaRng(1), valoriCompleti(raffica.impostazioni, { durata: d })).durataMs).toBe(d * 1000);
+  });
+
+  it("Stop al centro: più veloce = periodo più corto", () => {
+    const medio = (v: number) => {
+      let somma = 0;
+      for (let seme = 0; seme < 100; seme++) {
+        const c = stop.prepara(creaRng(seme), valoriCompleti(stop.impostazioni, { velocita: v }));
+        const [min, max] = PERIODI[v]!;
+        expect(c.periodoMs).toBeGreaterThanOrEqual(min);
+        expect(c.periodoMs).toBeLessThanOrEqual(max);
+        somma += c.periodoMs;
+      }
+      return somma / 100;
+    };
+    expect(VELOCITA.map(medio)).toEqual([...VELOCITA.map(medio)].sort((a, b) => b - a));
+  });
+
+  it("Colore giusto: usa i primi n colori, e parola e inchiostro restano diversi", () => {
+    expect(coloriDa(4)).toEqual(COLORI);
+    for (const n of NUMERI_COLORI) {
+      for (let seme = 0; seme < 100; seme++) {
+        const c = colore.prepara(creaRng(seme), valoriCompleti(colore.impostazioni, { colori: n }));
+        expect(c.colori).toHaveLength(n);
+        expect(c.colori).toContain(c.parola);
+        expect(c.colori).toContain(c.inchiostro);
+        expect(c.parola).not.toBe(c.inchiostro);
+      }
+    }
+  });
+
+  it("Colori e nomi: il tempo per parola arriva nel round e sposta la parola giusta", () => {
+    for (const secondi of PASSI_NOMI_S) {
+      const c = nomi.prepara(creaRng(2), valoriCompleti(nomi.impostazioni, { passo: secondi }));
+      expect(c.passoMs).toBe(Math.round(secondi * 1000));
+      expect(comparsaGiusta(c)).toBe((c.parole.length - 1) * c.passoMs);
+    }
+  });
+
+  it("Memoria lampo: caselle e lunghezza scelte, sequenza dentro i limiti, colonne coerenti", () => {
+    for (const caselle of CASELLE_SCELTE) {
+      for (const lunghezza of LUNGHEZZE) {
+        for (let seme = 0; seme < 20; seme++) {
+          const c = memoria.prepara(creaRng(seme), valoriCompleti(memoria.impostazioni, { caselle, lunghezza }));
+          expect(c.caselle).toBe(caselle);
+          expect(c.sequenza).toHaveLength(lunghezza);
+          for (let i = 0; i < c.sequenza.length; i++) {
+            expect(c.sequenza[i]).toBeGreaterThanOrEqual(0);
+            expect(c.sequenza[i]).toBeLessThan(caselle);
+            if (i > 0) expect(c.sequenza[i]).not.toBe(c.sequenza[i - 1]);
+          }
+        }
+      }
+      expect(caselle % colonne(caselle)).toBe(0);
+    }
+  });
+
+  it("Trova: ogni lato, ogni tempo e ogni numero di cambi ammesso danno round coerenti", () => {
+    for (const lato of LATI) {
+      const grezzi = { lato };
+      const v0 = valoriCompleti(IMPOSTAZIONI_TROVA, grezzi);
+      const cambiImp = IMPOSTAZIONI_TROVA.find((i) => i.chiave === "cambi")!;
+      if (cambiImp.tipo !== "scelta") throw new Error("cambi dovrebbe essere una scelta");
+      const permessi = sceltePermesse(cambiImp, v0);
+      expect(Math.max(...permessi)).toBe(lato * lato);
+      for (const cambi of [1, Math.ceil((lato * lato) / 2), lato * lato]) {
+        for (const passo of PASSI_S) {
+          const v = valoriCompleti(IMPOSTAZIONI_TROVA, { lato, cambi, passo });
+          const c = panda.prepara(creaRng(lato + cambi), v);
+          expect(c.lato).toBe(lato);
+          expect(c.iniziale).toHaveLength(lato * lato);
+          expect(c.passoMs).toBe(Math.round(passo * 1000));
+          c.passi.forEach((passoCambi, k) =>
+            expect(passoCambi).toHaveLength(k + 1 <= c.indiceComparsa ? cambi : Math.min(cambi, lato * lato - 1)),
+          );
+          expect(grigliaAlPasso(c, c.indiceComparsa)[c.posizione]?.figura).toBe("panda");
+          expect(grigliaAlPasso(c, c.passi.length)[c.posizione]?.figura).toBe("panda");
+        }
+      }
+    }
+  });
+
+  it("Trova: restringendo la griglia i cambi scendono al massimo possibile", () => {
+    const v = valoriCompleti(IMPOSTAZIONI_TROVA, { lato: 3, cambi: 16 });
+    expect(v.lato).toBe(3);
+    expect(v.cambi).toBe(9);
+    expect(valoriCompleti(IMPOSTAZIONI_TROVA, { lato: 6, cambi: 36 }).cambi).toBe(36);
+  });
+
+  it("Trova: con «tutte dritte» l'interruttore «ruotano» vale falso", () => {
+    const v = valoriCompleti(IMPOSTAZIONI_TROVA, { dritte: true, ruotano: true });
+    expect(v.dritte).toBe(true);
+    expect(v.ruotano).toBe(false);
+    expect(parametriDa(v)).toMatchObject({ dritte: true, ruotano: false });
+    expect(valoriCompleti(IMPOSTAZIONI_TROVA, { dritte: false, ruotano: true }).ruotano).toBe(true);
+  });
+
+  it("nuovaPartita completa le impostazioni mancanti e corregge quelle fuori limite", () => {
+    const p = nuovaPartita({ mani: { via: 1 }, impostazioni: { via: { attesaMax: 99 }, panda: { lato: 3, cambi: 30, passo: 0.5 }, inesistente: { x: 1 } } });
+    expect(p.impostazioni.via).toEqual({ attesaMax: 5 });
+    expect(p.impostazioni.panda).toMatchObject({ lato: 3, cambi: 9, passo: 0.5 });
+    expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4 });
+    expect(Object.keys(p.impostazioni).sort()).toEqual([...ID_MINIGIOCHI].sort());
+    expect(nuovaPartita({ mani: { via: 1 } }).impostazioni.raffica).toEqual({ durata: 5 });
   });
 });

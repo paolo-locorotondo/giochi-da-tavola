@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
-import { COLORI, type Colore, type ConfigColore, type RisultatoColore } from "../../minigiochi/colore";
+import type { Colore, ConfigColore, RisultatoColore } from "../../minigiochi/colore";
 import type { Descrivi, VistaProps } from "./tipi";
 
 export const descriviColore: Descrivi<RisultatoColore> = (r, t) => {
@@ -63,7 +63,7 @@ export function ColoreVista({ config, inizio, onRisultato }: VistaProps<ConfigCo
       </p>
       <p className="suggerimento dl-colore-domanda">{t("coloreDomanda")}</p>
       <div className="dl-colore-tasti">
-        {COLORI.map((c) => (
+        {config.colori.map((c) => (
           <button
             key={c}
             type="button"

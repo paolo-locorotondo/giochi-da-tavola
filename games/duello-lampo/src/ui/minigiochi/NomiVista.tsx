@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
-import { PASSO_MS, type ConfigNomi, type RisultatoNomi } from "../../minigiochi/nomi";
+import type { ConfigNomi, RisultatoNomi } from "../../minigiochi/nomi";
 import type { Descrivi, VistaProps } from "./tipi";
 
 export const descriviNomi: Descrivi<RisultatoNomi> = (r, t) => {
@@ -30,7 +30,7 @@ export function NomiVista({ config, inizio, onRisultato }: VistaProps<ConfigNomi
           tGiusta.current = performance.now();
         }
         setPasso(i);
-      }, Math.max(0, i * PASSO_MS - ora)),
+      }, Math.max(0, i * config.passoMs - ora)),
     );
     return () => ids.forEach((id) => window.clearTimeout(id));
   }, [config, inizio, ultimo]);

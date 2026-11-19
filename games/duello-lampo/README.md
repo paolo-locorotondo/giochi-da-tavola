@@ -21,11 +21,27 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Stop al centro** | Un indicatore scorre avanti e indietro su una barra: vince chi lo ferma più vicino al centro. |
 | **Colore giusto** | Compare il nome di un colore scritto con un altro colore (es. «Verde» scritto in rosso): si tocca il colore **della scritta**. Vince chi risponde giusto per primo; chi sbaglia perde il round. |
 | **Colori e nomi** | Passano nomi di colori scritti con un altro colore (es. «Rosso» scritto in verde), uno ogni 1,3 secondi. Quando nome e colore combaciano (es. «Blu» in blu) vince chi tocca per primo; chi tocca prima perde il round, come in Via!. |
-| **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. Ogni secondo **cambiano 3 animali** a caso; a un certo punto uno di quelli che cambiano è un panda: vince chi lo tocca per primo. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
+| **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. Ogni secondo **cambiano 3 animali** a caso; a un certo punto uno di quelli che cambiano è un panda: vince chi lo tocca per primo. Gli altri animali continuano a cambiare anche dopo, così non si capisce dal fermo che è uscito. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
 | **Trova lo smile** | Come Trova il panda, ma con faccine tristi colorate e girate: vince chi tocca per primo l'unica faccina che sorride. |
 | **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
 
-Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande). Prossimo passo previsto: le impostazioni di ogni mini gioco ([piano](docs/piano-impostazioni-minigiochi.md)).
+### Impostazioni
+
+Sotto ogni mini gioco, nella preparazione, c'è il pannello **«Impostazioni»** (si apre e si chiude). I valori di base sono quelli della tabella sopra; quando ne cambi uno compare «N modificate» e il tasto «Valori di base» li rimette. Le impostazioni valgono per la sfida e restano salvate sul telefono insieme a mani e nomi.
+
+| Mini gioco | Impostazioni (base in grassetto) |
+|---|---|
+| Via! | Attesa massima prima del via: 3 / **5** / 8 s |
+| Raffica | Durata: 3 / **5** / 10 s |
+| Stop al centro | Velocità dell'indicatore: lenta / **media** / veloce |
+| Colore giusto | Numero di colori: **4** / 5 (il quinto è il viola) |
+| Colori e nomi | Tempo per ogni parola: 0,8 / **1,3** / 2 s |
+| Trova il panda, Trova lo smile (ognuno i suoi) | Griglia: 3×3 / **4×4** / 5×5 / 6×6 · Caselle che cambiano a ogni passo: da 1 a tutte (**3**) · Ogni quanto cambiano: 0,5 / 0,75 / **1** / 1,5 / 2 s · Le figure che cambiano ruotano: **sì** / no · Tutte dritte verso il giocatore (facile): sì / **no** |
+| Memoria lampo | Caselle: **4** / 6 / 9 · Lunghezza della sequenza: 3 / **4** / 5 / 6 / 7 / 8 |
+
+Regole tra impostazioni: se rimpicciolisci la griglia, le caselle che cambiano scendono al massimo possibile (in 3×3 al massimo 9); con «Tutte dritte» l'interruttore «ruotano» si spegne. Lo spareggio di Via! usa le impostazioni scelte per Via!.
+
+Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande). Sui tablet si potranno valutare griglie più grandi di 6×6.
 
 ## Modalità di gioco
 
@@ -64,7 +80,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - **Stop al centro**: i due giocatori vedono lo stesso movimento e vince chi è più vicino al centro (si legge anche lo scarto in %).
 - **Colore giusto**: la parola e il colore della scritta non coincidono mai; ogni tasto ha il nome del colore oltre al pallino (si gioca anche senza distinguere i colori).
 - **Colori e nomi**: la prima parola non combacia mai e la stessa parola non esce due volte di fila; chi tocca prima che combacino perde.
-- **Trova il panda / lo smile**: a ogni passo cambiano solo 3 caselle (non tutta la griglia, per non stancare la vista) e il bersaglio compare tra quelle che cambiano; le due metà hanno la stessa griglia e il bersaglio compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
+- **Trova il panda / lo smile**: a ogni passo cambiano solo 3 caselle (non tutta la griglia, per non stancare la vista) e il bersaglio compare tra quelle che cambiano; dopo la comparsa le altre continuano a cambiare e il bersaglio resta fermo nella sua casella; le due metà hanno la stessa griglia e il bersaglio compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
 - **Memoria lampo**: la casella accesa si riconosce anche dal numero; durante la dimostrazione i tocchi non contano.
 - Nello spareggio compare «Spareggio» al posto del numero del round.
 - «Esci» sta nella barra centrale (non c'è durante conto alla rovescia e mini gioco, per non toccarlo per sbaglio) e chiede conferma.

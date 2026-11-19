@@ -1,5 +1,5 @@
 import type { Rng } from "@gdt/engine";
-import { ID_MINIGIOCHI, ID_SPAREGGIO, type Lato } from "./minigiochi";
+import { ID_MINIGIOCHI, ID_SPAREGGIO, miniGioco, valoriCompleti, type Lato, type ValoriImpostazioni } from "./minigiochi";
 
 /** Errori di configurazione: la UI li traduce con la chiave `errore_<codice>`. */
 export type CodiceErrore = "nessunMinigioco" | "minigiocoSconosciuto" | "roundNonValidi";
@@ -18,8 +18,12 @@ export const MANI_PREDEFINITE = 2;
 /** Quante mani giocare a ogni mini gioco (per `id`); 0 o assente = il mini gioco non si usa. */
 export type Mani = Readonly<Record<string, number>>;
 
+/** Le impostazioni scelte per ogni mini gioco (per `id`, poi per chiave); quelle assenti valgono la base. */
+export type ImpostazioniSfida = Readonly<Record<string, Partial<Record<string, unknown>>>>;
+
 export interface Sfida {
   mani: Mani;
+  impostazioni?: ImpostazioniSfida;
 }
 
 export interface Partita {
@@ -30,6 +34,8 @@ export interface Partita {
   /** Indice del round in corso; uguale a `scaletta.length` a partita finita. */
   round: number;
   punti: readonly [number, number];
+  /** Le impostazioni di ogni mini gioco, già complete e corrette. */
+  impostazioni: Readonly<Record<string, ValoriImpostazioni>>;
 }
 
 /** Il totale dei round della sfida. */
@@ -50,13 +56,19 @@ export function nuovaPartita(sfida: Sfida): Partita {
   if (voci.some(([, n]) => !Number.isInteger(n) || n < 0 || n > MANI_MAX)) throw new ErroreDuello("roundNonValidi");
   const scaletta = creaScaletta(sfida.mani);
   if (scaletta.length === 0) throw new ErroreDuello("nessunMinigioco");
-  return { scaletta, totale: scaletta.length, round: 0, punti: [0, 0] };
+  const impostazioni = Object.fromEntries(
+    ID_MINIGIOCHI.map((id) => [id, valoriCompleti(miniGioco(id).impostazioni, sfida.impostazioni?.[id])]),
+  );
+  return { scaletta, totale: scaletta.length, round: 0, punti: [0, 0], impostazioni };
 }
 
 export const finita = (p: Partita): boolean => p.round >= p.scaletta.length;
 
 /** Il mini gioco del round in corso. */
 export const idCorrente = (p: Partita): string | undefined => p.scaletta[p.round];
+
+/** Le impostazioni di un mini gioco in questa partita (la base, se il mini gioco non ne ha). */
+export const impostazioniDi = (p: Partita, id: string): ValoriImpostazioni => p.impostazioni[id] ?? {};
 
 /** Vero se il round in corso è uno spareggio. */
 export const inSpareggio = (p: Partita): boolean => p.round >= p.totale;

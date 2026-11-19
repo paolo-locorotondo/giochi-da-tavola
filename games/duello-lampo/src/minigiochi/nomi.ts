@@ -1,5 +1,5 @@
 import { COLORI, type Colore } from "./colore";
-import { confronta, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Colori e nomi»: passano uno dopo l'altro nomi di colori scritti con un colore diverso
@@ -12,21 +12,24 @@ export interface ParolaColorata {
 }
 
 export interface ConfigNomi {
+  /** Quanto resta ogni parola sullo schermo, in millisecondi. */
+  passoMs: number;
   /** Le parole in ordine; solo l'ultima ha parola e inchiostro uguali. */
   parole: readonly ParolaColorata[];
 }
 
 export type RisultatoNomi = { ms: number } | { anticipo: true };
 
-/** Quanto resta ogni parola sullo schermo. */
-export const PASSO_MS = 1300;
+/** Impostazione «tempo per parola», in secondi. */
+export const PASSI_S = [0.8, 1.3, 2] as const;
+export const PASSO_BASE_S = 1.3;
 export const PAROLE_MIN = 2;
 export const PAROLE_MAX = 6;
 export const MARGINE_MS = 3000;
 export const SOGLIA_PARI_MS = 1;
 
 /** Quando compare la parola giusta, in millisecondi dall'inizio del round. */
-export const comparsaGiusta = (c: ConfigNomi): number => (c.parole.length - 1) * PASSO_MS;
+export const comparsaGiusta = (c: ConfigNomi): number => (c.parole.length - 1) * c.passoMs;
 
 /** 0 = ha toccato sulla parola giusta, 1 = non ha toccato, 2 = ha toccato prima. */
 function grado(r: RisultatoNomi | Nessuno): 0 | 1 | 2 {
@@ -37,7 +40,8 @@ function grado(r: RisultatoNomi | Nessuno): 0 | 1 | 2 {
 
 export const nomi: MiniGioco<ConfigNomi, RisultatoNomi> = {
   id: "nomi",
-  prepara(rng) {
+  impostazioni: [{ tipo: "scelta", chiave: "passo", valori: PASSI_S, base: PASSO_BASE_S, formato: "secondi" }],
+  prepara(rng, imp) {
     const quante = PAROLE_MIN + rng.intero(PAROLE_MAX - PAROLE_MIN + 1);
     const parole: ParolaColorata[] = [];
     for (let i = 0; i < quante - 1; i++) {
@@ -52,7 +56,7 @@ export const nomi: MiniGioco<ConfigNomi, RisultatoNomi> = {
     do giusta = COLORI[rng.intero(COLORI.length)] as Colore;
     while (giusta === parole[parole.length - 1]?.parola);
     parole.push({ parola: giusta, inchiostro: giusta });
-    return { parole };
+    return { passoMs: Math.round(numero(imp, "passo") * 1000), parole };
   },
   durataMassima: (c) => comparsaGiusta(c) + MARGINE_MS,
   chiudeAlPrimo: true,

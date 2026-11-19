@@ -9,6 +9,29 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.19.0] - 2026-11-19
+
+### Aggiunto
+
+- Duello Lampo: **impostazioni di ogni mini gioco**, in un pannello a scomparsa sotto il mini gioco nella preparazione (con «N modificate» e «Valori di base»), salvate sul telefono con la sfida.
+  - Via!: attesa massima prima del via (3, 5, 8 s).
+  - Raffica: durata (3, 5, 10 s).
+  - Stop al centro: velocità dell'indicatore (lenta, media, veloce).
+  - Colore giusto: numero di colori (4 o 5, con il viola).
+  - Colori e nomi: tempo per ogni parola (0,8, 1,3, 2 s).
+  - Trova il panda e Trova lo smile: griglia (da 3×3 a 6×6), caselle che cambiano a ogni passo (da 1 a tutte), ogni quanto cambiano (da 0,5 a 2 s), rotazione delle figure che cambiano, figure tutte dritte (facile).
+  - Memoria lampo: caselle (4, 6, 9) e lunghezza della sequenza (da 3 a 8).
+- Guida per aggiungere un mini gioco: paragrafo sulle impostazioni.
+
+### Modificato
+
+- Duello Lampo, Trova il panda e Trova lo smile: quando compare il bersaglio le altre figure **continuano a cambiare** fino a fine round (prima la griglia si fermava e si capiva che era uscito); il bersaglio resta nella sua casella. Lo stato («Aspetta il panda…», «Trovato!») sta sopra la griglia invece che sotto, così la griglia ha più spazio.
+- Le scelte salvate delle versioni precedenti di Duello Lampo si scartano (ripartono dai valori di base).
+
+### Rimosso
+
+- `games/duello-lampo/docs/piano-impostazioni-minigiochi.md`: il piano è stato realizzato, il contenuto è nel README del gioco e nella guida per aggiungere un mini gioco.
+
 ## [0.18.1] - 2026-11-19
 
 ### Modificato

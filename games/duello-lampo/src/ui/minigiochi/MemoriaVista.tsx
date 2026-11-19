@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
 import {
   ACCESA_MS,
   ATTESA_INIZIALE_MS,
-  CASELLE,
   PAUSA_MS,
+  colonne,
   fineDimostrazione,
   type ConfigMemoria,
   type RisultatoMemoria,
@@ -77,8 +77,12 @@ export function MemoriaVista({ config, inizio, onRisultato }: VistaProps<ConfigM
 
   return (
     <div className="dl-zona dl-memoria">
-      <div className="dl-memoria-griglia" data-sequenza={config.sequenza.join(",")}>
-        {Array.from({ length: CASELLE }, (_, i) => (
+      <div
+        className="dl-memoria-griglia"
+        data-sequenza={config.sequenza.join(",")}
+        style={{ "--dl-colonne": colonne(config.caselle) } as CSSProperties}
+      >
+        {Array.from({ length: config.caselle }, (_, i) => (
           <button
             key={i}
             type="button"
