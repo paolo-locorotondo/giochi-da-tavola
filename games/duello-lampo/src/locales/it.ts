@@ -42,8 +42,15 @@ export const it = {
   mg_colore_nome: "Colore giusto",
   mg_colore_regola:
     "Compare il nome di un colore scritto con un altro colore: tocca il colore con cui è scritto, non quello che dice. Se sbagli, perdi il round.",
+  mg_nomi_nome: "Colori e nomi",
+  mg_nomi_regola:
+    "Passano nomi di colori scritti con un altro colore. Quando nome e colore combaciano (es. «Blu» scritto in blu) tocca per primo. Se tocchi prima, perdi il round.",
   mg_panda_nome: "Trova il panda",
-  mg_panda_regola: "Una griglia di animali colorati: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
+  mg_panda_regola:
+    "Una griglia di animali colorati che cambia di continuo: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
+  mg_smile_nome: "Trova lo smile",
+  mg_smile_regola:
+    "Una griglia di faccine tristi che cambia di continuo: appena una sorride toccala per prima. Se tocchi una faccina triste, perdi il round.",
   mg_memoria_nome: "Memoria lampo",
   mg_memoria_regola: "Guarda le caselle che si accendono e ripeti la sequenza nello stesso ordine. Vince chi la ripete giusta per primo.",
 
@@ -71,6 +78,8 @@ export const it = {
   coloreDomanda: "Tocca il colore della scritta",
   casellaN: "Casella {n}",
   aspettaPanda: "Aspetta il panda…",
+  aspettaSmile: "Aspetta lo smile…",
+  nomiDomanda: "Tocca quando nome e colore combaciano",
   trovato: "Trovato!",
   sbagliato: "Sbagliato!",
   guarda: "Guarda…",

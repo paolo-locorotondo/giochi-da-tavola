@@ -12,7 +12,7 @@ async function pronti(page: Page) {
   await alto(page).getByRole("button", { name: "Sono pronto" }).click();
 }
 
-const NOMI = { via: "Via!", raffica: "Raffica", stop: "Stop al centro", colore: "Colore giusto", panda: "Trova il panda", memoria: "Memoria lampo" } as const;
+const NOMI = { via: "Via!", raffica: "Raffica", stop: "Stop al centro", colore: "Colore giusto", nomi: "Colori e nomi", panda: "Trova il panda", smile: "Trova lo smile", memoria: "Memoria lampo" } as const;
 type Id = keyof typeof NOMI;
 
 /** Imposta le mani di ogni mini gioco (le altre a 0) usando i pulsanti + e −. */
@@ -38,12 +38,12 @@ const punti = (page: Page, lato: "basso" | "alto") => page.locator(`.dl-meta--${
 test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page }) => {
   await page.goto("/duello-lampo");
   // Predefinito: 2 mani per mini gioco.
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2"]);
-  await expect(page.locator(".dl-totale")).toHaveText("In tutto 12 round");
+  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-totale")).toHaveText("In tutto 16 round");
   await schermata(page, "preparazione");
 
   await impostaMani(page, { via: 2, stop: 3 });
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0"]);
+  await expect(page.locator(".dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0", "0", "0"]);
   await expect(page.locator(".dl-totale")).toHaveText("In tutto 5 round");
   await expect(page.getByRole("button", { name: "Una mano in meno di Raffica" })).toBeDisabled();
 
@@ -61,7 +61,7 @@ test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page 
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Tutti" }).click();
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
   await page.getByRole("button", { name: "A caso" }).click();
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeEnabled();
 });
@@ -75,7 +75,7 @@ test("duello lampo: la scelta si ricorda sul telefono", async ({ page }) => {
   await expect(basso(page).locator(".dl-punti-nome")).toHaveText("Anna");
   await page.reload();
   await expect(page.getByLabel("Chi sta in basso")).toHaveValue("Anna");
-  await expect(page.locator(".dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0"]);
+  await expect(page.locator(".dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0", "0", "0"]);
 });
 
 test("duello lampo: le mani di un mini gioco escono di fila, nell'ordine dell'elenco", async ({ page }) => {
@@ -204,21 +204,50 @@ test("duello lampo: Colore giusto, vince chi tocca il colore della scritta", asy
   await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: sbagliato");
 });
 
-test("duello lampo: Trova il panda, vince chi lo tocca per primo", async ({ page }) => {
-  await iniziaCon(page, { panda: 1 });
-  await expect(basso(page).getByRole("heading", { name: "Trova il panda" })).toBeVisible();
+for (const [id, nome, attesa] of [
+  ["panda", "Trova il panda", "Aspetta il panda…"],
+  ["smile", "Trova lo smile", "Aspetta lo smile…"],
+] as const) {
+  test(`duello lampo: ${nome}, la griglia cambia e vince chi tocca il bersaglio per primo`, async ({ page }) => {
+    await iniziaCon(page, { [id]: 1 });
+    await expect(basso(page).getByRole("heading", { name: nome })).toBeVisible();
+    await pronti(page);
+    await expect(basso(page).locator(".dl-trova-casella")).toHaveCount(16, { timeout: 10_000 });
+    await expect(basso(page).getByText(attesa)).toBeVisible();
+    const bersaglioAlto = alto(page).locator('.dl-trova-casella[data-bersaglio="true"]');
+    await expect(bersaglioAlto).toBeVisible({ timeout: 10_000 });
+    await schermata(page, id);
+    // In basso si tocca una figura che non è il bersaglio: perde.
+    await basso(page).locator(".dl-trova-casella:not([data-bersaglio])").first().dispatchEvent("pointerdown");
+    await bersaglioAlto.dispatchEvent("pointerdown");
+    await expect(alto(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+    await expect(basso(page).locator(".dl-dettagli")).toContainText("Tu: sbagliato");
+  });
+}
+
+test("duello lampo: Colori e nomi, chi tocca prima che combacino perde", async ({ page }) => {
+  await iniziaCon(page, { nomi: 1 });
+  await expect(basso(page).getByRole("heading", { name: "Colori e nomi" })).toBeVisible();
   await pronti(page);
-  await expect(basso(page).locator(".dl-panda-casella")).toHaveCount(16, { timeout: 10_000 });
-  await expect(basso(page).getByText("Aspetta il panda…")).toBeVisible();
-  await schermata(page, "panda-attesa");
-  const pandaAlto = alto(page).locator('.dl-panda-casella[data-panda="true"]');
-  await expect(pandaAlto).toBeVisible({ timeout: 10_000 });
-  await schermata(page, "panda");
-  // In basso si tocca un animale qualsiasi che non è il panda: perde.
-  await basso(page).locator(".dl-panda-casella:not([data-panda])").first().dispatchEvent("pointerdown");
-  await pandaAlto.dispatchEvent("pointerdown");
-  await expect(alto(page).getByRole("status")).toHaveText("Punto per te!");
-  await expect(basso(page).locator(".dl-dettagli")).toContainText("Tu: sbagliato");
+  const parola = basso(page).locator(".dl-nomi .dl-colore-parola");
+  await expect(parola).toBeVisible({ timeout: 10_000 });
+  // La prima parola non combacia mai: in alto si tocca subito e si perde.
+  await expect(parola).not.toHaveAttribute("data-giusta", "true");
+  expect(await parola.getAttribute("data-parola")).not.toBe(await parola.getAttribute("data-inchiostro"));
+  await schermata(page, "nomi");
+  await alto(page).locator(".dl-nomi").dispatchEvent("pointerdown");
+  await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+});
+
+test("duello lampo: Colori e nomi, vince chi tocca quando combaciano", async ({ page }) => {
+  await iniziaCon(page, { nomi: 1 });
+  await pronti(page);
+  const giusta = basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]');
+  await expect(giusta).toBeVisible({ timeout: 15_000 });
+  expect(await giusta.getAttribute("data-parola")).toBe(await giusta.getAttribute("data-inchiostro"));
+  await basso(page).locator(".dl-nomi").dispatchEvent("pointerdown");
+  await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: nessun tocco");
 });
 
 test("duello lampo: Memoria lampo, si ripete la sequenza", async ({ page }) => {

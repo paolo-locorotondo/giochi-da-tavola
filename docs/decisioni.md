@@ -21,7 +21,7 @@ Giochi, in ordine:
 4. **Tris** — tre in fila, contro il telefono o in due; anche online (ognuno col suo telefono).
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
-6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Trova il panda, Memoria lampo), 1 punto a ogni mini gioco, si sceglie quali usare. Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
+6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo), 1 punto a ogni mini gioco, si sceglie quali usare. Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
 7. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
@@ -194,7 +194,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.17.0).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.18.0).
 
 ### Fatti
 
@@ -226,4 +226,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
 - TODO **Aggiungere gioco di carte «Ultima!»** (in stile UNO, nome neutro per i marchi): solo online, regole ufficiali, bot su richiesta dell'organizzatore. Piano rivisto: [piano-ultima.md](piano-ultima.md). Indirizzo `/ultima`.
+- TODO **Duello Lampo: impostazioni di ogni mini gioco** (piano da rivedere: `games/duello-lampo/docs/piano-impostazioni-minigiochi.md`).
 - TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), prova su telefoni veri del doppio tocco e, più avanti, la versione online (vedi README del gioco).

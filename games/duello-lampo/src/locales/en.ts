@@ -44,8 +44,15 @@ export const en: Dizionario<typeof it> = {
   mg_colore_nome: "Right color",
   mg_colore_regola:
     "The name of a color shows up written in another color: tap the color it is written in, not the one it says. If you get it wrong, you lose the round.",
+  mg_nomi_nome: "Colors and names",
+  mg_nomi_regola:
+    "Color names go by, written in another color. When name and color match (e.g. “Blue” written in blue), tap first. If you tap too early, you lose the round.",
   mg_panda_nome: "Find the panda",
-  mg_panda_regola: "A grid of colorful animals: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
+  mg_panda_regola:
+    "A grid of colorful animals that keeps changing: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
+  mg_smile_nome: "Find the smile",
+  mg_smile_regola:
+    "A grid of sad faces that keeps changing: as soon as one smiles, tap it first. If you tap a sad face, you lose the round.",
   mg_memoria_nome: "Flash memory",
   mg_memoria_regola: "Watch the squares light up and repeat the sequence in the same order. Whoever repeats it correctly first wins.",
 
@@ -72,6 +79,8 @@ export const en: Dizionario<typeof it> = {
   coloreDomanda: "Tap the color of the text",
   casellaN: "Square {n}",
   aspettaPanda: "Wait for the panda…",
+  aspettaSmile: "Wait for the smile…",
+  nomiDomanda: "Tap when name and color match",
   trovato: "Found!",
   sbagliato: "Wrong!",
   guarda: "Watch…",

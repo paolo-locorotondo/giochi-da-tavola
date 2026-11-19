@@ -18,7 +18,8 @@ import { ATTESA_MAX_MS, ATTESA_MIN_MS, via } from "./minigiochi/via";
 import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
 import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, colore } from "./minigiochi/colore";
-import { ANIMALI, CASELLE as CASELLE_PANDA, NUMERO_COLORI, panda } from "./minigiochi/panda";
+import { ANIMALI, CASELLE as CASELLE_TROVA, NUMERO_COLORI, PASSI_MAX, PASSI_MIN, comparsa, creaTrova, panda, smile } from "./minigiochi/trova";
+import { PAROLE_MAX, PAROLE_MIN, comparsaGiusta, nomi } from "./minigiochi/nomi";
 import { CASELLE as CASELLE_MEMORIA, LUNGHEZZA as LUNGHEZZA_MEMORIA, fineDimostrazione, memoria } from "./minigiochi/memoria";
 
 const codice = (f: () => unknown) => {
@@ -269,28 +270,74 @@ describe("Colore giusto", () => {
   });
 });
 
-describe("Trova il panda", () => {
-  it("griglia piena di animali (nessun panda finto), panda in una casella valida", () => {
-    for (let seme = 0; seme < 200; seme++) {
-      const c = panda.prepara(creaRng(seme));
-      expect(c.caselle).toHaveLength(CASELLE_PANDA);
-      for (const k of c.caselle) {
-        expect(ANIMALI).toContain(k.animale);
-        expect(k.gradi % 45).toBe(0);
-        expect(k.colore).toBeGreaterThanOrEqual(0);
-        expect(k.colore).toBeLessThan(NUMERO_COLORI);
+describe("Trova il panda e Trova lo smile", () => {
+  for (const [mg, bersaglio, distrattori] of [
+    [panda, "panda", ANIMALI as readonly string[]],
+    [smile, "felice", ["triste"]],
+  ] as const) {
+    it(`${mg.id}: la griglia cambia a ogni passo e il bersaglio c'è solo nell'ultima, una volta`, () => {
+      for (let seme = 0; seme < 200; seme++) {
+        const c = mg.prepara(creaRng(seme));
+        expect(c.griglie.length).toBeGreaterThanOrEqual(PASSI_MIN);
+        expect(c.griglie.length).toBeLessThanOrEqual(PASSI_MAX);
+        c.griglie.forEach((g, i) => {
+          expect(g).toHaveLength(CASELLE_TROVA);
+          const bersagli = g.filter((k) => k.figura === bersaglio).length;
+          expect(bersagli).toBe(i === c.griglie.length - 1 ? 1 : 0);
+          for (const k of g) {
+            if (k.figura !== bersaglio) expect(distrattori).toContain(k.figura);
+            expect(k.gradi % 45).toBe(0);
+            expect(k.colore).toBeGreaterThanOrEqual(0);
+            expect(k.colore).toBeLessThan(NUMERO_COLORI);
+          }
+        });
+        expect(c.griglie[c.griglie.length - 1]?.[c.posizione]?.figura).toBe(bersaglio);
+        expect(mg.durataMassima(c)).toBeGreaterThan(comparsa(c));
       }
-      expect(c.posizionePanda).toBeGreaterThanOrEqual(0);
-      expect(c.posizionePanda).toBeLessThan(CASELLE_PANDA);
-    }
+    });
+  }
+
+  it("le griglie di passi diversi non sono uguali (si rimescolano)", () => {
+    const c = panda.prepara(creaRng(4));
+    for (let i = 1; i < c.griglie.length; i++) expect(c.griglie[i]).not.toEqual(c.griglie[i - 1]);
   });
+
+  it("creaTrova rifiuta distrattori vuoti o che contengono il bersaglio", () => {
+    expect(() => creaTrova("x", "a", [])).toThrow();
+    expect(() => creaTrova("x", "a", ["a", "b"])).toThrow();
+  });
+
   const c = panda.prepara(creaRng(2));
-  it("vince chi trova il panda per primo; chi tocca un altro animale perde", () => {
+  it("vince chi trova per primo; chi tocca un'altra figura perde", () => {
     expect(panda.vincitore(c, [{ trovato: true, ms: 800 }, { trovato: true, ms: 650 }])).toBe(1);
     expect(panda.vincitore(c, [{ trovato: false, ms: 100 }, { trovato: true, ms: 2000 }])).toBe(1);
     expect(panda.vincitore(c, [{ trovato: true, ms: 2000 }, NESSUNO])).toBe(0);
     expect(panda.vincitore(c, [{ trovato: false, ms: 100 }, NESSUNO])).toBe(1);
     expect(panda.vincitore(c, [NESSUNO, NESSUNO])).toBeNull();
+  });
+});
+
+describe("Colori e nomi", () => {
+  it("solo l'ultima parola ha nome e colore uguali; mai la stessa parola di fila", () => {
+    for (let seme = 0; seme < 300; seme++) {
+      const { parole } = nomi.prepara(creaRng(seme));
+      expect(parole.length).toBeGreaterThanOrEqual(PAROLE_MIN);
+      expect(parole.length).toBeLessThanOrEqual(PAROLE_MAX);
+      parole.forEach((p, i) => {
+        expect(p.parola === p.inchiostro).toBe(i === parole.length - 1);
+        if (i > 0) expect(p.parola).not.toBe(parole[i - 1]?.parola);
+      });
+    }
+  });
+  const c = nomi.prepara(creaRng(5));
+  it("come Via!: vince chi tocca prima sulla parola giusta, chi anticipa perde", () => {
+    expect(nomi.chiudeAlPrimo).toBe(true);
+    expect(nomi.durataMassima(c)).toBeGreaterThan(comparsaGiusta(c));
+    expect(nomi.vincitore(c, [{ ms: 300 }, { ms: 400 }])).toBe(0);
+    expect(nomi.vincitore(c, [{ anticipo: true }, { ms: 900 }])).toBe(1);
+    expect(nomi.vincitore(c, [{ anticipo: true }, NESSUNO])).toBe(1);
+    expect(nomi.vincitore(c, [NESSUNO, { ms: 900 }])).toBe(1);
+    expect(nomi.vincitore(c, [{ anticipo: true }, { anticipo: true }])).toBeNull();
   });
 });
 

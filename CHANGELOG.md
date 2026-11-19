@@ -9,6 +9,18 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.18.0] - 2026-11-19
+
+### Aggiunto
+
+- Duello Lampo: **Colori e nomi**, passano nomi di colori scritti con un altro colore e vince chi tocca per primo quando nome e colore combaciano (chi anticipa perde, come in Via!).
+- Duello Lampo: **Trova lo smile**, faccine tristi colorate e girate, vince chi tocca per primo quella che sorride.
+- Duello Lampo: piano per le impostazioni di ogni mini gioco (`games/duello-lampo/docs/piano-impostazioni-minigiochi.md`, da rivedere).
+
+### Modificato
+
+- Duello Lampo: in **Trova il panda** la griglia cambia tutta ogni 0,7 secondi finché non compare il panda, così non si trova più per esclusione. Panda e smile usano lo stesso modulo (`minigiochi/trova.ts`).
+
 ## [0.17.0] - 2026-11-19
 
 ### Aggiunto

@@ -429,25 +429,25 @@ div.dl-zona {
 }
 
 .dl-colore-tasto[aria-disabled="true"],
-.dl-panda-casella[aria-disabled="true"],
+.dl-trova-casella[aria-disabled="true"],
 .dl-memoria-casella[aria-disabled="true"] {
   cursor: default;
 }
 
-/* Trova il panda: griglia 4×4 di animali, ognuno girato a modo suo */
+/* Trova il panda / lo smile: griglia 4×4 di figure, ognuna girata a modo suo */
 /* La zona misura sé stessa: la griglia (quadrata) sta nell'altezza disponibile, anche su telefoni bassi */
-.dl-panda {
+.dl-trova {
   container-type: size;
 }
 
-.dl-panda-griglia {
+.dl-trova-griglia {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.3rem;
   width: min(100%, 17rem, calc(100cqh - 3.5rem));
 }
 
-.dl-panda-casella {
+.dl-trova-casella {
   display: grid;
   place-items: center;
   min-width: 0;
@@ -462,19 +462,19 @@ div.dl-zona {
   -webkit-tap-highlight-color: transparent;
 }
 
-.dl-panda-casella:focus-visible,
+.dl-trova-casella:focus-visible,
 .dl-memoria-casella:focus-visible,
 .dl-colore-tasto:focus-visible {
   outline: 3px solid var(--ac);
   outline-offset: 2px;
 }
 
-.dl-animale {
+.dl-figura {
   width: 70%;
   height: 70%;
 }
 
-.dl-panda-stato,
+.dl-trova-stato,
 .dl-memoria-stato {
   margin: 0;
   min-height: 1.5em;
@@ -516,4 +516,9 @@ div.dl-zona {
 .dl-memoria-casella:active:not([aria-disabled="true"]) {
   background: var(--s2);
   border-color: var(--ac);
+}
+
+/* Colori e nomi: tutta la metà è la zona di tocco */
+.dl-nomi {
+  gap: 0.8rem;
 }

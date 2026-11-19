@@ -20,10 +20,12 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Raffica** | Per 5 secondi si tocca il più possibile: vince chi tocca di più. |
 | **Stop al centro** | Un indicatore scorre avanti e indietro su una barra: vince chi lo ferma più vicino al centro. |
 | **Colore giusto** | Compare il nome di un colore scritto con un altro colore (es. «Verde» scritto in rosso): si tocca il colore **della scritta**. Vince chi risponde giusto per primo; chi sbaglia perde il round. |
-| **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. A un certo punto un animale diventa un panda: vince chi lo tocca per primo. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
+| **Colori e nomi** | Passano nomi di colori scritti con un altro colore (es. «Rosso» scritto in verde), uno ogni 1,3 secondi. Quando nome e colore combaciano (es. «Blu» in blu) vince chi tocca per primo; chi tocca prima perde il round, come in Via!. |
+| **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione, che **cambia tutta** ogni 0,7 secondi. A un certo punto tra gli animali c'è un panda: vince chi lo tocca per primo. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
+| **Trova lo smile** | Come Trova il panda, ma con faccine tristi colorate e girate: vince chi tocca per primo l'unica faccina che sorride. |
 | **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
 
-Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande).
+Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande). Prossimo passo previsto: le impostazioni di ogni mini gioco ([piano](docs/piano-impostazioni-minigiochi.md)).
 
 ## Modalità di gioco
 
@@ -61,7 +63,8 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - **Raffica**: i tocchi si contano uno per uno e il round si chiude da solo dopo 5 secondi.
 - **Stop al centro**: i due giocatori vedono lo stesso movimento e vince chi è più vicino al centro (si legge anche lo scarto in %).
 - **Colore giusto**: la parola e il colore della scritta non coincidono mai; ogni tasto ha il nome del colore oltre al pallino (si gioca anche senza distinguere i colori).
-- **Trova il panda**: le due metà hanno la stessa griglia e il panda compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
+- **Colori e nomi**: la prima parola non combacia mai e la stessa parola non esce due volte di fila; chi tocca prima che combacino perde.
+- **Trova il panda / lo smile**: la griglia cambia tutta a ogni passo (non si riconosce il bersaglio per esclusione); le due metà hanno la stessa griglia e il bersaglio compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
 - **Memoria lampo**: la casella accesa si riconosce anche dal numero; durante la dimostrazione i tocchi non contano.
 - Nello spareggio compare «Spareggio» al posto del numero del round.
 - «Esci» sta nella barra centrale (non c'è durante conto alla rovescia e mini gioco, per non toccarlo per sbaglio) e chiede conferma.
@@ -74,7 +77,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 ## Struttura
 
 - `src/logica.ts`: la partita (scaletta con le mani di ogni mini gioco di fila, punti, spareggio), pura e testata.
-- `src/minigiochi/`: un file per mini gioco con le sole regole (`prepara`, `vincitore`, `durataMassima`), e `index.ts` con il **registro**.
+- `src/minigiochi/`: un file per mini gioco con le sole regole (`prepara`, `vincitore`, `durataMassima`), e `index.ts` con il **registro**. `trova.ts` è un modulo comune: Trova il panda e Trova lo smile sono due sue configurazioni (bersaglio e figure).
 - `src/ui/minigiochi/`: la vista React di ogni mini gioco e il suo registro `VISTE`.
 - `src/ui/Preparazione.tsx` (nomi e mani di ogni mini gioco), `Partita.tsx` (schermo diviso, round, esito, fine), `DuelloLampoApp.tsx`.
 - `src/locales/{it,en}.ts`: tutti i testi e il regolamento; `src/manifest.ts` li espone all'app.
