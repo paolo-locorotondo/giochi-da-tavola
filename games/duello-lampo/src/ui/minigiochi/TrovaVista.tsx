@@ -87,43 +87,46 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
     const griglia = griglie[passo] ?? [];
 
     return (
-      <div className="dl-zona dl-trova" data-comparsa={comparsa(config)}>
-        <div className="dl-trova-griglia" style={{ "--dl-lato": config.lato } as CSSProperties}>
-          {griglia.map((c, i) => {
-            const Icona = ICONE[c.figura] ?? Frown;
-            const èBersaglio = comparso && i === config.posizione;
-            return (
-              <button
-                key={i}
-                type="button"
-                className="dl-trova-casella"
-                data-suono="no"
-                data-bersaglio={èBersaglio ? "true" : undefined}
-                aria-label={t("casellaN", { n: i + 1 })}
-                aria-disabled={esito !== null}
-                onPointerDown={(e) => tocca(i, e.timeStamp)}
-                onKeyDown={(e) => {
-                  if ((e.key === "Enter" || e.key === " ") && !e.repeat) {
-                    e.preventDefault();
-                    tocca(i, e.timeStamp);
-                  }
-                }}
-              >
-                <Icona
-                  className={`dl-figura dl-c-${TINTE[c.colore % TINTE.length]}`}
-                  style={{ transform: `rotate(${c.gradi}deg)` }}
-                  strokeWidth={2.25}
-                  aria-hidden="true"
-                  focusable="false"
-                />
-              </button>
-            );
-          })}
-        </div>
+      <>
+        {/* Sopra il riquadro, tra l'intestazione e la griglia: così non copre mai le figure */}
         <p className="dl-trova-stato" role="status">
           {stato}
         </p>
-      </div>
+        <div className="dl-zona dl-trova" data-comparsa={comparsa(config)}>
+          <div className="dl-trova-griglia" style={{ "--dl-lato": config.lato } as CSSProperties}>
+            {griglia.map((c, i) => {
+              const Icona = ICONE[c.figura] ?? Frown;
+              const èBersaglio = comparso && i === config.posizione;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className="dl-trova-casella"
+                  data-suono="no"
+                  data-bersaglio={èBersaglio ? "true" : undefined}
+                  aria-label={t("casellaN", { n: i + 1 })}
+                  aria-disabled={esito !== null}
+                  onPointerDown={(e) => tocca(i, e.timeStamp)}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === " ") && !e.repeat) {
+                      e.preventDefault();
+                      tocca(i, e.timeStamp);
+                    }
+                  }}
+                >
+                  <Icona
+                    className={`dl-figura dl-c-${TINTE[c.colore % TINTE.length]}`}
+                    style={{ transform: `rotate(${c.gradi}deg)` }}
+                    strokeWidth={2.25}
+                    aria-hidden="true"
+                    focusable="false"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </>
     );
   };
 }

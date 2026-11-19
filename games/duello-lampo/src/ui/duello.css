@@ -528,22 +528,22 @@ div.dl-zona {
 
 /* Trova il panda / lo smile: griglia di figure colorate che cambiano poche alla volta */
 /* La zona misura sé stessa: la griglia (quadrata) sta nell'altezza disponibile, anche su telefoni bassi */
+/* Il riquadro misura sé stesso: la griglia (quadrata) sta nello spazio che resta, anche su telefoni bassi */
 .dl-trova {
-  position: relative;
   container-type: size;
   /* Margine ridotto: con 6×6 ogni pixel serve perché le caselle restino toccabili */
-  padding: 0.5rem;
+  padding: 0.2rem;
 }
 
 /*
  * Il lato della griglia arriva dal mini gioco (--dl-lato): 3×3 o 6×6 non richiedono CSS nuovo.
- * La griglia è quadrata e grande quanto la zona permette (la scritta di stato le sta sopra, non sotto),
+ * La griglia è quadrata e grande quanto il riquadro permette,
  * con un massimo di 4,6rem per casella: così non sborda mai, e le caselle crescono con la griglia piccola.
  */
 .dl-trova-griglia {
   display: grid;
   grid-template-columns: repeat(var(--dl-lato, 4), minmax(0, 1fr));
-  gap: 0.25rem;
+  gap: 0.15rem;
   width: min(100cqw, 100cqh, calc(var(--dl-lato, 4) * 4.6rem));
 }
 
@@ -629,27 +629,14 @@ div.dl-zona {
 }
 
 /*
- * Stato di «trova» sopra la griglia, come etichetta: compare solo prima del bersaglio («Aspetta…»)
- * e dopo il proprio tocco, quando le caselle non servono più. Non intercetta i tocchi.
+ * Stato di «trova»: una riga sopra il riquadro della griglia. Ha sempre la stessa altezza (anche
+ * vuota), così il riquadro non salta; il margine negativo toglie parte dello spazio tra le righe
+ * per lasciare più altezza alla griglia.
  */
-.dl-trova .dl-trova-stato {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  min-height: 0;
-  max-width: calc(100% - 1rem);
-  padding: 0.4rem 0.9rem;
+.dl-trova-stato {
+  flex: none;
+  margin: -0.45rem 0 -0.6rem;
+  min-height: 1.4em;
+  line-height: 1.4;
   text-align: center;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd-ctrl);
-  border-radius: 999px;
-  box-shadow: var(--sh);
-  pointer-events: none;
-}
-
-.dl-trova .dl-trova-stato:empty {
-  opacity: 0;
-  padding: 0;
-  border: 0;
 }

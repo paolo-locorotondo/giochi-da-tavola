@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.19.1] - 2026-11-19
+
+### Corretto
+
+- Duello Lampo, Trova il panda e Trova lo smile: la scritta «Aspetta il panda…» (e «Trovato!», «Sbagliato!») copriva le figure al centro della griglia; ora sta sopra il riquadro, tra l'intestazione della metà e la griglia. Le caselle del 6×6 restano di 44 px.
+
 ## [0.19.0] - 2026-11-19
 
 ### Aggiunto

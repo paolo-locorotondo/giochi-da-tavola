@@ -214,6 +214,16 @@ for (const [id, nome, attesa] of [
     await pronti(page);
     await expect(basso(page).locator(".dl-trova-casella")).toHaveCount(16, { timeout: 10_000 });
     await expect(basso(page).getByText(attesa)).toBeVisible();
+    // La scritta sta sopra il riquadro della griglia (tra l'intestazione e le figure) e non copre le caselle.
+    const sopra = await basso(page).evaluate((meta) => {
+      const stato = meta.querySelector(".dl-trova-stato")!.getBoundingClientRect();
+      const riquadro = meta.querySelector(".dl-trova")!.getBoundingClientRect();
+      const testa = meta.querySelector(".dl-testa")!.getBoundingClientRect();
+      const prima = meta.querySelector(".dl-trova-casella")!.getBoundingClientRect();
+      return { sotto: stato.top >= testa.bottom, sopra: stato.bottom <= riquadro.top, libere: stato.bottom <= prima.top };
+    });
+    expect(sopra).toEqual({ sotto: true, sopra: true, libere: true });
+    await schermata(page, `${id}-attesa`, { maschera: [".dl-trova-griglia"] });
     const bersaglioAlto = alto(page).locator('.dl-trova-casella[data-bersaglio="true"]');
     await expect(bersaglioAlto).toBeVisible({ timeout: 10_000 });
     await schermata(page, id);
