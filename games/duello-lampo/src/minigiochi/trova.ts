@@ -1,23 +1,34 @@
-import type { Rng } from "@gdt/engine";
 import { confronta, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
- * Mini giochi «trova»: una griglia di figure colorate, ognuna girata in una direzione, che si
- * rimescola a ogni passo (tutte le figure cambiano, così il bersaglio non si nota per esclusione).
- * Dopo qualche passo compare la figura da trovare in una casella: vince chi la tocca per primo.
- * Chi tocca un'altra figura, o tocca prima che il bersaglio compaia, perde il round.
+ * Mini giochi «trova»: una griglia di figure colorate. A ogni passo cambiano **solo alcune
+ * caselle** a caso (non tutta la griglia, che stancherebbe la vista); dopo qualche passo, tra le
+ * caselle che cambiano c'è la figura da trovare. Vince chi la tocca per primo; chi tocca
+ * un'altra figura, o tocca prima che il bersaglio compaia, perde il round.
  *
  * Le figure sono solo nomi: la vista sceglie l'icona di ognuna (vedi `ui/minigiochi/TrovaVista`).
  * «Trova il panda» e «Trova lo smile» sono due configurazioni dello stesso modulo.
  */
-export const COLONNE = 4;
-export const RIGHE = 4;
-export const CASELLE = COLONNE * RIGHE;
+
+/** Come si comporta la griglia. Oggi sono valori fissi; diventeranno le impostazioni del mini gioco. */
+export interface ParametriTrova {
+  /** Lato della griglia (3 = 3×3, 4 = 4×4, …). */
+  lato: number;
+  /** Quante caselle cambiano a ogni passo (da 1 a tutte). */
+  cambi: number;
+  /** Ogni quanto cambiano, in millisecondi. */
+  passoMs: number;
+  /** Le figure che cambiano prendono anche una direzione nuova. */
+  ruotano: boolean;
+  /** Tutte le figure dritte verso il giocatore (modalità facile): niente rotazioni. */
+  dritte: boolean;
+}
+
+export const PARAMETRI_BASE: ParametriTrova = { lato: 4, cambi: 3, passoMs: 1000, ruotano: true, dritte: false };
+
 /** Quanti colori diversi (indici in una tavolozza di token) si usano. */
 export const NUMERO_COLORI = 5;
-
-/** Ogni quanto si rimescola la griglia. */
-export const PASSO_MS = 700;
+/** Quanti passi (cambi) prima di quello con il bersaglio. */
 export const PASSI_MIN = 2;
 export const PASSI_MAX = 6;
 /** Dopo la comparsa del bersaglio, quanto tempo si lascia per trovarlo. */
@@ -28,14 +39,21 @@ export interface CasellaTrova {
   figura: string;
   /** Indice del colore, da 0 a `NUMERO_COLORI - 1`. */
   colore: number;
-  /** Rotazione in gradi, a passi di 45. */
+  /** Rotazione in gradi, a passi di 45 (sempre 0 con `dritte`). */
   gradi: number;
 }
 
+/** Le caselle che cambiano in un passo: posizione e nuovo contenuto. */
+export type CambioTrova = readonly { posizione: number; casella: CasellaTrova }[];
+
 export interface ConfigTrova {
-  /** Una griglia per passo; l'ultima contiene il bersaglio in `posizione`. */
-  griglie: readonly (readonly CasellaTrova[])[];
-  /** La casella del bersaglio nell'ultima griglia. */
+  lato: number;
+  passoMs: number;
+  /** La griglia all'inizio del round. */
+  iniziale: readonly CasellaTrova[];
+  /** I cambi, uno per passo; nell'ultimo c'è il bersaglio in `posizione`. */
+  passi: readonly CambioTrova[];
+  /** La casella del bersaglio. */
   posizione: number;
 }
 
@@ -46,7 +64,14 @@ export interface RisultatoTrova {
 }
 
 /** Quando compare il bersaglio, in millisecondi dall'inizio del round. */
-export const comparsa = (c: ConfigTrova): number => (c.griglie.length - 1) * PASSO_MS;
+export const comparsa = (c: ConfigTrova): number => c.passi.length * c.passoMs;
+
+/** La griglia dopo `n` passi (0 = quella iniziale). */
+export function grigliaAlPasso(c: ConfigTrova, n: number): CasellaTrova[] {
+  const g = [...c.iniziale];
+  for (const cambio of c.passi.slice(0, n)) for (const { posizione, casella } of cambio) g[posizione] = casella;
+  return g;
+}
 
 /** 0 = ha trovato, 1 = non ha toccato, 2 = ha sbagliato. */
 function grado(r: RisultatoTrova | Nessuno): 0 | 1 | 2 {
@@ -54,26 +79,54 @@ function grado(r: RisultatoTrova | Nessuno): 0 | 1 | 2 {
   return r.trovato ? 0 : 2;
 }
 
-function griglia(rng: Rng, distrattori: readonly string[]): CasellaTrova[] {
-  return Array.from({ length: CASELLE }, () => ({
-    figura: distrattori[rng.intero(distrattori.length)] as string,
-    colore: rng.intero(NUMERO_COLORI),
-    gradi: rng.intero(8) * 45,
-  }));
-}
+const uguali = (a: CasellaTrova, b: CasellaTrova) => a.figura === b.figura && a.colore === b.colore && a.gradi === b.gradi;
 
 /** Crea un mini gioco «trova»: `bersaglio` va trovato tra i `distrattori` (che non lo contengono). */
-export function creaTrova(id: string, bersaglio: string, distrattori: readonly string[]): MiniGioco<ConfigTrova, RisultatoTrova> {
+export function creaTrova(
+  id: string,
+  bersaglio: string,
+  distrattori: readonly string[],
+  parametri: ParametriTrova = PARAMETRI_BASE,
+): MiniGioco<ConfigTrova, RisultatoTrova> {
   if (distrattori.length === 0 || distrattori.includes(bersaglio)) throw new Error(`creaTrova: distrattori non validi per «${id}»`);
+  const { lato, passoMs, ruotano, dritte } = parametri;
+  const caselle = lato * lato;
+  const cambi = Math.min(Math.max(1, parametri.cambi), caselle);
+
   return {
     id,
     prepara(rng) {
-      const passi = PASSI_MIN + rng.intero(PASSI_MAX - PASSI_MIN + 1);
-      const griglie = Array.from({ length: passi }, () => griglia(rng, distrattori));
-      const posizione = rng.intero(CASELLE);
-      const ultima = griglie[griglie.length - 1] as CasellaTrova[];
-      ultima[posizione] = { figura: bersaglio, colore: rng.intero(NUMERO_COLORI), gradi: rng.intero(8) * 45 };
-      return { griglie, posizione };
+      const gradi = () => (dritte ? 0 : rng.intero(8) * 45);
+      const nuova = (figura: string): CasellaTrova => ({ figura, colore: rng.intero(NUMERO_COLORI), gradi: gradi() });
+      const distrattore = () => nuova(distrattori[rng.intero(distrattori.length)] as string);
+
+      const iniziale = Array.from({ length: caselle }, distrattore);
+      const griglia = [...iniziale];
+      const quanti = PASSI_MIN + rng.intero(PASSI_MAX - PASSI_MIN + 1);
+      const passi: CambioTrova[] = [];
+      let posizione = 0;
+
+      for (let p = 0; p <= quanti; p++) {
+        const scelte = rng.mescola(Array.from({ length: caselle }, (_, i) => i)).slice(0, cambi);
+        const ultimo = p === quanti;
+        if (ultimo) posizione = scelte[rng.intero(scelte.length)] as number;
+        const cambio = scelte.map((i) => {
+          const prima = griglia[i] as CasellaTrova;
+          let casella: CasellaTrova;
+          if (ultimo && i === posizione) casella = nuova(bersaglio);
+          else {
+            // Ogni casella che cambia deve cambiare davvero, altrimenti non si vede.
+            do {
+              casella = distrattore();
+              if (!ruotano) casella = { ...casella, gradi: prima.gradi };
+            } while (uguali(casella, prima));
+          }
+          griglia[i] = casella;
+          return { posizione: i, casella };
+        });
+        passi.push(cambio);
+      }
+      return { lato, passoMs, iniziale, passi, posizione };
     },
     durataMassima: (c) => comparsa(c) + MARGINE_MS,
     chiudeAlPrimo: false,
@@ -92,5 +145,5 @@ export const ANIMALI = ["gatto", "cane", "uccello", "pesce", "coniglio", "topo",
 /** «Trova il panda»: tra animali di ogni tipo. */
 export const panda = creaTrova("panda", "panda", ANIMALI);
 
-/** «Trova lo smile»: tra faccine tristi, uno solo sorride. */
+/** «Trova lo smile»: tra faccine tristi, una sola sorride. */
 export const smile = creaTrova("smile", "felice", ["triste"]);

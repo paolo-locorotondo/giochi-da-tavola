@@ -1,8 +1,14 @@
 # Piano: impostazioni di ogni mini gioco (bozza)
 
-Stato: **bozza da rivedere con l'utente** (2026-11-19). Nulla è ancora realizzato.
+Stato: **bozza, con le prime decisioni dell'utente (2026-11-19)**. Nulla è ancora realizzato come impostazione: «trova» ha già i parametri separati (`ParametriTrova` in `src/minigiochi/trova.ts`), con valori fissi.
 
-Idea: oltre alle mani, ogni mini gioco può avere qualche impostazione propria (es. quante caselle ha «Memoria lampo»). Le impostazioni sono della **sfida**: si scelgono nella preparazione e restano salvate sul telefono, come le mani.
+Idea: oltre alle mani, ogni mini gioco può avere qualche impostazione propria (es. quante caselle ha «Memoria lampo»).
+
+## Decisioni prese
+
+- Le impostazioni sono della **sfida**: si scelgono nella **preparazione**, insieme alle mani, e restano salvate sul telefono (localStorage) con le altre scelte. Non stanno nell'ingranaggio.
+- **Niente riepilogo** nella schermata della regola prima del round: le impostazioni sono della partita, non servono lì.
+- **Trova il panda / lo smile**: le impostazioni sono quelle scritte dall'utente (vedi sotto). Il comportamento di base è già cambiato: a ogni passo cambiano solo alcune caselle (non tutta la griglia) e il bersaglio compare tra quelle.
 
 ## Proposta di impostazioni
 
@@ -15,13 +21,20 @@ Poche per mini gioco, ognuna con un valore di base uguale a oggi (così chi non 
 | Stop al centro | Velocità dell'indicatore | lenta / media / veloce | media |
 | Colore giusto | Numero di colori | 4 / 5 | 4 |
 | Colori e nomi | Tempo per parola | 0,8 / 1,3 / 2 s | 1,3 s |
-| Trova il panda | Griglia | 3×3 / 4×4 / 5×5 | 4×4 |
-| Trova il panda | Velocità del rimescolamento | lenta / media / veloce | media |
-| Trova lo smile | Griglia e velocità | come il panda | 4×4, media |
+| Trova il panda / lo smile | Griglia | 3×3 / 4×4 / 5×5 / 6×6 | 4×4 |
+| Trova il panda / lo smile | Caselle che cambiano a ogni passo | da 1 a tutte (3×3: fino a 9) | 3 |
+| Trova il panda / lo smile | Ogni quanto cambiano | 0,5 / 0,75 / 1 / 1,5 / 2 s | 1 s |
+| Trova il panda / lo smile | Le figure che cambiano ruotano | sì / no | sì |
+| Trova il panda / lo smile | Tutte dritte verso il giocatore (facile) | sì / no | no |
 | Memoria lampo | Caselle | 4 / 6 / 9 | 4 |
 | Memoria lampo | Lunghezza della sequenza | 3–8 | 4 |
 
-Da decidere quali tenere davvero: troppe impostazioni rendono la preparazione lunga. Proposta: al massimo due per mini gioco.
+Per «trova» le impostazioni sono decise (cinque, ognuna separata per panda e smile). Per gli altri mini giochi la tabella è una proposta: da decidere quali tenere, perché troppe impostazioni allungano la preparazione.
+
+Note su «trova»:
+- «Caselle che cambiano» ha come massimo il numero di caselle della griglia: se si rimpicciolisce la griglia il valore scende da solo al massimo possibile.
+- «Tutte dritte» rende inutile «ruotano»: con «dritte» attivo l'interruttore «ruotano» si spegne e resta spento.
+- Con 6×6 a 375 px le caselle restano sopra i 44 px solo se la metà dello schermo è abbastanza alta: va verificato con gli screenshot e su un telefono vero, altrimenti il massimo resta 5×5.
 
 ## Come si mostra
 
@@ -71,12 +84,11 @@ Con questo schema, aggiungere un'impostazione a un mini gioco costa: una voce in
 
 1. Contratto `MiniGioco` con `impostazioni` e `prepara(rng, imp)`; sfida e salvataggio con le impostazioni; test.
 2. Interfaccia della preparazione (pannello a scomparsa) e verifica visiva a 375 px, scuro e chiaro.
-3. Impostazioni di Memoria lampo (caselle, lunghezza) come primo caso completo, con test e screenshot.
+3. Impostazioni di Trova il panda / lo smile come primo caso completo (i parametri sono già separati), con test e screenshot; poi Memoria lampo.
 4. Le altre, una per mini gioco, scegliendo con l'utente quali tenere.
 5. README del gioco, guida per aggiungere un mini gioco, CHANGELOG, versione.
 
 ## Da decidere con l'utente
 
-1. Quali impostazioni tenere (la tabella sopra è una proposta).
-2. Impostazioni nella preparazione (per sfida) o nell'ingranaggio del gioco (per telefono, come quelle di Lupus)? La proposta è nella preparazione, perché cambiano la sfida.
-3. Mostrare il riepilogo delle impostazioni anche nella schermata della regola, prima del round (es. «6 caselle»)?
+1. Quali impostazioni tenere per gli altri mini giochi (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Memoria lampo): la tabella sopra è una proposta.
+2. Se arrivare fino a 6×6 per «trova» (dipende dall'altezza dello schermo).

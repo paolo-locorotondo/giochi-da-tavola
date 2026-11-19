@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ComponentType } from "react";
 import { Bird, Cat, Dog, Fish, Frown, Panda, Rabbit, Rat, Smile, Snail, Squirrel, Turtle, type LucideIcon } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
-import { PASSO_MS, comparsa, type ConfigTrova, type RisultatoTrova } from "../../minigiochi/trova";
+import { comparsa, grigliaAlPasso, type ConfigTrova, type RisultatoTrova } from "../../minigiochi/trova";
 import type { Descrivi, VistaProps } from "./tipi";
 
 /** I colori delle figure: token `--c-<nome>` del tema. */
@@ -38,22 +38,25 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
 
     const [passo, setPasso] = useState(0);
     const [esito, setEsito] = useState<RisultatoTrova | null>(null);
-    const ultimo = config.griglie.length - 1;
+    // Passo 0 = griglia iniziale; passo n = dopo n cambi; l'ultimo porta il bersaglio.
+    const ultimo = config.passi.length;
+    const griglie = useMemo(() => Array.from({ length: ultimo + 1 }, (_, n) => grigliaAlPasso(config, n)), [config, ultimo]);
     const èComparso = useRef(false);
     const tComparso = useRef<number | null>(null);
 
     // La griglia si rimescola a ogni passo; all'ultimo c'è il bersaglio.
     useEffect(() => {
       const ora = performance.now() - inizio;
-      const ids = config.griglie.map((_, i) =>
-        window.setTimeout(() => {
-          if (i === ultimo) {
+      const ids = config.passi.map((_, k) => {
+        const n = k + 1;
+        return window.setTimeout(() => {
+          if (n === ultimo) {
             èComparso.current = true;
             tComparso.current = performance.now();
           }
-          setPasso(i);
-        }, Math.max(0, i * PASSO_MS - ora)),
-      );
+          setPasso(n);
+        }, Math.max(0, n * config.passoMs - ora));
+      });
       return () => ids.forEach((id) => window.clearTimeout(id));
     }, [config, inizio, ultimo]);
 
@@ -77,11 +80,11 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
 
     const comparso = passo === ultimo;
     const stato = esito ? (esito.trovato ? t("trovato") : t("sbagliato")) : comparso ? "" : t(attesa);
-    const griglia = config.griglie[passo] ?? [];
+    const griglia = griglie[passo] ?? [];
 
     return (
       <div className="dl-zona dl-trova" data-comparsa={comparsa(config)}>
-        <div className="dl-trova-griglia">
+        <div className="dl-trova-griglia" style={{ "--dl-lato": config.lato } as CSSProperties}>
           {griglia.map((c, i) => {
             const Icona = ICONE[c.figura] ?? Frown;
             const èBersaglio = comparso && i === config.posizione;

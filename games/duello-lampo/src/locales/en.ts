@@ -49,10 +49,10 @@ export const en: Dizionario<typeof it> = {
     "Color names go by, written in another color. When name and color match (e.g. “Blue” written in blue), tap first. If you tap too early, you lose the round.",
   mg_panda_nome: "Find the panda",
   mg_panda_regola:
-    "A grid of colorful animals that keeps changing: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
+    "A grid of colorful animals where a few change every second: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
   mg_smile_nome: "Find the smile",
   mg_smile_regola:
-    "A grid of sad faces that keeps changing: as soon as one smiles, tap it first. If you tap a sad face, you lose the round.",
+    "A grid of sad faces where a few change every second: as soon as one smiles, tap it first. If you tap a sad face, you lose the round.",
   mg_memoria_nome: "Flash memory",
   mg_memoria_regola: "Watch the squares light up and repeat the sequence in the same order. Whoever repeats it correctly first wins.",
 

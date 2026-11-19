@@ -47,10 +47,10 @@ export const it = {
     "Passano nomi di colori scritti con un altro colore. Quando nome e colore combaciano (es. «Blu» scritto in blu) tocca per primo. Se tocchi prima, perdi il round.",
   mg_panda_nome: "Trova il panda",
   mg_panda_regola:
-    "Una griglia di animali colorati che cambia di continuo: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
+    "Una griglia di animali colorati in cui ogni secondo ne cambiano alcuni: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
   mg_smile_nome: "Trova lo smile",
   mg_smile_regola:
-    "Una griglia di faccine tristi che cambia di continuo: appena una sorride toccala per prima. Se tocchi una faccina triste, perdi il round.",
+    "Una griglia di faccine tristi in cui ogni secondo ne cambiano alcune: appena una sorride toccala per prima. Se tocchi una faccina triste, perdi il round.",
   mg_memoria_nome: "Memoria lampo",
   mg_memoria_regola: "Guarda le caselle che si accendono e ripeti la sequenza nello stesso ordine. Vince chi la ripete giusta per primo.",
 

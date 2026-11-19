@@ -18,7 +18,7 @@ import { ATTESA_MAX_MS, ATTESA_MIN_MS, via } from "./minigiochi/via";
 import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
 import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, colore } from "./minigiochi/colore";
-import { ANIMALI, CASELLE as CASELLE_TROVA, NUMERO_COLORI, PASSI_MAX, PASSI_MIN, comparsa, creaTrova, panda, smile } from "./minigiochi/trova";
+import { ANIMALI, NUMERO_COLORI, PARAMETRI_BASE, PASSI_MAX, PASSI_MIN, comparsa, creaTrova, grigliaAlPasso, panda, smile } from "./minigiochi/trova";
 import { PAROLE_MAX, PAROLE_MIN, comparsaGiusta, nomi } from "./minigiochi/nomi";
 import { CASELLE as CASELLE_MEMORIA, LUNGHEZZA as LUNGHEZZA_MEMORIA, fineDimostrazione, memoria } from "./minigiochi/memoria";
 
@@ -271,35 +271,69 @@ describe("Colore giusto", () => {
 });
 
 describe("Trova il panda e Trova lo smile", () => {
+  const caselle = PARAMETRI_BASE.lato ** 2;
+  const uguali = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
+
   for (const [mg, bersaglio, distrattori] of [
     [panda, "panda", ANIMALI as readonly string[]],
     [smile, "felice", ["triste"]],
   ] as const) {
-    it(`${mg.id}: la griglia cambia a ogni passo e il bersaglio c'è solo nell'ultima, una volta`, () => {
+    it(`${mg.id}: a ogni passo cambiano poche caselle e il bersaglio compare solo all'ultimo, tra quelle`, () => {
       for (let seme = 0; seme < 200; seme++) {
         const c = mg.prepara(creaRng(seme));
-        expect(c.griglie.length).toBeGreaterThanOrEqual(PASSI_MIN);
-        expect(c.griglie.length).toBeLessThanOrEqual(PASSI_MAX);
-        c.griglie.forEach((g, i) => {
-          expect(g).toHaveLength(CASELLE_TROVA);
-          const bersagli = g.filter((k) => k.figura === bersaglio).length;
-          expect(bersagli).toBe(i === c.griglie.length - 1 ? 1 : 0);
+        expect(c.iniziale).toHaveLength(caselle);
+        expect(c.passi.length).toBeGreaterThanOrEqual(PASSI_MIN + 1);
+        expect(c.passi.length).toBeLessThanOrEqual(PASSI_MAX + 1);
+        for (let n = 0; n <= c.passi.length; n++) {
+          const g = grigliaAlPasso(c, n);
+          expect(g).toHaveLength(caselle);
+          expect(g.filter((k) => k.figura === bersaglio).length).toBe(n === c.passi.length ? 1 : 0);
           for (const k of g) {
             if (k.figura !== bersaglio) expect(distrattori).toContain(k.figura);
             expect(k.gradi % 45).toBe(0);
             expect(k.colore).toBeGreaterThanOrEqual(0);
             expect(k.colore).toBeLessThan(NUMERO_COLORI);
           }
-        });
-        expect(c.griglie[c.griglie.length - 1]?.[c.posizione]?.figura).toBe(bersaglio);
+          if (n > 0) {
+            // Cambiano esattamente le caselle del passo, e ognuna cambia davvero.
+            const prima = grigliaAlPasso(c, n - 1);
+            expect(c.passi[n - 1]).toHaveLength(PARAMETRI_BASE.cambi);
+            expect(g.filter((k, i) => !uguali(k, prima[i])).length).toBe(PARAMETRI_BASE.cambi);
+          }
+        }
+        const ultimo = c.passi[c.passi.length - 1]!;
+        expect(ultimo.map((x) => x.posizione)).toContain(c.posizione);
+        expect(grigliaAlPasso(c, c.passi.length)[c.posizione]?.figura).toBe(bersaglio);
+        expect(comparsa(c)).toBe(c.passi.length * PARAMETRI_BASE.passoMs);
         expect(mg.durataMassima(c)).toBeGreaterThan(comparsa(c));
       }
     });
   }
 
-  it("le griglie di passi diversi non sono uguali (si rimescolano)", () => {
-    const c = panda.prepara(creaRng(4));
-    for (let i = 1; i < c.griglie.length; i++) expect(c.griglie[i]).not.toEqual(c.griglie[i - 1]);
+  it("con figure dritte nessuna è ruotata", () => {
+    const dritto = creaTrova("x", "panda", ANIMALI, { ...PARAMETRI_BASE, dritte: true });
+    for (let seme = 0; seme < 50; seme++) {
+      const c = dritto.prepara(creaRng(seme));
+      for (let n = 0; n <= c.passi.length; n++) for (const k of grigliaAlPasso(c, n)) expect(k.gradi).toBe(0);
+    }
+  });
+
+  it("senza rotazione le figure che cambiano tengono la direzione di prima", () => {
+    const fermo = creaTrova("y", "panda", ANIMALI, { ...PARAMETRI_BASE, ruotano: false });
+    for (let seme = 0; seme < 50; seme++) {
+      const c = fermo.prepara(creaRng(seme));
+      for (let n = 1; n < c.passi.length; n++) {
+        const prima = grigliaAlPasso(c, n - 1);
+        for (const { posizione, casella } of c.passi[n - 1]!) expect(casella.gradi).toBe(prima[posizione]!.gradi);
+      }
+    }
+  });
+
+  it("griglia di altro lato; cambi oltre il massimo diventano tutte le caselle", () => {
+    const g3 = creaTrova("z", "panda", ANIMALI, { ...PARAMETRI_BASE, lato: 3, cambi: 99 });
+    const c = g3.prepara(creaRng(7));
+    expect(c.iniziale).toHaveLength(9);
+    for (const p of c.passi) expect(p).toHaveLength(9);
   });
 
   it("creaTrova rifiuta distrattori vuoti o che contengono il bersaglio", () => {

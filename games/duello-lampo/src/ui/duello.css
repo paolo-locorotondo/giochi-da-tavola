@@ -434,15 +434,16 @@ div.dl-zona {
   cursor: default;
 }
 
-/* Trova il panda / lo smile: griglia 4×4 di figure, ognuna girata a modo suo */
+/* Trova il panda / lo smile: griglia di figure colorate che cambiano poche alla volta */
 /* La zona misura sé stessa: la griglia (quadrata) sta nell'altezza disponibile, anche su telefoni bassi */
 .dl-trova {
   container-type: size;
 }
 
+/* Il lato della griglia arriva dal mini gioco (--dl-lato): 3×3 o 5×5 non richiedono CSS nuovo */
 .dl-trova-griglia {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--dl-lato, 4), minmax(0, 1fr));
   gap: 0.3rem;
   width: min(100%, 17rem, calc(100cqh - 3.5rem));
 }

@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.18.1] - 2026-11-19
+
+### Modificato
+
+- Duello Lampo, Trova il panda e Trova lo smile: invece di cambiare tutta la griglia (che stancava la vista) ogni secondo cambiano solo 3 caselle a caso, e il bersaglio compare in una di quelle. Griglia, caselle che cambiano, tempo, rotazione e figure dritte sono già parametri del modulo (`ParametriTrova`), pronti per diventare impostazioni.
+- Piano delle impostazioni dei mini giochi aggiornato con le decisioni dell'utente.
+
 ## [0.18.0] - 2026-11-19
 
 ### Aggiunto
