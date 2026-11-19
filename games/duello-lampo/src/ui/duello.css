@@ -52,7 +52,8 @@
   gap: 0.35rem;
 }
 
-.dl-mani-tasto {
+/* Doppia classe: deve battere il padding di `.btn`, che altrimenti sposta l'icona a destra */
+.dl-mani .dl-mani-tasto {
   display: grid;
   place-items: center;
   width: 44px;
@@ -61,7 +62,7 @@
   padding: 0;
 }
 
-.dl-mani-tasto:disabled {
+.dl-mani .dl-mani-tasto:disabled {
   opacity: 0.4;
   cursor: default;
 }

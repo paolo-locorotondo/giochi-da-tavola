@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.16.1] - 2026-11-19
+
+### Corretto
+
+- Duello Lampo: i pulsanti − e + delle mani erano spostati a destra, con l'icona fuori centro: ora sono centrati.
+
 ## [0.16.0] - 2026-11-19
 
 ### Modificato
