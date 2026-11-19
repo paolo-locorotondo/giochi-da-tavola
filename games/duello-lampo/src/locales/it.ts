@@ -3,10 +3,10 @@ export const it = {
   descrizione: "Sfida di riflessi per due: mini giochi di velocità sullo stesso telefono, uno di fronte all'altro.",
   regolamentoPassi: [
     "Appoggia il telefono al centro del tavolo: ognuno gioca sulla metà di schermo che ha davanti.",
-    "Scegli i mini giochi e quanti round giocare, poi tocca «Inizia la sfida».",
+    "Per ogni mini gioco scegli quante mani (round) giocare di fila, da 0 a 9; con 0 non si usa. Poi tocca «Inizia la sfida».",
     "Prima di ogni round si legge la regola e ognuno tocca «Sono pronto»; parte il conto alla rovescia 3, 2, 1.",
     "Il mini gioco assegna 1 punto a chi lo vince; se è pari nessuno prende punti.",
-    "Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.",
+    "Ogni metà dello schermo mostra il punteggio del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.",
   ],
   regolamentoNote: [
     "I tempi si misurano sul telefono, dal momento in cui lo stimolo compare sullo schermo.",
@@ -20,12 +20,16 @@ export const it = {
   nomeBasso: "Giocatore 1",
   nomeAlto: "Giocatore 2",
   minigiochiTitolo: "Mini giochi",
-  minigiochiAiuto: "Scegli quali usare: ne serve almeno uno.",
+  minigiochiAiuto:
+    "Per ognuno scegli quante mani giocare di fila (da 1 a {max}); con 0 non si usa. Se alla fine è pari c'è uno spareggio.",
+  maniDi: "Mani di {nome}",
+  menoMani: "Una mano in meno di {nome}",
+  piuMani: "Una mano in più di {nome}",
+  maniNumero: "{nome}: {n} mani",
+  totaleRound: { one: "In tutto {n} round", other: "In tutto {n} round" },
   tutti: "Tutti",
   aCaso: "A caso",
-  nessunoScelto: "Scegli almeno un mini gioco.",
-  roundTitolo: "Quanti round?",
-  roundAiuto: "Se alla fine sono pari si fa uno spareggio.",
+  nessunoScelto: "Scegli almeno una mano: con tutti a 0 non si può giocare.",
   inizia: "Inizia la sfida",
 
   // Mini giochi: nome e regola (una coppia di chiavi per ogni id del registro)
@@ -40,7 +44,7 @@ export const it = {
   campo: "Campo di gioco di {nome}",
   round: "Round {n} di {tot}",
   spareggio: "Spareggio",
-  punteggio: "{a} {pa} - {pb} {b}",
+  punti: "Punti di {nome}: {n}",
   pronto: "Sono pronto",
   aspettoAltro: "Aspetto l'altro giocatore…",
   contoAlla: "{n}",

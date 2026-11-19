@@ -194,7 +194,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.15.0).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.16.0).
 
 ### Fatti
 

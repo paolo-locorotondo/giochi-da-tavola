@@ -3,12 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   ErroreDuello,
   assegna,
+  MANI_MAX,
   creaScaletta,
   finita,
   idCorrente,
   inSpareggio,
+  maniACaso,
   nuovaPartita,
-  sceltaACaso,
+  totaleRound,
   vincitorePartita,
 } from "./logica";
 import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco } from "./minigiochi";
@@ -26,63 +28,45 @@ const codice = (f: () => unknown) => {
 };
 
 describe("creaScaletta", () => {
-  it("ha la lunghezza chiesta e usa solo i mini giochi scelti", () => {
-    const s = creaScaletta(["via", "raffica"], 7, creaRng("a"));
-    expect(s).toHaveLength(7);
-    expect(s.every((id) => id === "via" || id === "raffica")).toBe(true);
+  it("gioca ogni mini gioco per le sue mani di fila, nell'ordine del registro", () => {
+    expect(creaScaletta({ via: 2, stop: 3 })).toEqual(["via", "via", "stop", "stop", "stop"]);
+    expect(creaScaletta({ stop: 1, raffica: 2, via: 1 })).toEqual(["via", "raffica", "raffica", "stop"]);
   });
 
-  it("non ripete mai lo stesso mini gioco di fila se ce n'è più di uno", () => {
-    for (let seme = 0; seme < 200; seme++) {
-      for (const ids of [["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"]]) {
-        const s = creaScaletta(ids, 21, creaRng(seme));
-        for (let i = 1; i < s.length; i++) expect(s[i]).not.toBe(s[i - 1]);
-      }
-    }
+  it("zero o assente vuol dire che il mini gioco non si usa", () => {
+    expect(creaScaletta({ via: 0, raffica: 1 })).toEqual(["raffica"]);
+    expect(creaScaletta({})).toEqual([]);
   });
 
-  it("con tutti i mini giochi, nei primi n round compaiono tutti (sacchetto)", () => {
-    const ids = ["a", "b", "c"];
-    const s = creaScaletta(ids, 3, creaRng("x"));
-    expect([...s].sort()).toEqual(ids);
-  });
-
-  it("con un solo mini gioco lo ripete", () => {
-    expect(creaScaletta(["via"], 3, creaRng(1))).toEqual(["via", "via", "via"]);
-  });
-
-  it("è riproducibile con lo stesso seme", () => {
-    const ids = ["a", "b", "c"];
-    expect(creaScaletta(ids, 9, creaRng(5))).toEqual(creaScaletta(ids, 9, creaRng(5)));
-  });
-
-  it("senza mini giochi dà errore", () => {
-    expect(codice(() => creaScaletta([], 3, creaRng(1)))).toBe("nessunMinigioco");
+  it("totaleRound somma le mani", () => {
+    expect(totaleRound({ via: 2, raffica: 3, stop: 1 })).toBe(6);
+    expect(totaleRound({})).toBe(0);
   });
 });
 
 describe("nuovaPartita", () => {
-  const rng = () => creaRng("p");
-  it("controlla round e mini giochi", () => {
-    expect(codice(() => nuovaPartita({ minigiochi: [], round: 5 }, rng()))).toBe("nessunMinigioco");
-    expect(codice(() => nuovaPartita({ minigiochi: ["via"], round: 0 }, rng()))).toBe("roundNonValidi");
-    expect(codice(() => nuovaPartita({ minigiochi: ["via"], round: 2.5 }, rng()))).toBe("roundNonValidi");
-    expect(codice(() => nuovaPartita({ minigiochi: ["via"], round: 99 }, rng()))).toBe("roundNonValidi");
-    expect(codice(() => nuovaPartita({ minigiochi: ["inesistente"], round: 3 }, rng()))).toBe("minigiocoSconosciuto");
+  it("controlla mani e mini giochi", () => {
+    expect(codice(() => nuovaPartita({ mani: {} }))).toBe("nessunMinigioco");
+    expect(codice(() => nuovaPartita({ mani: { via: 0, stop: 0 } }))).toBe("nessunMinigioco");
+    expect(codice(() => nuovaPartita({ mani: { via: -1 } }))).toBe("roundNonValidi");
+    expect(codice(() => nuovaPartita({ mani: { via: 2.5 } }))).toBe("roundNonValidi");
+    expect(codice(() => nuovaPartita({ mani: { via: MANI_MAX + 1 } }))).toBe("roundNonValidi");
+    expect(codice(() => nuovaPartita({ mani: { inesistente: 3 } }))).toBe("minigiocoSconosciuto");
   });
 
   it("parte da zero punti al primo round", () => {
-    const p = nuovaPartita({ minigiochi: [...ID_MINIGIOCHI], round: 5 }, rng());
+    const p = nuovaPartita({ mani: { via: 2, raffica: 1, stop: 2 } });
     expect(p.punti).toEqual([0, 0]);
     expect(p.round).toBe(0);
-    expect(p.scaletta).toHaveLength(5);
-    expect(idCorrente(p)).toBe(p.scaletta[0]);
+    expect(p.totale).toBe(5);
+    expect(p.scaletta).toEqual(["via", "via", "raffica", "stop", "stop"]);
+    expect(idCorrente(p)).toBe("via");
     expect(finita(p)).toBe(false);
   });
 });
 
 describe("assegna", () => {
-  const nuova = (round: number) => nuovaPartita({ minigiochi: ["via"], round }, creaRng(1));
+  const nuova = (round: number) => nuovaPartita({ mani: { via: round } });
 
   it("dà un punto al vincitore e passa al round dopo", () => {
     const p = assegna(nuova(3), 1);
@@ -130,15 +114,20 @@ describe("assegna", () => {
   });
 });
 
-describe("sceltaACaso", () => {
-  it("dà un sottoinsieme non vuoto nell'ordine del registro", () => {
+describe("maniACaso", () => {
+  it("usa almeno un mini gioco, mai tutti se ce n'è più di uno, con 1-3 mani ciascuno", () => {
     for (let seme = 0; seme < 100; seme++) {
-      const s = sceltaACaso(ID_MINIGIOCHI, creaRng(seme));
-      expect(s.length).toBeGreaterThanOrEqual(1);
-      expect(s.length).toBeLessThan(ID_MINIGIOCHI.length);
-      expect(s).toEqual(ID_MINIGIOCHI.filter((id) => s.includes(id)));
+      const m = maniACaso(creaRng(seme));
+      expect(Object.keys(m).sort()).toEqual([...ID_MINIGIOCHI].sort());
+      const usati = ID_MINIGIOCHI.filter((id) => (m[id] ?? 0) > 0);
+      expect(usati.length).toBeGreaterThanOrEqual(1);
+      expect(usati.length).toBeLessThan(ID_MINIGIOCHI.length);
+      for (const id of usati) {
+        expect(m[id]).toBeGreaterThanOrEqual(1);
+        expect(m[id]).toBeLessThanOrEqual(3);
+      }
+      expect(() => nuovaPartita({ mani: m })).not.toThrow();
     }
-    expect(sceltaACaso(["solo"], creaRng(1))).toEqual(["solo"]);
   });
 });
 

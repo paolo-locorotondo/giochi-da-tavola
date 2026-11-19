@@ -9,6 +9,14 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.16.0] - 2026-11-19
+
+### Modificato
+
+- Duello Lampo: al posto del numero di round fisso (3, 5, 7, 9, 11) ogni mini gioco ha un **selettore delle mani** (− e +, da 0 a 9; con 0 non si usa). Le mani di un mini gioco si giocano **di fila**, nell'ordine dell'elenco (es. Via! due volte, poi Stop al centro tre volte); sotto l'elenco si legge il totale dei round. Le scelte salvate con la versione precedente si scartano.
+- Duello Lampo: **contatore dei punti** grande in ogni metà dello schermo, con il nome e i punti del giocatore di quella metà.
+- Duello Lampo: la guida per aggiungere un mini gioco è ora in `games/duello-lampo/docs/aggiungere-un-minigioco.md`; il README del gioco ha solo il rimando.
+
 ## [0.15.0] - 2026-11-19
 
 ### Aggiunto

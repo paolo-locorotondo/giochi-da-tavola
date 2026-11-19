@@ -58,8 +58,8 @@ type VistaMiniGioco<Config, Risultato> = (props: {
 ## Creazione della sfida
 
 - Nomi dei due giocatori (facoltativi; di base «Giocatore 1» e «Giocatore 2»).
-- **Scelta dei mini giochi**: elenco con interruttori (tutti accesi di base), pulsanti «Tutti» e «A caso». Almeno uno.
-- **Numero di round** (di base 7). Se i mini giochi scelti sono meno dei round, si ripetono, mai due volte di fila; l'ordine è casuale.
+- **Scelta dei mini giochi**: elenco con il selettore delle mani, pulsanti «Tutti» e «A caso». Almeno una mano in tutto.
+- **Mani per mini gioco** (fatto in 0.16.0): accanto a ogni mini gioco un selettore − / + da 0 a 9 (di base 2); le mani di un mini gioco si giocano di fila, nell'ordine dell'elenco. Con 0 il mini gioco non si usa.
 - La scelta resta salvata sul telefono (`@gdt/preferenze`) per la sfida successiva.
 
 ## Schermo diviso, telefono al centro
@@ -67,6 +67,7 @@ type VistaMiniGioco<Config, Risultato> = (props: {
 - Due metà: quella in alto **ruotata di 180°**, così ognuno legge il proprio lato. Ogni metà è una zona di tocco indipendente.
 - Tocchi con **Pointer Events** multitouch, ognuno assegnato alla propria metà. Da provare su telefoni veri: alcuni browser perdono un tocco quando due dita toccano insieme.
 - Mentre si gioca: schermo sempre acceso (Wake Lock, se disponibile), niente scorrimento né zoom, orientamento verticale.
+- Contatore dei punti grande in ogni metà (fatto in 0.16.0).
 - Tra un round e l'altro: risultato del round su entrambe le metà, punteggio, «Pronti?» con conto alla rovescia 3-2-1.
 - Fine partita: vincitore, punti per mini gioco, «Rivincita» con la stessa scelta.
 - Suoni sintetizzati con `@gdt/suoni` (via, punto, fine); vibrazione facoltativa sul punto.

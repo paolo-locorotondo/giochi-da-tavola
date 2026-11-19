@@ -5,10 +5,10 @@ Sfida di riflessi per **due giocatori sullo stesso telefono**, appoggiato al cen
 ## Regolamento
 
 1. Appoggia il telefono al centro del tavolo: ognuno gioca sulla metà di schermo che ha davanti (quella in alto è girata di 180°).
-2. Scegli i mini giochi e quanti round giocare, poi tocca «Inizia la sfida».
+2. Per ogni mini gioco scegli quante **mani** (round) giocare di fila, da 0 a 9; con 0 non si usa. Poi tocca «Inizia la sfida».
 3. Prima di ogni round si legge la regola e ognuno tocca «Sono pronto»; parte il conto alla rovescia 3, 2, 1.
 4. Il mini gioco assegna 1 punto a chi lo vince; se è pari nessuno prende punti.
-5. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.
+5. Ogni metà dello schermo mostra il **punteggio** del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.
 
 Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sullo schermo; ognuno tocca solo la sua metà.
 
@@ -26,7 +26,7 @@ Mini giochi previsti più avanti: Colore giusto (effetto Stroop), Bersagli, Il p
 
 ### Offline (un solo telefono)
 
-È l'unica modalità. Funziona senza rete dopo la prima apertura ([come installarla](../../docs/app-installabile.md)). Nessuna partita da creare: si scelgono i mini giochi e si parte. Nomi, mini giochi e numero di round restano salvati su quel telefono per la sfida dopo.
+È l'unica modalità. Funziona senza rete dopo la prima apertura ([come installarla](../../docs/app-installabile.md)). Nessuna partita da creare: si scelgono le mani di ogni mini gioco e si parte. Nomi e mani restano salvati su quel telefono per la sfida dopo.
 
 ### Online (ognuno col suo telefono)
 
@@ -51,6 +51,8 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 ## Cosa controllare
 
 - **Su un telefono vero** (i test automatici non provano il doppio tocco): ognuno con un dito sulla sua metà, insieme. Verifica che i due tocchi simultanei arrivino entrambi, anche in «Raffica».
+- Il punteggio grande in ogni metà è quello del giocatore di quella metà e sale a ogni punto.
+- Con le mani scelte (es. Via! 2, Stop al centro 3) i round escono di fila in quest'ordine: prima le mani del primo mini gioco dell'elenco, poi quelle del secondo, ecc.
 - La metà in alto si legge dritta da chi sta di fronte; nessuno scorrimento né zoom durante la sfida; lo schermo resta acceso.
 - **Via!**: toccare prima del verde dà il punto all'altro; il tempo mostrato è plausibile (200–400 ms); con due tocchi quasi insieme vince chi è davvero primo.
 - **Raffica**: i tocchi si contano uno per uno e il round si chiude da solo dopo 5 secondi.
@@ -65,41 +67,16 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Struttura
 
-- `src/logica.ts`: la partita (scaletta dei mini giochi senza ripetizioni di fila, punti, spareggio), pura e testata.
+- `src/logica.ts`: la partita (scaletta con le mani di ogni mini gioco di fila, punti, spareggio), pura e testata.
 - `src/minigiochi/`: un file per mini gioco con le sole regole (`prepara`, `vincitore`, `durataMassima`), e `index.ts` con il **registro**.
 - `src/ui/minigiochi/`: la vista React di ogni mini gioco e il suo registro `VISTE`.
-- `src/ui/Preparazione.tsx` (scelta di nomi, mini giochi e round), `Partita.tsx` (schermo diviso, round, esito, fine), `DuelloLampoApp.tsx`.
+- `src/ui/Preparazione.tsx` (nomi e mani di ogni mini gioco), `Partita.tsx` (schermo diviso, round, esito, fine), `DuelloLampoApp.tsx`.
 - `src/locales/{it,en}.ts`: tutti i testi e il regolamento; `src/manifest.ts` li espone all'app.
 - `src/suoni/`: suoni sintetizzati (nessun file audio).
 
-## Come aggiungere un mini gioco
+## Aggiungere un mini gioco
 
-Un mini gioco è fatto di **regole** (puro TypeScript) e **vista** (React). Esempio: «Tocco lento», vince chi aspetta di più prima di toccare dopo il via.
-
-1. **Regole**: `src/minigiochi/lento.ts` con un oggetto `MiniGioco<Config, Risultato>`:
-
-   ```ts
-   import { confronta, type MiniGioco } from "./tipi";
-
-   export interface ConfigLento { dopoMs: number }
-   export interface RisultatoLento { ms: number }
-
-   export const lento: MiniGioco<ConfigLento, RisultatoLento> = {
-     id: "lento",
-     prepara: (rng) => ({ dopoMs: 2000 + rng.intero(2000) }), // tutta la casualità passa da qui
-     durataMassima: (c) => c.dopoMs + 3000,
-     chiudeAlPrimo: false,
-     vincitore: (_c, [a, b]) =>
-       confronta("ms" in a ? a.ms : 0, "ms" in b ? b.ms : 0, "maggiore"),
-   };
-   ```
-
-   `vincitore` restituisce `0` (chi sta in basso), `1` (chi sta in alto) o `null` (pari); chi non ha finito in tempo è `NESSUNO`. Aggiungi i test in `src/logica.test.ts`.
-
-2. **Registro delle regole**: aggiungi `lento` all'elenco `MINIGIOCHI` in `src/minigiochi/index.ts`. È tutto: scelta dei mini giochi, scaletta e salvataggio lo usano da soli.
-3. **Vista**: `src/ui/minigiochi/LentoVista.tsx` riceve `{ config, lato, inizio, principale, onRisultato }`, disegna la sua metà e chiama `onRisultato(...)` **una sola volta**; esporta anche `descriviLento` (il testo breve del risultato). Per i tempi usa `performance.now()` e `inizio` (il tempo zero comune), non l'ora del computer. Aggiungila a `VISTE` in `src/ui/minigiochi/index.ts`. Le zone di tocco usano la classe `dl-zona`.
-4. **Testi**: in `src/locales/it.ts` e `en.ts` le chiavi `mg_lento_nome` e `mg_lento_regola` (stesse chiavi in entrambe: lo verifica il compilatore).
-5. Prova con `pnpm --filter @gdt/duello-lampo test` e a mano.
+I mini giochi sono moduli indipendenti: aggiungerne uno non richiede di toccare il resto. La guida passo per passo, con un esempio, è in [docs/aggiungere-un-minigioco.md](docs/aggiungere-un-minigioco.md).
 
 ## Lingue
 

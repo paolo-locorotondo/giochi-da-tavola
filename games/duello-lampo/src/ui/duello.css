@@ -13,29 +13,22 @@
   gap: 0.5rem;
 }
 
+/* Un mini gioco: nome e regola a sinistra, selettore delle mani a destra */
 .dl-mg-voce {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   min-height: 48px;
   padding: 0.6rem 0.75rem;
   background: var(--s1);
   border: var(--bw) solid var(--bd-ctrl);
   border-radius: calc(var(--r) - 4px);
-  cursor: pointer;
 }
 
-.dl-mg-voce input {
-  flex: none;
-  width: 1.4rem;
-  height: 1.4rem;
-  margin: 0.1rem 0 0;
-  accent-color: var(--ac);
-}
-
-.dl-mg-voce:has(input:focus-visible) {
-  outline: 3px solid var(--ac);
-  outline-offset: 2px;
+/* Con 0 mani il mini gioco non si usa: si vede, ma resta chiaro che è fuori (il numero resta scritto) */
+.dl-mg-voce--spenta .dl-mg-testo {
+  opacity: 0.6;
 }
 
 .dl-mg-testo {
@@ -43,11 +36,49 @@
   flex-direction: column;
   gap: 0.15rem;
   min-width: 0;
+  flex: 1;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .dl-mg-nome {
   font-weight: 700;
+}
+
+.dl-mani {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dl-mani-tasto {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.dl-mani-tasto:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dl-mani-numero {
+  min-width: 1.6rem;
+  text-align: center;
+  font-family: var(--font-titoli);
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: lining-nums;
+  color: var(--ac);
+}
+
+.dl-totale {
+  margin: 0.7rem 0 0;
+  text-align: center;
 }
 
 .dl-mg-azioni {
@@ -101,9 +132,32 @@
   color: var(--mu);
 }
 
-.dl-testa span {
+.dl-testa > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Punti del giocatore di quella metà: nome piccolo e numero grande */
+.dl-punti {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 70%;
+}
+
+.dl-punti-nome {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dl-punti-numero {
+  flex: none;
+  font-family: var(--font-titoli);
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ac);
 }
 
 .dl-corpo {
@@ -246,6 +300,7 @@
 
 /* Raffica */
 .dl-raffica-numero {
+  font-variant-numeric: lining-nums;
   font-family: var(--font-titoli);
   font-size: 4rem;
   font-weight: 800;

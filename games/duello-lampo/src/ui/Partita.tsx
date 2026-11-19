@@ -69,7 +69,7 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
 
   const [rng] = useState(() => creaRng(Math.floor(Math.random() * 2 ** 32)));
   const [{ partita, config }, setStato] = useState(() => {
-    const p = nuovaPartita(sfida, rng);
+    const p = nuovaPartita(sfida);
     return { partita: p, config: preparaRound(p, rng) };
   });
   const [fase, setFase] = useState<Fase>("regola");
@@ -162,7 +162,7 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
   };
 
   const rivincita = () => {
-    const p = nuovaPartita(sfida, rng);
+    const p = nuovaPartita(sfida);
     setStato({ partita: p, config: preparaRound(p, rng) });
     setPronti([false, false]);
     setEsito(null);
@@ -251,7 +251,14 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
       <section key={lato} className={`dl-meta dl-meta--${lato === 0 ? "basso" : "alto"}`} aria-label={t("campo", { nome: nomi[lato] })}>
         <header className="dl-testa">
           <span>{fase === "fine" ? "" : etichettaRound}</span>
-          <span>{t("punteggio", { a: nomi[lato], pa: partita.punti[lato], pb: partita.punti[altro], b: nomi[altro] })}</span>
+          <span className="dl-punti" role="img" aria-label={t("punti", { nome: nomi[lato], n: partita.punti[lato] })}>
+            <span className="dl-punti-nome" aria-hidden="true">
+              {nomi[lato]}
+            </span>
+            <span className="dl-punti-numero" aria-hidden="true">
+              {partita.punti[lato]}
+            </span>
+          </span>
         </header>
         <div className="dl-corpo">{corpo}</div>
       </section>
