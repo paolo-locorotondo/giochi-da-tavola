@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { creaRng, type Rng } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { assegna, finita, idCorrente, impostazioniDi, nuovaPartita, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
+import { assegna, erroriRound, finita, idCorrente, impostazioniDi, nuovaPartita, type Errori, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
 import { NESSUNO, miniGioco, type Lato } from "../minigiochi";
 import { suonoConto, suonoFine, suonoPari, suonoPunto } from "../suoni";
 import { VISTE } from "./minigiochi";
@@ -19,6 +19,8 @@ interface Esito {
   id: string;
   vincitore: Lato | null;
   risultati: readonly [unknown, unknown];
+  /** Chi ha perso un punto per un errore. */
+  errori: Errori;
 }
 
 interface Props {
@@ -120,14 +122,15 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
       chiuso.current = true;
       const r = [risultati.current[0] ?? NESSUNO, risultati.current[1] ?? NESSUNO] as const;
       const vincitore = mg.vincitore(config, r);
-      setEsito({ id, vincitore, risultati: r });
-      setStato({ partita: assegna(partita, vincitore), config });
+      const errori = erroriRound(partita, id, config, r);
+      setEsito({ id, vincitore, risultati: r, errori });
+      setStato({ partita: assegna(partita, vincitore, rng, errori), config });
       setFase("esito");
     };
     chiudiRif.current = chiudi;
     const tm = window.setTimeout(chiudi, mg.durataMassima(config) + 500);
     return () => window.clearTimeout(tm);
-  }, [fase, partita, config]);
+  }, [fase, partita, config, rng]);
 
   // Esito: suono e blocco breve di «Avanti».
   useEffect(() => {
@@ -221,7 +224,10 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
           </p>
           <ul className="dl-dettagli">
             {([lato, altro] as const).map((l) => (
-              <li key={l}>{t("dettaglio", { chi: l === lato ? t("tu") : nomi[l], valore: descrivi(esito.risultati[l], t) })}</li>
+              <li key={l}>
+                {t("dettaglio", { chi: l === lato ? t("tu") : nomi[l], valore: descrivi(esito.risultati[l], t) })}
+                {esito.errori[l] && <span className="dl-penalita"> {t("penalita")}</span>}
+              </li>
             ))}
           </ul>
           <button type="button" className="btn primario dl-grande" disabled={!sbloccato} onClick={avanti}>

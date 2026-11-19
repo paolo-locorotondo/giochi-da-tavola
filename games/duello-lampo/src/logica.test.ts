@@ -12,6 +12,7 @@ import {
   nuovaPartita,
   totaleRound,
   vincitorePartita,
+  erroriRound,
 } from "./logica";
 import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco, sceltePermesse, tuttiBase, valoriBase, valoriCompleti } from "./minigiochi";
 import { ATTESA_MIN_MS, ATTESE_MAX_S, via } from "./minigiochi/via";
@@ -19,7 +20,7 @@ import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
 import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, NUMERI_COLORI, coloriDa, colore } from "./minigiochi/colore";
 import { ANIMALI, IMPOSTAZIONI_TROVA, LATI, MARGINE_MS, NUMERO_COLORI, PARAMETRI_BASE, PASSI_MAX, PASSI_MIN, PASSI_S, comparsa, creaTrova, grigliaAlPasso, panda, parametriDa, passiDopo, smile } from "./minigiochi/trova";
-import { PAROLE_MAX, PAROLE_MIN, PASSI_S as PASSI_NOMI_S, comparsaGiusta, nomi } from "./minigiochi/nomi";
+import { PAROLE_DOPO, PASSI_S as PASSI_NOMI_S, PRIMA_MAX, PRIMA_MIN, comparsaGiusta, nomi } from "./minigiochi/nomi";
 import { CASELLE as CASELLE_MEM_BASE, CASELLE_SCELTE, LUNGHEZZE, LUNGHEZZA as LUNGHEZZA_MEMORIA, colonne, fineDimostrazione, memoria } from "./minigiochi/memoria";
 import { DURATE_S } from "./minigiochi/raffica";
 import { PERIODI, VELOCITA } from "./minigiochi/stop";
@@ -76,22 +77,23 @@ describe("nuovaPartita", () => {
 
 describe("assegna", () => {
   const nuova = (round: number) => nuovaPartita({ mani: { via: round } });
+  const rng = () => creaRng(1);
 
   it("dà un punto al vincitore e passa al round dopo", () => {
-    const p = assegna(nuova(3), 1);
+    const p = assegna(nuova(3), 1, rng());
     expect(p.punti).toEqual([0, 1]);
     expect(p.round).toBe(1);
   });
 
   it("con un pari nessuno prende punti", () => {
-    const p = assegna(nuova(3), null);
+    const p = assegna(nuova(3), null, rng());
     expect(p.punti).toEqual([0, 0]);
     expect(p.round).toBe(1);
   });
 
   it("la partita finisce al round finale se qualcuno è avanti", () => {
     let p = nuova(3);
-    for (const v of [0, 1, 0] as const) p = assegna(p, v);
+    for (const v of [0, 1, 0] as const) p = assegna(p, v, rng());
     expect(finita(p)).toBe(true);
     expect(p.punti).toEqual([2, 1]);
     expect(vincitorePartita(p)).toBe(0);
@@ -100,26 +102,104 @@ describe("assegna", () => {
 
   it("con parità a fine round si aggiunge lo spareggio, finché qualcuno è avanti", () => {
     let p = nuova(2);
-    p = assegna(p, 0);
-    p = assegna(p, 1);
+    p = assegna(p, 0, rng());
+    p = assegna(p, 1, rng());
     expect(finita(p)).toBe(false);
     expect(inSpareggio(p)).toBe(true);
     expect(idCorrente(p)).toBe("via");
-    p = assegna(p, null); // pari anche lo spareggio: se ne gioca un altro
+    p = assegna(p, null, rng()); // pari anche lo spareggio: se ne gioca un altro
     expect(finita(p)).toBe(false);
-    p = assegna(p, 1);
+    p = assegna(p, 1, rng());
     expect(finita(p)).toBe(true);
     expect(vincitorePartita(p)).toBe(1);
   });
 
   it("a partita finita non cambia più niente", () => {
     let p = nuova(1);
-    p = assegna(p, 0);
-    expect(assegna(p, 1)).toBe(p);
+    p = assegna(p, 0, rng());
+    expect(assegna(p, 1, rng())).toBe(p);
   });
 
   it("senza round finiti non c'è vincitore", () => {
     expect(vincitorePartita(nuova(3))).toBeNull();
+  });
+
+  it("lo spareggio è un mini gioco a caso tra quelli scelti nella sfida", () => {
+    const visti = new Set<string>();
+    for (let seme = 0; seme < 200; seme++) {
+      const r = creaRng(seme);
+      let p = nuovaPartita({ mani: { raffica: 1, stop: 1, panda: 0 } });
+      expect(p.scelti).toEqual(["raffica", "stop"]);
+      p = assegna(p, 0, r);
+      p = assegna(p, 1, r);
+      const id = idCorrente(p)!;
+      expect(inSpareggio(p)).toBe(true);
+      expect(["raffica", "stop"]).toContain(id);
+      visti.add(id);
+    }
+    // Con molti semi escono entrambi: non è sempre lo stesso.
+    expect([...visti].sort()).toEqual(["raffica", "stop"]);
+  });
+
+  it("con un solo mini gioco scelto lo spareggio è quello", () => {
+    let p = nuovaPartita({ mani: { memoria: 2 } });
+    p = assegna(p, 0, rng());
+    p = assegna(p, 1, rng());
+    expect(idCorrente(p)).toBe("memoria");
+  });
+
+  it("chi sbaglia perde un punto, anche sotto zero; l'altro prende il suo", () => {
+    let p = nuova(3);
+    p = assegna(p, 1, rng(), [true, false]);
+    expect(p.punti).toEqual([-1, 1]);
+    p = assegna(p, null, rng(), [true, true]);
+    expect(p.punti).toEqual([-2, 0]);
+  });
+
+  it("errori che riportano in parità danno lo spareggio", () => {
+    let p = nuova(1);
+    // Vince chi sta in basso ma sbaglia anche... no: un errore toglie un punto a chi lo fa.
+    p = assegna(p, 0, rng(), [false, false]);
+    expect(finita(p)).toBe(true);
+    let q = nuova(1);
+    q = assegna(q, 1, rng(), [false, true]); // in alto vince e sbaglia: 0 a 0
+    expect(q.punti).toEqual([0, 0]);
+    expect(finita(q)).toBe(false);
+    expect(inSpareggio(q)).toBe(true);
+  });
+});
+
+describe("erroriRound", () => {
+  const conErrori = (id: string, attivo: boolean) =>
+    nuovaPartita({ mani: { [id]: 1 }, impostazioni: { [id]: { errori: attivo } } });
+
+  it("di base gli errori non contano", () => {
+    const p = nuovaPartita({ mani: { via: 1 } });
+    expect(erroriRound(p, "via", {}, [{ anticipo: true }, { ms: 300 }])).toEqual([false, false]);
+  });
+
+  it("Via!: con l'impostazione attiva, toccare prima del via è un errore; essere lenti no", () => {
+    const p = conErrori("via", true);
+    expect(erroriRound(p, "via", {}, [{ anticipo: true }, { ms: 900 }])).toEqual([true, false]);
+    expect(erroriRound(p, "via", {}, [{ ms: 200 }, NESSUNO])).toEqual([false, false]);
+  });
+
+  it("Colore giusto, Colori e nomi, Trova, Memoria: le risposte sbagliate sono errori", () => {
+    expect(erroriRound(conErrori("colore", true), "colore", {}, [{ giusto: false, ms: 1 }, { giusto: true, ms: 1 }])).toEqual([true, false]);
+    expect(erroriRound(conErrori("nomi", true), "nomi", {}, [{ ms: 500 }, { sbagliato: true }])).toEqual([false, true]);
+    expect(erroriRound(conErrori("panda", true), "panda", {}, [{ trovato: false, ms: 0 }, NESSUNO])).toEqual([true, false]);
+    expect(erroriRound(conErrori("smile", true), "smile", {}, [NESSUNO, { trovato: false, ms: 0 }])).toEqual([false, true]);
+    expect(erroriRound(conErrori("memoria", true), "memoria", {}, [{ giusta: false, ms: 1 }, { giusta: true, ms: 2 }])).toEqual([true, false]);
+  });
+
+  it("Raffica e Stop al centro non hanno errori (e nemmeno l'impostazione)", () => {
+    for (const id of ["raffica", "stop"]) {
+      expect(miniGioco(id).impostazioni?.some((i) => i.chiave === "errori")).toBe(false);
+      expect(miniGioco(id).errore).toBeUndefined();
+    }
+    for (const id of ["via", "colore", "nomi", "panda", "smile", "memoria"]) {
+      expect(miniGioco(id).impostazioni?.find((i) => i.chiave === "errori")).toMatchObject({ tipo: "interruttore", base: false });
+    }
   });
 });
 
@@ -372,26 +452,29 @@ describe("Trova il panda e Trova lo smile", () => {
 });
 
 describe("Colori e nomi", () => {
-  it("solo l'ultima parola ha nome e colore uguali; mai la stessa parola di fila", () => {
+  it("una sola parola combacia, non è mai la prima e dopo ne passano altre; mai la stessa parola di fila", () => {
     for (let seme = 0; seme < 300; seme++) {
-      const { parole } = nomi.prepara(creaRng(seme), base(nomi));
-      expect(parole.length).toBeGreaterThanOrEqual(PAROLE_MIN);
-      expect(parole.length).toBeLessThanOrEqual(PAROLE_MAX);
-      parole.forEach((p, i) => {
-        expect(p.parola === p.inchiostro).toBe(i === parole.length - 1);
-        if (i > 0) expect(p.parola).not.toBe(parole[i - 1]?.parola);
+      const c = nomi.prepara(creaRng(seme), base(nomi));
+      expect(c.indiceGiusta).toBeGreaterThanOrEqual(PRIMA_MIN);
+      expect(c.indiceGiusta).toBeLessThanOrEqual(PRIMA_MAX);
+      expect(c.parole).toHaveLength(c.indiceGiusta + 1 + PAROLE_DOPO);
+      c.parole.forEach((p, i) => {
+        expect(p.parola === p.inchiostro).toBe(i === c.indiceGiusta);
+        if (i > 0) expect(p.parola).not.toBe(c.parole[i - 1]?.parola);
       });
+      expect(comparsaGiusta(c)).toBe(c.indiceGiusta * c.passoMs);
+      // Il round dura fino all'ultima parola: dopo quella giusta lo scorrimento continua.
+      expect(nomi.durataMassima(c)).toBeGreaterThanOrEqual(c.parole.length * c.passoMs);
     }
   });
   const c = nomi.prepara(creaRng(5), base(nomi));
-  it("come Via!: vince chi tocca prima sulla parola giusta, chi anticipa perde", () => {
+  it("vince chi tocca prima sulla parola giusta; chi tocca quando non combacia perde", () => {
     expect(nomi.chiudeAlPrimo).toBe(true);
-    expect(nomi.durataMassima(c)).toBeGreaterThan(comparsaGiusta(c));
     expect(nomi.vincitore(c, [{ ms: 300 }, { ms: 400 }])).toBe(0);
-    expect(nomi.vincitore(c, [{ anticipo: true }, { ms: 900 }])).toBe(1);
-    expect(nomi.vincitore(c, [{ anticipo: true }, NESSUNO])).toBe(1);
+    expect(nomi.vincitore(c, [{ sbagliato: true }, { ms: 900 }])).toBe(1);
+    expect(nomi.vincitore(c, [{ sbagliato: true }, NESSUNO])).toBe(1);
     expect(nomi.vincitore(c, [NESSUNO, { ms: 900 }])).toBe(1);
-    expect(nomi.vincitore(c, [{ anticipo: true }, { anticipo: true }])).toBeNull();
+    expect(nomi.vincitore(c, [{ sbagliato: true }, { sbagliato: true }])).toBeNull();
   });
 });
 
@@ -422,28 +505,28 @@ describe("Memoria lampo", () => {
 
 describe("impostazioni dei mini giochi", () => {
   it("valoriCompleti: base se mancano, scarta valori non ammessi o di tipo sbagliato", () => {
-    expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5 });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: 8 })).toEqual({ attesaMax: 8 });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: 7 })).toEqual({ attesaMax: 5 });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: "8" })).toEqual({ attesaMax: 5 });
-    expect(valoriCompleti(via.impostazioni, { sconosciuta: 1 })).toEqual({ attesaMax: 5 });
+    expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5, errori: false });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 8 })).toEqual({ attesaMax: 8, errori: false });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 7 })).toEqual({ attesaMax: 5, errori: false });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: "8", errori: "sì" })).toEqual({ attesaMax: 5, errori: false });
+    expect(valoriCompleti(via.impostazioni, { sconosciuta: 1 })).toEqual({ attesaMax: 5, errori: false });
     expect(valoriCompleti(undefined)).toEqual({});
   });
 
   it("valoriBase e tuttiBase", () => {
-    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4 });
-    expect(tuttiBase(memoria.impostazioni, { caselle: 4, lunghezza: 4 })).toBe(true);
-    expect(tuttiBase(memoria.impostazioni, { caselle: 6, lunghezza: 4 })).toBe(false);
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
+    expect(tuttiBase(memoria.impostazioni, { caselle: 4, lunghezza: 4, errori: false })).toBe(true);
+    expect(tuttiBase(memoria.impostazioni, { caselle: 6, lunghezza: 4, errori: false })).toBe(false);
   });
 
   it("i valori di base sono quelli di prima (le partite non cambiano)", () => {
-    expect(valoriBase(via.impostazioni)).toEqual({ attesaMax: 5 });
+    expect(valoriBase(via.impostazioni)).toEqual({ attesaMax: 5, errori: false });
     expect(valoriBase(raffica.impostazioni)).toEqual({ durata: 5 });
     expect(valoriBase(stop.impostazioni)).toEqual({ velocita: 2 });
-    expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4 });
-    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3 });
-    expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false });
-    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4 });
+    expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4, errori: false });
+    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, errori: false });
+    expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false, errori: false });
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
   });
 
   it("ogni valore base è tra i valori ammessi", () => {
@@ -490,7 +573,7 @@ describe("impostazioni dei mini giochi", () => {
     for (const secondi of PASSI_NOMI_S) {
       const c = nomi.prepara(creaRng(2), valoriCompleti(nomi.impostazioni, { passo: secondi }));
       expect(c.passoMs).toBe(Math.round(secondi * 1000));
-      expect(comparsaGiusta(c)).toBe((c.parole.length - 1) * c.passoMs);
+      expect(comparsaGiusta(c)).toBe(c.indiceGiusta * c.passoMs);
     }
   });
 
@@ -554,9 +637,9 @@ describe("impostazioni dei mini giochi", () => {
 
   it("nuovaPartita completa le impostazioni mancanti e corregge quelle fuori limite", () => {
     const p = nuovaPartita({ mani: { via: 1 }, impostazioni: { via: { attesaMax: 99 }, panda: { lato: 3, cambi: 30, passo: 0.5 }, inesistente: { x: 1 } } });
-    expect(p.impostazioni.via).toEqual({ attesaMax: 5 });
+    expect(p.impostazioni.via).toEqual({ attesaMax: 5, errori: false });
     expect(p.impostazioni.panda).toMatchObject({ lato: 3, cambi: 9, passo: 0.5 });
-    expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4 });
+    expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4, errori: false });
     expect(Object.keys(p.impostazioni).sort()).toEqual([...ID_MINIGIOCHI].sort());
     expect(nuovaPartita({ mani: { via: 1 } }).impostazioni.raffica).toEqual({ durata: 5 });
   });

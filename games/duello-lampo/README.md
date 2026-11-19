@@ -8,7 +8,7 @@ Sfida di riflessi per **due giocatori sullo stesso telefono**, appoggiato al cen
 2. Per ogni mini gioco scegli quante **mani** (round) giocare di fila, da 0 a 9; con 0 non si usa. Poi tocca «Inizia la sfida».
 3. Prima di ogni round si legge la regola e ognuno tocca «Sono pronto»; parte il conto alla rovescia 3, 2, 1.
 4. Il mini gioco assegna 1 punto a chi lo vince; se è pari nessuno prende punti.
-5. Ogni metà dello schermo mostra il **punteggio** del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.
+5. Ogni metà dello schermo mostra il **punteggio** del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio con un mini gioco scelto a caso tra quelli della sfida, finché qualcuno è avanti.
 
 Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sullo schermo; ognuno tocca solo la sua metà.
 
@@ -20,7 +20,7 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Raffica** | Per 5 secondi si tocca il più possibile: vince chi tocca di più. |
 | **Stop al centro** | Un indicatore scorre avanti e indietro su una barra: vince chi lo ferma più vicino al centro. |
 | **Colore giusto** | Compare il nome di un colore scritto con un altro colore (es. «Verde» scritto in rosso): si tocca il colore **della scritta**. Vince chi risponde giusto per primo; chi sbaglia perde il round. |
-| **Colori e nomi** | Passano nomi di colori scritti con un altro colore (es. «Rosso» scritto in verde), uno ogni 1,3 secondi. Quando nome e colore combaciano (es. «Blu» in blu) vince chi tocca per primo; chi tocca prima perde il round, come in Via!. |
+| **Colori e nomi** | Passano nomi di colori scritti con un altro colore (es. «Rosso» scritto in verde), uno ogni 1,3 secondi. Vince chi tocca per primo mentre nome e colore combaciano (es. «Blu» in blu); chi tocca quando non combaciano perde il round. Dopo la parola giusta ne passano altre: lo scorrimento non si ferma, così non dà la risposta. |
 | **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. Ogni secondo **cambiano 3 animali** a caso; a un certo punto uno di quelli che cambiano è un panda: vince chi lo tocca per primo. Gli altri animali continuano a cambiare anche dopo, così non si capisce dal fermo che è uscito. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
 | **Trova lo smile** | Come Trova il panda, ma con faccine tristi colorate e girate: vince chi tocca per primo l'unica faccina che sorride. |
 | **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
@@ -31,15 +31,17 @@ Sotto ogni mini gioco, nella preparazione, c'è il pannello **«Impostazioni»**
 
 | Mini gioco | Impostazioni (base in grassetto) |
 |---|---|
-| Via! | Attesa massima prima del via: 3 / **5** / 8 s |
+| Via! | Attesa massima prima del via: 3 / **5** / 8 s · Gli errori contano −1 |
 | Raffica | Durata: 3 / **5** / 10 s |
 | Stop al centro | Velocità dell'indicatore: lenta / **media** / veloce |
-| Colore giusto | Numero di colori: **4** / 5 (il quinto è il viola) |
-| Colori e nomi | Tempo per ogni parola: 0,8 / **1,3** / 2 s |
-| Trova il panda, Trova lo smile (ognuno i suoi) | Griglia: 3×3 / **4×4** / 5×5 / 6×6 · Caselle che cambiano a ogni passo: da 1 a tutte (**3**) · Ogni quanto cambiano: 0,5 / 0,75 / **1** / 1,5 / 2 s · Le figure che cambiano ruotano: **sì** / no · Tutte dritte verso il giocatore (facile): sì / **no** |
-| Memoria lampo | Caselle: **4** / 6 / 9 · Lunghezza della sequenza: 3 / **4** / 5 / 6 / 7 / 8 |
+| Colore giusto | Numero di colori: **4** / 5 (il quinto è il viola) · Gli errori contano −1 |
+| Colori e nomi | Tempo per ogni parola: 0,8 / **1,3** / 2 s · Gli errori contano −1 |
+| Trova il panda, Trova lo smile (ognuno i suoi) | Griglia: 3×3 / **4×4** / 5×5 / 6×6 · Caselle che cambiano a ogni passo: da 1 a tutte (**3**) · Ogni quanto cambiano: 0,5 / 0,75 / **1** / 1,5 / 2 s · Le figure che cambiano ruotano: **sì** / no · Tutte dritte verso il giocatore (facile): sì / **no** · Gli errori contano −1 |
+| Memoria lampo | Caselle: **4** / 6 / 9 · Lunghezza della sequenza: 3 / **4** / 5 / 6 / 7 / 8 · Gli errori contano −1 |
 
-Regole tra impostazioni: se rimpicciolisci la griglia, le caselle che cambiano scendono al massimo possibile (in 3×3 al massimo 9); con «Tutte dritte» l'interruttore «ruotano» si spegne. Lo spareggio di Via! usa le impostazioni scelte per Via!.
+Regole tra impostazioni: se rimpicciolisci la griglia, le caselle che cambiano scendono al massimo possibile (in 3×3 al massimo 9); con «Tutte dritte» l'interruttore «ruotano» si spegne. Lo spareggio usa le impostazioni scelte per il mini gioco estratto.
+
+**Gli errori contano −1** (spento di base): chi sbaglia perde anche un punto, e il punteggio può scendere sotto zero. È un errore solo una risposta sbagliata, non essere più lenti: in Via! toccare prima del via; in Colore giusto toccare un colore sbagliato; in Colori e nomi toccare quando nome e colore non combaciano; nei «trova» toccare un animale che non è il panda o una faccina triste; in Memoria lampo toccare una casella fuori sequenza. Raffica e Stop al centro non hanno errori. Nell'esito del round l'errore è segnato con «(−1)».
 
 Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande). Sui tablet si potranno valutare griglie più grandi di 6×6.
 

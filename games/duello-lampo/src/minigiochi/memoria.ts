@@ -1,4 +1,4 @@
-import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { IMP_ERRORI, confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Memoria lampo»: si accende una breve sequenza di caselle, poi va ripetuta toccandole nello
@@ -49,6 +49,7 @@ export const memoria: MiniGioco<ConfigMemoria, RisultatoMemoria> = {
   impostazioni: [
     { tipo: "scelta", chiave: "caselle", valori: CASELLE_SCELTE, base: CASELLE, formato: "numero" },
     { tipo: "scelta", chiave: "lunghezza", valori: LUNGHEZZE, base: LUNGHEZZA, formato: "numero" },
+    IMP_ERRORI,
   ],
   prepara(rng, imp) {
     const caselle = numero(imp, "caselle");
@@ -70,4 +71,6 @@ export const memoria: MiniGioco<ConfigMemoria, RisultatoMemoria> = {
     if (ga === 0) return confronta((a as RisultatoMemoria).ms, (b as RisultatoMemoria).ms, "minore", SOGLIA_PARI_MS);
     return null;
   },
+  /** Errore: toccare una casella fuori sequenza. */
+  errore: (_config, r) => "giusta" in r && !r.giusta,
 };

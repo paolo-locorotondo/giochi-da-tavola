@@ -83,6 +83,7 @@ function testoValore(formato: "numero" | "secondi" | "griglia", n: number, t: T)
 
 /** Il titolo di un'impostazione: per «trova» è condiviso tra panda e smile. */
 function chiaveTitolo(id: string, chiave: string): string {
+  if (chiave === "errori") return "imp_errori"; // comune a tutti i mini giochi in cui si può sbagliare
   return ["panda", "smile"].includes(id) ? `imp_trova_${chiave}` : `mg_${id}_imp_${chiave}`;
 }
 
@@ -120,6 +121,7 @@ function PannelloImpostazioni({
           const idCampo = `dl-imp-${id}-${i.chiave}`;
           if (i.tipo === "interruttore") {
             const spento = i.disattivo?.(valori) === true;
+            const aiuto = spento ? t("imp_ruotano_spento") : i.chiave === "errori" ? t("imp_errori_aiuto") : null;
             return (
               <label key={i.chiave} className={`dl-imp-interruttore${spento ? " dl-imp-interruttore--spento" : ""}`}>
                 <input
@@ -127,14 +129,14 @@ function PannelloImpostazioni({
                   role="switch"
                   checked={valori[i.chiave] === true}
                   disabled={spento}
-                  aria-describedby={spento ? `${idCampo}-aiuto` : undefined}
+                  aria-describedby={aiuto ? `${idCampo}-aiuto` : undefined}
                   onChange={(e) => onCambia(i.chiave, e.target.checked)}
                 />
                 <span className="dl-imp-etichetta">
                   {titolo}
-                  {spento && (
+                  {aiuto && (
                     <span className="suggerimento" id={`${idCampo}-aiuto`}>
-                      {t("imp_ruotano_spento")}
+                      {aiuto}
                     </span>
                   )}
                 </span>

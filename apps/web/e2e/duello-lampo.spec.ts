@@ -84,8 +84,9 @@ test("duello lampo: le mani di un mini gioco escono di fila, nell'ordine dell'el
   await expect(titolo).toHaveText("Via!");
   await expect(basso(page).locator(".dl-testa")).toContainText("Round 1 di 3");
   await pronti(page);
+  await expect(basso(page).getByRole("button", { name: "Aspetta…" })).toBeVisible({ timeout: 10_000 });
   await basso(page).getByRole("button", { name: "Aspetta…" }).dispatchEvent("pointerdown");
-  await basso(page).getByRole("button", { name: "Avanti" }).click({ timeout: 5_000 });
+  await basso(page).getByRole("button", { name: "Avanti" }).click({ timeout: 10_000 });
   await expect(titolo).toHaveText("Raffica");
   await expect(basso(page).locator(".dl-testa")).toContainText("Round 2 di 3");
 });
@@ -243,7 +244,7 @@ for (const [id, nome, attesa] of [
   });
 }
 
-test("duello lampo: Colori e nomi, chi tocca prima che combacino perde", async ({ page }) => {
+test("duello lampo: Colori e nomi, chi tocca quando non combaciano perde", async ({ page }) => {
   await iniziaCon(page, { nomi: 1 });
   await expect(basso(page).getByRole("heading", { name: "Colori e nomi" })).toBeVisible();
   await pronti(page);
@@ -257,15 +258,53 @@ test("duello lampo: Colori e nomi, chi tocca prima che combacino perde", async (
   await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
 });
 
-test("duello lampo: Colori e nomi, vince chi tocca quando combaciano", async ({ page }) => {
+test("duello lampo: Colori e nomi, dopo la parola giusta lo scorrimento continua", async ({ page }) => {
   await iniziaCon(page, { nomi: 1 });
   await pronti(page);
   const giusta = basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]');
   await expect(giusta).toBeVisible({ timeout: 15_000 });
   expect(await giusta.getAttribute("data-parola")).toBe(await giusta.getAttribute("data-inchiostro"));
+  // Dopo la parola giusta le parole continuano a cambiare: lo scorrimento non si ferma.
+  const parola = basso(page).locator(".dl-nomi .dl-colore-parola");
+  await expect(parola).not.toHaveAttribute("data-giusta", "true", { timeout: 3_000 });
+  await expect(parola).toBeVisible();
+  // Chi tocca adesso, quando non combaciano più, sbaglia; chi non tocca no.
+  await basso(page).locator(".dl-nomi").dispatchEvent("pointerdown");
+  await expect(alto(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+  await expect(alto(page).locator(".dl-dettagli")).toContainText("Giocatore 1: sbagliato");
+});
+
+test("duello lampo: Colori e nomi, vince chi tocca mentre la parola combacia", async ({ page }) => {
+  await iniziaCon(page, { nomi: 1 });
+  await pronti(page);
+  const giusta = basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]');
+  await expect(giusta).toBeVisible({ timeout: 15_000 });
   await basso(page).locator(".dl-nomi").dispatchEvent("pointerdown");
   await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
   await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: nessun tocco");
+});
+
+test("duello lampo: con «gli errori contano −1» chi sbaglia perde un punto", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { via: 2 });
+  const pannelloVia = page.locator(".dl-mg-riga", { hasText: "Via!" }).locator("details.dl-imp");
+  await pannelloVia.locator("summary").click();
+  const errori = pannelloVia.getByRole("switch", { name: "Gli errori contano −1" });
+  await expect(errori).not.toBeChecked();
+  await expect(pannelloVia.getByText("Chi sbaglia perde anche un punto")).toBeVisible();
+  await errori.check();
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+
+  // Round 1: chi sta in basso tocca prima del via. Punto all'altro e −1 a lui.
+  await pronti(page);
+  await expect(basso(page).getByRole("button", { name: "Aspetta…" })).toBeVisible({ timeout: 10_000 });
+  await basso(page).getByRole("button", { name: "Aspetta…" }).dispatchEvent("pointerdown");
+  await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per Giocatore 2");
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Tu: troppo presto (−1)");
+  await expect(punti(page, "basso")).toHaveText("-1");
+  await expect(punti(page, "alto")).toHaveText("1");
+  await expect(basso(page).getByRole("button", { name: "Avanti" })).toBeEnabled();
+  await schermata(page, "errore-meno-uno");
 });
 
 test("duello lampo: Memoria lampo, si ripete la sequenza", async ({ page }) => {

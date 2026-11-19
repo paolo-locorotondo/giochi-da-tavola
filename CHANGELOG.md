@@ -9,6 +9,17 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.20.0] - 2026-11-19
+
+### Aggiunto
+
+- Duello Lampo: impostazione **«Gli errori contano −1»** (spenta di base) in tutti i mini giochi dove si può sbagliare: chi sbaglia perde anche un punto, e il punteggio può andare sotto zero. Sono errori solo le risposte sbagliate (toccare prima del via, un colore sbagliato, una parola che non combacia, una figura che non è il bersaglio, una casella fuori sequenza), non essere più lenti. Raffica e Stop al centro non hanno errori. L'esito del round segna «(−1)».
+
+### Modificato
+
+- Duello Lampo: lo **spareggio** è un mini gioco scelto a caso tra quelli della sfida (prima era sempre Via!).
+- Duello Lampo, Colori e nomi: dopo la parola che combacia ne passano altre, lo scorrimento non si ferma più (fermarsi suggeriva di toccare). Toccare quando nome e colore non combaciano, prima o dopo quella giusta, è un errore. Regola riscritta: «Tocca non appena vedi che nome e colore combaciano (es. «Blu» scritto in blu). Se tocchi quando non combaciano, perdi il round.»
+
 ## [0.19.1] - 2026-11-19
 
 ### Corretto

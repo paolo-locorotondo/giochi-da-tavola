@@ -9,7 +9,7 @@ export const en: Dizionario<typeof it> = {
     "For each mini game choose how many hands (rounds) to play in a row, from 0 to 9; 0 means it isn't used. Then tap “Start the duel”.",
     "Before each round you read the rule and each player taps “I'm ready”; then a 3, 2, 1 countdown starts.",
     "The mini game gives 1 point to whoever wins it; on a tie nobody scores.",
-    "Each half of the screen shows its player's score. Whoever has more points at the end wins. If it's a tie, you play a “Go!” tiebreaker until someone is ahead.",
+    "Each half of the screen shows its player's score. Whoever has more points at the end wins. If it's a tie, you play a tiebreaker with a mini game picked at random among the ones in the duel, until someone is ahead.",
   ],
   regolamentoNote: [
     "Times are measured on the phone, from the moment the signal shows up on the screen.",
@@ -32,6 +32,9 @@ export const en: Dizionario<typeof it> = {
   imp_secondi: "{n} s",
   imp_griglia: "{n}×{n}",
   imp_si: "Yes",
+  imp_errori: "Mistakes count −1",
+  imp_errori_aiuto: "Whoever makes a mistake also loses a point (being slower is not a mistake).",
+  penalita: "(−1)",
   imp_no: "No",
   mg_via_imp_attesaMax: "Longest wait before go",
   mg_raffica_imp_durata: "Duration",
@@ -70,7 +73,7 @@ export const en: Dizionario<typeof it> = {
     "The name of a color shows up written in another color: tap the color it is written in, not the one it says. If you get it wrong, you lose the round.",
   mg_nomi_nome: "Colors and names",
   mg_nomi_regola:
-    "Color names go by, written in another color. When name and color match (e.g. “Blue” written in blue), tap first. If you tap too early, you lose the round.",
+    "Color names go by, written in another color. Tap as soon as you see that name and color match (e.g. “Blue” written in blue). If you tap when they don't match, you lose the round.",
   mg_panda_nome: "Find the panda",
   mg_panda_regola:
     "A grid of colorful animals where a few change every second: as soon as the panda shows up, tap it first. If you tap another animal, you lose the round.",
@@ -105,7 +108,7 @@ export const en: Dizionario<typeof it> = {
   casellaN: "Square {n}",
   aspettaPanda: "Wait for the panda…",
   aspettaSmile: "Wait for the smile…",
-  nomiDomanda: "Tap when name and color match",
+  nomiDomanda: "Tap as soon as name and color match",
   trovato: "Found!",
   sbagliato: "Wrong!",
   guarda: "Watch…",

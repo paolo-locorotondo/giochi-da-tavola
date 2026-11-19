@@ -1,4 +1,4 @@
-import { confronta, numero, sino, type ImpostazioneMiniGioco, type Lato, type MiniGioco, type Nessuno, type ValoriImpostazioni } from "./tipi";
+import { IMP_ERRORI, confronta, numero, sino, type ImpostazioneMiniGioco, type Lato, type MiniGioco, type Nessuno, type ValoriImpostazioni } from "./tipi";
 
 /**
  * Mini giochi «trova»: una griglia di figure colorate. A ogni passo cambiano **solo alcune
@@ -51,6 +51,7 @@ export const IMPOSTAZIONI_TROVA: readonly ImpostazioneMiniGioco[] = [
   // Con «tutte dritte» le figure non ruotano mai: l'interruttore «ruotano» si spegne.
   { tipo: "interruttore", chiave: "ruotano", base: PARAMETRI_BASE.ruotano, disattivo: (v) => sino(v, "dritte") },
   { tipo: "interruttore", chiave: "dritte", base: PARAMETRI_BASE.dritte },
+  IMP_ERRORI,
 ];
 
 /** I parametri della griglia dai valori delle impostazioni (già completi). */
@@ -179,6 +180,8 @@ export function creaTrova(id: string, bersaglio: string, distrattori: readonly s
       if (ga === 0) return confronta((a as RisultatoTrova).ms, (b as RisultatoTrova).ms, "minore", SOGLIA_PARI_MS);
       return null;
     },
+    /** Errore: toccare una figura che non è il bersaglio (o toccare prima che compaia). */
+    errore: (_config, r) => "trovato" in r && !r.trovato,
   };
 }
 

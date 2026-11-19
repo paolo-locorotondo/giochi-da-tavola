@@ -1,5 +1,5 @@
 import type { Rng } from "@gdt/engine";
-import { ID_MINIGIOCHI, ID_SPAREGGIO, miniGioco, valoriCompleti, type Lato, type ValoriImpostazioni } from "./minigiochi";
+import { ID_MINIGIOCHI, miniGioco, sino, valoriCompleti, type Lato, type Nessuno, type ValoriImpostazioni } from "./minigiochi";
 
 /** Errori di configurazione: la UI li traduce con la chiave `errore_<codice>`. */
 export type CodiceErrore = "nessunMinigioco" | "minigiocoSconosciuto" | "roundNonValidi";
@@ -33,7 +33,10 @@ export interface Partita {
   totale: number;
   /** Indice del round in corso; uguale a `scaletta.length` a partita finita. */
   round: number;
+  /** Possono scendere sotto zero se gli errori contano −1. */
   punti: readonly [number, number];
+  /** I mini giochi scelti (con almeno una mano): lo spareggio ne sceglie uno a caso. */
+  scelti: readonly string[];
   /** Le impostazioni di ogni mini gioco, già complete e corrette. */
   impostazioni: Readonly<Record<string, ValoriImpostazioni>>;
 }
@@ -59,7 +62,8 @@ export function nuovaPartita(sfida: Sfida): Partita {
   const impostazioni = Object.fromEntries(
     ID_MINIGIOCHI.map((id) => [id, valoriCompleti(miniGioco(id).impostazioni, sfida.impostazioni?.[id])]),
   );
-  return { scaletta, totale: scaletta.length, round: 0, punti: [0, 0], impostazioni };
+  const scelti = ID_MINIGIOCHI.filter((id) => (sfida.mani[id] ?? 0) > 0);
+  return { scaletta, totale: scaletta.length, round: 0, punti: [0, 0], scelti, impostazioni };
 }
 
 export const finita = (p: Partita): boolean => p.round >= p.scaletta.length;
@@ -73,16 +77,35 @@ export const impostazioniDi = (p: Partita, id: string): ValoriImpostazioni => p.
 /** Vero se il round in corso è uno spareggio. */
 export const inSpareggio = (p: Partita): boolean => p.round >= p.totale;
 
+/** Chi ha sbagliato nel round (solo se per quel mini gioco «gli errori contano −1» è attivo). */
+export type Errori = readonly [boolean, boolean];
+export const NESSUN_ERRORE: Errori = [false, false];
+
 /**
- * Chiude il round in corso: 1 punto a chi ha vinto (nessuno se è pari). Se sono finiti i round e
- * i punti sono pari si aggiunge un round di spareggio, e così finché qualcuno è in vantaggio.
+ * Gli errori del round: per ogni giocatore, se il risultato è un errore del mini gioco e
+ * l'impostazione «gli errori contano −1» è attiva. Essere più lenti non è mai un errore.
  */
-export function assegna(p: Partita, vincitore: Lato | null): Partita {
+export function erroriRound(p: Partita, id: string, config: unknown, risultati: readonly [unknown, unknown]): Errori {
+  const mg = miniGioco(id);
+  if (!mg.errore || !sino(impostazioniDi(p, id), "errori")) return NESSUN_ERRORE;
+  const errore = mg.errore;
+  return [errore(config, risultati[0] as Nessuno), errore(config, risultati[1] as Nessuno)];
+}
+
+/**
+ * Chiude il round in corso: 1 punto a chi ha vinto (nessuno se è pari) e −1 a chi ha sbagliato
+ * (se gli errori contano). Se sono finiti i round e i punti sono pari si aggiunge un round di
+ * spareggio con un mini gioco scelto a caso tra quelli della sfida, e così finché qualcuno è avanti.
+ */
+export function assegna(p: Partita, vincitore: Lato | null, rng: Rng, errori: Errori = NESSUN_ERRORE): Partita {
   if (finita(p)) return p;
   const punti: [number, number] = [p.punti[0], p.punti[1]];
   if (vincitore !== null) punti[vincitore] += 1;
+  if (errori[0]) punti[0] -= 1;
+  if (errori[1]) punti[1] -= 1;
   const round = p.round + 1;
-  const scaletta = round >= p.scaletta.length && punti[0] === punti[1] ? [...p.scaletta, ID_SPAREGGIO] : p.scaletta;
+  const spareggio = round >= p.scaletta.length && punti[0] === punti[1];
+  const scaletta = spareggio ? [...p.scaletta, p.scelti[rng.intero(p.scelti.length)] as string] : p.scaletta;
   return { ...p, punti, round, scaletta };
 }
 

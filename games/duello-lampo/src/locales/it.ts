@@ -6,7 +6,7 @@ export const it = {
     "Per ogni mini gioco scegli quante mani (round) giocare di fila, da 0 a 9; con 0 non si usa. Poi tocca «Inizia la sfida».",
     "Prima di ogni round si legge la regola e ognuno tocca «Sono pronto»; parte il conto alla rovescia 3, 2, 1.",
     "Il mini gioco assegna 1 punto a chi lo vince; se è pari nessuno prende punti.",
-    "Ogni metà dello schermo mostra il punteggio del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio di «Via!», finché qualcuno è avanti.",
+    "Ogni metà dello schermo mostra il punteggio del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio con un mini gioco scelto a caso tra quelli della sfida, finché qualcuno è avanti.",
   ],
   regolamentoNote: [
     "I tempi si misurano sul telefono, dal momento in cui lo stimolo compare sullo schermo.",
@@ -30,6 +30,9 @@ export const it = {
   imp_secondi: "{n} s",
   imp_griglia: "{n}×{n}",
   imp_si: "Sì",
+  imp_errori: "Gli errori contano −1",
+  imp_errori_aiuto: "Chi sbaglia perde anche un punto (essere più lenti non è un errore).",
+  penalita: "(−1)",
   imp_no: "No",
   mg_via_imp_attesaMax: "Attesa massima prima del via",
   mg_raffica_imp_durata: "Durata",
@@ -68,7 +71,7 @@ export const it = {
     "Compare il nome di un colore scritto con un altro colore: tocca il colore con cui è scritto, non quello che dice. Se sbagli, perdi il round.",
   mg_nomi_nome: "Colori e nomi",
   mg_nomi_regola:
-    "Passano nomi di colori scritti con un altro colore. Quando nome e colore combaciano (es. «Blu» scritto in blu) tocca per primo. Se tocchi prima, perdi il round.",
+    "Passano nomi di colori scritti con un altro colore. Tocca non appena vedi che nome e colore combaciano (es. «Blu» scritto in blu). Se tocchi quando non combaciano, perdi il round.",
   mg_panda_nome: "Trova il panda",
   mg_panda_regola:
     "Una griglia di animali colorati in cui ogni secondo ne cambiano alcuni: appena compare il panda toccalo per primo. Se tocchi un altro animale, perdi il round.",
@@ -104,7 +107,7 @@ export const it = {
   casellaN: "Casella {n}",
   aspettaPanda: "Aspetta il panda…",
   aspettaSmile: "Aspetta lo smile…",
-  nomiDomanda: "Tocca quando nome e colore combaciano",
+  nomiDomanda: "Tocca appena nome e colore combaciano",
   trovato: "Trovato!",
   sbagliato: "Sbagliato!",
   guarda: "Guarda…",

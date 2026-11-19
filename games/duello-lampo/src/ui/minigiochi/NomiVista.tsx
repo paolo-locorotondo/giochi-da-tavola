@@ -6,7 +6,7 @@ import type { Descrivi, VistaProps } from "./tipi";
 
 export const descriviNomi: Descrivi<RisultatoNomi> = (r, t) => {
   if ("ms" in r) return t("valMs", { ms: r.ms });
-  if ("anticipo" in r) return t("valAnticipo");
+  if ("sbagliato" in r) return t("valSbagliato");
   return t("valNessuno");
 };
 
@@ -17,38 +17,40 @@ export function NomiVista({ config, inizio, onRisultato }: VistaProps<ConfigNomi
 
   const [passo, setPasso] = useState(0);
   const [esito, setEsito] = useState<RisultatoNomi | null>(null);
-  const ultimo = config.parole.length - 1;
-  const èGiusta = useRef(false);
+  const giusta = config.indiceGiusta;
+  // La parola sullo schermo adesso (il ref è sempre aggiornato, lo stato può essere un attimo indietro).
+  const corrente = useRef(0);
   const tGiusta = useRef<number | null>(null);
 
+  // Le parole passano tutte, anche dopo quella giusta: se si fermassero, il fermo direbbe di toccare.
   useEffect(() => {
     const ora = performance.now() - inizio;
     const ids = config.parole.map((_, i) =>
       window.setTimeout(() => {
-        if (i === ultimo) {
-          èGiusta.current = true;
-          tGiusta.current = performance.now();
-        }
+        corrente.current = i;
+        if (i === giusta) tGiusta.current = performance.now();
         setPasso(i);
       }, Math.max(0, i * config.passoMs - ora)),
     );
     return () => ids.forEach((id) => window.clearTimeout(id));
-  }, [config, inizio, ultimo]);
+  }, [config, inizio, giusta]);
 
   // Il tempo parte dal fotogramma in cui la parola giusta è stata disegnata.
   useEffect(() => {
-    if (passo !== ultimo) return;
+    if (passo !== giusta) return;
     const f = requestAnimationFrame(() => {
       tGiusta.current = performance.now();
     });
     return () => cancelAnimationFrame(f);
-  }, [passo, ultimo]);
+  }, [passo, giusta]);
 
   const tocca = (istante: number) => {
     if (esito) return;
-    const r: RisultatoNomi = èGiusta.current
-      ? { ms: Math.max(0, Math.round(istante - (tGiusta.current ?? istante))) }
-      : { anticipo: true };
+    // Giusto solo mentre la parola che combacia è sullo schermo; prima o dopo è un errore.
+    const r: RisultatoNomi =
+      corrente.current === giusta
+        ? { ms: Math.max(0, Math.round(istante - (tGiusta.current ?? istante))) }
+        : { sbagliato: true };
     setEsito(r);
     rif.current(r);
   };
@@ -65,13 +67,13 @@ export function NomiVista({ config, inizio, onRisultato }: VistaProps<ConfigNomi
   return (
     <button type="button" className="dl-zona dl-nomi" data-suono="no" onPointerDown={(e) => tocca(e.timeStamp)} onKeyDown={tasto}>
       {esito ? (
-        <span className="dl-colore-msg">{"anticipo" in esito ? t("troppoPresto") : t("valMs", { ms: esito.ms })}</span>
+        <span className="dl-colore-msg">{"sbagliato" in esito ? t("sbagliato") : t("valMs", { ms: esito.ms })}</span>
       ) : p ? (
         <span
           className={`dl-colore-parola dl-c-${p.inchiostro}`}
           data-parola={p.parola}
           data-inchiostro={p.inchiostro}
-          data-giusta={passo === ultimo ? "true" : undefined}
+          data-giusta={passo === giusta ? "true" : undefined}
         >
           {t(`c_${p.parola}`)}
         </span>

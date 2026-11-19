@@ -63,7 +63,16 @@ export interface MiniGioco<Config, Risultato> {
   chiudeAlPrimo: boolean;
   /** Chi vince il round; `null` = pari, nessun punto. */
   vincitore(config: Config, risultati: readonly [Risultato | Nessuno, Risultato | Nessuno]): Lato | null;
+  /**
+   * Il risultato è un **errore** (es. toccare prima del via)? Solo i mini giochi in cui si può sbagliare
+   * lo definiscono, e allora dichiarano anche l'impostazione `IMP_ERRORI`: se è attiva l'errore costa
+   * un punto. Essere più lenti non è un errore.
+   */
+  errore?(config: Config, risultato: Risultato | Nessuno): boolean;
 }
+
+/** L'impostazione comune «gli errori contano −1», spenta di base. */
+export const IMP_ERRORI: ImpostazioneMiniGioco = { tipo: "interruttore", chiave: "errori", base: false };
 
 /** Esito di un confronto tra due numeri: `meglio` dice se è meglio il più piccolo o il più grande. */
 export function confronta(a: number, b: number, meglio: "minore" | "maggiore", soglia = 0): Lato | null {

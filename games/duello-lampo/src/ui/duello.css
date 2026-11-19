@@ -623,6 +623,12 @@ div.dl-zona {
   border-color: var(--ac);
 }
 
+/* Punto tolto per un errore: scritto, non solo colorato */
+.dl-penalita {
+  font-weight: 700;
+  color: var(--errore);
+}
+
 /* Colori e nomi: tutta la metà è la zona di tocco */
 .dl-nomi {
   gap: 0.8rem;

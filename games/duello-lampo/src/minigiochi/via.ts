@@ -1,4 +1,4 @@
-import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { IMP_ERRORI, confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /** «Via!»: lo schermo diventa verde dopo un'attesa casuale e vince chi tocca per primo. */
 export interface ConfigVia {
@@ -27,7 +27,10 @@ function grado(r: RisultatoVia | Nessuno): 0 | 1 | 2 {
 
 export const via: MiniGioco<ConfigVia, RisultatoVia> = {
   id: "via",
-  impostazioni: [{ tipo: "scelta", chiave: "attesaMax", valori: ATTESE_MAX_S, base: ATTESA_MAX_BASE_S, formato: "secondi" }],
+  impostazioni: [
+    { tipo: "scelta", chiave: "attesaMax", valori: ATTESE_MAX_S, base: ATTESA_MAX_BASE_S, formato: "secondi" },
+    IMP_ERRORI,
+  ],
   prepara(rng, imp) {
     const max = numero(imp, "attesaMax") * 1000;
     return { attesaMs: ATTESA_MIN_MS + rng.intero(max - ATTESA_MIN_MS + 1) };
@@ -42,4 +45,6 @@ export const via: MiniGioco<ConfigVia, RisultatoVia> = {
     if ("ms" in a && "ms" in b) return confronta(a.ms, b.ms, "minore", SOGLIA_PARI_MS);
     return null;
   },
+  /** Errore: toccare prima del via. */
+  errore: (_config, r) => "anticipo" in r,
 };

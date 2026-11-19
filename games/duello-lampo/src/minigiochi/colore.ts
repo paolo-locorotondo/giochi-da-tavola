@@ -1,4 +1,4 @@
-import { confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { IMP_ERRORI, confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Colore giusto» (effetto Stroop): compare il nome di un colore scritto con un altro colore e
@@ -44,7 +44,10 @@ function grado(r: RisultatoColore | Nessuno): 0 | 1 | 2 {
 
 export const colore: MiniGioco<ConfigColore, RisultatoColore> = {
   id: "colore",
-  impostazioni: [{ tipo: "scelta", chiave: "colori", valori: NUMERI_COLORI, base: NUMERO_COLORI_BASE, formato: "numero" }],
+  impostazioni: [
+    { tipo: "scelta", chiave: "colori", valori: NUMERI_COLORI, base: NUMERO_COLORI_BASE, formato: "numero" },
+    IMP_ERRORI,
+  ],
   prepara(rng, imp) {
     const colori = coloriDa(numero(imp, "colori"));
     const parola = colori[rng.intero(colori.length)] as Colore;
@@ -61,4 +64,6 @@ export const colore: MiniGioco<ConfigColore, RisultatoColore> = {
     if (ga === 0) return confronta((a as RisultatoColore).ms, (b as RisultatoColore).ms, "minore", SOGLIA_PARI_MS);
     return null;
   },
+  /** Errore: toccare un colore sbagliato (o toccare prima che compaia la parola). */
+  errore: (_config, r) => "giusto" in r && !r.giusto,
 };
