@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.15.0] - 2026-11-19
+
+### Aggiunto
+
+- **Duello Lampo**, nuovo gioco: sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo (la metà di schermo in alto è ruotata di 180°). Mini giochi **Via!**, **Raffica** e **Stop al centro**, 1 punto a ogni mini gioco vinto, spareggio di Via! se finisce in parità. Prima di cominciare si scelgono i mini giochi (con «Tutti» e «A caso»), da 3 a 11 round e i nomi, e la scelta resta salvata sul telefono. Indirizzo `/duello-lampo`, italiano e inglese, suoni sintetizzati, schermo sempre acceso durante la sfida. I mini giochi sono moduli (regole, vista, registro) pensati per aggiungerne altri facilmente; la versione online è rimandata e la guida del gioco spiega cosa comporta.
+- Piani di lavoro: `docs/piano-duello-lampo.md` e `docs/piano-ultima.md` (gioco di carte in stile UNO, da fare).
+
 ## [0.14.0] - 2026-11-19
 
 ### Aggiunto

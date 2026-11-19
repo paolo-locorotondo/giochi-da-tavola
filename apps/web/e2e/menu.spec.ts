@@ -3,12 +3,12 @@ import { fissaCaso, schermata } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
-test("menu: elenca i cinque giochi", async ({ page }) => {
+test("menu: elenca i sei giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
-  await expect(page.locator("a.gioco")).toHaveCount(5);
+  await expect(page.locator("a.gioco")).toHaveCount(6);
   // Tutti si giocano offline; Impostore e Tris anche online.
-  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(5);
+  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(6);
   await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(2);
   await expect(page.locator("a.gioco", { hasText: "Impostore" }).getByRole("img", { name: /online/ })).toHaveCount(1);
   await schermata(page, "menu");
@@ -16,7 +16,7 @@ test("menu: elenca i cinque giochi", async ({ page }) => {
 
 test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Impostore", "Lupus in fabula", "Tabù", "Tris"]);
+  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù", "Tris"]);
   await expect(page.getByRole("searchbox")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
@@ -32,7 +32,7 @@ test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
   await expect(page.getByRole("searchbox")).toHaveCount(0);
-  await expect(page.locator("a.gioco")).toHaveCount(5);
+  await expect(page.locator("a.gioco")).toHaveCount(6);
 });
 
 test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
@@ -41,6 +41,7 @@ test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
     ["/lupus", "Giocatori (uno per riga, da 8 a 24)"],
     ["/tabu", "Prima squadra"],
     ["/dadi", "Che cosa lanci?"],
+    ["/duello-lampo", "Chi sta in basso"],
   ] as const) {
     await page.goto(percorso);
     await expect(page.getByText(testo)).toBeVisible();

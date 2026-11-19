@@ -16,6 +16,7 @@ import {
   Wifi,
   WifiOff,
   X,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ const ICONE = {
   divieto: Ban,
   dadi: Dices,
   griglia: Grid3x3,
+  fulmine: Zap,
   indietro: ArrowLeft,
   impostazioni: Settings,
   regolamento: BookOpen,

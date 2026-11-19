@@ -1,0 +1,306 @@
+/* Preparazione della sfida */
+.dl-prep {
+  gap: 1.1rem;
+}
+
+.dl-mg-elenco {
+  clear: both;
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dl-mg-voce {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.6rem 0.75rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 4px);
+  cursor: pointer;
+}
+
+.dl-mg-voce input {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--ac);
+}
+
+.dl-mg-voce:has(input:focus-visible) {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.dl-mg-testo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  text-align: left;
+}
+
+.dl-mg-nome {
+  font-weight: 700;
+}
+
+.dl-mg-azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.dl-grande {
+  min-height: 56px;
+  font-size: 1.1rem;
+}
+
+/*
+ * Partita: copre tutto lo schermo (telefono al centro del tavolo). Due metà uguali; quella in alto
+ * è ruotata di 180° così chi sta di fronte la legge dritta.
+ */
+.dl-gioco {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  background: var(--bg);
+  color: var(--fg);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+
+.dl-meta {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
+}
+
+.dl-meta--alto {
+  transform: rotate(180deg);
+}
+
+.dl-testa {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--mu);
+}
+
+.dl-testa span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dl-corpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.8rem;
+  text-align: center;
+}
+
+.dl-titolo {
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-size: 1.6rem;
+  color: var(--ac);
+}
+
+.dl-regola {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dl-conto {
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-size: 5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ac);
+}
+
+.dl-esito-titolo {
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-size: 1.5rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.dl-dettagli {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  color: var(--mu);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.dl-azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.dl-azioni .btn {
+  grid-column: 1 / -1;
+}
+
+/* Barra al centro: l'uscita sta tra le due metà, lontana dai tocchi di gioco */
+.dl-centro-barra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.25rem 1rem;
+  border-block: var(--bw) solid var(--bd);
+  background: var(--s1);
+}
+
+.dl-esci {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding-block: 0.4rem;
+}
+
+.dl-conferma {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* Zone di tocco dei mini giochi: grandi quanto la metà, nessun comportamento del browser */
+.dl-zona {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--fg);
+  background: var(--s2);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-zona:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+/* Via!: attesa (neutro) → ORA (verde) → preso / troppo presto. Mai solo il colore: c'è sempre il testo. */
+.dl-via-testo {
+  font-family: var(--font-titoli);
+  font-size: 2.4rem;
+  font-weight: 800;
+}
+
+.dl-via--ora {
+  background: var(--ac2);
+  border-color: var(--ac2);
+  color: var(--on-ac2);
+}
+
+.dl-via--anticipo {
+  background: var(--pericolo);
+  border-color: var(--pericolo);
+  color: var(--on-pericolo);
+}
+
+.dl-via--preso {
+  border-color: var(--ac);
+  color: var(--ac);
+}
+
+/* Raffica */
+.dl-raffica-numero {
+  font-family: var(--font-titoli);
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ac);
+}
+
+.dl-raffica-info {
+  font-weight: 600;
+}
+
+.dl-raffica:active:not(.dl-raffica--fine) {
+  transform: scale(0.98);
+}
+
+/* Stop al centro */
+.dl-pista {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 3rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dl-centro {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0.5rem;
+  margin-left: -0.25rem;
+  background: var(--ac2);
+}
+
+.dl-marcatore {
+  position: absolute;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  left: 0;
+  width: 1rem;
+  border-radius: 999px;
+  background: var(--ac);
+  box-shadow: 0 0 0 2px var(--bg);
+  will-change: transform;
+}
+
+.dl-stop-testo {
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-raffica:active {
+    transform: none;
+  }
+}

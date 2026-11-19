@@ -1,5 +1,6 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from "react";
 import { DadiApp, manifest as dadi } from "@gdt/dadi";
+import { DuelloLampoApp, manifest as duelloLampo } from "@gdt/duello-lampo";
 import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
 import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
@@ -29,6 +30,7 @@ const giochi: VoceGioco[] = [
   { ...tabu, Componente: TabuApp },
   { ...dadi, Componente: DadiApp },
   { ...tris, Componente: TrisApp },
+  { ...duelloLampo, Componente: DuelloLampoApp },
 ];
 
 /** Il gioco indicato dall'indirizzo: `/impostore`, `/impostore/ABC123`, ... */
@@ -62,6 +64,7 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   tabu: "divieto",
   dadi: "dadi",
   tris: "griglia",
+  "duello-lampo": "fulmine",
 };
 
 function Versione() {

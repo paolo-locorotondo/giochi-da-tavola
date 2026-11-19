@@ -21,7 +21,8 @@ Giochi, in ordine:
 4. **Tris** — tre in fila, contro il telefono o in due; anche online (ognuno col suo telefono).
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
-6. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
+6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro), 1 punto a ogni mini gioco, si sceglie quali usare. Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco). Piano: [piano-duello-lampo.md](piano-duello-lampo.md).
+7. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
 ## Piattaforma
@@ -129,7 +130,7 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
   versioni sempre allineate, un'unica app "raccolta".
 - **Ogni gioco è un plugin** (`games/*`): esporta un `manifest`, la logica e la UI; l'app
   li carica in lazy loading.
-- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`, `/dadi`, `/tris`.
+- **Ogni gioco ha un proprio indirizzo**: `/impostore`, `/lupus`, `/tabu`, `/dadi`, `/tris`, `/duello-lampo`.
 - **Logica di gioco in TypeScript puro e deterministica**, separata dalla UI: testabile e
   identica nel browser (modalità A) e sul server (modalità B).
 - **Fasi come macchina a stati.**
@@ -162,7 +163,8 @@ giochi-da-tavola/
 │   ├── lupus/      → regole e UI a un telefono
 │   ├── tabu/       → regole, carte e UI
 │   ├── dadi/       → lancio, modelli di dado (con spiegazione delle facce) e UI
-│   └── tic-tac-toe/ → regole, telefono avversario (minimax), modulo online con partita veloce e UI
+│   ├── tic-tac-toe/ → regole, telefono avversario (minimax), modulo online con partita veloce e UI
+│   └── duello-lampo/ → partita a punti, mini giochi di riflessi (regole + vista, con registro) e UI a schermo diviso
 ├── Dockerfile, docker-compose.yml
 └── docs/           → questo file e le guide
 ```
@@ -192,7 +194,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.14.0).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.15.0).
 
 ### Fatti
 
@@ -208,6 +210,8 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - FATTO **Branch `riscrittura`**: era già unito a `main`, cancellato.
 - FATTO **Lupus, nuovi ruoli e rifiniture** (0.13.0, 0.14.0): da 8 a 24 giocatori; motore a descrittori (`FASI_NOTTE` in `games/lupus/src/logica.ts`); Medico, Medium, Indemoniato, Massoni, Criceto mannaro, Gufo (Letale da 20 giocatori) e Mitomane; voto ufficiale a due turni; storico della partita per il narratore; timer della discussione e durata della transizione regolabili (con «Salta la transizione» se il narratore non gioca); suoni mp3 (ululato, gallo, pianto del lupo, ninna nanna) con la voce del narratore che parla solo dopo suoni e transizione. Il piano di lavoro (`piano-lupus-personaggi.md`) è stato eseguito per intero e rimosso; la storia è nel CHANGELOG.
 
+- FATTO **Duello Lampo, versione a un telefono** (0.15.0): sfida di riflessi per due con schermo diviso (metà in alto ruotata), mini giochi Via!, Raffica e Stop al centro, scelta dei mini giochi e dei round, spareggio. I mini giochi sono moduli (regole + vista + registro): aggiungerne uno costa un file di regole, una vista e una riga per registro (guida nel README del gioco).
+
 ### Da fare (TODO)
 
 - TODO **Test grafici su Linux/CI**: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Non esiste ancora una CI (nessuna cartella `.github`).
@@ -221,5 +225,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
-- TODO **Aggiungere gioco carte UNO** Il classico gioco di carte "UNO" con numeri e colori, pesca +2 e +4 carte (vedi su internet il regolamento ufficiale). Una sola versione: online ognuno col suo telefono.
-- TODO **Aggiungere gioco stile two player reactor** Il gioco consiste nel proporre, ad ogni partita, una serie di mini giochi di velocità (reactor = reattività) e a fine partita vince chi ha totalizzato più punti come somma dei punti di ogni mini gioco. Due versioni: versione offline un solo telefono, dove il telefono è posto al centro del tavolo ed i giocatori sono uno di fronte all'altro; versione online ognuno col suo telefono (qui è da capire perchè essendo un gioco di velocità, va capito a livello tecnico se la nostra attuale architettura regge e non crea penalizzazioni per chi ha una rete più lenta)
+- TODO **Aggiungere gioco di carte «Ultima!»** (in stile UNO, nome neutro per i marchi): solo online, regole ufficiali, bot su richiesta dell'organizzatore. Piano rivisto: [piano-ultima.md](piano-ultima.md). Indirizzo `/ultima`.
+- TODO **Duello Lampo: altri mini giochi** (Colore giusto, Bersagli, Il più grande, Memoria lampo), prova su telefoni veri del doppio tocco e, più avanti, la versione online (vedi README del gioco).
