@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { leggiPreferenza, scriviPreferenza, type ImpostazioneGioco } from "./index";
+import { leggiPreferenza, scriviPreferenza, type ImpostazioneDurata, type ImpostazioneScelta } from "./index";
 
-const IMP: ImpostazioneGioco = {
+const IMP: ImpostazioneScelta = {
   chiave: "durata",
   testo: "Durata",
   opzioni: [
@@ -20,7 +20,29 @@ beforeEach(() => {
   vi.stubGlobal("window", new EventTarget());
 });
 
+const DURATA: ImpostazioneDurata = {
+  tipo: "durata",
+  chiave: "timer",
+  testo: "Timer",
+  min: 1,
+  max: 3600,
+  predefinito: 180,
+  unita: ["Ore", "Minuti", "Secondi"],
+};
+
 describe("preferenze dei giochi", () => {
+  it("una durata vale il predefinito se manca o è fuori dai limiti", () => {
+    expect(leggiPreferenza("lupus", DURATA)).toBe(180);
+    scriviPreferenza("lupus", "timer", 90);
+    expect(leggiPreferenza("lupus", DURATA)).toBe(90);
+    for (const fuori of [0, 3601, -5]) {
+      scriviPreferenza("lupus", "timer", fuori);
+      expect(leggiPreferenza("lupus", DURATA)).toBe(180);
+    }
+    localStorage.setItem("gdt-pref-lupus-timer", "abc");
+    expect(leggiPreferenza("lupus", DURATA)).toBe(180);
+  });
+
   it("senza nulla salvato vale il predefinito", () => {
     expect(leggiPreferenza("lupus", IMP)).toBe(5);
   });

@@ -62,6 +62,27 @@ const SUONI: Record<NomeSuono, Disegno> = {
 
 let contesto: AudioContext | null = null;
 
+/** I suoni avviati o programmati e non ancora finiti (file e sintetizzati). */
+const inCorso = new Set<Promise<void>>();
+
+function registra(durataMs: number): void {
+  const p: Promise<void> = new Promise((fatto) =>
+    setTimeout(() => {
+      inCorso.delete(p);
+      fatto();
+    }, durataMs),
+  );
+  inCorso.add(p);
+}
+
+/**
+ * Si risolve quando non c'è più nessun suono in corso o in attesa di partire (anche quelli con ritardo).
+ * Serve a chi deve parlare «dopo i suoni», come la voce del narratore: così non si sovrappongono mai.
+ */
+export async function attendiSuoni(): Promise<void> {
+  while (inCorso.size > 0) await Promise.all([...inCorso]);
+}
+
 /**
  * Suona un suono comune o un disegno del gioco, solo se l'audio è acceso (con `ritardo` in secondi, se serve).
  * Non dà mai errori: senza Web Audio resta muto.
@@ -73,20 +94,43 @@ export function suona(suono: NomeSuono | Disegno, ritardo = 0): void {
 
 /**
  * Riproduce un file registrato (l'indirizzo lo dà il bundler: `import url from "./x.mp3"`). Se non parte
- * (per esempio il telefono blocca la riproduzione) suona `riserva`, se c'è.
+ * (per esempio il telefono blocca la riproduzione) suona `riserva`, se c'è. Con `interrompi` si può fermare in anticipo.
  */
-export function suonaFile(url: string, riserva?: Disegno, ritardo = 0): void {
-  if (!audioAttivo()) return;
-  const parti = () => {
-    if (!audioAttivo()) return;
-    try {
-      new Audio(url).play().catch(() => riserva && sintetizza(riserva, 0));
-    } catch {
-      if (riserva) sintetizza(riserva, 0);
-    }
-  };
-  if (ritardo > 0) setTimeout(parti, ritardo * 1000);
-  else parti();
+export function suonaFile(url: string, riserva?: Disegno, ritardo = 0, interrompi?: AbortSignal): Promise<void> {
+  if (!audioAttivo()) return Promise.resolve();
+  // La promessa si risolve a fine file (o in caso di errore, o dopo 15 s al massimo) e vale anche per `attendiSuoni`.
+  const p: Promise<void> = new Promise<void>((fatto) => {
+    const chiudi = () => {
+      inCorso.delete(p);
+      fatto();
+    };
+    const parti = () => {
+      if (!audioAttivo()) return chiudi();
+      const ripiega = () => {
+        if (riserva) sintetizza(riserva, 0);
+        chiudi();
+      };
+      try {
+        const audio = new Audio(url);
+        audio.addEventListener("ended", chiudi);
+        // Con `interrompi` chi ha avviato il suono può fermarlo (per esempio a fine transizione).
+        const ferma = () => {
+          audio.pause();
+          chiudi();
+        };
+        if (interrompi?.aborted) return ferma();
+        interrompi?.addEventListener("abort", ferma, { once: true });
+        setTimeout(chiudi, 15000);
+        audio.play().catch(ripiega);
+      } catch {
+        ripiega();
+      }
+    };
+    if (ritardo > 0) setTimeout(parti, ritardo * 1000);
+    else parti();
+  });
+  inCorso.add(p);
+  return p;
 }
 
 function sintetizza(disegno: Disegno, ritardo: number): void {
@@ -98,6 +142,7 @@ function sintetizza(disegno: Disegno, ritardo: number): void {
     void contesto.resume();
     const { onda, volume, note } = disegno;
     const t0 = contesto.currentTime + 0.01 + ritardo;
+    registra((ritardo + Math.max(0, ...note.map(([, inizio, durata]) => inizio + durata)) + 0.1) * 1000);
     for (const [freq, inizio, durata, fine] of note) {
       const osc = contesto.createOscillator();
       const guadagno = contesto.createGain();

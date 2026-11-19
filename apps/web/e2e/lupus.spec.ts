@@ -5,7 +5,12 @@ test.beforeEach(async ({ page }) => {
   await fissaCaso(page);
   // I test del giro di gioco partono senza transizione (si prova a parte); il valore predefinito è 5 s.
   await page.addInitScript(() => {
-    if (!sessionStorage.getItem("prova-transizione")) localStorage.setItem("gdt-pref-lupus-transizione", "0");
+    // La transizione dura almeno 1 s: salvo che si provi proprio lei, si salta appena compare (il narratore che gioca aspetta 1 s).
+    localStorage.setItem("gdt-pref-lupus-transizione", "1");
+    new MutationObserver(() => {
+      if (sessionStorage.getItem("prova-transizione")) return;
+      document.querySelector<HTMLButtonElement>(".transizione button")?.click();
+    }).observe(document, { childList: true, subtree: true });
   });
 });
 
@@ -350,8 +355,14 @@ test("transizione dell'alba: sole e «Il villaggio si risveglia» prima del racc
   await expect(page.getByRole("button", { name: "Si discute e si vota" })).toBeVisible();
 });
 
-test("transizione: con «No» nelle impostazioni del gioco non compare", async ({ page }) => {
+test("transizione: il narratore che non gioca può saltarla, quello che gioca no", async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem("prova-transizione", "1");
+    localStorage.setItem("gdt-pref-lupus-transizione", "60");
+  });
   await avvia(page);
   await giraLeCarte(page, 8);
+  await expect(page.locator(".transizione-luna")).toBeVisible();
+  await page.getByRole("button", { name: "Salta la transizione" }).click();
   await expect(page.getByRole("heading", { name: "Il veggente indaga" })).toBeVisible();
 });

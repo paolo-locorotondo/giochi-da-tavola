@@ -32,7 +32,7 @@ export const MAX_GIOCATORI = 24;
 export const MIN_GUFO_LETALE = 20;
 
 /** Versione della forma dello stato salvato: le partite salvate con un'altra versione si scartano. */
-export const VERSIONE_STATO = 5;
+export const VERSIONE_STATO = 7;
 
 /** Lupi: 2 da 8 a 15 giocatori, 3 da 16. */
 export function lupiPer(n: number): number {
@@ -97,6 +97,21 @@ export type Fase =
 /** Fasi in cui un ruolo si sveglia di notte. */
 export type FaseNotte = "medium" | "massoni" | "gufo" | "medico" | "veggente" | "lupi" | "mitomane";
 
+/** Cosa è successo in una notte: chi ha scelto chi (solo i ruoli vivi) e chi è morto. */
+export interface NottePassata {
+  notte: number;
+  scelte: { fase: FaseNotte; posto: number }[];
+  morti: number[];
+}
+
+/** Cosa è successo in un giorno: gli indiziati del primo turno e chi è stato eliminato dal voto. */
+export interface GiornoPassato {
+  /** Numero del giorno: il giorno N viene dopo la notte N. */
+  giorno: number;
+  indiziati: number[];
+  eliminato: number;
+}
+
 export interface Stato {
   versione: number;
   giocatori: Giocatore[];
@@ -111,6 +126,10 @@ export interface Stato {
   cartaMostrata: boolean;
   vittima: number | null;
   protetto: number | null;
+  /** Storico delle notti già risolte, dalla prima. */
+  storico: NottePassata[];
+  /** Storico dei giorni con un'eliminazione, dal primo. */
+  storicoGiorni: GiornoPassato[];
   /** Chi il Gufo ha indicato questa notte (null = nessuno). */
   gufato: number | null;
   /** Chi il Mitomane ha scelto di imitare (null = nessuno). */
@@ -165,6 +184,8 @@ export function statoIniziale(): Stato {
     vivi: [],
     fase: "carte",
     notte: 0,
+    storico: [],
+    storicoGiorni: [],
     indiceCarta: 0,
     cartaMostrata: false,
     vittima: null,
@@ -441,8 +462,13 @@ function risolviNotte(s: Stato): Stato {
   const ruoli = { ...s.ruoli, ...esito.cambi };
   const morti = [...(esito.sbranato === null ? [] : [esito.sbranato]), ...esito.altri.filter((p) => p !== esito.sbranato)];
   const vivi = s.vivi.filter((p) => !morti.includes(p));
+  const scelte = FASI_NOTTE.flatMap((d) => {
+    const posto = d.campo === null ? null : s[d.campo];
+    return siGioca(s, d) && d.sceglie(s) && ruoloAttivo(s, d) && posto !== null ? [{ fase: d.fase, posto }] : [];
+  });
   return {
     ...s,
+    storico: [...s.storico, { notte: s.notte, scelte, morti }],
     ruoli,
     vivi,
     mortiNotte: morti,
@@ -517,7 +543,7 @@ export function riduci(s: Stato, a: Azione): Stato {
         const [eliminato] = classificaVoti(s, s.indiziati ?? [], a.voti);
         if (eliminato === undefined) return s;
         const vivi = s.vivi.filter((p) => p !== eliminato);
-        return { ...s, vivi, fase: "esito", eliminato, linciato: eliminato, benvenuto: eliminato, vincitore: vincitore(s.ruoli, vivi) };
+        return { ...s, storicoGiorni: [...s.storicoGiorni, { giorno: s.notte, indiziati: s.indiziati ?? [], eliminato }], vivi, fase: "esito", eliminato, linciato: eliminato, benvenuto: eliminato, vincitore: vincitore(s.ruoli, vivi) };
       }
       return s;
     }

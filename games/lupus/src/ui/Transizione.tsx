@@ -1,10 +1,7 @@
 import { useEffect, type CSSProperties } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { staParlando } from "./voce";
-
-/** Dopo la durata si aspetta ancora che il narratore finisca la frase, ma non oltre questi secondi. */
-const ATTESA_VOCE_MAX = 20;
+import { suonoNinnaNanna } from "../suoni";
 
 /**
  * Schermata che copre il passaggio tra un ruolo e l'altro e tra notte e giorno.
@@ -14,31 +11,33 @@ const ATTESA_VOCE_MAX = 20;
 export function Transizione({
   secondi,
   giorno = false,
+  ninnaNanna = false,
   onFine,
+  onSalta,
 }: {
   secondi: number;
   /** Alba: sole e «Il villaggio si risveglia» al posto di luna e «Occhi chiusi». */
   giorno?: boolean;
+  /** Suona la ninna nanna (solo per «Occhi chiusi»). */
+  ninnaNanna?: boolean;
   onFine: () => void;
+  /** Solo se il narratore non gioca: gli permette di andare avanti prima della fine. */
+  onSalta?: () => void;
 }) {
   const t = usaT(dizionari);
+  // La voce del narratore non parla durante la transizione: parte da sola quando questa finisce.
   useEffect(() => {
-    let intervallo: ReturnType<typeof setInterval> | undefined;
-    const timer = setTimeout(() => {
-      const limite = Date.now() + ATTESA_VOCE_MAX * 1000;
-      const prova = () => {
-        if (staParlando() && Date.now() < limite) return;
-        clearInterval(intervallo);
-        onFine();
-      };
-      intervallo = setInterval(prova, 250);
-      prova();
-    }, secondi * 1000);
-    return () => {
-      clearTimeout(timer);
-      clearInterval(intervallo);
-    };
+    const timer = setTimeout(onFine, secondi * 1000);
+    return () => clearTimeout(timer);
   }, [secondi, onFine]);
+
+  // La ninna nanna accompagna «Occhi chiusi» e si interrompe quando la schermata finisce.
+  useEffect(() => {
+    if (giorno || !ninnaNanna) return;
+    const fine = new AbortController();
+    void suonoNinnaNanna(fine.signal);
+    return () => fine.abort();
+  }, [giorno, ninnaNanna]);
 
   return (
     <section className="schermata transizione" aria-live="polite">
@@ -59,6 +58,11 @@ export function Transizione({
       <div className="transizione-barra" aria-hidden="true">
         <span style={{ "--durata": `${secondi}s` } as CSSProperties} />
       </div>
+      {onSalta && (
+        <button type="button" className="btn" onClick={onSalta}>
+          {t("trSalta")}
+        </button>
+      )}
     </section>
   );
 }

@@ -7,15 +7,31 @@ import { useSyncExternalStore } from "react";
 
 export type ValorePreferenza = number | string;
 
-/** Un'impostazione a scelta singola, mostrata come una fila di opzioni. */
-export interface ImpostazioneGioco {
+interface ImpostazioneBase {
   chiave: string;
   testo: string;
   /** Una riga di spiegazione sotto il titolo. */
   aiuto?: string;
+}
+
+/** Un'impostazione a scelta singola, mostrata come una fila di opzioni. */
+export interface ImpostazioneScelta extends ImpostazioneBase {
+  tipo?: "scelta";
   opzioni: readonly { valore: ValorePreferenza; testo: string }[];
   predefinito: ValorePreferenza;
 }
+
+/** Una durata in secondi, mostrata come un timer a ore, minuti e secondi con frecce su e giù. */
+export interface ImpostazioneDurata extends ImpostazioneBase {
+  tipo: "durata";
+  min: number;
+  max: number;
+  predefinito: number;
+  /** I nomi delle tre colonne, per i lettori di schermo («Ore», «Minuti», «Secondi»). */
+  unita: readonly [string, string, string];
+}
+
+export type ImpostazioneGioco = ImpostazioneScelta | ImpostazioneDurata;
 
 const EVENTO = "gdt-preferenza";
 
@@ -28,6 +44,10 @@ export function leggiPreferenza(gioco: string, imp: ImpostazioneGioco): ValorePr
     grezzo = localStorage.getItem(chiaveArchivio(gioco, imp.chiave));
   } catch {
     /* archivio non disponibile */
+  }
+  if (imp.tipo === "durata") {
+    const n = Number(grezzo);
+    return grezzo !== null && Number.isInteger(n) && n >= imp.min && n <= imp.max ? n : imp.predefinito;
   }
   const trovata = imp.opzioni.find((o) => String(o.valore) === grezzo);
   return trovata ? trovata.valore : imp.predefinito;

@@ -1,6 +1,8 @@
 import { suona, suonaFile, type Disegno } from "@gdt/suoni";
 import galloUrl from "./gallo.mp3";
 import ululatoUrl from "./ululato.mp3";
+import lupoPiangeUrl from "./lupo_piange.mp3";
+import ninnaNannaUrl from "./ninna_nanna_carillon.mp3";
 import type { Ruolo } from "../logica";
 
 /**
@@ -45,7 +47,12 @@ const VERSO_MORTE: Record<Ruolo, Disegno> = {
   mitomane: MORTO_CONTADINO,
 };
 
+/** Gallo e ululato restituiscono una promessa che si risolve quando il suono è finito. */
 export const suonoUlulato = () => suonaFile(ululatoUrl, ULULATO);
 export const suonoGallo = () => suonaFile(galloUrl, GALLO);
-export const suonoMorte = (ruolo: Ruolo, ritardo = 0) => suona(VERSO_MORTE[ruolo], ritardo);
+/** Alla morte del lupo c'è il suo pianto (mp3); per gli altri ruoli un verso sintetizzato. */
+export const suonoMorte = (ruolo: Ruolo, ritardo = 0) =>
+  ruolo === "lupo" ? void suonaFile(lupoPiangeUrl, MORTO_LUPO, ritardo) : suona(VERSO_MORTE[ruolo], ritardo);
+/** Ninna nanna della schermata «Occhi chiusi»: si ferma da sola (con `interrompi`) quando la transizione finisce. */
+export const suonoNinnaNanna = (interrompi: AbortSignal) => suonaFile(ninnaNannaUrl, undefined, 0, interrompi);
 export const suonoFine = (vincitore: "lupi" | "villaggio") => suona(vincitore === "lupi" ? FINE_LUPI : FINE_CONTADINI);

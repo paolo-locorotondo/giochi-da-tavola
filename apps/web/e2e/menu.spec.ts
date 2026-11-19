@@ -107,7 +107,9 @@ test("audio: spegnerlo interrompe subito la voce del narratore e acceso la fa ri
     await page.getByRole("button", { name: "Ho visto, passa il telefono" }).click();
   }
   const detto = () => page.evaluate(() => (window as unknown as { __detto: string[] }).__detto.length);
-  await expect.poll(detto).toBeGreaterThan(0);
+  // Durante la transizione (5 s) il narratore tace: parla solo dopo.
+  expect(await detto()).toBe(0);
+  await expect.poll(detto, { timeout: 15000 }).toBeGreaterThan(0);
 
   const stopPrima = await page.evaluate(() => (window as unknown as { __stop: number }).__stop);
   await page.getByRole("button", { name: "Impostazioni" }).click();
@@ -153,15 +155,45 @@ test("impostazioni: nell'elenco solo quelle dell'app, dentro Lupus anche quelle 
   await page.goto("/lupus");
   await page.getByRole("button", { name: "Impostazioni" }).click();
   await expect(page.getByRole("switch", { name: "Audio" })).toBeVisible();
-  const cinque = page.getByRole("radio", { name: "5 s" });
-  await expect(cinque).toBeChecked();
+  // Transizione: da 1 a 60 secondi, predefinito 5 (solo minuti e secondi); timer della discussione: ore, minuti, secondi.
+  const gruppi = page.locator("fieldset.scelta");
+  const transizione = gruppi.filter({ hasText: "Schermata di transizione" });
+  const discussione = gruppi.filter({ hasText: "Timer della discussione" });
+  await expect(transizione.getByLabel("Secondi", { exact: true })).toHaveText("05");
+  await expect(transizione.getByLabel("Ore", { exact: true })).toHaveCount(0);
   await schermata(page, "impostazioni-lupus");
-  await page.getByRole("radio", { name: "8 s" }).click();
-  await expect(page.getByRole("radio", { name: "8 s" })).toBeChecked();
+  await transizione.getByRole("button", { name: "Aumenta: Secondi" }).click();
+  await transizione.getByRole("button", { name: "Aumenta: Secondi" }).click();
+  await transizione.getByRole("button", { name: "Aumenta: Secondi" }).click();
+  await expect(transizione.getByLabel("Secondi", { exact: true })).toHaveText("08");
+  // Il massimo è un minuto: da 0:59 salendo di un minuto si ferma a 1:00.
+  await transizione.getByRole("button", { name: "Aumenta: Minuti" }).click();
+  await expect(transizione.getByLabel("Minuti", { exact: true })).toHaveText("01");
+  await expect(transizione.getByLabel("Secondi", { exact: true })).toHaveText("00");
+  // Il minimo è 1 secondo: scendendo di un minuto da 1:00 si arriva a 0:01, non a 0:00.
+  await transizione.getByRole("button", { name: "Diminuisci: Minuti" }).click();
+  await expect(transizione.getByLabel("Minuti", { exact: true })).toHaveText("00");
+  await expect(transizione.getByLabel("Secondi", { exact: true })).toHaveText("01");
+  for (let i = 0; i < 7; i++) await transizione.getByRole("button", { name: "Aumenta: Secondi" }).click();
+  await expect(transizione.getByLabel("Secondi", { exact: true })).toHaveText("08");
+
+  await expect(discussione.getByLabel("Minuti", { exact: true })).toHaveText("03");
+  await discussione.getByRole("button", { name: "Diminuisci: Secondi" }).click();
+  await expect(discussione.getByLabel("Minuti", { exact: true })).toHaveText("03");
+  await expect(discussione.getByLabel("Secondi", { exact: true })).toHaveText("59");
+  // Il massimo è un'ora: salendo di un'ora si ferma a 01:00:00.
+  await discussione.getByRole("button", { name: "Aumenta: Ore" }).click();
+  await expect(discussione.getByLabel("Ore", { exact: true })).toHaveText("01");
+  await expect(discussione.getByLabel("Minuti", { exact: true })).toHaveText("00");
+  await expect(discussione.getByLabel("Secondi", { exact: true })).toHaveText("00");
+  await discussione.getByRole("button", { name: "Aumenta: Ore" }).click();
+  // Il minimo è 1 secondo: a zero ore e zero minuti il timer non scende a 00:00:00.
+  await expect(discussione.getByLabel("Secondi", { exact: true })).toHaveText("01");
+  await schermata(page, "impostazioni-lupus-timer");
   await page.keyboard.press("Escape");
   await page.reload();
   await page.getByRole("button", { name: "Impostazioni" }).click();
-  await expect(page.getByRole("radio", { name: "8 s" })).toBeChecked();
+  await expect(page.locator("fieldset.scelta").filter({ hasText: "Schermata di transizione" }).getByLabel("Secondi", { exact: true })).toHaveText("08");
 });
 
 test("impostore: indietro dalla modalità torna a «Come giocate?» e solo da lì al menu", async ({ page }) => {

@@ -1,7 +1,7 @@
 import type { Lingua } from "@gdt/i18n";
 import en from "../data/en/personaggi.json";
 import it from "../data/it/personaggi.json";
-import type { Ruolo } from "./logica";
+import { MIN_GUFO_LETALE, type Ruolo } from "./logica";
 
 interface TestiRuolo {
   nome: string;
@@ -11,6 +11,8 @@ interface TestiRuolo {
   tuo: string;
   /** La voce di «I personaggi» nel regolamento (terza persona). */
   regolamento: string;
+  /** Variante per le partite grandi (oggi solo il Gufo Letale): nome e testo della carta. */
+  letale?: { nome: string; tuo: string };
 }
 
 /**
@@ -20,8 +22,14 @@ interface TestiRuolo {
  */
 export const PERSONAGGI: Record<Lingua, Record<Ruolo, TestiRuolo>> = { it, en };
 
-export function nomeRuolo(ruolo: Ruolo, lingua: Lingua): string {
-  return PERSONAGGI[lingua][ruolo].nome;
+/** Il Gufo diventa «Gufo Letale» da MIN_GUFO_LETALE giocatori: passa `giocatori` dove la partita è nota. */
+function testiPer(ruolo: Ruolo, lingua: Lingua, giocatori?: number) {
+  const t = PERSONAGGI[lingua][ruolo];
+  return ruolo === "gufo" && giocatori !== undefined && giocatori >= MIN_GUFO_LETALE && t.letale ? t.letale : t;
+}
+
+export function nomeRuolo(ruolo: Ruolo, lingua: Lingua, giocatori?: number): string {
+  return testiPer(ruolo, lingua, giocatori).nome;
 }
 
 export function pluraleRuolo(ruolo: Ruolo, lingua: Lingua): string {
@@ -29,8 +37,8 @@ export function pluraleRuolo(ruolo: Ruolo, lingua: Lingua): string {
 }
 
 /** Cosa legge il giocatore sulla propria carta. */
-export function descrizioneRuolo(ruolo: Ruolo, lingua: Lingua): string {
-  return PERSONAGGI[lingua][ruolo].tuo;
+export function descrizioneRuolo(ruolo: Ruolo, lingua: Lingua, giocatori?: number): string {
+  return testiPer(ruolo, lingua, giocatori).tuo;
 }
 
 /** Voci della sezione «I personaggi» del regolamento, nell'ordine del file. */

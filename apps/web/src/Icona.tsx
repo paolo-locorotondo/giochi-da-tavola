@@ -2,6 +2,8 @@ import {
   ArrowLeft,
   Ban,
   BookOpen,
+  ChevronDown,
+  ChevronUp,
   Dices,
   EyeOff,
   Grid3x3,
@@ -32,6 +34,8 @@ const ICONE = {
   cerca: Search,
   "volume-si": Volume2,
   "volume-no": VolumeX,
+  "freccia-su": ChevronUp,
+  "freccia-giu": ChevronDown,
   wifi: Wifi,
   "wifi-barrato": WifiOff,
 } satisfies Record<string, LucideIcon>;

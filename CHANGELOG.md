@@ -9,10 +9,25 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.14.0] - 2026-11-19
+
+### Aggiunto
+
+- Lupus in fabula: **storico della partita** per il narratore (notte per notte chi ha indicato chi e chi è morto, giorno per giorno indiziati ed eliminato); se il narratore gioca, ogni ruolo rivede le proprie scelte passate durante il suo turno.
+- Lupus in fabula: nelle impostazioni del gioco si sceglie la durata del **timer della discussione** (ore, minuti e secondi come il timer del telefono, da 1 secondo a 1 ora; predefinito 3 minuti).
+
 ### Modificato
 
+- Lupus in fabula: «Salta la transizione» per il narratore che non gioca (se gioca non c'è, per non sbirciare il turno dopo); l'ululato suona anche alla vittoria dei lupi.
+- Lupus in fabula: la durata della schermata di transizione si regola liberamente (minuti e secondi, da 1 secondo a 1 minuto) invece dei preset 3/5/8/10 s; l'opzione «No» non c'è più.
+- Lupus in fabula: nuovi suoni mp3, il pianto del lupo quando muore un lupo e la ninna nanna a carillon durante «Occhi chiusi» (si ferma quando la schermata finisce; nella transizione verso i lupi resta solo l'ululato, per non sovrapporli).
 - Lupus in fabula: ululato e gallo sono ora registrazioni mp3 (offline, con ripiego sulla sintesi se non partono).
-- Audio: `packages/suoni` è generico; i suoni di ogni gioco stanno in `games/<gioco>/src/suoni`.
+- Lupus in fabula: la carta del Gufo è dinamica («Gufo» sotto i 20 giocatori, «Gufo Letale» da 20); testo del criceto mannaro più chiaro; alla scoperta della carta i lupi non vedono più i compagni (si riconoscono di notte, come i massoni).
+
+### Corretto
+
+- Lupus in fabula: la voce del narratore non si sovrappone più a nessun suono (ululato, gallo, versi e jingle, mp3 o sintetizzati): parte quando sono finiti e, se c'è la schermata di transizione, solo dopo che questa è finita (la transizione non aspetta più la voce).
+- Lupus in fabula: nella scelta dei personaggi non si possono spuntare più speciali di quanti ne entrino (i contadini non scendono sotto zero).
 
 ## [0.13.0] - 2026-11-14
 

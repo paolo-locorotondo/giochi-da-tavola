@@ -192,7 +192,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-08 (v0.12.0).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.14.0).
 
 ### Fatti
 
@@ -206,6 +206,7 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - FATTO **Stili della carta riusata in «Rivedi la mia carta»** (Impostore online): verificati a schermo dall'utente.
 - FATTO **Messaggi di errore del server a codici**: le frasi di `apps/server`, del modulo Impostore e del Tris sono codici (`errore_<codice>`, anche `codice:n`) tradotti in it/en da `testoMessaggio`.
 - FATTO **Branch `riscrittura`**: era già unito a `main`, cancellato.
+- FATTO **Lupus, nuovi ruoli e rifiniture** (0.13.0, 0.14.0): da 8 a 24 giocatori; motore a descrittori (`FASI_NOTTE` in `games/lupus/src/logica.ts`); Medico, Medium, Indemoniato, Massoni, Criceto mannaro, Gufo (Letale da 20 giocatori) e Mitomane; voto ufficiale a due turni; storico della partita per il narratore; timer della discussione e durata della transizione regolabili (con «Salta la transizione» se il narratore non gioca); suoni mp3 (ululato, gallo, pianto del lupo, ninna nanna) con la voce del narratore che parla solo dopo suoni e transizione. Il piano di lavoro (`piano-lupus-personaggi.md`) è stato eseguito per intero e rimosso; la storia è nel CHANGELOG.
 
 ### Da fare (TODO)
 
@@ -213,12 +214,6 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Test e2e con più telefoni per Impostore online** (oggi coperto solo dai test del server in `apps/server`).
 - TODO **Prova su telefoni veri**: WiFi con `docker compose up`, hotspot, schermo bloccato e rientro (anche per Tris online e partita veloce).
 - TODO **Lupus ognuno col suo telefono** (ruoli segreti, notte, voto): Lupus non ha ancora un modulo online; oggi è solo a un telefono. Con il server generico basta scrivere `games/lupus/src/online` e registrarlo; la coda non serve (partita da molti giocatori).
-- FATTO (v0.13.0) **Lupus, nuovi ruoli**: piano in `docs/piano-lupus-personaggi.md`. I test coprono tutti i casi attuali (`games/lupus/src/regole.test.ts`), quindi si può fare la sessione dedicata.
-  Il lavoro andrà in `games/lupus/src/logica.ts`: i ruoli sono nel tipo `Ruolo`; ogni ruolo
-  notturno ha una sua fase (come veggente e medico) e `risolviNotte` applica gli effetti.
-  Per aggiungerne molti conviene trasformare le fasi in una lista di ruoli notturni ordinati,
-  invece di scriverle a mano. Da decidere insieme: quali ruoli, a partire da quanti giocatori,
-  e come cambiano le condizioni di vittoria.
 - TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` (la cartella oggi non esiste) con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
 - TODO **Vercel**: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). `apps/web/vercel.json` c'è ancora e Vercel va scollegato dalla dashboard.
 - TODO **Tabù**: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da discutere.
@@ -226,3 +221,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
+- TODO **Aggiungere gioco carte UNO** Il classico gioco di carte "UNO" con numeri e colori, pesca +2 e +4 carte (vedi su internet il regolamento ufficiale). Una sola versione: online ognuno col suo telefono.
+- TODO **Aggiungere gioco stile two player reactor** Il gioco consiste nel proporre, ad ogni partita, una serie di mini giochi di velocità (reactor = reattività) e a fine partita vince chi ha totalizzato più punti come somma dei punti di ogni mini gioco. Due versioni: versione offline un solo telefono, dove il telefono è posto al centro del tavolo ed i giocatori sono uno di fronte all'altro; versione online ognuno col suo telefono (qui è da capire perchè essendo un gioco di velocità, va capito a livello tecnico se la nostra attuale architettura regge e non crea penalizzazioni per chi ha una rete più lenta)

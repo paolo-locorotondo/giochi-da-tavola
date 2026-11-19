@@ -249,6 +249,70 @@ h1 {
 }
 
 
+/* Selettore di durata come i timer del telefono: ore, minuti e secondi in colonna con frecce su e giù */
+.durata {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.durata-due {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.durata-colonna {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.durata-valore {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 56px;
+  font-family: var(--font-testo);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  background: var(--s2);
+  border: 1px solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 2px);
+}
+
+.durata-passo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 48px;
+  color: var(--fg);
+  background: var(--s2);
+  border: 1px solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 2px);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.durata-passo:active {
+  color: var(--on-ac);
+  background: var(--ac);
+  border-color: var(--ac);
+}
+
+.durata-passo:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.durata-unita {
+  font-size: 0.8rem;
+  color: var(--mu);
+}
+
 /* Interruttore animato: solo transform e colore */
 .interruttore {
   flex: none;

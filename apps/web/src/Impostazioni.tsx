@@ -1,8 +1,14 @@
-import { useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { Bandiera } from "./Bandiera";
 import { Icona, type NomeIcona } from "./Icona";
 import { audioAttivo, impostaAudio } from "@gdt/suoni";
-import { scriviPreferenza, usaPreferenza, type ImpostazioneGioco } from "@gdt/preferenze";
+import {
+  leggiPreferenza,
+  scriviPreferenza,
+  usaPreferenza,
+  type ImpostazioneDurata,
+  type ImpostazioneScelta,
+} from "@gdt/preferenze";
 import { LINGUE, NOME_LINGUA, scriviLingua, usaLingua, usaT, type TestiGioco } from "@gdt/i18n";
 import { dizionari } from "./testi";
 import { impostaTema, temaAttuale, type Tema } from "./tema";
@@ -65,7 +71,7 @@ function Interruttore({
 }
 
 /** Scelta singola fra poche opzioni (es. durata): una fila di pulsanti radio nativi. */
-function SceltaGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneGioco }) {
+function SceltaGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneScelta }) {
   const valore = usaPreferenza(gioco, imp);
   const id = useId();
   return (
@@ -87,6 +93,84 @@ function SceltaGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneGioco }) 
             />
             <span>{o.testo}</span>
           </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+/** Un passo del selettore su una colonna (0 ore, 1 minuti, 2 secondi): la colonna gira (59 → 0, 0 → 59), il totale resta nei limiti. */
+export function passoDurata(totale: number, colonna: 0 | 1 | 2, verso: 1 | -1, min: number, max: number): number {
+  const peso = [3600, 60, 1][colonna]!;
+  const modulo = colonna === 0 ? Math.floor(max / 3600) + 1 : colonna === 1 && max < 3600 ? Math.floor(max / 60) + 1 : 60;
+  const valore = Math.floor(totale / peso) % modulo;
+  const nuovo = (valore + verso + modulo) % modulo;
+  return Math.min(max, Math.max(min, totale + (nuovo - valore) * peso));
+}
+
+/** Freccia del selettore: un tocco fa un passo, tenuta premuta si ripete. */
+function PassoDurata({ etichetta, verso, onPasso }: { etichetta: string; verso: 1 | -1; onPasso: () => void }) {
+  const ripeti = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const attesa = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const ferma = () => {
+    clearTimeout(attesa.current);
+    clearInterval(ripeti.current);
+  };
+  useEffect(() => ferma, []);
+  return (
+    <button
+      type="button"
+      className="durata-passo"
+      aria-label={etichetta}
+      onPointerDown={() => {
+        onPasso();
+        attesa.current = setTimeout(() => (ripeti.current = setInterval(onPasso, 90)), 450);
+      }}
+      onPointerUp={ferma}
+      onPointerCancel={ferma}
+      onPointerLeave={ferma}
+      // Da tastiera il click non ha puntatore (detail 0): un passo per pressione.
+      onClick={(e) => {
+        if (e.detail === 0) onPasso();
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <Icona nome={verso === 1 ? "freccia-su" : "freccia-giu"} />
+    </button>
+  );
+}
+
+/** Durata come i timer del telefono: tre colonne (ore, minuti, secondi) con freccia su e giù. */
+function DurataGioco({ gioco, imp }: { gioco: string; imp: ImpostazioneDurata }) {
+  const t = usaT(dizionari);
+  const totale = Number(usaPreferenza(gioco, imp));
+  const id = useId();
+  const muovi = (colonna: 0 | 1 | 2, verso: 1 | -1) => {
+    const attuale = Number(leggiPreferenza(gioco, imp));
+    scriviPreferenza(gioco, imp.chiave, passoDurata(attuale, colonna, verso, imp.min, imp.max));
+  };
+  const valori = [Math.floor(totale / 3600), Math.floor((totale % 3600) / 60), totale % 60];
+  return (
+    <fieldset className="scelta" aria-describedby={imp.aiuto ? `${id}-aiuto` : undefined}>
+      <legend className="scelta-titolo">{imp.testo}</legend>
+      {imp.aiuto ? (
+        <p id={`${id}-aiuto`} className="scelta-aiuto">
+          {imp.aiuto}
+        </p>
+      ) : null}
+      {/* Sotto l'ora la colonna delle ore non serve: restano minuti e secondi. */}
+      <div className={imp.max < 3600 ? "durata durata-due" : "durata"}>
+        {([0, 1, 2] as const).filter((c) => c > 0 || imp.max >= 3600).map((c) => (
+          <div key={c} className="durata-colonna">
+            <PassoDurata etichetta={t("aumenta", { unita: imp.unita[c] })} verso={1} onPasso={() => muovi(c, 1)} />
+            <output className="durata-valore" aria-label={imp.unita[c]}>
+              {String(valori[c]).padStart(2, "0")}
+            </output>
+            <PassoDurata etichetta={t("diminuisci", { unita: imp.unita[c] })} verso={-1} onPasso={() => muovi(c, -1)} />
+            <span className="durata-unita" aria-hidden="true">
+              {imp.unita[c]}
+            </span>
+          </div>
         ))}
       </div>
     </fieldset>
@@ -239,7 +323,11 @@ export function Impostazioni({ gioco }: { gioco?: GiocoConRegole }) {
                 <ul className="impostazioni-voci">
                   {gioco.impostazioni?.map((imp) => (
                     <li key={imp.chiave}>
-                      <SceltaGioco gioco={gioco.id} imp={imp} />
+                      {imp.tipo === "durata" ? (
+                        <DurataGioco gioco={gioco.id} imp={imp} />
+                      ) : (
+                        <SceltaGioco gioco={gioco.id} imp={imp} />
+                      )}
                     </li>
                   ))}
                   <li>

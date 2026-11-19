@@ -24,6 +24,8 @@ import {
   statoIniziale,
   type Fase,
   type FaseNotte,
+  type GiornoPassato,
+  type NottePassata,
   type Ruolo,
   type Stato,
 } from "../logica";
@@ -31,13 +33,13 @@ import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
 import { traduttore, usaLingua, usaT, type Lingua, type Traduttore } from "@gdt/i18n";
 import { validaConfigurazione, type ErroreConfigurazione } from "../validazione";
 import { dizionari } from "../locales";
-import { audioAttivo, seguiAudio, suona } from "@gdt/suoni";
+import { attendiSuoni, audioAttivo, seguiAudio, suona } from "@gdt/suoni";
 import { suonoFine, suonoGallo, suonoMorte, suonoUlulato } from "../suoni";
 import { usaPreferenza } from "@gdt/preferenze";
 import { parla, silenzio } from "./voce";
 import { Transizione } from "./Transizione";
 import { descrizioneRuolo, nomeRuolo, pluraleRuolo } from "../personaggi";
-import { TRANSIZIONE } from "../impostazioni";
+import { DISCUSSIONE, TRANSIZIONE } from "../impostazioni";
 import "./lupus.css";
 
 const CHIAVE = "gdt-lupus-partita";
@@ -85,15 +87,6 @@ export function LupusApp() {
   const [audio, setAudio] = useState(audioAttivo);
   useEffect(() => seguiAudio(() => setAudio(audioAttivo())), []);
 
-  // Il narratore parla quando cambia la fase.
-  const lingua = usaLingua();
-  useEffect(() => {
-    if (!voce || !audio || s.giocatori.length === 0) return;
-    const testo = frasePerFase(s, lingua);
-    if (testo) parla(testo, lingua);
-    return silenzio;
-  }, [s.fase, s.notte, s.eliminato, voce, audio, s.giocatori.length, lingua]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Suoni di scena: ululato quando scende la notte, gallo all'alba. Il verso del morto solo se il narratore ne dice il ruolo.
   const faseSuoni = useRef(s.fase);
   useEffect(() => {
@@ -101,8 +94,9 @@ export function LupusApp() {
     faseSuoni.current = s.fase;
     if (prima === s.fase) return;
     const morto = s.fase === "alba" ? s.mortiNotte[0] : s.fase === "esito" ? s.eliminato : null;
-    if (s.fase === "lupi") suonoUlulato();
-    else if (s.fase === "alba") suonoGallo();
+    if (s.fase === "lupi") void suonoUlulato();
+    else if (s.fase === "alba") void suonoGallo();
+    else if (s.fase === "fine" && s.vincitore === "lupi") void suonoUlulato();
     if (s.svelaRuoli && morto !== null && morto !== undefined) {
       suonoMorte(s.ruoli[morto] ?? "contadino", s.fase === "alba" ? 1.5 : 0);
     }
@@ -119,6 +113,21 @@ export function LupusApp() {
   }
   const fineTransizione = useCallback(() => setInTransizione(false), []);
 
+  // Il narratore parla quando cambia la fase, ma solo dopo la fine di ogni suono (mp3 o sintetizzato, anche
+  // quelli in ritardo), così voce e suoni non si sovrappongono. Questo effetto sta dopo quello dei suoni di scena.
+  const lingua = usaLingua();
+  useEffect(() => {
+    // Durante la schermata di transizione la voce tace: parte quando la transizione è finita (e dopo i suoni).
+    if (!voce || !audio || s.giocatori.length === 0 || inTransizione) return;
+    const testo = frasePerFase(s, lingua);
+    let annullato = false;
+    if (testo) void attendiSuoni().then(() => !annullato && parla(testo, lingua));
+    return () => {
+      annullato = true;
+      silenzio();
+    };
+  }, [s.fase, s.notte, s.eliminato, voce, audio, s.giocatori.length, lingua, inTransizione]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (s.giocatori.length === 0) {
     return (
       <Configurazione
@@ -128,7 +137,7 @@ export function LupusApp() {
   }
 
   const contenuto = (() => {
-    if (inTransizione) return <Transizione secondi={secondi} giorno={s.fase === "alba"} onFine={fineTransizione} />;
+    if (inTransizione) return <Transizione secondi={secondi} giorno={s.fase === "alba"} ninnaNanna={s.fase !== "lupi"} onFine={fineTransizione} onSalta={s.narratoreGioca ? undefined : fineTransizione} />;
     switch (s.fase) {
       case "carte":
         return <Carte s={s} dispatch={dispatch} />;
@@ -165,6 +174,7 @@ export function LupusApp() {
       {contenuto}
       {/* Se il narratore gioca o il telefono passa di mano, i ruoli restano coperti. */}
       {s.fase !== "carte" && s.fase !== "fine" && !s.narratoreGioca && <RuoliNarratore s={s} />}
+      {s.fase !== "carte" && s.fase !== "fine" && !s.narratoreGioca && <StoricoPartita s={s} />}
       {s.fase !== "fine" && <ChiudiPartita onChiudi={() => dispatch({ tipo: "azzera" })} />}
     </>
   );
@@ -189,7 +199,7 @@ function RuoliNarratore({ s }: { s: Stato }) {
               <li key={g.posto} className={vivo ? "" : "morto"}>
                 <span className="nome-g">{g.nome}</span>
                 <span className="stato">
-                  {t("statoRuolo", { ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua), stato: vivo ? t("vivo") : t("morto") })}
+                  {t("statoRuolo", { ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua, s.giocatori.length), stato: vivo ? t("vivo") : t("morto") })}
                 </span>
               </li>
             );
@@ -200,12 +210,62 @@ function RuoliNarratore({ s }: { s: Stato }) {
   );
 }
 
+/** Per il narratore: notte per notte chi ha indicato chi e chi è morto, giorno per giorno chi è stato eliminato. */
+function StoricoPartita({ s }: { s: Stato }) {
+  const t = usaT(dizionari);
+  const lingua = usaLingua();
+  type Voce = { ordine: number; notte: NottePassata; giorno?: undefined } | { ordine: number; giorno: GiornoPassato; notte?: undefined };
+  const voci: Voce[] = [
+    ...s.storico.map((n): Voce => ({ ordine: n.notte * 2 - 1, notte: n })),
+    ...s.storicoGiorni.map((g): Voce => ({ ordine: g.giorno * 2, giorno: g })),
+  ].sort((a, b) => a.ordine - b.ordine);
+  return (
+    <details className="accordion" style={{ marginTop: "0.75rem" }}>
+      <summary>{t("storicoTitolo")}</summary>
+      <div className="accordion-corpo">
+        <p className="accordion-nota">{t("soloNarratore")}</p>
+        {voci.length === 0 && <p>{t("storicoVuoto")}</p>}
+        {voci.map((v) =>
+          v.giorno ? (
+            <div key={`g${v.giorno.giorno}`} className="storico-notte">
+              <h3>{t("storicoGiorno", { n: v.giorno.giorno })}</h3>
+              <ul className="ruoli-narratore">
+                <li>{t("storicoIndiziati", { nomi: v.giorno.indiziati.map((p) => nomeDi(s, p)).join(", ") })}</li>
+                <li>{t("storicoEliminato", { nome: nomeDi(s, v.giorno.eliminato) })}</li>
+              </ul>
+            </div>
+          ) : (
+            <div key={`n${v.notte.notte}`} className="storico-notte">
+              <h3>{t("storicoNotte", { n: v.notte.notte })}</h3>
+              <ul className="ruoli-narratore">
+                {v.notte.scelte.map((x) => (
+                  <li key={x.fase}>
+                    {t("storicoScelta", {
+                      ruolo: nomeRuolo(descrittoreNotte(x.fase)?.ruolo ?? "contadino", lingua, s.giocatori.length),
+                      nome: nomeDi(s, x.posto),
+                    })}
+                  </li>
+                ))}
+                <li>
+                  {v.notte.morti.length > 0
+                    ? t("storicoMorti", { nomi: v.notte.morti.map((p) => nomeDi(s, p)).join(", ") })
+                    : t("storicoNessunMorto")}
+                </li>
+              </ul>
+            </div>
+          ),
+        )}
+      </div>
+    </details>
+  );
+}
+
 type T = Traduttore<typeof dizionari.it>;
 
 /** « Era Contadino.» se la partita svela i ruoli di chi muore, altrimenti nulla. */
 function ruoloDetto(s: Stato, posto: number | null | undefined, t: T, lingua: Lingua): string {
   if (!s.svelaRuoli || posto === null || posto === undefined) return "";
-  return " " + t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[posto] ?? "contadino", lingua) });
+  return " " + t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[posto] ?? "contadino", lingua, s.giocatori.length) });
 }
 
 /** Cosa dice il narratore a voce in ogni fase, nella lingua scelta. */
@@ -308,7 +368,15 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
     .filter(Boolean);
   const n = nomi.length;
   const predefiniti = specialiPredefiniti(n);
-  const speciali = SPECIALI.map((x) => x.ruolo).filter((r) => scelti[r] ?? predefiniti.includes(r));
+  // Si includono gli speciali scelti solo finché c'è posto: i contadini non scendono sotto zero.
+  const speciali: Ruolo[] = [];
+  let liberi = n - lupiPer(n) - 1;
+  for (const x of SPECIALI) {
+    if ((scelti[x.ruolo] ?? predefiniti.includes(x.ruolo)) && x.quanti <= liberi) {
+      speciali.push(x.ruolo);
+      liberi -= x.quanti;
+    }
+  }
   const contadini = contadiniRestanti(n, speciali);
 
   function invia(e: FormEvent) {
@@ -345,7 +413,7 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
                 ...SPECIALI.filter((x) => speciali.includes(x.ruolo)).map((x) =>
                   x.quanti > 1
                     ? `${x.quanti} ${pluraleRuolo(x.ruolo, lingua).toLowerCase()}`
-                    : `1 ${nomeRuolo(x.ruolo, lingua).toLowerCase()}`,
+                    : `1 ${nomeRuolo(x.ruolo, lingua, n).toLowerCase()}`,
                 ),
                 t("ruoliContadini", { n: Math.max(0, contadini) }),
               ].join(", "),
@@ -356,9 +424,10 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
               <input
                 type="checkbox"
                 checked={speciali.includes(x.ruolo)}
+                disabled={!speciali.includes(x.ruolo) && x.quanti > liberi}
                 onChange={(e) => setScelti((v) => ({ ...v, [x.ruolo]: e.target.checked }))}
               />
-              {t("conSpeciale", { ruolo: nomeRuolo(x.ruolo, lingua) })}
+              {t("conSpeciale", { ruolo: nomeRuolo(x.ruolo, lingua, n) })}
             </label>
           ))}
         </fieldset>
@@ -409,17 +478,12 @@ function Carte({ s, dispatch }: { s: Stato; dispatch: D }) {
     );
   }
   const ruolo = s.ruoli[g.posto] ?? "contadino";
-  const compagni =
-    ruolo === "lupo"
-      ? s.giocatori.filter((x) => x.posto !== g.posto && s.ruoli[x.posto] === "lupo")
-      : [];
   return (
     <section className="schermata">
       <p className="muted">{t("guardaSoloTu", { nome: g.nome })}</p>
       <div className="carta">
-        <p className="grande">{nomeRuolo(ruolo, lingua)}</p>
-        <p>{descrizioneRuolo(ruolo, lingua)}</p>
-        {compagni.length > 0 && <p className="muted">{t("compagni", { nomi: compagni.map((c) => c.nome).join(", ") })}</p>}
+        <p className="grande">{nomeRuolo(ruolo, lingua, s.giocatori.length)}</p>
+        <p>{descrizioneRuolo(ruolo, lingua, s.giocatori.length)}</p>
       </div>
       <button className="btn" onClick={() => dispatch({ tipo: "prossimaCarta" })}>
         {t("hoVistoPassa")}
@@ -497,6 +561,18 @@ function Notte({ s, dispatch }: { s: Stato; dispatch: D }) {
         ))}
       </div>
       {risultato && <p className="grande">{risultato}</p>}
+      {s.narratoreGioca && d.campo !== null && s.storico.some((n) => n.scelte.some((x) => x.fase === fase)) && (
+        <details className="accordion">
+          <summary>{t("tueScelte")}</summary>
+          <div className="accordion-corpo">
+            {s.storico.flatMap((n) =>
+              n.scelte
+                .filter((x) => x.fase === fase)
+                .map((x) => <p key={n.notte}>{t("tuaScelta", { n: n.notte, nome: nomeDi(s, x.posto) })}</p>),
+            )}
+          </div>
+        </details>
+      )}
       <button
         className="btn primario"
         disabled={scelto === null && !senzaScelta}
@@ -536,13 +612,20 @@ function Alba({ s, dispatch }: { s: Stato; dispatch: D }) {
   );
 }
 
-const SECONDI_DISCUSSIONE = 180;
+/** «3:00», oppure «1:00:00» da un'ora in su. */
+function formattaTempo(secondi: number): string {
+  const ore = Math.floor(secondi / 3600);
+  const minuti = Math.floor((secondi % 3600) / 60);
+  const resto = String(secondi % 60).padStart(2, "0");
+  return ore > 0 ? `${ore}:${String(minuti).padStart(2, "0")}:${resto}` : `${minuti}:${resto}`;
+}
 
 function Discussione({ dispatch }: { dispatch: D }) {
   const t = usaT(dizionari);
   // Il timer è facoltativo e non blocca nulla: parte solo se lo si avvia.
+  const durata = Number(usaPreferenza("lupus", DISCUSSIONE));
   const [scadenza, setScadenza] = useState<number | null>(null);
-  const [rimasti, setRimasti] = useState(SECONDI_DISCUSSIONE);
+  const [rimasti, setRimasti] = useState(durata);
   useEffect(() => {
     if (scadenza === null) return;
     const id = setInterval(() => {
@@ -556,7 +639,7 @@ function Discussione({ dispatch }: { dispatch: D }) {
     }, 250);
     return () => clearInterval(id);
   }, [scadenza]);
-  const tempo = `${Math.floor(rimasti / 60)}:${String(rimasti % 60).padStart(2, "0")}`;
+  const tempo = formattaTempo(rimasti);
 
   return (
     <section className="schermata">
@@ -566,11 +649,11 @@ function Discussione({ dispatch }: { dispatch: D }) {
         <button
           className="btn"
           onClick={() => {
-            setRimasti(SECONDI_DISCUSSIONE);
-            setScadenza(Date.now() + SECONDI_DISCUSSIONE * 1000);
+            setRimasti(durata);
+            setScadenza(Date.now() + durata * 1000);
           }}
         >
-          {t("avviaTimer")}
+          {t("avviaTimer", { tempo: formattaTempo(durata) })}
         </button>
       ) : (
         <p className="grande" role="timer">
@@ -667,7 +750,7 @@ function Esito({ s, dispatch }: { s: Stato; dispatch: D }) {
     <section className="schermata">
       <h2>{t("eliminatoTitolo", { nome: nomeDi(s, s.eliminato) })}</h2>
       {s.svelaRuoli && s.eliminato !== null && (
-        <p>{t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[s.eliminato] ?? "contadino", lingua) })}</p>
+        <p>{t("eraRuolo", { ruolo: nomeRuolo(s.ruoli[s.eliminato] ?? "contadino", lingua, s.giocatori.length) })}</p>
       )}
       <button className="btn primario" onClick={() => dispatch({ tipo: "dopoVoto" })}>
         {s.vincitore ? t("vediRisultato") : t("scendeNotte")}
@@ -688,7 +771,7 @@ function Fine({ s, dispatch }: { s: Stato; dispatch: D }) {
       <ul className="elenco-ruoli">
         {s.giocatori.map((g) => (
           <li key={g.posto} className={s.vivi.includes(g.posto) ? "" : "morto"}>
-            {t("ruoloDi", { nome: g.nome, ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua) })}
+            {t("ruoloDi", { nome: g.nome, ruolo: nomeRuolo(s.ruoli[g.posto] ?? "contadino", lingua, s.giocatori.length) })}
           </li>
         ))}
       </ul>

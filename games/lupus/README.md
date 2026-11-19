@@ -6,9 +6,9 @@ Il villaggio dorme, i lupi no. Un telefono al centro del tavolo fa da **narrator
 
 > Regole scritte dalla conoscenza del gioco classico (esistono varianti), non copiate da un regolamento ufficiale: controllale e dimmi cosa cambiare.
 
-1. Ognuno vede in segreto il proprio **ruolo**. I lupi vedono i compagni.
+1. Ognuno vede in segreto il proprio **ruolo**. I compagni (lupi, massoni) si riconoscono poi di notte.
 2. **Notte**: tutti chiudono gli occhi. Il narratore chiama, nell'ordine: il medium (dalla seconda notte: sente se l'ultimo linciato era un lupo), i massoni (solo la prima notte: si riconoscono), il medico (protegge qualcuno, non sé stesso; può ripetere la stessa persona), il veggente (scopre se un giocatore è lupo), i lupi (scelgono una vittima, non un lupo). Ogni ruolo si sveglia anche se è morto, senza mostrare nulla.
-3. **Giorno**: si scopre chi è morto, si discute (timer facoltativo di 3 minuti; i morti non parlano).
+3. **Giorno**: si scopre chi è morto, si discute (timer facoltativo, 3 minuti se non lo si cambia nelle impostazioni; i morti non parlano).
 4. **Primo turno**: votano tutti, anche i morti (fantasmi); i voti si segnano con + e −. I due più votati sono gli **indiziati** e fanno un'arringa.
 5. **Secondo turno**: votano in segreto solo i vivi non indiziati; il più votato è linciato. Nei pareggi vince chi siede più vicino, in senso orario, a chi ha il «Benvenuto!» (l'ultimo morto; il primo giorno il narratore, quindi il primo nome dell'elenco).
 5. Vincono i **contadini** se muoiono tutti i lupi, i **lupi** quando sono almeno quanti gli altri vivi. Il **criceto mannaro**, se è vivo alla fine, vince da solo.
@@ -56,13 +56,17 @@ Quando il narratore chiama un ruolo, chi ha finito tocca il pulsante e lascia il
 - veggente: «Ho visto, torna a dormire» (il veggente vede la carta del giocatore scelto, poi chiude gli occhi);
 - l'ultima carta della distribuzione resta «Ho visto, passa il telefono».
 
-Dopo ogni pulsante di fine turno tra un ruolo e l'altro compare una **schermata di transizione** sempre uguale, con la luna e il testo «Occhi chiusi». Prima del racconto dell'alba ne compare una diversa, con il sole e «Il villaggio si risveglia»: dice a tutti di aprire gli occhi. Serve a non vedere la schermata del ruolo successivo mentre si torna a dormire. Dura il tempo scelto nelle impostazioni del gioco (ingranaggio → Lupus in fabula → Schermata di transizione: No, 3, 5, 8 o 10 secondi, predefinito 5). Se il narratore sta ancora parlando alla fine della durata, la schermata resta fino alla fine della frase (al massimo altri 20 secondi).
+Dopo ogni pulsante di fine turno tra un ruolo e l'altro compare una **schermata di transizione** sempre uguale, con la luna e il testo «Occhi chiusi». Prima del racconto dell'alba ne compare una diversa, con il sole e «Il villaggio si risveglia»: dice a tutti di aprire gli occhi. Serve a non vedere la schermata del ruolo successivo mentre si torna a dormire. Dura il tempo scelto nelle impostazioni del gioco (ingranaggio → Lupus in fabula → Schermata di transizione: un selettore a minuti e secondi, da 1 secondo a 1 minuto, predefinito 5; serve a regolare la durata sulle registrazioni). Durante la transizione il narratore tace (si sente solo il suono, per esempio il gallo): la voce parte quando la schermata è finita e ogni suono è terminato.
+
+Nelle stesse impostazioni c'è il **Timer della discussione**: ore, minuti e secondi con le frecce su e giù, come il timer del telefono (tenendo premuta una freccia il numero scorre), da 1 secondo a 1 ora; predefinito 3 minuti.
+
+**Suoni e voce.** Quando scende la notte si sente l'ululato, all'alba il gallo (mp3 in `src/suoni/`; lì ci sono anche `lupo_piange.mp3`, alla morte di un lupo, e `ninna_nanna_carillon.mp3`, durante «Occhi chiusi»); la voce del narratore aspetta sempre la fine di ogni suono (mp3 o sintetizzato, anche quelli in ritardo; per i file al massimo 15 secondi) prima di parlare, così non si sovrappongono. Lo garantisce `attendiSuoni()` di `@gdt/suoni`.
 
 Le impostazioni di gioco sono salvate sul telefono e non fanno parte della partita: si cambiano anche tra una partita e l'altra. Sono dichiarate in `src/impostazioni.ts` (pacchetto `@gdt/preferenze`).
 
 ## Cosa controllare
 
-- Ogni ruolo chiude con lo stesso gesto: «Conferma e torna a dormire» (o «Ho visto, torna a dormire» per il veggente), poi la transizione. Con «No» la transizione non compare.
+- Ogni ruolo chiude con lo stesso gesto: «Conferma e torna a dormire» (o «Ho visto, torna a dormire» per il veggente), poi la transizione. La transizione dura sempre almeno 1 secondo.
 - La voce italiana parla a ogni fase. Serve l'audio acceso (ingranaggio → Audio, spento di default); spegnerlo ferma subito la voce. La casella "Voce del narratore" spegne solo la voce.
 - Con l'audio acceso: ululato quando scende la notte, gallo all'alba, un verso diverso per ruolo (lupo, contadino, veggente, medico; indemoniato, massone, medium e criceto riusano quelli di lupo, contadino e veggente) quando muore qualcuno, solo se è attiva «Il narratore dice il ruolo di chi muore»; due suoni di fine partita (contadini o lupi). Gallo e ululato sono file mp3 in `games/lupus/src/suoni/` (si sostituiscono rimpiazzando i file, stesso nome; se non partono suona la versione sintetizzata); gli altri sono sintetizzati e si ritoccano in `games/lupus/src/suoni/index.ts`. Se non si sente: volume e voci italiane installate.
 - Lupi non scelgono un lupo; il medico non protegge sé stesso ma può proteggere la stessa persona due notti di fila.

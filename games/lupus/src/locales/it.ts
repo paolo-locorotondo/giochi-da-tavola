@@ -3,7 +3,7 @@ export const it = {
   // Elenco giochi e regolamento (l'app li mostra fuori dal gioco)
   nomeGioco: "Lupus in fabula",
   descrizioneGioco: "Il villaggio dorme, i lupi no. Il telefono fa da narratore.",
-  regPasso1: "Ognuno vede in segreto il proprio ruolo. I lupi vedono i compagni.",
+  regPasso1: "Ognuno vede in segreto il proprio ruolo. I compagni (lupi, massoni) si riconoscono poi di notte.",
   regPasso2:
     "Notte: tutti chiudono gli occhi. Il narratore chiama il medico (dalla seconda notte protegge qualcuno, mai sé stesso), poi il gufo (indica un giocatore: sarà indiziato, o muore se il gufo è letale), poi il veggente (scopre se un giocatore è lupo), poi i lupi (scelgono una vittima). Alla fine della seconda notte il mitomane indica un giocatore e ne prende il ruolo se è lupo o veggente. Dalla seconda notte il medium sente se l'ultimo linciato era un lupo; la prima notte i massoni si riconoscono. La prima notte nessuno muore: i lupi si riconoscono soltanto.",
   regPasso3: "Giorno: si scopre chi è morto, poi si discute. Primo turno: votano tutti, anche i morti (fantasmi); i due più votati sono gli indiziati e fanno un'arringa.",
@@ -16,14 +16,28 @@ export const it = {
   // Impostazioni del gioco
   impTransizione: "Schermata di transizione",
   impTransizioneAiuto:
-    "Tra un ruolo e l'altro e tra notte e giorno: il tempo per tornare a dormire senza vedere la schermata dopo.",
-  impNo: "No",
-  impSecondi: "{n} s",
+    "Tra un ruolo e l'altro e tra notte e giorno: il tempo per tornare a dormire senza vedere la schermata dopo. Da 1 secondo a 1 minuto.",
+  impDiscussione: "Timer della discussione",
+  impDiscussioneAiuto: "Quanto dura il timer del giorno, da 1 secondo a 1 ora.",
+  impOre: "Ore",
+  impMinuti: "Minuti",
+  impSecondiUnita: "Secondi",
 
   // Cornice della partita
   voceNarratore: "Voce del narratore",
   audioSpento: " (audio spento nelle impostazioni)",
   ruoliNarratoreTitolo: "Giocatori e ruoli ({vivi} vivi su {tot})",
+  storicoTitolo: "Storico della partita",
+  storicoGiorno: "Giorno {n}",
+  storicoIndiziati: "Indiziati: {nomi}",
+  storicoEliminato: "Eliminato: {nome}",
+  storicoNotte: "Notte {n}",
+  storicoScelta: "{ruolo} → {nome}",
+  storicoMorti: "Morti: {nomi}",
+  storicoNessunMorto: "Nessun morto.",
+  storicoVuoto: "Ancora nessuna notte conclusa.",
+  tueScelte: "Le tue scelte delle notti passate",
+  tuaScelta: "Notte {n}: {nome}",
   soloNarratore: "Solo per il narratore: non mostrare lo schermo agli altri.",
   statoRuolo: "{ruolo} · {stato}",
   vivo: "vivo",
@@ -72,7 +86,6 @@ export const it = {
   passaA: "Passa il telefono a",
   mostraRuolo: "Mostra il mio ruolo",
   guardaSoloTu: "{nome}, guarda solo tu",
-  compagni: "Compagni: {nomi}",
   hoVistoPassa: "Ho visto, passa il telefono",
 
   // Notte
@@ -128,7 +141,7 @@ export const it = {
   // Giorno: discussione, due turni di voto
   discussioneTitolo: "Si discute",
   discussioneTesto: "I vivi discutono su chi possa essere un lupo. I morti non parlano.",
-  avviaTimer: "Avvia il timer di 3 minuti",
+  avviaTimer: "Avvia il timer ({tempo})",
   tempoRimasto: "Tempo rimasto: {tempo}",
   tempoFinito: "Tempo scaduto: si vota.",
   vaiAlVoto: "Al primo turno di voto",
@@ -169,6 +182,7 @@ export const it = {
   // Transizioni
   trOcchiChiusi: "Occhi chiusi",
   trLasciaTelefono: "Chi ha appena toccato il telefono lo lascia al centro e torna a dormire.",
+  trSalta: "Salta la transizione",
   trProssimo: "Il narratore sta per chiamare il prossimo.",
   trAlba: "Il villaggio si risveglia",
   trApriGliOcchi: "Tutti possono aprire gli occhi.",

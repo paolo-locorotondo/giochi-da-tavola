@@ -1074,3 +1074,31 @@ describe("Mitomane", () => {
     expect(riduci(riduci(s, { tipo: "scegli", posto: a! }), { tipo: "scegli", posto: b! }).imitato).toBe(a);
   });
 });
+
+describe("storico delle notti", () => {
+  it("registra scelte e morti di ogni notte conclusa", () => {
+    let s = distribuisci(avvia(12, 3, { primaNotteSenzaVittima: false }));
+    expect(s.storico).toEqual([]);
+    for (let i = 0; i < 8 && s.fase !== "alba"; i++) {
+      const c = candidatiNotte(s);
+      if (c.length > 0) s = riduci(s, { tipo: "scegli", posto: c[0]! });
+      s = riduci(s, { tipo: "avanti" });
+    }
+    expect(s.fase).toBe("alba");
+    expect(s.storico).toHaveLength(1);
+    expect(s.storico[0]!.notte).toBe(1);
+    expect(s.storico[0]!.scelte.length).toBeGreaterThan(0);
+    expect(s.storico[0]!.morti).toEqual(s.mortiNotte);
+  });
+
+  it("registra indiziati ed eliminato del giorno", () => {
+    const base = distribuisci(avvia(12, 3, { primaNotteSenzaVittima: false }));
+    const [a, b] = base.vivi;
+    let s: Stato = { ...base, fase: "voto", notte: 1 };
+    s = riduci(s, { tipo: "chiudiVoto", voti: { [a!]: 5, [b!]: 3 } });
+    expect(s.fase).toBe("arringhe");
+    s = { ...s, fase: "voto2" };
+    s = riduci(s, { tipo: "chiudiVoto", voti: { [a!]: 4 } });
+    expect(s.storicoGiorni).toEqual([{ giorno: 1, indiziati: s.indiziati, eliminato: a }]);
+  });
+});

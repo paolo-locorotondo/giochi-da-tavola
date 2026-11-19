@@ -16,6 +16,13 @@ describe.each(LINGUE)("personaggi (data/%s/personaggi.json)", (lingua) => {
     }
   });
 
+  it("il gufo diventa Gufo Letale da 20 giocatori", () => {
+    expect(nomeRuolo("gufo", lingua, 19)).toBe(dati.gufo.nome);
+    expect(nomeRuolo("gufo", lingua, 20)).toBe(dati.gufo.letale!.nome);
+    expect(descrizioneRuolo("gufo", lingua, 20)).toBe(dati.gufo.letale!.tuo);
+    expect(nomeRuolo("lupo", lingua, 20)).toBe(dati.lupo.nome);
+  });
+
   it("le funzioni usano i testi del file", () => {
     expect(nomeRuolo("lupo", lingua)).toBe(dati.lupo.nome);
     expect(descrizioneRuolo("medico", lingua)).toBe(dati.medico.tuo);
