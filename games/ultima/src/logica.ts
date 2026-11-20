@@ -272,7 +272,11 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
     registra(p, { tipo: "fineRound", posto: chi, punti });
     return p;
   }
-  if (mano.length === 1) p.ultima = { posto: chi, dichiarata: dichiaraSubito };
+  if (mano.length === 1) {
+    p.ultima = { posto: chi, dichiarata: dichiaraSubito };
+    // Chi dichiara subito (il bot) lascia comunque traccia, come chi preme il pulsante.
+    if (dichiaraSubito) registra(p, { tipo: "ultima", posto: chi });
+  }
 
   if (carta.tipo === "piu4") {
     const vittima = avanza(chi, p.verso, n);

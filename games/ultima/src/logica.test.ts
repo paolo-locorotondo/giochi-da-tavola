@@ -250,6 +250,7 @@ describe("gioca", () => {
     const c = num("rosso", 4);
     const p = gioca(partita([[c, num("blu", 1)], [num("verde", 2)]]), 2, 1, c.id, undefined, rng(), true);
     expect(p.ultima).toEqual({ posto: 1, dichiarata: true });
+    expect(p.eventi.some((e) => e.tipo === "ultima" && e.posto === 1)).toBe(true);
   });
 });
 

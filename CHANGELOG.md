@@ -11,6 +11,16 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
+## [0.24.1] - 2026-11-20
+
+### Corretto
+
+- Ultima!: quando il bot dichiara «Ultima!» ora resta traccia nell'elenco degli eventi («X dice «Ultima!»»), come per chi preme il pulsante. Prima sembrava che non fosse successo niente e non compariva nessun pulsante «Beccato!».
+
+### Modificato
+
+- Ultima! in inglese si chiama **Last One!** (nome del gioco, pulsante e testi); resta «Caught!» per «Beccato!».
+
 ## [0.24.0] - 2026-11-20
 
 ### Aggiunto
