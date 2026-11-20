@@ -129,6 +129,20 @@ describe("mossaBot: Ultima!", () => {
   });
 });
 
+describe("mossaBot: Beccato!", () => {
+  const dimentico = () => partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: false } });
+  it("becca chi ha una carta sola e non ha detto «Ultima!»", () => {
+    expect(mossaBot(dimentico(), 2, 2)).toEqual({ tipo: "beccato", bersaglio: 1 });
+    const dopo = eseguiMossa(dimentico(), 2, 2, { tipo: "beccato", bersaglio: 1 }, creaRng(1));
+    expect(dopo.mani[0]).toHaveLength(3);
+    expect(dopo.ultima).toBeNull();
+  });
+  it("non becca chi ha già dichiarato", () => {
+    const detto = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: true } });
+    expect(mossaBot(detto, 2, 2).tipo).not.toBe("beccato");
+  });
+});
+
 describe("mossaBot: errori", () => {
   it("non c'è mossa a round finito né fuori turno", () => {
     expect(() => mossaBot(partita([[num("blu", 1)], altri(4)], { fine: { vincitore: 2, punti: 3 } }), 2, 1)).toThrow();

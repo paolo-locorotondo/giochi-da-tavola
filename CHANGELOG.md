@@ -11,6 +11,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
+## [0.24.2] - 2026-11-20
+
+### Corretto
+
+- Ultima!: «Simula mossa col bot» ora **becca** chi ha una carta sola e non ha detto «Ultima!» (prima il bot ignorava la dimenticanza e giocava il proprio turno, chiudendo la finestra e facendo scampare la penalità). Il bot usa solo dati pubblici.
+
 ## [0.24.1] - 2026-11-20
 
 ### Corretto

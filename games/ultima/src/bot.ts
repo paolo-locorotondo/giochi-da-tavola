@@ -3,6 +3,7 @@ import {
   COLORI,
   accetta,
   avanza,
+  beccato,
   eColorata,
   eJolly,
   giocabili,
@@ -32,7 +33,9 @@ export type MossaBot =
   | { tipo: "scegliColore"; colore: Colore }
   | { tipo: "sfida" }
   | { tipo: "accetta" }
-  | { tipo: "ultima" };
+  | { tipo: "ultima" }
+  /** Un altro ha una carta sola e non ha detto «Ultima!»: lo si becca. */
+  | { tipo: "beccato"; bersaglio: number };
 
 /** Sotto questa soglia di carte il prossimo giocatore è «in pericolo» e si cerca di colpirlo. */
 export const POCHE_CARTE = 3;
@@ -84,6 +87,12 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
   // «Ultima!»: chi resta con una carta la dichiara sempre (anche se il turno è di un altro).
   if (p.ultima && p.ultima.posto === posto && !p.ultima.dichiarata) return { tipo: "ultima" };
 
+  // «Beccato!»: dato pubblico (una carta sola, finestra aperta, nessuna dichiarazione).
+  const aperta = p.ultima;
+  if (aperta && !aperta.dichiarata && aperta.posto !== posto && p.mani[aperta.posto - 1]!.length === 1) {
+    return { tipo: "beccato", bersaglio: aperta.posto };
+  }
+
   if (p.turno !== posto) throw new Error("nonTocca");
 
   if (p.sfida) {
@@ -129,5 +138,7 @@ export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, r
       return accetta(p, n, posto, rng);
     case "ultima":
       return ultima(p, posto);
+    case "beccato":
+      return beccato(p, posto, m.bersaglio, rng);
   }
 }

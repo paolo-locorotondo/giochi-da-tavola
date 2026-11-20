@@ -37,7 +37,7 @@ Usa solo ciò che quel giocatore vedrebbe (la sua mano e lo stato pubblico), cos
 3. tiene i Jolly per ultimi; il +4 solo se è lecito (non bluffa);
 4. a parità preferisce il colore di cui ha più carte.
 
-Senza carte giocabili pesca; se la carta pescata si può giocare la gioca. Sceglie come colore quello di cui ha più carte. Sfida un +4 solo se chi l'ha giocato aveva appena pescato, altrimenti lo accetta. Dichiara sempre «Ultima!» appena cala la penultima carta (resta negli eventi): per questo contro il bot non compare «Beccato!».
+Senza carte giocabili pesca; se la carta pescata si può giocare la gioca. Sceglie come colore quello di cui ha più carte. Sfida un +4 solo se chi l'ha giocato aveva appena pescato, altrimenti lo accetta. Becca chi ha una carta sola e non ha detto «Ultima!» (se la finestra è aperta: una mossa per pressione). Dichiara sempre «Ultima!» appena cala la penultima carta (resta negli eventi): per questo contro il bot non compare «Beccato!».
 
 ## Provarlo
 

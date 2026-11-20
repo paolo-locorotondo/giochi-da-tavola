@@ -308,6 +308,34 @@ describe("Ultima! e Beccato! online", () => {
   });
 });
 
+describe("il bot becca chi dimentica «Ultima!»", () => {
+  it("«Simula mossa» per l'avversario becca l'umano che non ha dichiarato", () => {
+    for (let seme = 0; seme < 600; seme++) {
+      let s = avviata(seme, ["Anna", "Bruno"]);
+      for (let i = 0; i < 400 && s.fase === "partita"; i++) {
+        const p = s.partita!;
+        const mano = p.mani[p.turno - 1]!;
+        if (mano.length === 2 && !p.sfida && p.colore !== null) {
+          const v = vistaPer(s, p.turno, false);
+          const c = mano.find((x) => v.giocabili.includes(x.id) && x.tipo === "numero");
+          if (c) {
+            const dopo = applica(s, { tipo: "gioca", chi: p.turno, carta: c.id });
+            if (dopo.partita!.ultima && !dopo.partita!.fine) {
+              const umano = p.turno;
+              const finale = applica(dopo, { tipo: "bot", posto: dopo.partita!.turno });
+              expect(finale.partita!.mani[umano - 1]).toHaveLength(3);
+              expect(finale.partita!.eventi.some((e) => e.tipo === "beccato" && e.posto === umano)).toBe(true);
+              return;
+            }
+          }
+        }
+        s = applica(s, { tipo: "bot", posto: p.ultima && !p.ultima.dichiarata ? p.ultima.posto : p.turno });
+      }
+    }
+    throw new Error("situazione non trovata");
+  });
+});
+
 describe("determinismo", () => {
   it("lo stesso seme dà lo stesso round", () => {
     expect(avviata(33)).toEqual(avviata(33));
