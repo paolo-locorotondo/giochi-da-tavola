@@ -35,6 +35,50 @@
   opacity: 0.6;
 }
 
+/* Scelta dell'ordine dei mini giochi, in cima all'elenco */
+.dl-ordine {
+  clear: both;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.dl-ordine-opzioni {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.4rem;
+}
+
+.dl-ordine .suggerimento {
+  display: block;
+  margin-top: 0.35rem;
+  text-align: left;
+}
+
+/* Frecce per spostare un mini gioco, sopra la sua riga; il numero dice la posizione */
+.dl-sposta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  background: var(--s2);
+  border-bottom: var(--bw) solid var(--bd);
+}
+
+.dl-sposta-pos {
+  flex: 1;
+  font-family: var(--font-titoli);
+  font-weight: 800;
+  font-variant-numeric: lining-nums;
+  color: var(--ac);
+}
+
+.dl-sequenza {
+  margin: 0.2rem 0 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 /* Pannello delle impostazioni: l'accordion dell'app, senza la sua scheda (sta già dentro la riga) */
 .dl-imp.accordion {
   background: transparent;

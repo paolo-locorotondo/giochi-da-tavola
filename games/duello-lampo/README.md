@@ -5,7 +5,7 @@ Sfida di riflessi per **due giocatori sullo stesso telefono**, appoggiato al cen
 ## Regolamento
 
 1. Appoggia il telefono al centro del tavolo: ognuno gioca sulla metà di schermo che ha davanti (quella in alto è girata di 180°).
-2. Per ogni mini gioco scegli quante **mani** (round) giocare di fila, da 0 a 9; con 0 non si usa. Poi tocca «Inizia la sfida».
+2. Per ogni mini gioco scegli quante **mani** (round) giocare di fila, da 0 a 9; con 0 non si usa. Scegli l'**ordine** dei mini giochi (a caso, oppure il tuo). Poi tocca «Inizia la sfida».
 3. Prima di ogni round si legge la regola e ognuno tocca «Sono pronto»; parte il conto alla rovescia 3, 2, 1.
 4. Il mini gioco assegna 1 punto a chi lo vince; se è pari nessuno prende punti.
 5. Ogni metà dello schermo mostra il **punteggio** del suo giocatore. Vince chi ha più punti alla fine. Se sono pari si gioca uno spareggio con un mini gioco scelto a caso tra quelli della sfida, finché qualcuno è avanti.
@@ -24,6 +24,15 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. Ogni secondo **cambiano 3 animali** a caso; a un certo punto uno di quelli che cambiano è un panda: vince chi lo tocca per primo. Gli altri animali continuano a cambiare anche dopo, così non si capisce dal fermo che è uscito. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
 | **Trova lo smile** | Come Trova il panda, ma con faccine tristi colorate e girate: vince chi tocca per primo l'unica faccina che sorride. |
 | **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
+
+### Ordine dei mini giochi
+
+Sopra l'elenco dei mini giochi c'è la scelta **«Ordine dei mini giochi»**:
+
+- **A caso** (di base): a ogni sfida, e a ogni **rivincita**, i mini giochi escono in un ordine nuovo. Le mani di ogni mini gioco restano **di fila** (per esempio Stop ×3, poi Via! ×2, poi Panda ×2). Sotto il totale compare «Ordine casuale, nuovo a ogni sfida».
+- **Il mio ordine**: ogni mini gioco ha una striscia con la posizione e le frecce ▲▼ per spostarlo su e giù; escono in quell'ordine, con le loro mani di fila. Sotto il totale si legge la sequenza («Stop al centro ×3 · Via! ×2»).
+
+L'ordine scelto con le frecce resta salvato sul telefono insieme alle altre scelte, anche se poi si torna ad «A caso»: rimettendo «Il mio ordine» lo si ritrova. Con una prima apertura l'ordine è «A caso». Un mini gioco aggiunto in seguito va in fondo all'elenco. Lo spareggio non dipende dall'ordine: è un mini gioco a caso tra quelli con almeno una mano.
 
 ### Impostazioni
 
@@ -75,7 +84,8 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 
 - **Su un telefono vero** (i test automatici non provano il doppio tocco): ognuno con un dito sulla sua metà, insieme. Verifica che i due tocchi simultanei arrivino entrambi, anche in «Raffica».
 - Il punteggio grande in ogni metà è quello del giocatore di quella metà e sale a ogni punto.
-- Con le mani scelte (es. Via! 2, Stop al centro 3) i round escono di fila in quest'ordine: prima le mani del primo mini gioco dell'elenco, poi quelle del secondo, ecc.
+- Con le mani scelte (es. Via! 2, Stop al centro 3) i round escono di fila, un mini gioco alla volta: con «Il mio ordine» nell'ordine dell'elenco, con «A caso» in un ordine nuovo a ogni sfida e a ogni rivincita.
+- Le frecce ▲▼ spostano un mini gioco di un posto, il fuoco resta sulla freccia usata (si può spostare più volte di fila); il primo non sale e l'ultimo non scende.
 - La metà in alto si legge dritta da chi sta di fronte; nessuno scorrimento né zoom durante la sfida; lo schermo resta acceso.
 - **Via!**: toccare prima del verde dà il punto all'altro; il tempo mostrato è plausibile (200–400 ms); con due tocchi quasi insieme vince chi è davvero primo.
 - **Raffica**: i tocchi si contano uno per uno e il round si chiude da solo dopo 5 secondi.
@@ -94,7 +104,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Struttura
 
-- `src/logica.ts`: la partita (scaletta con le mani di ogni mini gioco di fila, punti, spareggio), pura e testata.
+- `src/logica.ts`: la partita (scaletta con le mani di ogni mini gioco di fila, ordine a caso o scelto, punti, spareggio), pura e testata.
 - `src/minigiochi/`: un file per mini gioco con le sole regole (`prepara`, `vincitore`, `durataMassima`), e `index.ts` con il **registro**. `trova.ts` è un modulo comune: Trova il panda e Trova lo smile sono due sue configurazioni (bersaglio e figure).
 - `src/ui/minigiochi/`: la vista React di ogni mini gioco e il suo registro `VISTE`.
 - `src/ui/Preparazione.tsx` (nomi e mani di ogni mini gioco), `Partita.tsx` (schermo diviso, round, esito, fine), `DuelloLampoApp.tsx`.

@@ -62,7 +62,7 @@ export const lento: MiniGioco<ConfigLento, RisultatoLento> = {
 
 ### 2. Il registro delle regole
 
-In `src/minigiochi/index.ts` aggiungi `lento` all'elenco `MINIGIOCHI`. **L'ordine dell'elenco è l'ordine in cui escono i mini giochi in partita** (tutte le mani di uno, poi quelle del successivo). Scelta, scaletta e salvataggio usano il registro da soli.
+In `src/minigiochi/index.ts` aggiungi `lento` all'elenco `MINIGIOCHI`. **L'ordine dell'elenco è l'ordine di partenza** di «Il mio ordine» (con «A caso» l'ordine cambia a ogni sfida); un mini gioco nuovo va in fondo anche nelle scelte già salvate. Scelta, scaletta e salvataggio usano il registro da soli.
 
 ### 3. I test
 

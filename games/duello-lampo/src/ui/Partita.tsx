@@ -71,7 +71,7 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
 
   const [rng] = useState(() => creaRng(Math.floor(Math.random() * 2 ** 32)));
   const [{ partita, config }, setStato] = useState(() => {
-    const p = nuovaPartita(sfida);
+    const p = nuovaPartita(sfida, rng);
     return { partita: p, config: preparaRound(p, rng) };
   });
   const [fase, setFase] = useState<Fase>("regola");
@@ -165,7 +165,8 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
   };
 
   const rivincita = () => {
-    const p = nuovaPartita(sfida);
+    // Con l'ordine casuale la rivincita ha un ordine nuovo.
+    const p = nuovaPartita(sfida, rng);
     setStato({ partita: p, config: preparaRound(p, rng) });
     setPronti([false, false]);
     setEsito(null);

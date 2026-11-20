@@ -13,6 +13,7 @@ import {
   totaleRound,
   vincitorePartita,
   erroriRound,
+  ordineCompleto,
 } from "./logica";
 import { ID_MINIGIOCHI, MINIGIOCHI, NESSUNO, miniGioco, sceltePermesse, tuttiBase, valoriBase, valoriCompleti } from "./minigiochi";
 import { ATTESA_MIN_MS, ATTESE_MAX_S, via } from "./minigiochi/via";
@@ -673,5 +674,55 @@ describe("impostazioni dei mini giochi", () => {
     expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4, errori: false });
     expect(Object.keys(p.impostazioni).sort()).toEqual([...ID_MINIGIOCHI].sort());
     expect(nuovaPartita({ mani: { via: 1 } }).impostazioni.raffica).toEqual({ durata: 5 });
+  });
+});
+
+describe("ordine dei mini giochi", () => {
+  const mani = { via: 2, raffica: 1, stop: 3 };
+  /** I mini giochi nell'ordine in cui escono (un nome per blocco di mani). */
+  const blocchi = (scaletta: readonly string[]) => scaletta.filter((id, i) => id !== scaletta[i - 1]);
+
+  it("ordineCompleto tiene l'ordine dato, scarta voci sconosciute e doppie, mette in fondo le mancanti", () => {
+    expect(ordineCompleto(["stop", "via"])).toEqual(["stop", "via", ...ID_MINIGIOCHI.filter((id) => id !== "stop" && id !== "via")]);
+    expect(ordineCompleto(["stop", "boh", "stop", 3])).toEqual(["stop", ...ID_MINIGIOCHI.filter((id) => id !== "stop")]);
+    expect(ordineCompleto(undefined)).toEqual([...ID_MINIGIOCHI]);
+    expect(ordineCompleto("x")).toEqual([...ID_MINIGIOCHI]);
+  });
+
+  it("«il mio ordine» rispetta l'elenco, con le mani di fila", () => {
+    const p = nuovaPartita({ mani, ordine: "mio", elenco: ["stop", "via", "raffica"] });
+    expect(p.scaletta).toEqual(["stop", "stop", "stop", "via", "via", "raffica"]);
+  });
+
+  it("senza ordine né elenco resta quello del registro (compatibile con le sfide di prima)", () => {
+    expect(nuovaPartita({ mani }).scaletta).toEqual(["via", "via", "raffica", "stop", "stop", "stop"]);
+  });
+
+  it("«a caso»: le mani restano di fila, ci sono tutti i mini giochi scelti, e l'ordine cambia con il seme", () => {
+    const ordini = new Set<string>();
+    for (let seme = 0; seme < 200; seme++) {
+      const p = nuovaPartita({ mani, ordine: "caso" }, creaRng(seme));
+      expect(p.scaletta).toHaveLength(6);
+      const b = blocchi(p.scaletta);
+      // Ogni mini gioco forma un solo blocco di fila.
+      expect([...b].sort()).toEqual(["raffica", "stop", "via"]);
+      for (const id of b) expect(p.scaletta.filter((x) => x === id)).toHaveLength(mani[id as keyof typeof mani]);
+      ordini.add(b.join(","));
+    }
+    // Tre mini giochi: con molti semi escono tutti e sei gli ordini possibili.
+    expect(ordini.size).toBe(6);
+  });
+
+  it("«a caso» è riproducibile con lo stesso seme (la rivincita ne usa uno nuovo)", () => {
+    const a = nuovaPartita({ mani, ordine: "caso" }, creaRng(42)).scaletta;
+    expect(nuovaPartita({ mani, ordine: "caso" }, creaRng(42)).scaletta).toEqual(a);
+    const r = creaRng(7);
+    const prima = nuovaPartita({ mani, ordine: "caso" }, r).scaletta;
+    const rivincite = Array.from({ length: 20 }, () => nuovaPartita({ mani, ordine: "caso" }, r).scaletta.join());
+    expect(rivincite.some((x) => x !== prima.join())).toBe(true);
+  });
+
+  it("«a caso» senza generatore dà errore", () => {
+    expect(() => nuovaPartita({ mani, ordine: "caso" })).toThrow();
   });
 });

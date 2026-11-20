@@ -9,6 +9,16 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.22.0] - 2026-11-20
+
+### Aggiunto
+
+- Duello Lampo: **ordine dei mini giochi**. Di base è «A caso»: a ogni sfida e a ogni rivincita i mini giochi escono in un ordine nuovo, con le mani di ognuno di fila (come nel Reactor). Con «Il mio ordine» si spostano i mini giochi con le frecce ▲▼ e escono in quell'ordine. L'ordine scelto resta salvato sul telefono. Sotto il totale dei round si legge la sequenza (o «Ordine casuale»).
+
+### Modificato
+
+- Duello Lampo: prima i mini giochi uscivano sempre nell'ordine dell'elenco; ora di base l'ordine è casuale (per ritrovare il vecchio comportamento: «Il mio ordine»).
+
 ## [0.21.0] - 2026-11-20
 
 ### Aggiunto

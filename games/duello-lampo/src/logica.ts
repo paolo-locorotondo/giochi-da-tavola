@@ -21,9 +21,19 @@ export type Mani = Readonly<Record<string, number>>;
 /** Le impostazioni scelte per ogni mini gioco (per `id`, poi per chiave); quelle assenti valgono la base. */
 export type ImpostazioniSfida = Readonly<Record<string, Partial<Record<string, unknown>>>>;
 
+/**
+ * In che ordine escono i mini giochi: `caso` = a ogni partita (e a ogni rivincita) un ordine nuovo;
+ * `mio` = quello dell'elenco `elenco`. In entrambi i casi le mani di un mini gioco restano di fila.
+ */
+export type Ordine = "caso" | "mio";
+
 export interface Sfida {
   mani: Mani;
   impostazioni?: ImpostazioniSfida;
+  /** Predefinito `mio` (l'ordine dell'elenco, o quello del registro se manca). */
+  ordine?: Ordine;
+  /** I mini giochi nell'ordine voluto; vale con `ordine: "mio"`. Le voci mancanti vanno in fondo. */
+  elenco?: readonly string[];
 }
 
 export interface Partita {
@@ -45,19 +55,41 @@ export interface Partita {
 export const totaleRound = (mani: Mani): number => ID_MINIGIOCHI.reduce((s, id) => s + (mani[id] ?? 0), 0);
 
 /**
- * L'ordine dei round: i mini giochi nell'ordine del registro, ognuno per le sue mani **di fila**
- * (es. Via! due volte, poi Stop al centro tre volte).
+ * Un elenco di mini giochi completo e senza doppioni: tiene le voci valide nell'ordine dato e mette
+ * in fondo quelle che mancano (un mini gioco aggiunto dopo il salvataggio). Ignora le voci sconosciute.
  */
-export function creaScaletta(mani: Mani): string[] {
-  return ID_MINIGIOCHI.flatMap((id) => Array<string>(mani[id] ?? 0).fill(id));
+export function ordineCompleto(elenco: unknown): string[] {
+  const dati = Array.isArray(elenco) ? elenco : [];
+  const visti = new Set<string>();
+  for (const id of dati) if (typeof id === "string" && ID_MINIGIOCHI.includes(id)) visti.add(id);
+  return [...visti, ...ID_MINIGIOCHI.filter((id) => !visti.has(id))];
 }
 
-/** Controlla la scelta (può venire da un salvataggio vecchio) e prepara la partita. */
-export function nuovaPartita(sfida: Sfida): Partita {
+/**
+ * L'ordine dei round: i mini giochi nell'ordine di `elenco` (di base quello del registro), ognuno
+ * per le sue mani **di fila** (es. Via! due volte, poi Stop al centro tre volte).
+ */
+export function creaScaletta(mani: Mani, elenco: readonly string[] = ID_MINIGIOCHI): string[] {
+  return elenco.flatMap((id) => Array<string>(mani[id] ?? 0).fill(id));
+}
+
+/**
+ * Controlla la scelta (può venire da un salvataggio vecchio) e prepara la partita.
+ * Con `ordine: "caso"` serve `rng`: l'ordine dei mini giochi si estrae qui, quindi ogni partita
+ * (e ogni rivincita) ne ha uno nuovo.
+ */
+export function nuovaPartita(sfida: Sfida, rng?: Rng): Partita {
   const voci = Object.entries(sfida.mani);
   if (voci.some(([id]) => !ID_MINIGIOCHI.includes(id))) throw new ErroreDuello("minigiocoSconosciuto");
   if (voci.some(([, n]) => !Number.isInteger(n) || n < 0 || n > MANI_MAX)) throw new ErroreDuello("roundNonValidi");
-  const scaletta = creaScaletta(sfida.mani);
+  let elenco: readonly string[];
+  if (sfida.ordine === "caso") {
+    if (!rng) throw new Error("nuovaPartita: l'ordine casuale richiede un generatore (rng)");
+    elenco = rng.mescola(ID_MINIGIOCHI);
+  } else {
+    elenco = ordineCompleto(sfida.elenco);
+  }
+  const scaletta = creaScaletta(sfida.mani, elenco);
   if (scaletta.length === 0) throw new ErroreDuello("nessunMinigioco");
   const impostazioni = Object.fromEntries(
     ID_MINIGIOCHI.map((id) => [id, valoriCompleti(miniGioco(id).impostazioni, sfida.impostazioni?.[id])]),

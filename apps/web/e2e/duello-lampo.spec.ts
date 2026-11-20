@@ -79,7 +79,10 @@ test("duello lampo: la scelta si ricorda sul telefono", async ({ page }) => {
 });
 
 test("duello lampo: le mani di un mini gioco escono di fila, nell'ordine dell'elenco", async ({ page }) => {
-  await iniziaCon(page, { via: 1, raffica: 1, stop: 1 });
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { via: 1, raffica: 1, stop: 1 });
+  await page.getByRole("radio", { name: "Il mio ordine" }).check({ force: true });
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
   const titolo = basso(page).getByRole("heading");
   await expect(titolo).toHaveText("Via!");
   await expect(basso(page).locator(".dl-testa")).toContainText("Round 1 di 3");
@@ -432,4 +435,74 @@ test("duello lampo: Trova il panda 6×6 con cambi diversi", async ({ page }) => 
   // Il round si chiude quando hanno risposto tutti e due: in basso si sbaglia.
   await basso(page).locator(".dl-trova-casella:not([data-bersaglio])").first().dispatchEvent("pointerdown");
   await expect(alto(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+});
+
+/** I nomi dei mini giochi nell'ordine in cui sono mostrati nella preparazione. */
+const elencoMostrato = (page: Page) => page.locator(".dl-mg-riga .dl-mg-nome").allTextContents();
+
+test("duello lampo: ordine a caso di base; con «Il mio ordine» si spostano i mini giochi con le frecce", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await expect(page.getByRole("radio", { name: "A caso" })).toBeChecked();
+  await expect(page.locator(".dl-sposta")).toHaveCount(0);
+  await expect(page.locator(".dl-sequenza")).toHaveText("Ordine casuale, nuovo a ogni sfida");
+
+  await page.getByRole("radio", { name: "Il mio ordine" }).check({ force: true });
+  await expect(page.locator(".dl-sposta")).toHaveCount(8);
+  // Il primo non sale e l'ultimo non scende.
+  await expect(page.getByRole("button", { name: "Sposta su Via!" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sposta giù Memoria lampo" })).toBeDisabled();
+
+  // Stop al centro sale di due posti e diventa il primo; il fuoco resta sulla sua freccia.
+  await page.getByRole("button", { name: "Sposta su Stop al centro" }).click();
+  await expect(page.getByRole("button", { name: "Sposta su Stop al centro" })).toBeFocused();
+  await page.getByRole("button", { name: "Sposta su Stop al centro" }).click();
+  expect((await elencoMostrato(page)).slice(0, 3)).toEqual(["Stop al centro", "Via!", "Raffica"]);
+  await expect(page.getByRole("button", { name: "Sposta su Stop al centro" })).toBeDisabled();
+
+  await impostaMani(page, { stop: 3, via: 2 });
+  await expect(page.locator(".dl-sequenza")).toHaveText("Stop al centro ×3 · Via! ×2");
+  await schermata(page, "ordine-mio");
+
+  // L'ordine scelto vale in partita: prima le 3 mani di Stop, poi Via!.
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await expect(basso(page).getByRole("heading")).toHaveText("Stop al centro");
+  await expect(basso(page).locator(".dl-testa")).toContainText("Round 1 di 5");
+});
+
+test("duello lampo: il proprio ordine resta salvato sul telefono", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await page.getByRole("radio", { name: "Il mio ordine" }).check({ force: true });
+  await page.getByRole("button", { name: "Sposta giù Via!" }).click();
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "Il mio ordine" })).toBeChecked();
+  expect((await elencoMostrato(page)).slice(0, 2)).toEqual(["Raffica", "Via!"]);
+  // Tornando a «A caso» la scelta resta (ma l'ordine non si usa): rimettendo «Il mio ordine» lo si ritrova.
+  await page.getByRole("radio", { name: "A caso" }).check({ force: true });
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await page.reload();
+  await expect(page.getByRole("radio", { name: "A caso" })).toBeChecked();
+  await page.getByRole("radio", { name: "Il mio ordine" }).check({ force: true });
+  expect((await elencoMostrato(page)).slice(0, 2)).toEqual(["Raffica", "Via!"]);
+});
+
+test("duello lampo: con l'ordine a caso le mani restano di fila", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { via: 2, colore: 2 });
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  const primo = await basso(page).getByRole("heading").textContent();
+  expect(["Via!", "Colore giusto"]).toContain(primo);
+  // Il secondo round è lo stesso mini gioco del primo (le mani sono di fila).
+  await pronti(page);
+  if (primo === "Via!") {
+    await expect(basso(page).getByRole("button", { name: "Aspetta…" })).toBeVisible({ timeout: 10_000 });
+    await basso(page).getByRole("button", { name: "Aspetta…" }).dispatchEvent("pointerdown");
+  } else {
+    await expect(basso(page).locator(".dl-colore-tasto").first()).toBeVisible({ timeout: 10_000 });
+    await basso(page).locator(".dl-colore-tasto").first().dispatchEvent("pointerdown");
+    await alto(page).locator(".dl-colore-tasto").first().dispatchEvent("pointerdown");
+  }
+  await basso(page).getByRole("button", { name: "Avanti" }).click({ timeout: 10_000 });
+  await expect(basso(page).getByRole("heading")).toHaveText(primo!);
+  await expect(basso(page).locator(".dl-testa")).toContainText("Round 2 di 4");
 });
