@@ -145,6 +145,42 @@ function PannelloImpostazioni({
           }
           const permesse = sceltePermesse(i, valori);
           const aLivelli = NOMI_LIVELLI.has(`${id}:${i.chiave}`);
+          if (i.contatore) {
+            const attuale = Number(valori[i.chiave]);
+            const pos = permesse.indexOf(attuale);
+            const prima = permesse[pos - 1];
+            const dopo = permesse[pos + 1];
+            return (
+              <div key={i.chiave} className="dl-imp-contatore">
+                <span className="dl-imp-etichetta" id={`${idCampo}-titolo`}>
+                  {titolo}
+                </span>
+                <span className="dl-mani" role="group" aria-labelledby={`${idCampo}-titolo`}>
+                  <button
+                    type="button"
+                    className="btn dl-mani-tasto"
+                    aria-label={t("impMeno", { titolo })}
+                    disabled={prima === undefined}
+                    onClick={() => prima !== undefined && onCambia(i.chiave, prima)}
+                  >
+                    <Minus size={20} aria-hidden="true" />
+                  </button>
+                  <output className="dl-mani-numero" aria-live="polite" aria-label={t("impValore", { titolo, n: attuale })}>
+                    {attuale}
+                  </output>
+                  <button
+                    type="button"
+                    className="btn dl-mani-tasto"
+                    aria-label={t("impPiu", { titolo })}
+                    disabled={dopo === undefined}
+                    onClick={() => dopo !== undefined && onCambia(i.chiave, dopo)}
+                  >
+                    <Plus size={20} aria-hidden="true" />
+                  </button>
+                </span>
+              </div>
+            );
+          }
           return (
             <fieldset key={i.chiave} className="dl-imp-scelta">
               <legend className="dl-imp-etichetta">{titolo}</legend>

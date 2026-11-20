@@ -17,40 +17,42 @@ export function NomiVista({ config, inizio, onRisultato }: VistaProps<ConfigNomi
 
   const [passo, setPasso] = useState(0);
   const [esito, setEsito] = useState<RisultatoNomi | null>(null);
-  const giusta = config.indiceGiusta;
+  const giuste = config.giuste;
+  const èGiusta = (i: number) => giuste.includes(i);
   // La parola sullo schermo adesso (il ref è sempre aggiornato, lo stato può essere un attimo indietro).
   const corrente = useRef(0);
-  const tGiusta = useRef<number | null>(null);
+  /** Quando è comparsa la parola sullo schermo adesso: serve se è una delle giuste. */
+  const tComparsa = useRef<number | null>(null);
 
-  // Le parole passano tutte, anche dopo quella giusta: se si fermassero, il fermo direbbe di toccare.
+  // Le parole passano tutte, fino all'ultima: se si fermassero, il fermo direbbe di toccare.
   useEffect(() => {
+    corrente.current = 0;
+    tComparsa.current = performance.now();
     const ora = performance.now() - inizio;
     const ids = config.parole.map((_, i) =>
       window.setTimeout(() => {
         corrente.current = i;
-        if (i === giusta) tGiusta.current = performance.now();
+        tComparsa.current = performance.now();
         setPasso(i);
       }, Math.max(0, i * config.passoMs - ora)),
     );
     return () => ids.forEach((id) => window.clearTimeout(id));
-  }, [config, inizio, giusta]);
+  }, [config, inizio]);
 
-  // Il tempo parte dal fotogramma in cui la parola giusta è stata disegnata.
+  // Il tempo parte dal fotogramma in cui la parola è stata disegnata.
   useEffect(() => {
-    if (passo !== giusta) return;
     const f = requestAnimationFrame(() => {
-      tGiusta.current = performance.now();
+      tComparsa.current = performance.now();
     });
     return () => cancelAnimationFrame(f);
-  }, [passo, giusta]);
+  }, [passo]);
 
   const tocca = (istante: number) => {
     if (esito) return;
-    // Giusto solo mentre la parola che combacia è sullo schermo; prima o dopo è un errore.
-    const r: RisultatoNomi =
-      corrente.current === giusta
-        ? { ms: Math.max(0, Math.round(istante - (tGiusta.current ?? istante))) }
-        : { sbagliato: true };
+    // Giusto solo mentre sullo schermo c'è una parola che combacia; in ogni altro momento è un errore.
+    const r: RisultatoNomi = èGiusta(corrente.current)
+      ? { ms: Math.max(0, Math.round(istante - (tComparsa.current ?? istante))) }
+      : { sbagliato: true };
     setEsito(r);
     rif.current(r);
   };
@@ -73,7 +75,7 @@ export function NomiVista({ config, inizio, onRisultato }: VistaProps<ConfigNomi
           className={`dl-colore-parola dl-c-${p.inchiostro}`}
           data-parola={p.parola}
           data-inchiostro={p.inchiostro}
-          data-giusta={passo === giusta ? "true" : undefined}
+          data-giusta={èGiusta(passo) ? "true" : undefined}
         >
           {t(`c_${p.parola}`)}
         </span>

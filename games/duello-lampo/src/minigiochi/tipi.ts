@@ -30,6 +30,8 @@ export type ImpostazioneMiniGioco =
       formato: "numero" | "secondi" | "griglia";
       /** Massimo che dipende da un'altra impostazione (es. caselle che cambiano ≤ caselle della griglia). */
       massimo?: (valori: ValoriImpostazioni) => number;
+      /** Mostrata come selettore − / + (come le mani) invece che come fila di opzioni. */
+      contatore?: boolean;
     }
   | {
       tipo: "interruttore";

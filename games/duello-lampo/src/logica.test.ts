@@ -20,7 +20,7 @@ import { raffica } from "./minigiochi/raffica";
 import { CICLI_MASSIMI, distanzaDalCentro, posizione, stop } from "./minigiochi/stop";
 import { ATTESA_MAX_MS as ATTESA_MAX_COLORE, ATTESA_MIN_MS as ATTESA_MIN_COLORE, COLORI, NUMERI_COLORI, coloriDa, colore } from "./minigiochi/colore";
 import { ANIMALI, IMPOSTAZIONI_TROVA, LATI, MARGINE_MS, NUMERO_COLORI, PARAMETRI_BASE, PASSI_MAX, PASSI_MIN, PASSI_S, comparsa, creaTrova, grigliaAlPasso, panda, parametriDa, passiDopo, smile } from "./minigiochi/trova";
-import { PAROLE_DOPO, PASSI_S as PASSI_NOMI_S, PRIMA_MAX, PRIMA_MIN, comparsaGiusta, nomi } from "./minigiochi/nomi";
+import { GIUSTE_BASE, PAROLE_BASE, PAROLE_MAX, PAROLE_MIN, PASSI_S as PASSI_NOMI_S, comparsaGiusta, nomi } from "./minigiochi/nomi";
 import { CASELLE as CASELLE_MEM_BASE, CASELLE_SCELTE, LUNGHEZZE, LUNGHEZZA as LUNGHEZZA_MEMORIA, colonne, fineDimostrazione, memoria } from "./minigiochi/memoria";
 import { DURATE_S } from "./minigiochi/raffica";
 import { PERIODI, VELOCITA } from "./minigiochi/stop";
@@ -452,23 +452,54 @@ describe("Trova il panda e Trova lo smile", () => {
 });
 
 describe("Colori e nomi", () => {
-  it("una sola parola combacia, non è mai la prima e dopo ne passano altre; mai la stessa parola di fila", () => {
-    for (let seme = 0; seme < 300; seme++) {
-      const c = nomi.prepara(creaRng(seme), base(nomi));
-      expect(c.indiceGiusta).toBeGreaterThanOrEqual(PRIMA_MIN);
-      expect(c.indiceGiusta).toBeLessThanOrEqual(PRIMA_MAX);
-      expect(c.parole).toHaveLength(c.indiceGiusta + 1 + PAROLE_DOPO);
-      c.parole.forEach((p, i) => {
-        expect(p.parola === p.inchiostro).toBe(i === c.indiceGiusta);
-        if (i > 0) expect(p.parola).not.toBe(c.parole[i - 1]?.parola);
-      });
-      expect(comparsaGiusta(c)).toBe(c.indiceGiusta * c.passoMs);
-      // Il round dura fino all'ultima parola: dopo quella giusta lo scorrimento continua.
-      expect(nomi.durataMassima(c)).toBeGreaterThanOrEqual(c.parole.length * c.passoMs);
+  const conImp = (v: Record<string, unknown>) => valoriCompleti(nomi.impostazioni, v);
+  const controlla = (c: ReturnType<typeof nomi.prepara>, totale: number, quante: number) => {
+    expect(c.parole).toHaveLength(totale);
+    expect(c.giuste).toHaveLength(quante);
+    expect([...c.giuste]).toEqual([...c.giuste].sort((x, y) => x - y));
+    expect(new Set(c.giuste).size).toBe(quante);
+    c.parole.forEach((p, i) => {
+      expect(p.parola === p.inchiostro).toBe(c.giuste.includes(i));
+      if (i > 0) expect(p.parola).not.toBe(c.parole[i - 1]?.parola);
+    });
+    // Il round dura fino all'ultima parola: lo scorrimento non si ferma su quella giusta.
+    expect(nomi.durataMassima(c)).toBeGreaterThanOrEqual(c.parole.length * c.passoMs);
+  };
+
+  it("di base: 6 parole, una che combacia", () => {
+    for (let seme = 0; seme < 100; seme++) controlla(nomi.prepara(creaRng(seme), base(nomi)), PAROLE_BASE, GIUSTE_BASE);
+  });
+
+  it("per ogni numero di parole e di parole giuste ammesso, il round è coerente", () => {
+    for (let totale = PAROLE_MIN; totale <= PAROLE_MAX; totale++) {
+      for (let quante = 1; quante < totale; quante++) {
+        for (let seme = 0; seme < 10; seme++) controlla(nomi.prepara(creaRng(seme * 97 + totale), conImp({ parole: totale, giuste: quante })), totale, quante);
+      }
     }
   });
+
+  it("la posizione della parola giusta è casuale, dalla prima all'ultima, e non sempre seguita dallo stesso numero di parole", () => {
+    const posizioni = new Set<number>();
+    for (let seme = 0; seme < 500; seme++) posizioni.add(nomi.prepara(creaRng(seme), conImp({ parole: 10, giuste: 1 })).giuste[0]!);
+    expect([...posizioni].sort((x, y) => x - y)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  });
+
+  it("le parole giuste non possono essere tutte: al massimo il totale meno una", () => {
+    expect(conImp({ parole: 10, giuste: 9 }).giuste).toBe(9);
+    expect(conImp({ parole: 4, giuste: 9 }).giuste).toBe(3);
+    expect(conImp({ parole: 2, giuste: 5 }).giuste).toBe(1);
+    const imp = nomi.impostazioni!.find((i) => i.chiave === "giuste")!;
+    if (imp.tipo !== "scelta") throw new Error("giuste dovrebbe essere una scelta");
+    expect(Math.max(...sceltePermesse(imp, conImp({ parole: 7 })))).toBe(6);
+  });
+
+  it("la prima comparsa giusta è alla prima posizione giusta", () => {
+    const c = nomi.prepara(creaRng(3), conImp({ parole: 8, giuste: 3 }));
+    expect(comparsaGiusta(c)).toBe(c.giuste[0]! * c.passoMs);
+  });
+
   const c = nomi.prepara(creaRng(5), base(nomi));
-  it("vince chi tocca prima sulla parola giusta; chi tocca quando non combacia perde", () => {
+  it("vince chi tocca prima su una parola giusta; chi tocca quando non combacia perde", () => {
     expect(nomi.chiudeAlPrimo).toBe(true);
     expect(nomi.vincitore(c, [{ ms: 300 }, { ms: 400 }])).toBe(0);
     expect(nomi.vincitore(c, [{ sbagliato: true }, { ms: 900 }])).toBe(1);
@@ -524,7 +555,7 @@ describe("impostazioni dei mini giochi", () => {
     expect(valoriBase(raffica.impostazioni)).toEqual({ durata: 5 });
     expect(valoriBase(stop.impostazioni)).toEqual({ velocita: 2 });
     expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4, errori: false });
-    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, errori: false });
+    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, parole: 6, giuste: 1, errori: false });
     expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false, errori: false });
     expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
   });
@@ -573,7 +604,7 @@ describe("impostazioni dei mini giochi", () => {
     for (const secondi of PASSI_NOMI_S) {
       const c = nomi.prepara(creaRng(2), valoriCompleti(nomi.impostazioni, { passo: secondi }));
       expect(c.passoMs).toBe(Math.round(secondi * 1000));
-      expect(comparsaGiusta(c)).toBe(c.indiceGiusta * c.passoMs);
+      expect(comparsaGiusta(c)).toBe(c.giuste[0]! * c.passoMs);
     }
   });
 

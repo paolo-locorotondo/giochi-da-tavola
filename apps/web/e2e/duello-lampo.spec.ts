@@ -38,12 +38,12 @@ const punti = (page: Page, lato: "basso" | "alto") => page.locator(`.dl-meta--${
 test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page }) => {
   await page.goto("/duello-lampo");
   // Predefinito: 2 mani per mini gioco.
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
   await expect(page.locator(".dl-totale")).toHaveText("In tutto 16 round");
   await schermata(page, "preparazione");
 
   await impostaMani(page, { via: 2, stop: 3 });
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0", "0", "0"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0", "0", "0"]);
   await expect(page.locator(".dl-totale")).toHaveText("In tutto 5 round");
   await expect(page.getByRole("button", { name: "Una mano in meno di Raffica" })).toBeDisabled();
 
@@ -53,7 +53,7 @@ test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page 
     if (await piu.isEnabled()) await piu.click();
   }
   await expect(page.getByRole("button", { name: "Una mano in più di Via!" })).toBeDisabled();
-  await expect(page.locator(".dl-mani output").first()).toHaveText("9");
+  await expect(page.locator(".dl-mg-voce .dl-mani output").first()).toHaveText("9");
 
   // Con tutto a zero non si parte.
   await impostaMani(page, {});
@@ -61,7 +61,7 @@ test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page 
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Tutti" }).click();
-  await expect(page.locator(".dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
   await page.getByRole("button", { name: "A caso" }).click();
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeEnabled();
 });
@@ -75,7 +75,7 @@ test("duello lampo: la scelta si ricorda sul telefono", async ({ page }) => {
   await expect(basso(page).locator(".dl-punti-nome")).toHaveText("Anna");
   await page.reload();
   await expect(page.getByLabel("Chi sta in basso")).toHaveValue("Anna");
-  await expect(page.locator(".dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0", "0", "0"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0", "0", "0"]);
 });
 
 test("duello lampo: le mani di un mini gioco escono di fila, nell'ordine dell'elenco", async ({ page }) => {
@@ -244,41 +244,62 @@ for (const [id, nome, attesa] of [
   });
 }
 
+/** Le parole di «Colori e nomi» nella metà in basso: quella sullo schermo e se combacia. */
+const parolaNomi = (page: Page) => basso(page).locator(".dl-nomi .dl-colore-parola");
+
+/** Apre il pannello di «Colori e nomi» e imposta parole e parole giuste con i selettori − / +. */
+async function impostaNomi(page: Page, parole: number, giuste: number) {
+  const pann = page.locator(".dl-mg-riga", { hasText: "Colori e nomi" }).locator("details.dl-imp");
+  if (!(await pann.evaluate((d) => (d as HTMLDetailsElement).open))) await pann.locator("summary").click();
+  for (const [titolo, voluto] of [["Parole nel round", parole], ["Parole che combaciano", giuste]] as const) {
+    const numero = pann.getByRole("group", { name: titolo }).locator("output");
+    while (Number(await numero.textContent()) > voluto) await pann.getByRole("button", { name: `Diminuisci: ${titolo}` }).click();
+    while (Number(await numero.textContent()) < voluto) await pann.getByRole("button", { name: `Aumenta: ${titolo}` }).click();
+  }
+}
+
+test("duello lampo: Colori e nomi, impostazioni di parole e parole che combaciano", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaNomi(page, 2, 1);
+  const pann = page.locator(".dl-mg-riga", { hasText: "Colori e nomi" }).locator("details.dl-imp");
+  // Con 2 parole ne può combaciare al massimo una.
+  await expect(pann.getByRole("button", { name: "Aumenta: Parole che combaciano" })).toBeDisabled();
+  await expect(pann.getByRole("button", { name: "Diminuisci: Parole nel round" })).toBeDisabled();
+  await impostaNomi(page, 10, 9);
+  await expect(pann.getByRole("button", { name: "Aumenta: Parole nel round" })).toBeDisabled();
+  await expect(pann.getByRole("button", { name: "Aumenta: Parole che combaciano" })).toBeDisabled();
+  // Riducendo le parole, quelle giuste scendono da sole al massimo possibile.
+  await impostaNomi(page, 4, 3);
+  await expect(pann.getByRole("group", { name: "Parole che combaciano" }).locator("output")).toHaveText("3");
+  await schermata(page, "impostazioni-nomi");
+});
+
 test("duello lampo: Colori e nomi, chi tocca quando non combaciano perde", async ({ page }) => {
-  await iniziaCon(page, { nomi: 1 });
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { nomi: 1 });
+  await impostaNomi(page, 6, 1);
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
   await expect(basso(page).getByRole("heading", { name: "Colori e nomi" })).toBeVisible();
   await pronti(page);
-  const parola = basso(page).locator(".dl-nomi .dl-colore-parola");
-  await expect(parola).toBeVisible({ timeout: 10_000 });
-  // La prima parola non combacia mai: in alto si tocca subito e si perde.
-  await expect(parola).not.toHaveAttribute("data-giusta", "true");
-  expect(await parola.getAttribute("data-parola")).not.toBe(await parola.getAttribute("data-inchiostro"));
-  await schermata(page, "nomi");
+  // In alto si tocca su una parola che non combacia (con 6 parole e 1 giusta ce n'è sempre una).
+  const sbagliata = alto(page).locator(".dl-nomi .dl-colore-parola:not([data-giusta])");
+  await expect(sbagliata).toBeVisible({ timeout: 15_000 });
+  await schermata(page, "nomi", { maschera: [".dl-colore-parola"] });
   await alto(page).locator(".dl-nomi").dispatchEvent("pointerdown");
   await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: sbagliato");
 });
 
-test("duello lampo: Colori e nomi, dopo la parola giusta lo scorrimento continua", async ({ page }) => {
-  await iniziaCon(page, { nomi: 1 });
+test("duello lampo: Colori e nomi, vince chi tocca mentre la parola combacia, e lo scorrimento non si ferma", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { nomi: 1 });
+  await impostaNomi(page, 8, 2);
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
   await pronti(page);
-  const giusta = basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]');
-  await expect(giusta).toBeVisible({ timeout: 15_000 });
-  expect(await giusta.getAttribute("data-parola")).toBe(await giusta.getAttribute("data-inchiostro"));
-  // Dopo la parola giusta le parole continuano a cambiare: lo scorrimento non si ferma.
-  const parola = basso(page).locator(".dl-nomi .dl-colore-parola");
-  await expect(parola).not.toHaveAttribute("data-giusta", "true", { timeout: 3_000 });
-  await expect(parola).toBeVisible();
-  // Chi tocca adesso, quando non combaciano più, sbaglia; chi non tocca no.
-  await basso(page).locator(".dl-nomi").dispatchEvent("pointerdown");
-  await expect(alto(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
-  await expect(alto(page).locator(".dl-dettagli")).toContainText("Giocatore 1: sbagliato");
-});
-
-test("duello lampo: Colori e nomi, vince chi tocca mentre la parola combacia", async ({ page }) => {
-  await iniziaCon(page, { nomi: 1 });
-  await pronti(page);
-  const giusta = basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]');
-  await expect(giusta).toBeVisible({ timeout: 15_000 });
+  const parola = parolaNomi(page);
+  // Durante il round compaiono parole che combaciano e parole che no, in un ordine che cambia.
+  await expect(basso(page).locator('.dl-nomi .dl-colore-parola[data-giusta="true"]')).toBeVisible({ timeout: 15_000 });
+  expect(await parola.getAttribute("data-parola")).toBe(await parola.getAttribute("data-inchiostro"));
   await basso(page).locator(".dl-nomi").dispatchEvent("pointerdown");
   await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
   await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: nessun tocco");

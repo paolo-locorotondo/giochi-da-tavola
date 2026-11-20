@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.21.0] - 2026-11-20
+
+### Aggiunto
+
+- Duello Lampo, Colori e nomi: impostazioni **«Parole nel round»** (da 2 a 10, base 6) e **«Parole che combaciano»** (da 1 al totale meno una, base 1), con selettore − / + come le mani. Le parole che combaciano escono in posizioni casuali (anche la prima o l'ultima): prima dopo quella giusta ne passavano sempre 3, e si poteva prevedere la fine.
+
 ## [0.20.0] - 2026-11-19
 
 ### Aggiunto

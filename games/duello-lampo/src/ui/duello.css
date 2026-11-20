@@ -97,6 +97,14 @@
   font-variant-numeric: lining-nums;
 }
 
+/* Impostazione numerica con selettore − / +: titolo a sinistra, selettore a destra */
+.dl-imp-contatore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .dl-imp-interruttore {
   display: flex;
   align-items: flex-start;
