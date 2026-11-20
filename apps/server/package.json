@@ -14,7 +14,8 @@
     "@gdt/impostore": "workspace:*",
     "@gdt/tic-tac-toe": "workspace:*",
     "ws": "^8.18.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "@gdt/ultima": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

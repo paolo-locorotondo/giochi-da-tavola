@@ -11,6 +11,14 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
+## [0.24.0] - 2026-11-20
+
+### Aggiunto
+
+- **Ultima!**: nuovo gioco di carte a colori e numeri (regole ufficiali: mazzo da 108 carte, Salta, Inverti, +2, Jolly e Jolly +4 con sfida, «Ultima!» e «Beccato!»), da 2 a 10 giocatori, **solo online** perché la mano è segreta. Alla creazione si sceglie un solo round o una partita a punti (di base fino a 500). L'organizzatore ha «Sollecita» e «Simula mossa col bot»: il bot fa una sola mossa per il giocatore di turno usando solo ciò che quel giocatore vedrebbe. Le carte altrui non passano mai sulla rete. Indirizzo `/ultima` e `/ultima/CODICE`; testi in italiano e inglese.
+- Home: nuova icona del mazzo con il «1»; i giochi solo online non mostrano il badge «offline».
+- Test: logica, bot (partite intere giocate dai bot), modulo online, server e e2e con tre telefoni.
+
 ## [0.23.1] - 2026-11-20
 
 ### Corretto

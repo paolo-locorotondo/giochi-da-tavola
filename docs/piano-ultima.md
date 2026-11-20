@@ -1,6 +1,6 @@
 # Piano di lavoro — «Ultima!» (gioco di carte in stile UNO)
 
-Stato: **piano rivisto con le decisioni dell'utente (2026-11-19)**, da approvare prima di partire. Origine: TODO in `docs/decisioni.md`.
+Stato: **realizzato nella 0.24.0 (2026-11-20)**; piano approvato dall'utente. Scelte prese in corso d'opera: vedi «Scelte di regola» nel README del gioco. Origine: TODO in `docs/decisioni.md`.
 
 Una sola versione: **online, ognuno col suo telefono** (la mano è segreta, con un solo telefono non avrebbe senso).
 

@@ -16,6 +16,7 @@ segrete (una parola, un ruolo), guida le fasi del gioco e raccoglie le scelte qu
 | **Tabù**: due squadre, timer, parole vietate | Un telefono | [Leggi la guida](games/tabu/README.md) |
 | **Dadi**: moneta, D4…D20 e dado con i valori che vuoi | Un telefono | [Leggi la guida](games/dadi/README.md) |
 | **Tris**: tre in fila, contro il telefono o in due | Un telefono e ognuno col suo telefono (anche partita veloce) | [Leggi la guida](games/tic-tac-toe/README.md) |
+| **Ultima!**: gioco di carte a colori e numeri, da 2 a 10, con bot su richiesta | Solo ognuno col suo telefono | [Leggi la guida](games/ultima/README.md) |
 | **Duello Lampo**: mini giochi di riflessi per due, telefono al centro del tavolo | Un telefono | [Leggi la guida](games/duello-lampo/README.md) |
 
 Due modi di giocare: **un solo telefono** (il telefono passa di mano, nessuna rete) oppure

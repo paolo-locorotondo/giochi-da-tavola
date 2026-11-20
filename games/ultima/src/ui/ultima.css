@@ -1,0 +1,305 @@
+/* Ultima!: solo token del tema, nessun colore scritto a mano */
+
+.ul-tavolo {
+  gap: 1rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.ul-stato {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-titoli);
+  font-size: 1.25rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Carte */
+.ul-carta {
+  --ul-col: var(--fg);
+  flex: none;
+  width: 4.5rem;
+  height: 6.5rem;
+  min-width: 0;
+  padding: 0.35rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  align-items: center;
+  font: inherit;
+  font-family: var(--font-titoli);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ul-col);
+  background: var(--s1);
+  border: 3px solid var(--ul-col);
+  border-radius: var(--r);
+  touch-action: manipulation;
+}
+
+button.ul-carta {
+  cursor: pointer;
+  transition: transform var(--durata-tocco, 120ms);
+}
+
+button.ul-carta:active:not([aria-disabled="true"]) {
+  transform: translateY(2px);
+}
+
+button.ul-carta:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.ul-rosso { --ul-col: var(--c-rosso); }
+.ul-giallo { --ul-col: var(--c-giallo); }
+.ul-verde { --ul-col: var(--c-verde); }
+.ul-blu { --ul-col: var(--c-blu); }
+.ul-jolly { --ul-col: var(--fg); }
+
+.ul-valore {
+  display: grid;
+  place-items: center;
+  min-height: 1.5rem;
+}
+
+.ul-nome {
+  font-family: var(--font-testo);
+  font-size: 0.65rem;
+  font-weight: 700;
+  min-height: 0.8rem;
+}
+
+.ul-spenta {
+  opacity: 0.5;
+}
+
+.ul-grande {
+  width: 6rem;
+  height: 8.5rem;
+  font-size: 2.2rem;
+}
+
+.ul-grande .ul-nome {
+  font-size: 0.8rem;
+}
+
+/* Centro del tavolo: scarto, mazzo, colore */
+.ul-centro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.ul-mazzo {
+  width: 6rem;
+  height: 8.5rem;
+  display: grid;
+  place-content: center;
+  gap: 0.25rem;
+  justify-items: center;
+  font: inherit;
+  font-weight: 700;
+  color: var(--on-ac);
+  background: var(--ac);
+  border: 3px solid var(--ac);
+  border-radius: var(--r);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.ul-mazzo:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ul-mazzo:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.ul-info {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.ul-colore-corso {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+  color: var(--ul-col);
+  background: var(--s2);
+  border: 2px solid var(--ul-col);
+  border-radius: 999px;
+}
+
+/* Giocatori */
+.ul-giocatori {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.ul-giocatore {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.ul-giocatore.ul-turno {
+  border: 2px solid var(--ac);
+}
+
+.ul-giocatore-nome {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ul-giocatore-dati {
+  font-size: 0.85rem;
+  color: var(--mu);
+}
+
+.ul-giocatore .btn {
+  min-height: 44px;
+  padding: 0.5rem 0.7rem;
+}
+
+/* Azioni principali */
+.ul-azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.ul-azioni .primario {
+  grid-column: 1 / -1;
+}
+
+.ul-avviso {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+}
+
+.ul-avviso h3,
+.ul-avviso p {
+  margin: 0;
+}
+
+/* Mano: scorre in orizzontale; le carte sono sempre bersagli grandi */
+.ul-mano {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.6rem 0.2rem 0.8rem;
+  scroll-snap-type: x proximity;
+}
+
+.ul-mano > * {
+  scroll-snap-align: start;
+}
+
+.ul-colori {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+
+.ul-colori .btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 56px;
+  font-weight: 700;
+  color: var(--ul-col);
+  border: 3px solid var(--ul-col);
+}
+
+.ul-eventi {
+  margin: 0;
+  padding: 0 0 0 1.2rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* Classifica */
+.ul-classifica {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ul-classifica li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.ul-classifica li.ul-vincitore {
+  border: 2px solid var(--ac);
+}
+
+.ul-nomi-crea {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ul-riga-nome {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.ul-opzione {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 56px;
+  padding: 0.6rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+}
+
+.ul-opzione:has(input:checked) {
+  border: 2px solid var(--ac);
+}
+
+.ul-opzione input {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.ul-carta {
+    transition: none;
+  }
+}

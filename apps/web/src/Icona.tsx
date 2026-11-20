@@ -18,8 +18,16 @@ import {
   WifiOff,
   X,
   Zap,
+  createLucideIcon,
   type LucideIcon,
 } from "lucide-react";
+
+/* Mazzo di carte con il «1» sulla prima carta: distingue Ultima! dagli altri giochi di carte che arriveranno. Stesso tratto delle icone lucide (24×24, 2 px). */
+const Carte = createLucideIcon("carte-con-uno", [
+  ["rect", { x: 3, y: 6, width: 11, height: 15, rx: 2, key: "dietro" }],
+  ["path", { d: "M17 8.5 20 9.2a2 2 0 0 1 1.5 2.4L19.2 20", key: "lato" }],
+  ["path", { d: "M7 11l2-1.5V17", key: "uno" }],
+]);
 
 /* Solo le icone usate: l'import per nome tiene fuori dal bundle tutte le altre. */
 const ICONE = {
@@ -29,6 +37,7 @@ const ICONE = {
   divieto: Ban,
   dadi: Dices,
   griglia: Grid3x3,
+  carte: Carte,
   fulmine: Zap,
   indietro: ArrowLeft,
   impostazioni: Settings,

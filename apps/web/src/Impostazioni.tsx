@@ -14,7 +14,7 @@ import { dizionari } from "./testi";
 import { impostaTema, temaAttuale, type Tema } from "./tema";
 
 /** Un gioco con i suoi testi nella lingua corrente (manifest + `testi(lingua)`). */
-export type GiocoConRegole = TestiGioco & { id: string; online?: boolean };
+export type GiocoConRegole = TestiGioco & { id: string; online?: boolean; soloOnline?: boolean };
 
 function Regole({ gioco }: { gioco: GiocoConRegole }) {
   const t = usaT(dizionari);

@@ -6,6 +6,7 @@ import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
 import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
 import { TrisApp, manifest as tris } from "@gdt/tic-tac-toe";
+import { UltimaApp, manifest as ultima } from "@gdt/ultima";
 
 import { applicaLingua, usaLingua, usaT, type Lingua, type TestiGioco } from "@gdt/i18n";
 
@@ -18,6 +19,8 @@ interface ManifestGioco {
   id: string;
   /** true = c'è anche la modalità online; tutti i giochi funzionano offline. */
   online?: boolean;
+  /** true = si gioca solo online (niente badge «offline»). */
+  soloOnline?: boolean;
   testi: (lingua: Lingua) => TestiGioco;
 }
 
@@ -31,6 +34,7 @@ const giochi: VoceGioco[] = [
   { ...tabu, Componente: TabuApp },
   { ...dadi, Componente: DadiApp },
   { ...tris, Componente: TrisApp },
+  { ...ultima, Componente: UltimaApp },
   { ...duelloLampo, Componente: DuelloLampoApp },
 ];
 
@@ -42,7 +46,7 @@ function giocoDaPercorso(percorso: string): VoceGioco | undefined {
 
 /** Il gioco con i testi nella lingua corrente, come lo vogliono le schede (regolamento, impostazioni). */
 function conTesti(g: VoceGioco, lingua: Lingua): GiocoConRegole {
-  return { id: g.id, online: g.online === true, ...g.testi(lingua) };
+  return { id: g.id, online: g.online === true, soloOnline: g.soloOnline === true, ...g.testi(lingua) };
 }
 
 function usaPercorso(): [string, (a: string) => void] {
@@ -65,6 +69,7 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   tabu: "divieto",
   dadi: "dadi",
   tris: "griglia",
+  ultima: "carte",
   "duello-lampo": "fulmine",
 };
 
@@ -274,9 +279,11 @@ export function App() {
                 <span className="gioco-titolo">
                   <span className="gioco-nome">{g.nome}</span>
                   <span className="gioco-modi">
-                    <span className="modo-badge modo-badge--offline" role="img" aria-label={t("giocaOffline")}>
-                      <Icona nome="wifi-barrato" dimensione={20} />
-                    </span>
+                    {!g.soloOnline && (
+                      <span className="modo-badge modo-badge--offline" role="img" aria-label={t("giocaOffline")}>
+                        <Icona nome="wifi-barrato" dimensione={20} />
+                      </span>
+                    )}
                     {g.online && (
                       <span className="modo-badge modo-badge--online" role="img" aria-label={t("giocaOnline")}>
                         <Icona nome="wifi" dimensione={20} />
