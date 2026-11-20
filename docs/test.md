@@ -54,8 +54,19 @@ File in `apps/web/e2e/`; configurazione in `apps/web/playwright.config.ts`.
 
 Cosa coprono: menu e tema, ogni schermata di Impostore (un telefono), Lupus e Tabù, gli errori di validazione, il
 ripristino dopo refresh, "Chiudi la partita" con conferma, il timer di Tabù (orologio simulato) e il messaggio di
-server non raggiungibile.
+server non raggiungibile. Per la home: ricerca, **ordinamento dei giochi con le frecce** (salvataggio, «Annulla»,
+«Ordine alfabetico») e **barra in alto sempre visibile** scorrendo. Per Duello Lampo (`duello-lampo.spec.ts`):
+preparazione (mani, impostazioni di ogni mini gioco, ordine a caso o scelto), ogni mini gioco con i suoi casi
+(partenza anticipata, risposta sbagliata, bersaglio che compare mentre la griglia continua a cambiare), errori che
+contano −1, partita intera fino alla rivincita e barra dell'app nascosta durante la partita.
 
-Non coprono: la partita online di Impostore con più telefoni (la sua logica è nei test unitari di `online/regole` e
+Gli screenshot con elementi che cambiano nel tempo (le griglie dei «trova», il numero casuale di tocchi) si
+confrontano **mascherando** la parte che cambia (`maschera` in `schermata`), altrimenti il confronto è instabile.
+Dopo una modifica alla barra in alto o al numero di versione cambiano gli screenshot di tutte le schermate (la
+versione è scritta in fondo): si rigenerano con `pnpm test:e2e:aggiorna` e si guardano a campione.
+
+Non coprono: il **doppio tocco** vero con due dita sullo stesso schermo (Duello Lampo: si prova a mano su un
+telefono), la barra fissa sotto il notch e i pulsanti in basso sopra la barra dei gesti, la partita online di
+Impostore con più telefoni (la sua logica è nei test unitari di `online/regole` e
 `apps/server`; il collegamento vero è nei "punti aperti" di [decisioni.md](decisioni.md)), la voce del narratore e
 l'installazione/uso offline (si provano con `docker compose up`).

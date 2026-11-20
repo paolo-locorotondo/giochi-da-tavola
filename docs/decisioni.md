@@ -21,7 +21,7 @@ Giochi, in ordine:
 4. **Tris** — tre in fila, contro il telefono o in due; anche online (ognuno col suo telefono).
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
-6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo), 1 punto a ogni mini gioco, si sceglie quali usare. Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
+6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo), 1 punto a ogni mini gioco. Si scelgono le mani di ogni mini gioco, le sue impostazioni e l'ordine (a caso o scelto). Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
 7. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
@@ -137,6 +137,8 @@ vede chi manca e può sollecitare. **Niente "escludi dal voto"** (rimosso il 202
 - **Carte e testi nei dati**: le carte di ogni gioco (parole, categorie, personaggi) stanno in
   `games/<gioco>/data/<lingua>/*.json` e si cambiano senza toccare il codice; il README del gioco
   spiega come. Le regole (poteri dei ruoli, punteggi) restano nel codice: sono logica, non dati.
+- **Barra in alto sempre visibile** (0.23.0): nella home e dentro i giochi resta in cima scorrendo. Un gioco a schermo intero (Duello Lampo durante la partita) la nasconde con `segnalaSchermoIntero` di `@gdt/preferenze`. Il piè di pagina con la versione non è fisso.
+- **Ordine dei giochi nella home** (0.23.0): di base alfabetico; l'utente può sceglierne uno suo con le frecce, salvato sul telefono (`applicaOrdine` / `leggiOrdine` in `@gdt/preferenze`); un gioco nuovo va in fondo.
 - **Impostazioni**: l'ingranaggio mostra sempre «App» (tema, audio) e, dentro un gioco, anche le
   impostazioni del gioco, dichiarate nel `manifest` (`impostazioni`) e salvate dal pacchetto
   `@gdt/preferenze`. Sono dell'app su quel telefono, non della partita.
@@ -157,14 +159,14 @@ giochi-da-tavola/
 │   ├── collegamento/ → hook WebSocket condiviso (rientro con token, coda partita veloce)
 │   ├── i18n/       → lingue it/en con chiavi controllate dal compilatore
 │   ├── suoni/      → suoni sintetizzati e interruttore audio
-│   └── preferenze/ → impostazioni dei giochi salvate sul telefono
+│   └── preferenze/ → impostazioni dei giochi e ordine della home salvati sul telefono, segnale «schermo intero»
 ├── games/
 │   ├── impostore/  → regole, UI a un telefono, modulo online (src/online) e UI online
 │   ├── lupus/      → regole e UI a un telefono
 │   ├── tabu/       → regole, carte e UI
 │   ├── dadi/       → lancio, modelli di dado (con spiegazione delle facce) e UI
 │   ├── tic-tac-toe/ → regole, telefono avversario (minimax), modulo online con partita veloce e UI
-│   └── duello-lampo/ → partita a punti, mini giochi di riflessi (regole + vista, con registro) e UI a schermo diviso
+│   └── duello-lampo/ → partita a punti, mini giochi di riflessi (regole + vista + impostazioni, con registro), ordine a caso o scelto, UI a schermo diviso
 ├── Dockerfile, docker-compose.yml
 └── docs/           → questo file e le guide
 ```
@@ -194,7 +196,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-19 (v0.23.1).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-20 (v0.23.1).
 
 ### Fatti
 
@@ -214,6 +216,10 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 
 - FATTO **Duello Lampo, impostazioni dei mini giochi** (0.19.0): pannello «Impostazioni» sotto ogni mini gioco nella preparazione, salvate sul telefono con la sfida; griglia dei «trova» fino a 6×6 (più grande da valutare sui tablet).
 
+- FATTO **Duello Lampo, rifiniture** (0.20.0–0.22.0): impostazione «gli errori contano −1» (solo risposte sbagliate, non la lentezza); spareggio con un mini gioco a caso tra quelli scelti; Colori e nomi con parole e parole giuste impostabili, in posizioni casuali; ordine dei mini giochi a caso (di base, nuovo a ogni rivincita) o scelto con le frecce; nei «trova» le figure continuano a cambiare dopo la comparsa del bersaglio.
+- FATTO **Home ordinabile e barra fissa** (0.23.0, 0.23.1): ordine dei giochi con le frecce, salvato sul telefono; barra in alto sempre visibile, nascosta solo dai giochi a schermo intero.
+- FATTO **Prova su telefono vero di Duello Lampo e della barra fissa** (verificata dall'utente il 2026-11-20): doppio tocco con due dita (anche in Raffica), griglia 6×6 dei «trova» a 375 px, barra fissa sotto il notch e pulsanti dell'ordinamento sopra la barra dei gesti.
+
 ### Da fare (TODO)
 
 - TODO **Test grafici su Linux/CI**: gli screenshot di riferimento sono fatti su Windows; se serve la CI su Linux vanno rigenerati là (vedi docs/test.md). Non esiste ancora una CI (nessuna cartella `.github`).
@@ -228,4 +234,4 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
 - TODO **Aggiungere gioco di carte «Ultima!»** (in stile UNO, nome neutro per i marchi): solo online, regole ufficiali, bot su richiesta dell'organizzatore. Piano rivisto: [piano-ultima.md](piano-ultima.md). Indirizzo `/ultima`.
-- TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), prova su telefoni veri del doppio tocco e, più avanti, la versione online (vedi README del gioco).
+- TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

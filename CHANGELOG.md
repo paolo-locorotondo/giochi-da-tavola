@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
+
 ## [0.23.1] - 2026-11-20
 
 ### Corretto

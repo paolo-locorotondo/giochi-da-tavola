@@ -82,7 +82,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 
 ## Cosa controllare
 
-- **Su un telefono vero** (i test automatici non provano il doppio tocco): ognuno con un dito sulla sua metà, insieme. Verifica che i due tocchi simultanei arrivino entrambi, anche in «Raffica».
+- **Su un telefono vero** (i test automatici non provano il doppio tocco): ognuno con un dito sulla sua metà, insieme. Verifica che i due tocchi simultanei arrivino entrambi, anche in «Raffica». Ultima prova riuscita: 2026-11-20 (con la griglia 6×6 dei «trova»).
 - Il punteggio grande in ogni metà è quello del giocatore di quella metà e sale a ogni punto.
 - Con le mani scelte (es. Via! 2, Stop al centro 3) i round escono di fila, un mini gioco alla volta: con «Il mio ordine» nell'ordine dell'elenco, con «A caso» in un ordine nuovo a ogni sfida e a ogni rivincita.
 - Le frecce ▲▼ spostano un mini gioco di un posto, il fuoco resta sulla freccia usata (si può spostare più volte di fila); il primo non sale e l'ultimo non scende.
