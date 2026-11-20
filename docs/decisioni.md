@@ -22,7 +22,7 @@ Giochi, in ordine:
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
 6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo), 1 punto a ogni mini gioco. Si scelgono le mani di ogni mini gioco, le sue impostazioni e l'ordine (a caso o scelto). Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
-7. **Ultima!** — gioco di carte a colori e numeri (regole ufficiali), da 2 a 10, **solo online** (la mano è segreta). Round singolo o partita a punti; «Simula mossa col bot» per chi non risponde. Piano e decisioni: [piano-ultima.md](piano-ultima.md).
+7. **Ultima!** — gioco di carte a colori e numeri (regole ufficiali), contro i bot su un telefono (anche offline) oppure online da 2 a 10 (la mano è segreta). Round singolo o partita a punti; «Simula mossa col bot» per chi non risponde. Piano e decisioni: [piano-ultima.md](piano-ultima.md).
 8. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
 
@@ -234,5 +234,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
-- FATTO **Ultima!** (0.24.0): gioco di carte solo online, 2–10 giocatori, regole ufficiali, round singolo o a punti, bot su richiesta dell'organizzatore (`games/ultima`). Piano: [piano-ultima.md](piano-ultima.md). Restano le varianti (README del gioco) e la prova su telefoni veri.
+- FATTO **Ultima!** (0.24.0, poi 0.25.0): regole ufficiali, round singolo o a punti, bot su richiesta dell'organizzatore online; dalla 0.25.0 anche contro i bot su un telefono, offline, con tre livelli e velocità (`games/ultima`). Piano: [piano-ultima.md](piano-ultima.md). Restano le varianti (README del gioco), una coda per la partita veloce (rimandata) e la prova su telefoni veri.
 - TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

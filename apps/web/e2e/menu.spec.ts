@@ -11,8 +11,8 @@ test("menu: elenca i sette giochi", async ({ page }) => {
   const altezza = await titolo.evaluate((h) => h.getBoundingClientRect().height / parseFloat(getComputedStyle(h).lineHeight));
   expect(altezza).toBeLessThan(1.5);
   await expect(page.locator("a.gioco")).toHaveCount(7);
-  // Tutti si giocano offline tranne Ultima! (solo online); Impostore, Tris e Ultima! anche online.
-  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(6);
+  // Tutti si giocano offline; Impostore, Tris e Ultima! anche online.
+  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(7);
   await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(3);
   await expect(page.locator("a.gioco", { hasText: "Impostore" }).getByRole("img", { name: /online/ })).toHaveCount(1);
   await schermata(page, "menu");

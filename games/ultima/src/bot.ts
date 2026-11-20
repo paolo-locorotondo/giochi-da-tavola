@@ -121,11 +121,11 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
   return p.haPescato ? { tipo: "passa" } : { tipo: "pesca" };
 }
 
-/** Esegue sulla logica la mossa scelta dal bot per `posto`. */
-export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng): Partita {
+/** Esegue sulla logica la mossa scelta dal bot per `posto`. `dichiara`: se cala la penultima carta dice «Ultima!» subito. */
+export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng, dichiara = true): Partita {
   switch (m.tipo) {
     case "gioca":
-      return gioca(p, n, posto, m.carta, m.colore, rng, true);
+      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara);
     case "pesca":
       return pesca(p, posto, rng);
     case "passa":
@@ -140,5 +140,49 @@ export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, r
       return ultima(p, posto);
     case "beccato":
       return beccato(p, posto, m.bersaglio, rng);
+  }
+}
+
+/** Come gioca un bot: come in Tris, facile a caso, medio sbaglia spesso, difficile gioca sempre la mossa migliore. */
+export type Livello = "facile" | "medio" | "difficile";
+export const LIVELLI: readonly Livello[] = ["facile", "medio", "difficile"];
+
+/** A «medio» il bot gioca la mossa migliore 55 volte su 100 (come in Tris). */
+export const PERCENTUALE_MEDIO = 0.55;
+
+/** Probabilità che il bot dichiari «Ultima!» quando cala la penultima carta. */
+export const PROB_ULTIMA: Record<Livello, number> = { facile: 0.5, medio: 0.85, difficile: 1 };
+
+/** Probabilità che il bot becchi chi ha dimenticato «Ultima!». */
+export const PROB_BECCA: Record<Livello, number> = { facile: 0.6, medio: 0.9, difficile: 1 };
+
+/**
+ * La mossa di un bot di un certo livello. «Difficile» è `mossaBot`; gli altri partono da quella
+ * e a volte ripiegano su una mossa lecita a caso. Il caso arriva da `rng`: stesso seme, stesse mosse.
+ */
+export function mossaBotLivello(p: Partita, n: number, posto: number, livello: Livello, rng: Rng): MossaBot {
+  const base = mossaBot(p, n, posto);
+  if (livello === "difficile") return base;
+
+  if (base.tipo === "beccato") {
+    // Chi non becca gioca semplicemente il proprio turno (e la finestra si chiude).
+    return rng.next() < PROB_BECCA[livello] ? base : mossaBot({ ...p, ultima: null }, n, posto);
+  }
+  const casuale = livello === "facile" || rng.next() >= PERCENTUALE_MEDIO;
+  if (!casuale) return base;
+
+  switch (base.tipo) {
+    case "gioca": {
+      const lecite = carteGiocabili(p, posto);
+      const carta = lecite[rng.intero(lecite.length)]!;
+      return eJolly(carta) ? { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]! } : { tipo: "gioca", carta: carta.id };
+    }
+    case "scegliColore":
+      return { tipo: "scegliColore", colore: COLORI[rng.intero(COLORI.length)]! };
+    case "sfida":
+    case "accetta":
+      return rng.next() < 0.5 ? { tipo: "sfida" } : { tipo: "accetta" };
+    default:
+      return base;
   }
 }

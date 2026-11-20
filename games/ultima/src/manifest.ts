@@ -4,8 +4,6 @@ import { dizionari } from "./locales";
 export const manifest = {
   id: "ultima",
   online: true,
-  /** Si gioca solo online, ognuno col suo telefono: la mano è segreta. */
-  soloOnline: true,
   minGiocatori: 2,
   /** Testi mostrati dall'app (elenco giochi, regolamento, ingranaggio) nella lingua scelta. */
   testi(lingua: Lingua): TestiGioco {

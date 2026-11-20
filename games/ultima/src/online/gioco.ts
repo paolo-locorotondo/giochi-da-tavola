@@ -1,5 +1,5 @@
 import { MAX_CARATTERI_NOME, creaRng, limitaTesto, type GiocoOnline, type Rng } from "@gdt/engine";
-import { eseguiMossa, mossaBot } from "../bot";
+import { PROB_ULTIMA, eseguiMossa, mossaBotLivello, type Livello } from "../bot";
 import {
   ErroreUltima,
   MAX_EVENTI,
@@ -74,8 +74,11 @@ export type AzioneOnline =
   | { tipo: "accetta"; chi: number }
   | { tipo: "ultima"; chi: number }
   | { tipo: "beccato"; chi: number; bersaglio: number }
-  /** Solo l'organizzatore: il bot fa una mossa per `posto`. */
-  | { tipo: "bot"; posto: number }
+  /**
+   * Il bot fa una mossa per `posto`. Online la chiede l'organizzatore (livello difficile, evento «mossa
+   * simulata dal bot»); offline la macchina a stati la usa per gli avversari, con il loro `livello`.
+   */
+  | { tipo: "bot"; posto: number; livello?: Livello }
   | { tipo: "prossimoRound"; seme: number }
   | { tipo: "ricomincia"; seme: number };
 
@@ -202,15 +205,19 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
     case "beccato":
       return dopoMossa(s, beccato(p, chi, a.bersaglio, rng));
     case "bot": {
+      // Online (senza livello) è il bot di «Simula mossa»: difficile e annunciato negli eventi.
+      // Offline gli avversari sono bot dichiarati: si vede solo la loro mossa.
+      const livello = a.livello ?? "difficile";
       let m;
       try {
-        m = mossaBot(p, n, chi);
+        m = mossaBotLivello(p, n, chi, livello, rng);
       } catch {
         throw new ErroreUltima("nullaDaFare");
       }
+      const dichiara = rng.next() < PROB_ULTIMA[livello];
       // L'evento «mossa simulata dal bot» precede quello della mossa, così si legge in ordine.
-      const conEvento: Partita = { ...p, eventi: [...p.eventi, { tipo: "bot" as const, posto: chi }].slice(-MAX_EVENTI) };
-      return dopoMossa(s, eseguiMossa(conEvento, n, chi, m, rng));
+      const conEvento: Partita = a.livello ? p : { ...p, eventi: [...p.eventi, { tipo: "bot" as const, posto: chi }].slice(-MAX_EVENTI) };
+      return dopoMossa(s, eseguiMossa(conEvento, n, chi, m, rng, dichiara));
     }
   }
 }

@@ -11,6 +11,17 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
+## [0.25.0] - 2026-11-20
+
+### Aggiunto
+
+- Ultima!: **contro i bot**, su un solo telefono e anche offline. Si sceglie da «Come giocate?»: il proprio nome e da 1 a 9 bot con nomi modificabili, il livello (**facile**, **medio**, **difficile**, come Tris), la velocità (lenta, normale, veloce; si cambia anche in partita) e come si vince. I bot giocano da soli uno alla volta, dicono «Ultima!» e ti beccano se lo dimentichi, lasciandoti prima almeno 1,8 secondi. Le ultime scelte restano salvate sul telefono.
+
+### Modificato
+
+- Ultima! non è più solo online: in home ha anche il badge «offline». Se il server non risponde, oltre a «Riprova» propone di giocare contro i bot.
+- Il tavolo è un componente comune alle due modalità (`Tavolo.tsx`).
+
 ## [0.24.2] - 2026-11-20
 
 ### Corretto

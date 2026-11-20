@@ -303,3 +303,24 @@ button.ul-carta:focus-visible {
     transition: none;
   }
 }
+
+.ul-senza-bordo {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+/* Scelte a segmenti (velocità in partita): tre colonne uguali, nessun pulsante primario allargato */
+.ul-segmento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ul-segmento .btn[aria-pressed="true"] {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+  font-weight: 600;
+}

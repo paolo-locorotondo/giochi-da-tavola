@@ -1,6 +1,6 @@
 # Ultima!
 
-Gioco di carte a colori e numeri per **2–10 giocatori, ognuno col suo telefono** (la mano è segreta: con un solo telefono non avrebbe senso). Chi resta con una carta in mano deve dire «Ultima!».
+Gioco di carte a colori e numeri. Due modi: **contro i bot** su un solo telefono (da 1 a 9 bot, anche offline) oppure **ognuno col suo telefono** da 2 a 10 giocatori. La mano è segreta: per questo a un telefono gli avversari sono bot. Chi resta con una carta in mano deve dire «Ultima!».
 
 Le regole sono simili ai classici giochi di carte a colori e numeri. Il nome e le carte sono originali: nel progetto non compaiono marchi di terzi.
 
@@ -13,7 +13,7 @@ Le regole sono simili ai classici giochi di carte a colori e numeri. Il nome e l
 5. Quando resti con una carta devi premere «Ultima!». Se un altro preme «Beccato!» prima che il giocatore dopo di te giochi o peschi, pesci 2 carte.
 6. Vince il round chi finisce le carte. A punti, il vincitore prende i punti delle carte rimaste agli altri: numeri = il loro valore, Salta, Inverti e +2 = 20, Jolly e Jolly +4 = 50.
 
-Solo online, da 2 a 10 giocatori. Alla creazione si sceglie un solo round oppure una partita a punti (di base fino a 500, da 50 a 2000). Se qualcuno non risponde, l'organizzatore può toccare «Simula mossa col bot» (vedi sotto).
+Contro i bot (anche offline) o online da 2 a 10 giocatori. Alla creazione si sceglie un solo round oppure una partita a punti (di base fino a 500, da 50 a 2000). Se qualcuno non risponde, l'organizzatore può toccare «Simula mossa col bot» (vedi sotto).
 
 Il mazzo è di 108 carte: per ogni colore (rosso, giallo, verde, blu) uno `0`, due per ciascun `1–9`, due Salta, due Inverti, due +2; più 4 Jolly e 4 Jolly +4. Ogni colore ha anche un simbolo (fiamma, sole, foglia, goccia) e il nome scritto: il colore non è mai l'unico segnale.
 
@@ -26,7 +26,17 @@ Il mazzo è di 108 carte: per ogni colore (rosso, giallo, verde, blu) uno `0`, d
 - **Mazzo esaurito**: si rimescola lo scarto tranne la carta in cima. Se mazzo e scarto sono finiti si pesca a vuoto e si passa.
 - **Partita a punti**: dopo ogni round l'organizzatore tocca «Prossimo round»; la partita finisce quando qualcuno arriva alla soglia.
 
-## Il bot («Simula mossa col bot»)
+## Contro i bot (un telefono, anche offline)
+
+Su «Come giocate?» si sceglie **Contro i bot**. Si scrivono il proprio nome e da 1 a 9 bot (con nomi modificabili, di base «Bot 1», «Bot 2»…), il livello, la velocità e come si vince. Le ultime scelte restano salvate sul telefono.
+
+- Il telefono fa da server per sé: usa la stessa macchina a stati dell'online (`src/offline.ts`). Si vede solo la propria mano; dei bot solo quante carte hanno.
+- I bot giocano da soli, uno alla volta, con una pausa: **lenta** 2,2 s, **normale** 1,3 s, **veloce** 0,6 s (`VELOCITA`). La velocità si cambia anche in partita.
+- **Livelli** (come Tris): **facile** gioca carte lecite a caso; **medio** gioca la mossa migliore 55 volte su 100 (`PERCENTUALE_MEDIO`); **difficile** gioca sempre la mossa migliore. A ogni livello cambiano anche le probabilità di dire «Ultima!» (50 / 85 / 100 %, `PROB_ULTIMA`) e di beccare chi lo dimentica (60 / 90 / 100 %, `PROB_BECCA`).
+- Se dimentichi «Ultima!» i bot ti possono beccare, ma prima ti lasciano almeno 1,8 s per dirlo (`RITARDO_BECCATO_MS`), anche alla velocità più alta.
+- Fine round, classifica e «Prossimo round» come online; «Esci dalla partita» (con conferma) torna alla creazione.
+
+## Il bot online («Simula mossa col bot»)
 
 Solo l'organizzatore lo vede, per il giocatore di turno (anche per rispondere a un +4 o per «Ultima!»). Fa **una mossa sola** e nell'elenco degli eventi compare «Mossa simulata dal bot per X». Nessun bot automatico.
 
@@ -46,7 +56,7 @@ pnpm install     # solo la prima volta
 pnpm dev         # http://localhost:5173/ultima (anche dal telefono, vedi l'indirizzo "Network")
 ```
 
-Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs/provare-in-locale.md); con il PC come server: [guida-giocare-con-il-pc.md](../../docs/guida-giocare-con-il-pc.md). Il gioco è solo online: **non funziona offline** (la pagina si apre ma, senza server, propone di riprovare).
+Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs/provare-in-locale.md); con il PC come server: [guida-giocare-con-il-pc.md](../../docs/guida-giocare-con-il-pc.md). Contro i bot funziona **offline**: `pnpm --filter @gdt/web build`, apri il sito una volta, poi spegni la rete e ricarica. Online serve il server; se non risponde la pagina propone di riprovare o di giocare contro i bot.
 
 ## Cosa controllare
 
@@ -58,6 +68,7 @@ Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi det
 - «Simula mossa col bot» e «Sollecita» solo per l'organizzatore.
 - Fine round: punti e classifica; «Prossimo round» solo all'organizzatore; a fine partita «Ricomincia».
 - Refresh o schermo bloccato: si rientra nel proprio posto, con la propria mano.
+- Contro i bot: da 1 a 9 bot con nomi modificabili; i bot giocano da soli alla velocità scelta; con la rete spenta la partita va avanti; se dimentichi «Ultima!» un bot difficile ti becca dopo un attimo; «Esci dalla partita» chiede conferma.
 - Tema chiaro e scuro, inglese, nessuno scroll orizzontale a 375 px.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
@@ -65,11 +76,12 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 ## Struttura
 
 - `src/logica.ts`: mazzo, giocabilità, effetti, sfida del +4, «Ultima!»/«Beccato!», rimescolo e punteggio di un round. Puro e deterministico (il caso arriva da `Rng`); gli errori sono codici (`ErroreUltima`).
-- `src/bot.ts`: `mossaBot(stato, n, posto)` e `eseguiMossa`; usa solo ciò che vedrebbe quel giocatore.
+- `src/bot.ts`: `mossaBot(stato, n, posto)`, i livelli (`mossaBotLivello`) e `eseguiMossa`; usa solo ciò che vedrebbe quel giocatore.
+- `src/offline.ts`: la partita contro i bot sul telefono (`nuovaPartitaLocale`, `agisci`, `muoviBot`, `pausaBot`, `vistaLocale`), con test in `offline.test.ts`.
 - `src/online/gioco.ts`: stato della stanza (round, punti, soglia), azioni, permessi (`traduci`) e `vistaPer` (mai le carte altrui né l'esito segreto della sfida); registrato in `apps/server/src/giochi.ts`. Il seme di ogni mossa deriva dal seme del round, così con lo stesso seme la partita si ripete identica.
 - `src/locales/{it,en}.ts` e `src/manifest.ts`: tutti i testi e il regolamento.
-- `src/ui/`: `Ultima.tsx`, `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Carta.tsx` e `ultima.css` (solo token del tema).
-- Test: `logica.test.ts`, `bot.test.ts`, `online/gioco.test.ts`, `apps/server/src/ultima.test.ts` ed e2e con tre telefoni in `apps/web/e2e/ultima-online.spec.ts`.
+- `src/ui/`: `Ultima.tsx` (scelta della modalità), `UltimaLocale.tsx` (contro i bot), `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Tavolo.tsx` (il tavolo, comune alle due modalità), `Carta.tsx` e `ultima.css` (solo token del tema).
+- Test: `logica.test.ts`, `bot.test.ts`, `online/gioco.test.ts`, `apps/server/src/ultima.test.ts` ed e2e in `apps/web/e2e/ultima-online.spec.ts` (tre telefoni) e `ultima-bot.spec.ts` (contro i bot, anche offline).
 - Le carte sono fisse (le regole stanno nel codice): non c'è una cartella `data/`.
 
 ## Varianti possibili

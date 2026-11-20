@@ -10,6 +10,7 @@ async function stanza(browser: Browser, config: { punti?: number } = {}) {
   const contesti = await Promise.all([1, 2, 3].map(() => browser.newContext(telefono)));
   const [host, bruno, carla] = await Promise.all(contesti.map((c) => c.newPage()));
   await host!.goto("/ultima");
+  await host!.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
   await host!.getByLabel("Nome del giocatore 1").fill("Anna");
   await host!.getByLabel("Nome del giocatore 2").fill("Bruno");
   await host!.getByRole("button", { name: "Aggiungi un giocatore" }).click();
@@ -42,6 +43,7 @@ async function giocaConBot(host: Page, finale: RegExp) {
 
 test("ultima: creazione e sala d'attesa", async ({ page }) => {
   await page.goto("/ultima");
+  await page.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
   await page.getByLabel("Nome del giocatore 1").fill("Anna");
   await page.getByLabel("Nome del giocatore 2").fill("Bruno");
   await expect(page.getByRole("button", { name: "Crea la partita" })).toBeEnabled();
