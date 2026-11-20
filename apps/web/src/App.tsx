@@ -1,4 +1,5 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from "react";
+import { applicaOrdine, leggiOrdine, scriviOrdine, spostaVoce } from "@gdt/preferenze";
 import { DadiApp, manifest as dadi } from "@gdt/dadi";
 import { DuelloLampoApp, manifest as duelloLampo } from "@gdt/duello-lampo";
 import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
@@ -67,6 +68,9 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   "duello-lampo": "fulmine",
 };
 
+/** Nome dell'ordine dei giochi della home nelle preferenze del telefono. */
+const ORDINE_HOME = "home";
+
 function Versione() {
   const t = usaT(dizionari);
   return <p className="versione">{t("versione", { versione: __APP_VERSION__ })}</p>;
@@ -87,12 +91,43 @@ export function App() {
   const gioco = voce ? conTesti(voce, lingua) : undefined;
   const [ricercaAperta, setRicercaAperta] = useState(false);
   const [filtro, setFiltro] = useState("");
+  /** L'ordine salvato su questo telefono; `null` = alfabetico. */
+  const [ordineSalvato, setOrdineSalvato] = useState<string[] | null>(() => leggiOrdine(ORDINE_HOME));
+  /** Durante l'ordinamento: l'ordine in prova (si salva solo con «Salva l'ordinamento»). */
+  const [inOrdinamento, setInOrdinamento] = useState<string[] | null>(null);
+  /** Il gioco appena spostato e la freccia usata: il fuoco resta lì per spostarlo ancora. */
+  const [spostato, setSpostato] = useState<{ id: string; verso: -1 | 1 } | null>(null);
 
-  // Elenco in ordine alfabetico per nome nella lingua corrente, filtrato dalla ricerca (nome o descrizione).
-  const elenco = giochi
-    .map((v) => conTesti(v, lingua))
-    .sort((a, b) => a.nome.localeCompare(b.nome, lingua))
-    .filter((g) => !filtro.trim() || normalizza(`${g.nome} ${g.descrizione}`).includes(normalizza(filtro.trim())));
+  // Di base in ordine alfabetico nella lingua corrente; con un ordine salvato, quello (i giochi nuovi in fondo).
+  const alfabetico = giochi.map((v) => conTesti(v, lingua)).sort((a, b) => a.nome.localeCompare(b.nome, lingua));
+  const ordinati = applicaOrdine(alfabetico, (g) => g.id, inOrdinamento ?? ordineSalvato);
+  // Durante l'ordinamento la ricerca non filtra: si ordinano tutti i giochi.
+  const elenco = inOrdinamento
+    ? ordinati
+    : ordinati.filter((g) => !filtro.trim() || normalizza(`${g.nome} ${g.descrizione}`).includes(normalizza(filtro.trim())));
+
+  const iniziaOrdinamento = () => {
+    setRicercaAperta(false);
+    setFiltro("");
+    setSpostato(null);
+    setInOrdinamento(ordinati.map((g) => g.id));
+  };
+  const sposta = (id: string, verso: -1 | 1) => {
+    if (!inOrdinamento) return;
+    setInOrdinamento(spostaVoce(inOrdinamento, id, verso));
+    setSpostato({ id, verso });
+  };
+  const salvaOrdinamento = () => {
+    if (!inOrdinamento) return;
+    scriviOrdine(ORDINE_HOME, inOrdinamento);
+    setOrdineSalvato(inOrdinamento);
+    setInOrdinamento(null);
+  };
+  const tornaAlfabetico = () => {
+    scriviOrdine(ORDINE_HOME, null);
+    setOrdineSalvato(null);
+    setInOrdinamento(null);
+  };
 
   // `lang` della pagina e titolo della scheda del browser seguono la lingua scelta.
   useEffect(() => {
@@ -117,7 +152,7 @@ export function App() {
     const { Componente } = voce;
     return (
       <main className="app">
-        <header className="barra-gioco">
+        <header className="barra-gioco barra-fissa">
           <a className="tema-btn" href="/" onClick={indietro} aria-label={t("indietro")}>
             <Icona nome="indietro" />
           </a>
@@ -131,16 +166,26 @@ export function App() {
   }
 
   return (
-    <main className="app">
-      <header className="app-testata">
+    <main className={`app${inOrdinamento ? " app--ordinamento" : ""}`}>
+      <header className="app-testata barra-fissa">
         <h1>{t("titolo")}</h1>
         <div className="testata-azioni">
+          <button
+            type="button"
+            className="tema-btn"
+            aria-label={t("ordina")}
+            aria-pressed={inOrdinamento !== null}
+            onClick={() => (inOrdinamento ? setInOrdinamento(null) : iniziaOrdinamento())}
+          >
+            <Icona nome="ordina" />
+          </button>
           <button
             type="button"
             className="tema-btn"
             aria-label={t("cerca")}
             aria-expanded={ricercaAperta}
             aria-controls="ricerca-giochi"
+            disabled={inOrdinamento !== null}
             onClick={() => {
               setRicercaAperta(!ricercaAperta);
               if (ricercaAperta) setFiltro("");
@@ -151,7 +196,12 @@ export function App() {
           <Impostazioni />
         </div>
       </header>
-      {ricercaAperta && (
+      {inOrdinamento && (
+        <p className="muted ordina-aiuto" role="status">
+          {t("ordinaAiuto")}
+        </p>
+      )}
+      {ricercaAperta && !inOrdinamento && (
         <div className="campo ricerca" id="ricerca-giochi">
           <input
             type="search"
@@ -166,9 +216,50 @@ export function App() {
         </div>
       )}
       <ul className="lista-giochi">
-        {elenco.map((g) => (
-          <li key={g.id} className="riga-gioco">
-            <a className="gioco" href={`/${g.id}`} onClick={naviga(`/${g.id}`)}>
+        {elenco.map((g, posizione) => (
+          <li key={g.id} className={`riga-gioco${inOrdinamento ? " riga-gioco--ordina" : ""}`}>
+            {inOrdinamento && (
+              <div className="ordina-riga" role="group" aria-label={t("posizioneDi", { gioco: g.nome })}>
+                <span className="ordina-pos" aria-hidden="true">
+                  {posizione + 1}
+                </span>
+                <button
+                  type="button"
+                  className="tema-btn ordina-freccia"
+                  aria-label={t("spostaSu", { gioco: g.nome })}
+                  disabled={posizione === 0}
+                  ref={(el) => {
+                    // Il fuoco resta sulla freccia usata; se il gioco è arrivato in cima va sull'altra.
+                    if (el && spostato?.id === g.id && (spostato.verso === -1 ? posizione > 0 : posizione === elenco.length - 1))
+                      el.focus();
+                  }}
+                  onClick={() => sposta(g.id, -1)}
+                >
+                  <Icona nome="freccia-su" />
+                </button>
+                <button
+                  type="button"
+                  className="tema-btn ordina-freccia"
+                  aria-label={t("spostaGiu", { gioco: g.nome })}
+                  disabled={posizione === elenco.length - 1}
+                  ref={(el) => {
+                    if (el && spostato?.id === g.id && (spostato.verso === 1 ? posizione < elenco.length - 1 : posizione === 0))
+                      el.focus();
+                  }}
+                  onClick={() => sposta(g.id, 1)}
+                >
+                  <Icona nome="freccia-giu" />
+                </button>
+              </div>
+            )}
+            <a
+              className="gioco"
+              href={`/${g.id}`}
+              // Durante l'ordinamento le righe non si aprono: si spostano.
+              onClick={inOrdinamento ? (e) => e.preventDefault() : naviga(`/${g.id}`)}
+              aria-disabled={inOrdinamento ? true : undefined}
+              tabIndex={inOrdinamento ? -1 : undefined}
+            >
               <span className="gioco-icona">
                 <Icona nome={ICONE_GIOCHI[g.id] ?? "divieto"} dimensione={28} />
               </span>
@@ -189,10 +280,23 @@ export function App() {
                 <span className="muted">{g.descrizione}</span>
               </span>
             </a>
-            <PulsanteRegolamento gioco={g} />
+            {!inOrdinamento && <PulsanteRegolamento gioco={g} />}
           </li>
         ))}
       </ul>
+      {inOrdinamento && (
+        <div className="ordina-azioni">
+          <button type="button" className="primario" onClick={salvaOrdinamento}>
+            {t("salvaOrdine")}
+          </button>
+          <button type="button" onClick={() => setInOrdinamento(null)}>
+            {t("annullaOrdine")}
+          </button>
+          <button type="button" className="ordina-alfabetico" disabled={ordineSalvato === null} onClick={tornaAlfabetico}>
+            {t("ordineAlfabetico")}
+          </button>
+        </div>
+      )}
       {elenco.length === 0 && <p className="muted" role="status">{t("nessunGioco")}</p>}
       <Versione />
     </main>

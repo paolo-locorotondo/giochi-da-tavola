@@ -9,6 +9,17 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.23.0] - 2026-11-20
+
+### Aggiunto
+
+- Home: **ordinamento dei giochi**. Di base restano in ordine alfabetico; con il tasto ↑↓ accanto alla lente ogni gioco mostra la posizione e le frecce ▲▼, e si salva con «Salva l'ordinamento» (in fondo allo schermo, sempre visibile). «Annulla» lascia l'ordine di prima, «Ordine alfabetico» torna a quello di base. Durante l'ordinamento la ricerca è spenta e i giochi non si aprono. L'ordine resta salvato sul telefono; un gioco nuovo va in fondo.
+
+### Modificato
+
+- La barra in alto resta **sempre visibile** scorrendo, nella home (titolo, ordinamento, lente, ingranaggio) e dentro i giochi (indietro, nome, ingranaggio). Il piè di pagina con la versione resta in fondo alla pagina.
+- Home: il titolo «Giochi da tavola» sta su una riga, anche con tre tasti accanto.
+
 ## [0.22.0] - 2026-11-20
 
 ### Aggiunto

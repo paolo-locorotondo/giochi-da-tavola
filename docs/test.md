@@ -19,6 +19,7 @@ deterministico: stesso seme, stesso risultato, nessuna rete e nessun browser.
 
 | Pacchetto | Cosa si verifica |
 |---|---|
+| `packages/preferenze` | impostazioni dei giochi salvate; ordine scelto di un elenco (voci nuove in fondo, voci sparite e doppioni ignorati, spostamento su e giù, salvataggi non validi) |
 | `packages/engine` | numeri casuali con seme, elenco giocatori (nomi vuoti, doppi, maiuscole), codice partita |
 | `games/impostore` | partita dal seme, validazione dei campi, sessione a un telefono, parole (formato e duplicati), parole recenti, tutta la partita online (`regole.test.ts`: stanza, carte, indizi scritti, voto, ballottaggio, tentativo, privacy della vista) |
 | `games/lupus` | distribuzione dei ruoli per 4–20 giocatori, candidati della notte, risoluzione della notte, voto e ballottaggio, vittoria, partite intere con molti semi |

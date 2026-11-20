@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  ArrowUpDown,
   Ban,
   BookOpen,
   ChevronDown,
@@ -38,6 +39,7 @@ const ICONE = {
   "volume-no": VolumeX,
   "freccia-su": ChevronUp,
   "freccia-giu": ChevronDown,
+  ordina: ArrowUpDown,
   wifi: Wifi,
   "wifi-barrato": WifiOff,
 } satisfies Record<string, LucideIcon>;

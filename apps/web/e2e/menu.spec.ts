@@ -6,6 +6,10 @@ test.beforeEach(({ page }) => fissaCaso(page));
 test("menu: elenca i sei giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
+  // Il titolo sta su una riga anche con i tre tasti accanto.
+  const titolo = page.getByRole("heading", { name: "Giochi da tavola" });
+  const altezza = await titolo.evaluate((h) => h.getBoundingClientRect().height / parseFloat(getComputedStyle(h).lineHeight));
+  expect(altezza).toBeLessThan(1.5);
   await expect(page.locator("a.gioco")).toHaveCount(6);
   // Tutti si giocano offline; Impostore e Tris anche online.
   await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(6);
@@ -218,4 +222,93 @@ test("barra di gioco: torna ai giochi", async ({ page }) => {
   await page.goto("/tabu");
   await page.getByRole("link", { name: "Indietro" }).click();
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
+});
+
+const nomi = (page: import("@playwright/test").Page) => page.locator(".gioco-nome").allTextContents();
+
+test("menu: ordinamento dei giochi con le frecce, salvato sul telefono", async ({ page }) => {
+  await page.goto("/");
+  const ordina = page.getByRole("button", { name: "Ordina i giochi" });
+  await expect(ordina).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator(".ordina-riga")).toHaveCount(0);
+
+  await ordina.click();
+  await expect(ordina).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".ordina-riga")).toHaveCount(6);
+  await expect(page.getByText("Sposta i giochi con le frecce")).toBeVisible();
+  // Durante l'ordinamento la ricerca è spenta e i giochi non si aprono.
+  await expect(page.getByRole("button", { name: "Cerca un gioco" })).toBeDisabled();
+  await page.locator("a.gioco", { hasText: "Tris" }).click({ force: true });
+  await expect(page).toHaveURL(/\/$/);
+  // Il primo non sale e l'ultimo non scende; «Ordine alfabetico» è spento finché non c'è un ordine salvato.
+  await expect(page.getByRole("button", { name: "Sposta su Dadi" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sposta giù Tris" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Ordine alfabetico" })).toBeDisabled();
+
+  // Tris sale in cima con cinque tocchi; il fuoco resta sulla freccia.
+  const su = page.getByRole("button", { name: "Sposta su Tris" });
+  await su.click();
+  await expect(su).toBeFocused();
+  for (let i = 0; i < 4; i++) await su.click();
+  // In cima la freccia «su» si spegne e il fuoco passa alla freccia «giù» dello stesso gioco.
+  await expect(su).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sposta giù Tris" })).toBeFocused();
+  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù"]);
+  // I pulsanti stanno fissi in fondo e la pagina lascia spazio sotto: scorrendo fino in fondo l'ultimo
+  // gioco resta tutto sopra la barra. Schermata della finestra, non della pagina intera (la barra è fissa).
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const ultimo = await page.locator(".riga-gioco").last().boundingBox();
+  const azioni = await page.locator(".ordina-azioni").boundingBox();
+  expect(ultimo!.y + ultimo!.height).toBeLessThanOrEqual(azioni!.y);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(page).toHaveScreenshot("ordinamento.png", { fullPage: false });
+
+  await page.getByRole("button", { name: "Salva l'ordinamento" }).click();
+  await expect(page.locator(".ordina-riga")).toHaveCount(0);
+  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù"]);
+
+  // Resta dopo un ricaricamento.
+  await page.reload();
+  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù"]);
+
+  // «Annulla» non salva.
+  await page.getByRole("button", { name: "Ordina i giochi" }).click();
+  await page.getByRole("button", { name: "Sposta giù Tris" }).click();
+  expect((await nomi(page))[0]).toBe("Dadi");
+  await page.getByRole("button", { name: "Annulla" }).click();
+  expect((await nomi(page))[0]).toBe("Tris");
+
+  // «Ordine alfabetico» torna all'ordine di base, anche dopo un ricaricamento.
+  await page.getByRole("button", { name: "Ordina i giochi" }).click();
+  await page.getByRole("button", { name: "Ordine alfabetico" }).click();
+  expect(await nomi(page)).toEqual(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù", "Tris"]);
+  await page.reload();
+  expect(await nomi(page)).toEqual(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Tabù", "Tris"]);
+});
+
+test("menu: l'ordinamento chiude la ricerca aperta e la ricerca filtra nell'ordine salvato", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Cerca un gioco" }).click();
+  await page.getByRole("searchbox", { name: "Cerca un gioco" }).fill("tr");
+  await page.getByRole("button", { name: "Ordina i giochi" }).click();
+  await expect(page.getByRole("searchbox")).toHaveCount(0);
+  await expect(page.locator("a.gioco")).toHaveCount(6);
+});
+
+test("barra in alto: resta visibile scorrendo, nella home e dentro un gioco", async ({ page }) => {
+  for (const [percorso, selettore] of [
+    ["/", ".app-testata"],
+    ["/duello-lampo", ".barra-gioco"],
+  ] as const) {
+    await page.goto(percorso);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+    const barra = await page.locator(selettore).boundingBox();
+    expect(barra, selettore).not.toBeNull();
+    expect(Math.round(barra!.y), `${selettore} in cima`).toBeLessThanOrEqual(1);
+  }
+  // In fondo alla home la versione si legge (il piè di pagina non è fisso).
+  await page.goto("/");
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(page.locator(".versione")).toBeInViewport();
 });

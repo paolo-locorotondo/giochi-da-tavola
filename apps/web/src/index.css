@@ -49,6 +49,39 @@ h1 {
   gap: 0.75rem;
 }
 
+/*
+ * Titolo della home: su una riga anche con tre tasti accanto. Lo spazio a 375 px è di circa 170 px:
+ * la dimensione scala con la larghezza dello schermo (5,3 vw ≈ 20 px a 375, 19 a 360).
+ */
+.app-testata h1 {
+  min-width: 0;
+  font-size: clamp(1.15rem, 5.3vw, 2rem);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* I tasti della testata un po' più vicini, per lasciare spazio al titolo */
+.app-testata .testata-azioni {
+  gap: 0.4rem;
+}
+
+/*
+ * Barra in alto sempre visibile (home e dentro i giochi): resta attaccata mentre la pagina scorre.
+ * Fondo pieno e, sotto, una linea sottile; il margine negativo la allarga fino ai bordi del
+ * contenuto, il padding superiore rispetta il notch (la safe area è già nel padding di .app).
+ */
+.barra-fissa {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: calc(-1 * max(1.5rem, env(safe-area-inset-top))) -1rem 0;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0.75rem;
+  background: var(--bg);
+  border-bottom: var(--bw) solid var(--bd);
+}
+
 .testata-azioni {
   display: flex;
   align-items: center;
@@ -385,6 +418,9 @@ h1 {
   grid-template-columns: 48px 1fr 48px;
   align-items: center;
   gap: 0.75rem;
+}
+
+.barra-gioco.barra-fissa {
   margin-bottom: 1rem;
 }
 
@@ -462,7 +498,7 @@ a.tema-btn {
 
 .lista-giochi {
   list-style: none;
-  margin: 1.25rem 0 0;
+  margin: 1rem 0 0;
   padding: 0;
   display: grid;
   gap: 0.75rem;
@@ -573,4 +609,122 @@ a.tema-btn {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* Tasti della testata spenti (es. la ricerca durante l'ordinamento) */
+.tema-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Il tasto di ordinamento acceso mostra che si è in modalità ordinamento: anche con il colore, oltre ad aria-pressed */
+.tema-btn[aria-pressed="true"] {
+  color: var(--on-ac);
+  background: var(--ac);
+  border-color: var(--ac);
+}
+
+/* --- Ordinamento dei giochi nella home --- */
+.ordina-aiuto {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+}
+
+/* In ordinamento la riga va a capo: sopra la striscia con posizione e frecce, sotto la scheda del gioco */
+.riga-gioco--ordina {
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.ordina-riga {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  background: var(--s2);
+  border: var(--bw) solid var(--bd);
+  border-bottom: 0;
+  border-radius: var(--r) var(--r) 0 0;
+}
+
+.riga-gioco--ordina > .gioco {
+  border-radius: 0 0 var(--r) var(--r);
+  box-shadow: none;
+  cursor: default;
+}
+
+.ordina-pos {
+  flex: 1;
+  padding-left: 0.4rem;
+  font-family: var(--font-titoli);
+  font-weight: 800;
+  font-size: 1.1rem;
+  font-variant-numeric: lining-nums;
+  color: var(--ac);
+}
+
+.ordina-freccia {
+  width: 44px;
+  height: 44px;
+}
+
+/*
+ * Pulsanti dell'ordinamento, fissi in fondo allo schermo: si salva senza scorrere fino alla fine.
+ * Larghi quanto il contenuto (32rem al massimo); la pagina lascia sotto lo spazio che occupano,
+ * così non coprono mai l'ultimo gioco. Stile dei pulsanti dell'app, in griglia.
+ */
+.ordina-azioni {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0.6rem max(1rem, env(safe-area-inset-right)) max(0.6rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: var(--bg);
+  border-top: var(--bw) solid var(--bd);
+  box-shadow: var(--sh);
+}
+
+/* Spazio sotto la lista pari all'altezza della barra dei pulsanti (due righe da 48 px più i margini) */
+.app--ordinamento {
+  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
+.ordina-azioni button {
+  min-height: 48px;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--fg);
+  background: var(--s2);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 2px);
+  cursor: pointer;
+}
+
+.ordina-azioni button:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.ordina-azioni button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ordina-azioni .primario {
+  grid-column: 1 / -1;
+  color: var(--on-ac);
+  background: var(--ac);
+  border-color: var(--ac);
+}
+
+/* «Annulla» e «Ordine alfabetico» affiancati sotto il primario; l'alfabetico ha solo il bordo */
+.ordina-azioni .ordina-alfabetico {
+  background: transparent;
 }

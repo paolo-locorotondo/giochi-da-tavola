@@ -75,3 +75,4 @@ function iscriviti(f: () => void): () => void {
 export function usaPreferenza(gioco: string, imp: ImpostazioneGioco): ValorePreferenza {
   return useSyncExternalStore(iscriviti, () => leggiPreferenza(gioco, imp));
 }
+export { applicaOrdine, decodificaOrdine, leggiOrdine, scriviOrdine, spostaVoce } from "./ordine";
