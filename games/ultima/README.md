@@ -84,6 +84,10 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - Test: `logica.test.ts`, `bot.test.ts`, `online/gioco.test.ts`, `apps/server/src/ultima.test.ts` ed e2e in `apps/web/e2e/ultima-online.spec.ts` (tre telefoni) e `ultima-bot.spec.ts` (contro i bot, anche offline).
 - Le carte sono fisse (le regole stanno nel codice): non c'è una cartella `data/`.
 
+## Partita veloce
+
+Non c'è ancora: con più di 2 giocatori serve una coda «a stanze aperte» comune a tutti i giochi, descritta e ancora da decidere in [decisioni.md](../../docs/decisioni.md) (voce «Partita veloce a stanze aperte»).
+
 ## Varianti possibili
 
 Non ci sono nella prima versione (solo regole ufficiali). Ognuna diventerebbe un'opzione della stanza, spenta di base:
