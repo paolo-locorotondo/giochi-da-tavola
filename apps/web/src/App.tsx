@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from "react";
-import { applicaOrdine, leggiOrdine, scriviOrdine, spostaVoce } from "@gdt/preferenze";
+import { applicaOrdine, leggiOrdine, scriviOrdine, seguiSchermoIntero, spostaVoce } from "@gdt/preferenze";
 import { DadiApp, manifest as dadi } from "@gdt/dadi";
 import { DuelloLampoApp, manifest as duelloLampo } from "@gdt/duello-lampo";
 import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
@@ -97,6 +97,13 @@ export function App() {
   const [inOrdinamento, setInOrdinamento] = useState<string[] | null>(null);
   /** Il gioco appena spostato e la freccia usata: il fuoco resta lì per spostarlo ancora. */
   const [spostato, setSpostato] = useState<{ id: string; verso: -1 | 1 } | null>(null);
+  /** Un gioco a schermo intero (es. una partita a metà e metà) nasconde la barra dell'app. */
+  const [schermoIntero, setSchermoIntero] = useState(false);
+  useEffect(() => seguiSchermoIntero(setSchermoIntero), []);
+  // Uscendo da un gioco la barra torna comunque (anche se il gioco non ha fatto in tempo a dirlo).
+  useEffect(() => {
+    if (!voce) setSchermoIntero(false);
+  }, [voce]);
 
   // Di base in ordine alfabetico nella lingua corrente; con un ordine salvato, quello (i giochi nuovi in fondo).
   const alfabetico = giochi.map((v) => conTesti(v, lingua)).sort((a, b) => a.nome.localeCompare(b.nome, lingua));
@@ -151,7 +158,7 @@ export function App() {
   if (voce && gioco) {
     const { Componente } = voce;
     return (
-      <main className="app">
+      <main className={`app${schermoIntero ? " app--schermo-intero" : ""}`}>
         <header className="barra-gioco barra-fissa">
           <a className="tema-btn" href="/" onClick={indietro} aria-label={t("indietro")}>
             <Icona nome="indietro" />

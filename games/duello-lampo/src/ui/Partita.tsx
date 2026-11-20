@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { creaRng, type Rng } from "@gdt/engine";
+import { segnalaSchermoIntero } from "@gdt/preferenze";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { assegna, erroriRound, finita, idCorrente, impostazioniDi, nuovaPartita, type Errori, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
@@ -53,11 +54,14 @@ function usaSchermoAcceso() {
     };
     chiedi();
     document.addEventListener("visibilitychange", chiedi);
+    // La partita usa tutto lo schermo: l'app nasconde la sua barra in alto.
+    segnalaSchermoIntero(true);
     // Niente scorrimento della pagina sotto la partita.
     const precedente = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     return () => {
       attivo = false;
+      segnalaSchermoIntero(false);
       document.removeEventListener("visibilitychange", chiedi);
       document.documentElement.style.overflow = precedente;
       blocco?.release().catch(() => undefined);

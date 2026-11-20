@@ -76,3 +76,4 @@ export function usaPreferenza(gioco: string, imp: ImpostazioneGioco): ValorePref
   return useSyncExternalStore(iscriviti, () => leggiPreferenza(gioco, imp));
 }
 export { applicaOrdine, decodificaOrdine, leggiOrdine, scriviOrdine, spostaVoce } from "./ordine";
+export { EVENTO_SCHERMO_INTERO, segnalaSchermoIntero, seguiSchermoIntero } from "./schermo";

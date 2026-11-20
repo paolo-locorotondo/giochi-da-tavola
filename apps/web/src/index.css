@@ -424,6 +424,12 @@ h1 {
   margin-bottom: 1rem;
 }
 
+/* Un gioco a schermo intero (es. Duello Lampo durante la partita): la barra dell'app non c'è */
+.app--schermo-intero .barra-gioco,
+.app--schermo-intero .versione {
+  display: none;
+}
+
 .barra-titolo {
   text-align: center;
   font-family: var(--font-titoli);

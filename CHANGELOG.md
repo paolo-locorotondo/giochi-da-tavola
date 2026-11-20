@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.23.1] - 2026-11-20
+
+### Corretto
+
+- Duello Lampo: a partita avviata la barra in alto dell'app (resa fissa nella 0.23.0) copriva la metà dello schermo di chi sta in alto. Ora la partita sta sopra a tutto e la barra si nasconde finché si gioca; torna uscendo. Regola generale: un gioco a schermo intero lo segnala con `segnalaSchermoIntero` (`@gdt/preferenze`), gli altri giochi tengono la barra.
+
 ## [0.23.0] - 2026-11-20
 
 ### Aggiunto

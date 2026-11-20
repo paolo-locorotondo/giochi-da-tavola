@@ -12,6 +12,7 @@
   "dependencies": {
     "@gdt/engine": "workspace:*",
     "@gdt/i18n": "workspace:*",
+    "@gdt/preferenze": "workspace:*",
     "@gdt/suoni": "workspace:*",
     "lucide-react": "^1.69.0"
   },

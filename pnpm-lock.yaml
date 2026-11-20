@@ -137,6 +137,9 @@ importers:
       '@gdt/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
+      '@gdt/preferenze':
+        specifier: workspace:*
+        version: link:../../packages/preferenze
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni

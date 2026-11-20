@@ -230,7 +230,8 @@ for (const [id, nome, attesa] of [
     await schermata(page, `${id}-attesa`, { maschera: [".dl-trova-griglia"] });
     const bersaglioAlto = alto(page).locator('.dl-trova-casella[data-bersaglio="true"]');
     await expect(bersaglioAlto).toBeVisible({ timeout: 10_000 });
-    await schermata(page, id);
+    // Al momento della comparsa le figure cambiano ancora: la griglia si maschera, per non rendere lo screenshot instabile.
+    await schermata(page, id, { maschera: [".dl-trova-griglia"] });
     // Dopo la comparsa le figure continuano a cambiare (il fermo direbbe che il bersaglio è uscito),
     // mentre il bersaglio resta nella sua casella.
     const figure = () =>
@@ -505,4 +506,22 @@ test("duello lampo: con l'ordine a caso le mani restano di fila", async ({ page 
   await basso(page).getByRole("button", { name: "Avanti" }).click({ timeout: 10_000 });
   await expect(basso(page).getByRole("heading")).toHaveText(primo!);
   await expect(basso(page).locator(".dl-testa")).toContainText("Round 2 di 4");
+});
+
+test("duello lampo: a partita avviata la barra dell'app non copre la metà in alto, e torna uscendo", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await expect(page.locator(".barra-gioco")).toBeVisible();
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  // La barra non c'è e la metà in alto parte dal bordo dello schermo.
+  await expect(page.locator(".barra-gioco")).toBeHidden();
+  await expect(page.getByRole("link", { name: "Indietro" })).toBeHidden();
+  const alta = await alto(page).boundingBox();
+  expect(Math.round(alta!.y)).toBeLessThanOrEqual(1);
+  // Nessun elemento dell'app sta sopra la metà in alto (il primo elemento in cima è del gioco).
+  const sopra = await page.evaluate(() => document.elementFromPoint(window.innerWidth / 2, 10)?.closest(".dl-gioco") !== null);
+  expect(sopra).toBe(true);
+  // Uscendo la barra torna.
+  await page.getByRole("button", { name: "Esci dalla sfida" }).click();
+  await page.getByRole("button", { name: "Esci", exact: true }).click();
+  await expect(page.locator(".barra-gioco")).toBeVisible();
 });
