@@ -314,11 +314,11 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
   };
   return (
     <section className="schermata allineata">
-      <p className="muted">{t("coppieAiuto")}</p>
       <p className="muted">{t("riepilogoConfig", { posti: v.config.posti, soglia: v.config.soglia })}</p>
       {v.config.posti === 4 && (
         <div className="sc-coppie">
           <h3>{t("coppie")}</h3>
+          <p className="muted">{t("coppieAiuto")}</p>
           <ul className="sc-coppie-lista">
             {([0, 1] as const).map((sq) => (
               <li key={sq}>{nomeSquadra(t, v, sq)}</li>
@@ -329,7 +329,7 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
               <p className="muted">{t("coppieScambia")}</p>
               <div className="giocatori">
                 {v.nomi.map((n) => (
-                  <button key={n.posto} className="btn" aria-pressed={scambio === n.posto} onClick={() => tocca(n.posto)}>
+                  <button key={n.posto} className="btn" aria-label={t("scambiaNome", { nome: n.nome })} aria-pressed={scambio === n.posto} onClick={() => tocca(n.posto)}>
                     <ArrowLeftRight size={16} aria-hidden="true" /> {n.nome}
                   </button>
                 ))}

@@ -1,4 +1,4 @@
-import type { Carta } from "@gdt/carte";
+import type { Carta } from "@gdt/carte/src/tipi";
 import type { Rng } from "@gdt/engine";
 import { ErroreScopa, gioca, mazzoCompleto, presePossibili, type Partita } from "./logica";
 import { valorePrimiera } from "./punti";

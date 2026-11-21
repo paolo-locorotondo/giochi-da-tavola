@@ -111,6 +111,7 @@ export const en: Dizionario<typeof it> = {
   compagnoDi: "{nome}'s partner",
   coppieAiuto: "Turns follow the seat order; by default partners sit opposite each other (seats 1 and 3).",
   coppieScambia: "To swap two players from different pairs, tap the first and then the second.",
+  scambiaNome: "Swap {nome}",
   round: "Round {n}",
   manoDi: "Hand {n} of {tot}",
   toccaATe: "Your turn",

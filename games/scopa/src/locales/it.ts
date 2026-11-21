@@ -114,6 +114,7 @@ export const it = {
   compagnoDi: "Compagno di {nome}",
   coppieAiuto: "Si gioca a turno nell'ordine dei posti; i compagni di base sono di fronte (posti 1 e 3).",
   coppieScambia: "Per scambiare due giocatori di coppie diverse, tocca il primo e poi il secondo.",
+  scambiaNome: "Scambia {nome}",
   // Tavolo
   round: "Round {n}",
   manoDi: "Mano {n} di {tot}",
