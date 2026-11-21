@@ -20,6 +20,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@gdt/burraco':
+        specifier: workspace:*
+        version: link:../../games/burraco
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -51,6 +54,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@gdt/burraco':
+        specifier: workspace:*
+        version: link:../../games/burraco
       '@gdt/dadi':
         specifier: workspace:*
         version: link:../../games/dadi

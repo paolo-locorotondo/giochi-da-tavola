@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@gdt/burraco": "workspace:*",
     "@gdt/engine": "workspace:*",
     "@gdt/impostore": "workspace:*",
     "@gdt/tic-tac-toe": "workspace:*",

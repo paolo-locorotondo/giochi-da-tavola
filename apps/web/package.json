@@ -12,6 +12,7 @@
     "test:e2e:aggiorna": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@gdt/burraco": "workspace:*",
     "@gdt/dadi": "workspace:*",
     "@gdt/duello-lampo": "workspace:*",
     "@gdt/i18n": "workspace:*",
