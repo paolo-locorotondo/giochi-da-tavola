@@ -1,4 +1,4 @@
-import { mescola } from "@gdt/carte";
+import { mescola } from "@gdt/carte/logica";
 import type { Rng } from "@gdt/engine";
 import { eMatta, mazzoCompleto, valorePunti, type Carta } from "./carte";
 import { attacca, bonusBurraco, burraco, leggi, puntiCarte, type Combinazione } from "./combinazioni";

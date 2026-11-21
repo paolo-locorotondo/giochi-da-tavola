@@ -1,4 +1,4 @@
-import { SEMI_FRANCESI, type SemeFrancese } from "@gdt/carte";
+import { SEMI_FRANCESI, type SemeFrancese } from "@gdt/carte/logica";
 import type { Rng } from "@gdt/engine";
 import { eMatta, valorePunti, type Carta } from "./carte";
 import { attacca, leggi, type Combinazione } from "./combinazioni";
