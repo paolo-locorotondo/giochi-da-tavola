@@ -87,10 +87,10 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | Blocco | Branch / worktree | Stato |
 |---|---|---|
 | Piani (5 file) | main | unito |
-| 0a Contratto `veloce` + `ctx.ora()` in engine | lavoro/base-engine | in corso (2026-11-21) |
+| 0a Contratto `veloce` + `ctx.ora()` in engine | main | unito (2026-11-21) |
 | 0b `@gdt/carte` | lavoro/base-carte | in corso (2026-11-21) |
 | 4 Duello Lampo (Bersagli, Il più grande) | lavoro/duello-lampo | in corso (2026-11-21) |
-| 1 Partita veloce (server + UI) | — | da fare, dopo 0a |
-| 5 Ultima! varianti | — | da fare, dopo 0a |
+| 1 Partita veloce (server + UI) | lavoro/partita-veloce | in corso (2026-11-21) |
+| 5 Ultima! varianti | lavoro/ultima-varianti | in corso (2026-11-21) |
 | 3 Scopa | — | da fare, dopo 0a e 0b |
 | 2 Burraco | — | da fare, dopo 0a e 0b |
