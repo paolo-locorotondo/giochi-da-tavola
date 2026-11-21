@@ -58,8 +58,8 @@ export interface Partita {
   pozzetti: Carta[][];
   /** La squadra ha già preso (o sta per ricevere) il suo pozzetto. */
   presi: boolean[];
-  /** Chi ha finito le carte scartando: riceve il pozzetto all'inizio del suo prossimo turno. */
-  inAttesa: number | null;
+  /** Chi ha finito le carte scartando: riceve il pozzetto all'inizio del suo prossimo turno (anche due, uno per squadra). */
+  inAttesa: number[];
   combinazioni: Combinazione[];
   prossimoId: number;
   turno: number;
@@ -92,7 +92,7 @@ export function nuovaMano(n: number, rng: Rng, primo: number, pila: Pila, mano =
     mani,
     pozzetti,
     presi: [false, false],
-    inAttesa: null,
+    inAttesa: [],
     combinazioni: [],
     prossimoId: 1,
     turno: primo,
@@ -163,6 +163,7 @@ export function puoPrendere(p: Partita, posto: number): boolean {
   if (!pilaBloccata(p)) return true;
   const cima = p.scarti[p.scarti.length - 1]!;
   if (eMatta(cima)) return false;
+  if (REGOLE.unTrisPerValore && p.combinazioni.some((c) => c.squadra === squadra(posto) && c.tipo === "tris" && c.posate[0]!.come === cima.valore)) return false;
   return p.mani[posto - 1]!.filter((c) => !eMatta(c) && c.valore === cima.valore).length >= 2;
 }
 
@@ -266,7 +267,7 @@ export function scarta(p: Partita, posto: number, idCarta: number): Partita {
       return { ...base, fine: { motivo: "chiusura", chi: posto }, eventi: conEvento(base, { tipo: "chiusura", posto }) };
     }
     // Pozzetto «con lo scarto»: è della squadra da subito, arriva in mano al prossimo turno.
-    return passaTurno({ ...base, presi: p.presi.map((x, i) => (i === sq - 1 ? true : x)), inAttesa: posto });
+    return passaTurno({ ...base, presi: p.presi.map((x, i) => (i === sq - 1 ? true : x)), inAttesa: [...p.inAttesa, posto] });
   }
   return passaTurno(base);
 }
@@ -281,11 +282,11 @@ function passaTurno(p: Partita): Partita {
   }
   const turno = avanza(p.turno, p.n);
   const prossimo: Partita = { ...p, turno, fase: "pescare", senzaProgressi, progresso: false };
-  if (p.inAttesa !== turno) return prossimo;
+  if (!p.inAttesa.includes(turno)) return prossimo;
   const sq = squadra(turno);
   return {
     ...prossimo,
-    inAttesa: null,
+    inAttesa: p.inAttesa.filter((x) => x !== turno),
     mani: p.mani.map((m, i) => (i === turno - 1 ? [...m, ...p.pozzetti[sq - 1]!] : m)),
     pozzetti: p.pozzetti.map((x, i) => (i === sq - 1 ? [] : x)),
     eventi: conEvento(p, { tipo: "pozzetto", posto: turno, diretta: false }),
@@ -317,7 +318,7 @@ export function punteggioMano(p: Partita): [PunteggioSquadra, PunteggioSquadra] 
     p.mani.forEach((m, i) => {
       if (squadra(i + 1) === sq) inMano -= m.reduce((s, c) => s + valorePunti(c), 0);
     });
-    if (p.inAttesa !== null && squadra(p.inAttesa) === sq) inMano -= p.pozzetti[sq - 1]!.reduce((s, c) => s + valorePunti(c), 0);
+    if (p.inAttesa.some((x) => squadra(x) === sq)) inMano -= p.pozzetti[sq - 1]!.reduce((s, c) => s + valorePunti(c), 0);
     const pozzetto = !p.presi[sq - 1] && !nessunoPreso ? REGOLE.bonus.pozzettoNonPreso : 0;
     return { calate, burraco: bonus, chiusura, inMano, pozzetto, totale: calate + bonus + chiusura + inMano + pozzetto };
   };

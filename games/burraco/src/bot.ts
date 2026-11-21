@@ -1,7 +1,7 @@
 import { SEMI_FRANCESI, type SemeFrancese } from "@gdt/carte";
 import type { Rng } from "@gdt/engine";
 import { eMatta, valorePunti, type Carta } from "./carte";
-import { attacca, leggi, puntiCarte, type Combinazione } from "./combinazioni";
+import { attacca, leggi, type Combinazione } from "./combinazioni";
 import {
   ErroreBurraco,
   cala,
@@ -38,38 +38,38 @@ export const PERCENTUALE_MEDIO = 0.55;
 const naturaleA = (c: Carta, seme: SemeFrancese, pos: number): boolean =>
   c.seme === seme && (c.valore === 1 ? pos === 1 || pos === 14 : c.valore === pos);
 
-/** Tutte le combinazioni nuove possibili con queste carte (insiemi di id già validi). */
-function candidati(carte: readonly Carta[], valoriTrisVietati: ReadonlySet<number>): number[][] {
-  const ris: number[][] = [];
+interface Candidata {
+  ids: number[];
+  matte: number;
+}
+
+/** Tutte le combinazioni nuove possibili con queste carte (insiemi di id già validi, con quante matte usano). */
+function candidati(carte: readonly Carta[], valoriTrisVietati: ReadonlySet<number>): Candidata[] {
+  const ris: Candidata[] = [];
   const matte = [...carte].filter(eMatta).sort((a, b) => valorePunti(a) - valorePunti(b));
   // Tris
   for (let v = 1; v <= 13; v++) {
     if (v === 2 || valoriTrisVietati.has(v)) continue;
     const nat = carte.filter((c) => !eMatta(c) && c.valore === v);
-    if (nat.length >= 3) ris.push(nat.slice(0, REGOLE.massimoTris - 1).map((c) => c.id));
-    if (nat.length >= 2 && matte.length > 0) ris.push([...nat.slice(0, REGOLE.massimoTris - 2).map((c) => c.id), matte[0]!.id]);
+    if (nat.length >= 3) ris.push({ ids: nat.slice(0, REGOLE.massimoTris - 1).map((c) => c.id), matte: 0 });
+    if (nat.length >= 2 && matte.length > 0) ris.push({ ids: [...nat.slice(0, REGOLE.massimoTris - 2).map((c) => c.id), matte[0]!.id], matte: 1 });
   }
-  // Scale
+  // Scale: per ogni seme e inizio si allunga una posizione alla volta, fermandosi al secondo buco.
   for (const seme of SEMI_FRANCESI) {
+    const delSeme = carte.filter((c) => c.seme === seme);
     for (let s = 1; s <= 12; s++) {
-      for (let e = s + 2; e <= 14; e++) {
-        const usate = new Set<number>();
-        let buco = false;
-        let ok = true;
-        for (let p = s; p <= e && ok; p++) {
-          const c = carte.find((x) => !usate.has(x.id) && naturaleA(x, seme, p));
-          if (c) {
-            usate.add(c.id);
-            continue;
-          }
-          const m = matte.find((x) => !usate.has(x.id));
-          if (buco || !m) ok = false;
-          else {
-            buco = true;
-            usate.add(m.id);
-          }
+      const usate: number[] = [];
+      let buco = false;
+      for (let p = s; p <= 14; p++) {
+        const c = delSeme.find((x) => !usate.includes(x.id) && naturaleA(x, seme, p));
+        if (c) usate.push(c.id);
+        else {
+          const m = matte.find((x) => !usate.includes(x.id));
+          if (buco || !m) break;
+          buco = true;
+          usate.push(m.id);
         }
-        if (ok && usate.size >= 3) ris.push([...usate]);
+        if (p - s >= 2) ris.push({ ids: [...usate], matte: buco ? 1 : 0 });
       }
     }
   }
@@ -83,19 +83,19 @@ export function miglioriNuove(mano: readonly Carta[], squadraCombs: readonly Com
   const gruppi: Gruppo[] = [];
   for (;;) {
     let migliore: { ids: number[]; valore: number } | null = null;
-    for (const ids of candidati(rimaste, vietati)) {
-      const carte = ids.map((id) => rimaste.find((c) => c.id === id)!);
-      const lettura = leggi(carte);
-      if (!lettura) continue;
-      const matte = lettura.posate.filter((p) => p.matta).length;
-      const valore = puntiCarte(lettura.posate) + 25 * carte.length - 15 * matte;
-      if (!migliore || valore > migliore.valore) migliore = { ids, valore };
+    for (const cand of candidati(rimaste, vietati)) {
+      const carte = cand.ids.map((id) => rimaste.find((c) => c.id === id)!);
+      const valore = carte.reduce((t, c) => t + valorePunti(c), 0) + 25 * carte.length - 15 * cand.matte;
+      if (!migliore || valore > migliore.valore) migliore = { ids: cand.ids, valore };
     }
     if (!migliore) break;
+    const carte = migliore.ids.map((id) => rimaste.find((c) => c.id === id)!);
+    const l = leggi(carte);
+    // Scala di sole carte rimaste dopo aver tolto la migliore: se non è leggibile si ferma qui.
+    if (!l) break;
     const usate = new Set(migliore.ids);
     gruppi.push({ carte: migliore.ids });
     // Due tris dello stesso valore non si possono avere: il secondo diventa vietato.
-    const l = leggi(migliore.ids.map((id) => rimaste.find((c) => c.id === id)!))!;
     if (l.tipo === "tris") vietati.add(l.posate[0]!.come);
     rimaste = rimaste.filter((c) => !usate.has(c.id));
   }
@@ -205,11 +205,15 @@ function vuolePila(p: Partita, posto: number): number[] | true | false {
     const due = mano.filter((c) => !eMatta(c) && c.valore === cima.valore).slice(0, 2);
     return due.length === 2 ? due.map((c) => c.id) : false;
   }
-  const prima = puntiGruppi(mano, [...miglioriNuove(mano, mie), ...attaccabili(mano, mie, new Set(miglioriNuove(mano, mie).flatMap((g) => g.carte)))]);
+  const piano = (carte: readonly Carta[]): Gruppo[] => {
+    const nuove = miglioriNuove(carte, mie);
+    return [...nuove, ...attaccabili(carte, mie, new Set(nuove.flatMap((g) => g.carte)))];
+  };
+  const prima = puntiGruppi(mano, piano(mano));
   const tutte = [...mano, ...p.scarti];
-  const nuove = miglioriNuove(tutte, mie);
-  const dopo = puntiGruppi(tutte, [...nuove, ...attaccabili(tutte, mie, new Set(nuove.flatMap((g) => g.carte)))]);
-  const usate = new Set([...nuove, ...attaccabili(tutte, mie, new Set(nuove.flatMap((g) => g.carte)))].flatMap((g) => g.carte));
+  const dopoPiano = piano(tutte);
+  const dopo = puntiGruppi(tutte, dopoPiano);
+  const usate = new Set(dopoPiano.flatMap((g) => g.carte));
   const zavorra = p.scarti.filter((c) => !usate.has(c.id)).reduce((s, c) => s + valorePunti(c), 0);
   const guadagno = dopo - prima - zavorra / 2;
   const usaMonte = p.scarti.some((c) => usate.has(c.id));

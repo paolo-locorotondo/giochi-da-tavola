@@ -65,7 +65,12 @@ function comeScale(carte: readonly Carta[]): Interpretazione[] {
   if (n < REGOLE.minimoCombinazione || n > REGOLE.massimoScala) return [];
   const risultati: Interpretazione[] = [];
   const viste = new Set<string>();
-  for (const seme of SEMI_FRANCESI) {
+  // Il seme è quello delle carte che non possono fare da matta (tutte uguali); se sono tutte matte, si provano i semi dei 2.
+  const fisse = carte.filter((c) => !eMatta(c));
+  const semiFissi = new Set(fisse.map((c) => c.seme));
+  if (semiFissi.size > 1) return [];
+  const semi = fisse.length > 0 ? SEMI_FRANCESI.filter((s) => semiFissi.has(s)) : SEMI_FRANCESI.filter((s) => carte.some((c) => c.seme === s));
+  for (const seme of semi) {
     for (let inizio = 1; inizio + n - 1 <= 14; inizio++) {
       const usate = new Array<boolean>(n).fill(false);
       const posate: Posata[] = [];
