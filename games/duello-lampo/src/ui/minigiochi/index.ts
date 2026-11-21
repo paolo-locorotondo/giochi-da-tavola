@@ -1,7 +1,9 @@
 import type { ComponentType } from "react";
+import { BersagliVista, descriviBersagli } from "./BersagliVista";
 import { ColoreVista, descriviColore } from "./ColoreVista";
 import { MemoriaVista, descriviMemoria } from "./MemoriaVista";
 import { NomiVista, descriviNomi } from "./NomiVista";
+import { PiuGrandeVista, descriviPiuGrande } from "./PiuGrandeVista";
 import { RafficaVista, descriviRaffica } from "./RafficaVista";
 import { StopVista, descriviStop } from "./StopVista";
 import { creaTrovaVista, descriviTrova } from "./TrovaVista";
@@ -26,6 +28,8 @@ export const VISTE: Readonly<Record<string, VoceVista>> = {
   panda: { Vista: creaTrovaVista("aspettaPanda"), descrivi: descriviTrova },
   smile: { Vista: creaTrovaVista("aspettaSmile"), descrivi: descriviTrova },
   memoria: { Vista: MemoriaVista, descrivi: descriviMemoria },
+  bersagli: { Vista: BersagliVista, descrivi: descriviBersagli },
+  piugrande: { Vista: PiuGrandeVista, descrivi: descriviPiuGrande },
 };
 
 export type { T, VistaProps } from "./tipi";

@@ -21,7 +21,7 @@ Giochi, in ordine:
 4. **Tris** — tre in fila, contro il telefono o in due; anche online (ognuno col suo telefono).
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
-6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo), 1 punto a ogni mini gioco. Si scelgono le mani di ogni mini gioco, le sue impostazioni e l'ordine (a caso o scelto). Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
+6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo, Bersagli, Il più grande), 1 punto a ogni mini gioco. Si scelgono le mani di ogni mini gioco, le sue impostazioni e l'ordine (a caso o scelto). Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
 7. **Ultima!** — gioco di carte a colori e numeri (regole ufficiali), contro i bot su un telefono (anche offline) oppure online da 2 a 10 (la mano è segreta). Round singolo o partita a punti; «Simula mossa col bot» per chi non risponde. Piano e decisioni: [piano-ultima.md](piano-ultima.md).
 8. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
@@ -244,4 +244,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
   - chi esce dalla sala prima dell'avvio libera il posto; scadenza di una stanza aperta che non si riempie (oggi 2 minuti per la coda);
   - contratto `GiocoOnline`: probabilmente `coda` diventa `{ min, max }` o `{ posti }` e il server smette di avviare da solo; i nomi arrivano uno alla volta (oggi `nuovoStato` riceve tutti i nomi alla creazione).
 - TODO **Impostore, partita veloce**: per ora no (deciso il 2026-11-21); si potrà aggiungere dichiarando `veloce` nel modulo online quando la partita veloce a stanze aperte sarà pronta.
-- TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).
+- FATTO **Duello Lampo: Bersagli e Il più grande** (nuova funzione, 10 mini giochi, 20 round di base). Scelte: la penalità «errori −1» di Bersagli è una per round (chi tocca a vuoto almeno una volta), non una per tocco, perché il contratto `errore` è per round; in Il più grande un numero sbagliato fa perdere il round; suono nuovo solo per il colpo di Bersagli; nessuna attesa casuale prima dei numeri.
+- TODO **Duello Lampo**: griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

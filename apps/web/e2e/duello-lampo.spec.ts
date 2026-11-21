@@ -12,7 +12,7 @@ async function pronti(page: Page) {
   await alto(page).getByRole("button", { name: "Sono pronto" }).click();
 }
 
-const NOMI = { via: "Via!", raffica: "Raffica", stop: "Stop al centro", colore: "Colore giusto", nomi: "Colori e nomi", panda: "Trova il panda", smile: "Trova lo smile", memoria: "Memoria lampo" } as const;
+const NOMI = { via: "Via!", raffica: "Raffica", stop: "Stop al centro", colore: "Colore giusto", nomi: "Colori e nomi", panda: "Trova il panda", smile: "Trova lo smile", memoria: "Memoria lampo", bersagli: "Bersagli", piugrande: "Il più grande" } as const;
 type Id = keyof typeof NOMI;
 
 /** Imposta le mani di ogni mini gioco (le altre a 0) usando i pulsanti + e −. */
@@ -38,12 +38,12 @@ const punti = (page: Page, lato: "basso" | "alto") => page.locator(`.dl-meta--${
 test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page }) => {
   await page.goto("/duello-lampo");
   // Predefinito: 2 mani per mini gioco.
-  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
-  await expect(page.locator(".dl-totale")).toHaveText("In tutto 16 round");
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-totale")).toHaveText("In tutto 20 round");
   await schermata(page, "preparazione");
 
   await impostaMani(page, { via: 2, stop: 3 });
-  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0", "0", "0"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "0", "3", "0", "0", "0", "0", "0", "0", "0"]);
   await expect(page.locator(".dl-totale")).toHaveText("In tutto 5 round");
   await expect(page.getByRole("button", { name: "Una mano in meno di Raffica" })).toBeDisabled();
 
@@ -61,7 +61,7 @@ test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page 
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeDisabled();
 
   await page.getByRole("button", { name: "Tutti" }).click();
-  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]);
   await page.getByRole("button", { name: "A caso" }).click();
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeEnabled();
 });
@@ -75,7 +75,7 @@ test("duello lampo: la scelta si ricorda sul telefono", async ({ page }) => {
   await expect(basso(page).locator(".dl-punti-nome")).toHaveText("Anna");
   await page.reload();
   await expect(page.getByLabel("Chi sta in basso")).toHaveValue("Anna");
-  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0", "0", "0"]);
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["1", "0", "3", "0", "0", "0", "0", "0", "0", "0"]);
 });
 
 test("duello lampo: le mani di un mini gioco escono di fila, nell'ordine dell'elenco", async ({ page }) => {
@@ -355,8 +355,8 @@ const pannello = (page: Page, nome: string) => page.locator(".dl-mg-riga", { has
 
 test("duello lampo: impostazioni di ogni mini gioco, in un pannello a scomparsa", async ({ page }) => {
   await page.goto("/duello-lampo");
-  // Solo i mini giochi con impostazioni hanno il pannello: tutti e otto ne hanno almeno una.
-  await expect(page.locator("details.dl-imp")).toHaveCount(8);
+  // Solo i mini giochi con impostazioni hanno il pannello: tutti e dieci ne hanno almeno una.
+  await expect(page.locator("details.dl-imp")).toHaveCount(10);
   await expect(page.locator("details.dl-imp[open]")).toHaveCount(0);
 
   const memoria = pannello(page, "Memoria lampo");
@@ -448,10 +448,10 @@ test("duello lampo: ordine a caso di base; con «Il mio ordine» si spostano i m
   await expect(page.locator(".dl-sequenza")).toHaveText("Ordine casuale, nuovo a ogni sfida");
 
   await page.getByRole("radio", { name: "Il mio ordine" }).check({ force: true });
-  await expect(page.locator(".dl-sposta")).toHaveCount(8);
+  await expect(page.locator(".dl-sposta")).toHaveCount(10);
   // Il primo non sale e l'ultimo non scende.
   await expect(page.getByRole("button", { name: "Sposta su Via!" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Sposta giù Memoria lampo" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sposta giù Il più grande" })).toBeDisabled();
 
   // Stop al centro sale di due posti e diventa il primo; il fuoco resta sulla sua freccia.
   await page.getByRole("button", { name: "Sposta su Stop al centro" }).click();
@@ -524,4 +524,91 @@ test("duello lampo: a partita avviata la barra dell'app non copre la metà in al
   await page.getByRole("button", { name: "Esci dalla sfida" }).click();
   await page.getByRole("button", { name: "Esci", exact: true }).click();
   await expect(page.locator(".barra-gioco")).toBeVisible();
+});
+
+test("duello lampo: impostazioni di Bersagli e di Il più grande", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  const bers = pannello(page, "Bersagli");
+  await bers.locator("summary").click();
+  const gruppo = bers.getByRole("group", { name: "Impostazioni di Bersagli" });
+  for (const titolo of ["Durata", "Griglia", "Quanto resta acceso un bersaglio", "Ogni quanto compare un bersaglio"]) {
+    await expect(gruppo.getByText(titolo, { exact: true })).toBeVisible();
+  }
+  await expect(gruppo.getByRole("radio", { name: "8 s", exact: true })).toBeChecked();
+  await expect(gruppo.getByRole("radio", { name: "3×3" })).toBeChecked();
+  await expect(gruppo.getByRole("switch", { name: "Gli errori contano −1" })).not.toBeChecked();
+  await bers.locator("summary").scrollIntoViewIfNeeded();
+  await schermata(page, "impostazioni-bersagli");
+  await bers.locator("summary").click();
+
+  const pg = pannello(page, "Il più grande");
+  await pg.locator("summary").click();
+  const gruppoPg = pg.getByRole("group", { name: "Impostazioni di Il più grande" });
+  await expect(gruppoPg.getByText("Scarto minimo tra i due più grandi")).toBeVisible();
+  await gruppoPg.getByRole("radio", { name: "9", exact: true }).check({ force: true });
+  await expect(pg.locator("summary")).toContainText("1 modificate");
+  await schermata(page, "impostazioni-piugrande");
+});
+
+test("duello lampo: Bersagli, si colpiscono i cerchi e chi tocca a vuoto perde un punto", async ({ page }) => {
+  await page.goto("/duello-lampo");
+  await impostaMani(page, { bersagli: 1 });
+  const bers = pannello(page, "Bersagli");
+  await bers.locator("summary").click();
+  const gruppo = bers.getByRole("group", { name: "Impostazioni di Bersagli" });
+  // Griglia più fitta (4×4, il caso più stretto per il telefono) e round breve.
+  await gruppo.getByRole("radio", { name: "4×4" }).check({ force: true });
+  await gruppo.getByRole("radio", { name: "5 s", exact: true }).check({ force: true });
+  await gruppo.getByRole("switch", { name: "Gli errori contano −1" }).check();
+  await page.getByRole("button", { name: "Inizia la sfida" }).click();
+  await expect(basso(page).getByRole("heading", { name: "Bersagli" })).toBeVisible();
+  await pronti(page);
+
+  await expect(basso(page).locator(".dl-bersagli-cella")).toHaveCount(16, { timeout: 10_000 });
+  await expect(basso(page).getByRole("status")).toHaveText("Colpiti: 0");
+  // Lo stato sta sopra il riquadro e non copre le celle.
+  const posto = await basso(page).evaluate((meta) => {
+    const info = meta.querySelector(".dl-bersagli-info")!.getBoundingClientRect();
+    const riquadro = meta.querySelector(".dl-bersagli")!.getBoundingClientRect();
+    const testa = meta.querySelector(".dl-testa")!.getBoundingClientRect();
+    return { sotto: info.top >= testa.bottom, sopra: info.bottom <= riquadro.top };
+  });
+  expect(posto).toEqual({ sotto: true, sopra: true });
+
+  const bersaglio = basso(page).locator(".dl-bersaglio").first();
+  await expect(bersaglio).toBeVisible({ timeout: 5_000 });
+  // I bersagli compaiono e spariscono: la griglia e il tempo si mascherano.
+  await schermata(page, "bersagli", { maschera: [".dl-bersagli-griglia", ".dl-bersagli-info"] });
+  // In basso si colpisce il bersaglio; in alto si tocca una cella vuota.
+  await bersaglio.dispatchEvent("pointerdown");
+  await expect(basso(page).getByRole("status")).toHaveText(/Colpito!|Colpiti: 1/);
+  await alto(page).locator(".dl-bersagli-cella:not(:has(.dl-bersaglio))").first().dispatchEvent("pointerdown");
+
+  // Il round si chiude da solo allo scadere.
+  await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!", { timeout: 15_000 });
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Tu: 1 colpito");
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: 0 colpiti · 1 a vuoto (−1)");
+  await expect(punti(page, "basso")).toHaveText("1");
+  await expect(punti(page, "alto")).toHaveText("-1");
+});
+
+test("duello lampo: Il più grande, vince chi tocca il numero più grande; chi sbaglia perde", async ({ page }) => {
+  await iniziaCon(page, { piugrande: 1 });
+  await expect(basso(page).getByRole("heading", { name: "Il più grande" })).toBeVisible();
+  await pronti(page);
+  await expect(basso(page).locator(".dl-numero")).toHaveCount(6, { timeout: 10_000 });
+  await expect(basso(page).getByRole("status")).toHaveText("Tocca il numero più grande");
+  // Gli stessi numeri nelle stesse posizioni per tutti e due.
+  const valori = (lato: ReturnType<typeof basso>) => lato.locator(".dl-numero").evaluateAll((l) => l.map((e) => e.getAttribute("data-valore")));
+  expect(await valori(alto(page))).toEqual(await valori(basso(page)));
+  const numeri = (await valori(basso(page))).map(Number);
+  expect(Number(await basso(page).locator('.dl-numero[data-piu-grande="true"]').getAttribute("data-valore"))).toBe(Math.max(...numeri));
+  await schermata(page, "piugrande");
+
+  await basso(page).locator('.dl-numero[data-piu-grande="true"]').dispatchEvent("pointerdown");
+  await expect(basso(page).getByRole("status")).toHaveText("Giusto!");
+  await schermata(page, "piugrande-giusto");
+  await alto(page).locator(".dl-numero:not([data-piu-grande])").first().dispatchEvent("pointerdown");
+  await expect(basso(page).locator(".dl-esito-titolo")).toHaveText("Punto per te!");
+  await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: sbagliato");
 });

@@ -25,6 +25,8 @@ import { GIUSTE_BASE, PAROLE_BASE, PAROLE_MAX, PAROLE_MIN, PASSI_S as PASSI_NOMI
 import { CASELLE as CASELLE_MEM_BASE, CASELLE_SCELTE, LUNGHEZZE, LUNGHEZZA as LUNGHEZZA_MEMORIA, colonne, fineDimostrazione, memoria } from "./minigiochi/memoria";
 import { DURATE_S } from "./minigiochi/raffica";
 import { PERIODI, VELOCITA } from "./minigiochi/stop";
+import { DURATE_S as B_DURATE, LATI as B_LATI, RITMI_S as B_RITMI, VITE_S as B_VITE, attivi, bersagli, valutaTocco } from "./minigiochi/bersagli";
+import { CIFRE_SCELTE as PG_CIFRE, DISTANZE as PG_DISTANZE, NUMERI_SCELTI as PG_NUMERI, intervallo, piugrande } from "./minigiochi/piugrande";
 
 const codice = (f: () => unknown) => {
   try {
@@ -535,6 +537,105 @@ describe("Memoria lampo", () => {
   });
 });
 
+describe("Bersagli", () => {
+  const c = bersagli.prepara(creaRng(3), base(bersagli));
+  it("i bersagli sono uguali con lo stesso seme, dentro la griglia e la durata, senza la stessa cella due volte di fila", () => {
+    expect(bersagli.prepara(creaRng(3), base(bersagli))).toEqual(c);
+    expect(c.bersagli.length).toBeGreaterThan(5);
+    expect(c.bersagli[0]!.comparsaMs).toBe(500);
+    c.bersagli.forEach((b, i) => {
+      expect(b.cella).toBeGreaterThanOrEqual(0);
+      expect(b.cella).toBeLessThan(9);
+      expect(b.comparsaMs).toBeLessThan(c.durataMs - 400);
+      expect(b.scadeMs - b.comparsaMs).toBe(1200);
+      if (i > 0) expect(b.cella).not.toBe(c.bersagli[i - 1]!.cella);
+    });
+  });
+  it("ogni combinazione di impostazioni dà un round coerente (mai due bersagli vivi nella stessa cella)", () => {
+    for (const durata of B_DURATE)
+      for (const lato of B_LATI)
+        for (const vita of B_VITE)
+          for (const ritmo of B_RITMI)
+            for (let seme = 0; seme < 5; seme++) {
+              const r = bersagli.prepara(creaRng(seme), valoriCompleti(bersagli.impostazioni, { durata, lato, vita, ritmo }));
+              expect(r.durataMs).toBe(durata * 1000);
+              expect(r.lato).toBe(lato);
+              // Nessuna comparsa salta: c'è sempre una cella libera.
+              expect(r.bersagli).toHaveLength(Math.ceil((durata * 1000 - 400 - 500) / Math.round(ritmo * 1000)));
+              for (const b of r.bersagli) {
+                expect(b.cella).toBeLessThan(lato * lato);
+                expect(attivi(r, b.comparsaMs).filter((i) => r.bersagli[i]!.cella === b.cella)).toHaveLength(1);
+              }
+            }
+  });
+  it("valutaTocco: colpito, già colpito (ignorato), a vuoto", () => {
+    const b = c.bersagli[0]!;
+    expect(valutaTocco(c, b.comparsaMs + 200, b.cella, new Set())).toEqual({ tipo: "colpito", indice: 0, ms: 200 });
+    expect(valutaTocco(c, b.comparsaMs + 300, b.cella, new Set([0]))).toEqual({ tipo: "ignorato" });
+    expect(valutaTocco(c, b.comparsaMs - 1, b.cella, new Set())).toEqual({ tipo: "vuoto" });
+    expect(valutaTocco(c, b.scadeMs, b.cella, new Set())).toEqual({ tipo: "vuoto" });
+    const t = b.comparsaMs + 100;
+    const vuota = [0, 1, 2, 3, 4, 5, 6, 7, 8].find((x) => !attivi(c, t).some((i) => c.bersagli[i]!.cella === x))!;
+    expect(valutaTocco(c, t, vuota, new Set())).toEqual({ tipo: "vuoto" });
+    expect(attivi(c, 0)).toEqual([]);
+  });
+  it("vince chi colpisce di più; a parità chi è più veloce; senza colpi è pari", () => {
+    expect(bersagli.vincitore(c, [{ colpiti: 4, sommaMs: 2000, vuoti: 5 }, { colpiti: 3, sommaMs: 100, vuoti: 0 }])).toBe(0);
+    expect(bersagli.vincitore(c, [{ colpiti: 3, sommaMs: 900, vuoti: 0 }, { colpiti: 3, sommaMs: 800, vuoti: 0 }])).toBe(1);
+    expect(bersagli.vincitore(c, [{ colpiti: 3, sommaMs: 800, vuoti: 1 }, { colpiti: 3, sommaMs: 801, vuoti: 0 }])).toBeNull();
+    expect(bersagli.vincitore(c, [{ colpiti: 0, sommaMs: 0, vuoti: 2 }, NESSUNO])).toBeNull();
+    expect(bersagli.vincitore(c, [NESSUNO, { colpiti: 1, sommaMs: 400, vuoti: 0 }])).toBe(1);
+  });
+  it("errore: almeno un tocco a vuoto (una sola penalità per round)", () => {
+    expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 4 })).toBe(true);
+    expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 0 })).toBe(false);
+    expect(bersagli.errore!(c, NESSUNO)).toBe(false);
+    expect(bersagli.durataMassima(c)).toBe(c.durataMs + 1500);
+  });
+});
+
+describe("Il più grande", () => {
+  it("ogni combinazione di impostazioni: numeri distinti nell'intervallo, scarto minimo rispettato", () => {
+    for (const quanti of PG_NUMERI)
+      for (const cifre of PG_CIFRE)
+        for (const distanza of PG_DISTANZE)
+          for (let seme = 0; seme < 60; seme++) {
+            const r = piugrande.prepara(creaRng(seme), valoriCompleti(piugrande.impostazioni, { numeri: quanti, cifre, distanza }));
+            const [min, max] = intervallo(cifre);
+            expect(r.numeri).toHaveLength(quanti);
+            expect(new Set(r.numeri).size).toBe(quanti);
+            for (const n of r.numeri) {
+              expect(n).toBeGreaterThanOrEqual(min);
+              expect(n).toBeLessThanOrEqual(max);
+            }
+            const ordinati = [...r.numeri].sort((a, b) => b - a);
+            expect(r.numeri[r.indicePiuGrande]).toBe(ordinati[0]);
+            expect(ordinati[0]! - ordinati[1]!).toBeGreaterThanOrEqual(distanza);
+            expect(r.colonne).toBe(colonne(quanti));
+          }
+  });
+  it("il più grande non sta sempre nella stessa posizione", () => {
+    const posizioni = new Set(Array.from({ length: 50 }, (_, s) => piugrande.prepara(creaRng(s), base(piugrande)).indicePiuGrande));
+    expect(posizioni.size).toBe(6);
+  });
+  const c = piugrande.prepara(creaRng(3), base(piugrande));
+  it("vince chi tocca giusto per primo; chi sbaglia perde; chi non tocca viene dopo chi è giusto", () => {
+    expect(piugrande.vincitore(c, [{ giusto: true, ms: 800 }, { giusto: true, ms: 900 }])).toBe(0);
+    expect(piugrande.vincitore(c, [{ giusto: false, ms: 100 }, { giusto: true, ms: 3000 }])).toBe(1);
+    expect(piugrande.vincitore(c, [{ giusto: false, ms: 100 }, NESSUNO])).toBe(1);
+    expect(piugrande.vincitore(c, [NESSUNO, { giusto: true, ms: 5000 }])).toBe(1);
+    expect(piugrande.vincitore(c, [{ giusto: true, ms: 700 }, { giusto: true, ms: 700 }])).toBeNull();
+    expect(piugrande.vincitore(c, [{ giusto: false, ms: 1 }, { giusto: false, ms: 9 }])).toBeNull();
+    expect(piugrande.vincitore(c, [NESSUNO, NESSUNO])).toBeNull();
+  });
+  it("errore: solo il numero sbagliato", () => {
+    expect(piugrande.errore!(c, { giusto: false, ms: 5 })).toBe(true);
+    expect(piugrande.errore!(c, { giusto: true, ms: 5 })).toBe(false);
+    expect(piugrande.errore!(c, NESSUNO)).toBe(false);
+    expect(piugrande.durataMassima(c)).toBe(6000);
+  });
+});
+
 describe("impostazioni dei mini giochi", () => {
   it("valoriCompleti: base se mancano, scarta valori non ammessi o di tipo sbagliato", () => {
     expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5, errori: false });
@@ -559,6 +660,8 @@ describe("impostazioni dei mini giochi", () => {
     expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, parole: 6, giuste: 1, errori: false });
     expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false, errori: false });
     expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
+    expect(valoriBase(bersagli.impostazioni)).toEqual({ durata: 8, lato: 3, vita: 1.2, ritmo: 0.9, errori: false });
+    expect(valoriBase(piugrande.impostazioni)).toEqual({ numeri: 6, cifre: 2, distanza: 5, errori: false });
   });
 
   it("ogni valore base è tra i valori ammessi", () => {
