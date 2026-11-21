@@ -47,7 +47,7 @@ test("burraco online: quattro telefoni, mano segreta, bot e mano finita", async 
     await host.getByRole("button", { name: "Inizia la partita" }).click();
     for (const p of pagine) await expect(p.getByText(/La tua mano: 11 carte/)).toBeVisible();
     // Ognuno vede solo le proprie carte e i nomi di tutti.
-    await expect(pagine[1]!.getByText("Anna")).toBeVisible();
+    await expect(pagine[1]!.getByRole("list", { name: "Giocatori" }).getByText("Anna", { exact: true })).toBeVisible();
     await expect(pagine[1]!.getByRole("button", { name: /Sollecita/ })).toHaveCount(0);
     await controllaMobile(pagine[1]!);
     await schermata(host, "partita");
@@ -56,7 +56,7 @@ test("burraco online: quattro telefoni, mano segreta, bot e mano finita", async 
     const bot = host.getByRole("button", { name: /^Simula mossa col bot/ });
     for (let i = 0; i < 2500; i++) {
       if (await host.getByRole("heading", { name: /Partita finita|Mano finita/ }).first().isVisible()) break;
-      if (await bot.isVisible()) await bot.click({ timeout: 2000 }).catch(() => {});
+      if (await bot.isVisible()) await bot.click({ timeout: 1000 }).catch(() => {});
       else await host.waitForTimeout(40);
     }
     await expect(host.getByRole("heading", { name: /Partita finita|Mano finita/ }).first()).toBeVisible();
