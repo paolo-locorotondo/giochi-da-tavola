@@ -1,6 +1,8 @@
+import { bersagli } from "./bersagli";
 import { colore } from "./colore";
 import { memoria } from "./memoria";
 import { nomi } from "./nomi";
+import { piugrande } from "./piugrande";
 import { raffica } from "./raffica";
 import { stop } from "./stop";
 import type { MiniGioco } from "./tipi";
@@ -14,7 +16,7 @@ export type MiniGiocoQualsiasi = MiniGioco<any, any>;
  * Registro dei mini giochi, nell'ordine in cui compaiono nella scelta.
  * Per aggiungerne uno: il suo file in questa cartella e una riga qui (vedi README del gioco).
  */
-export const MINIGIOCHI: readonly MiniGiocoQualsiasi[] = [via, raffica, stop, colore, nomi, panda, smile, memoria];
+export const MINIGIOCHI: readonly MiniGiocoQualsiasi[] = [via, raffica, stop, colore, nomi, panda, smile, memoria, bersagli, piugrande];
 
 export const ID_MINIGIOCHI: readonly string[] = MINIGIOCHI.map((m) => m.id);
 
