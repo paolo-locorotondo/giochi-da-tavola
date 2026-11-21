@@ -62,3 +62,39 @@ test("ultima: «Come giocate?» ha le due modalità", async ({ page }) => {
   await expect(page.getByRole("button", { name: /Ognuno col suo telefono/ })).toBeVisible();
   await schermata(page, "modalita");
 });
+
+test("ultima contro i bot: sezione «Varianti» con quattro interruttori spenti", async ({ page }) => {
+  await iniziaContro(page, 2);
+  const gruppo = page.getByRole("group", { name: "Varianti" });
+  await expect(gruppo.getByRole("checkbox")).toHaveCount(4);
+  for (const nome of ["Somma dei +2", "Più carte uguali", "Taglio", "Scambio e Rotazione"]) {
+    await expect(gruppo.getByRole("checkbox", { name: new RegExp(nome) })).not.toBeChecked();
+  }
+  await schermata(page, "bot-varianti");
+});
+
+test("ultima contro i bot: con tutte le varianti la partita finisce e il tavolo le riassume", async ({ page }) => {
+  test.setTimeout(180_000);
+  await iniziaContro(page, 2);
+  const gruppo = page.getByRole("group", { name: "Varianti" });
+  for (const c of await gruppo.getByRole("checkbox").all()) await c.check();
+  await page.getByRole("radio", { name: /Facile/ }).check();
+  await page.getByRole("radio", { name: /Veloce/ }).check();
+  await page.getByRole("button", { name: "Inizia la partita" }).click();
+  await expect(page.getByText(/^Varianti: /)).toBeVisible();
+  for (let i = 0; i < 1200; i++) {
+    if (await page.getByText("Partita finita").isVisible()) break;
+    if (await page.getByRole("button", { name: /^Pesca \d+$/ }).first().isVisible()) await page.getByRole("button", { name: /^Pesca \d+$/ }).first().click().catch(() => {});
+    else if (await page.getByRole("button", { name: /Taglia con/ }).first().isVisible()) await page.getByRole("button", { name: /Taglia con/ }).first().click().catch(() => {});
+    else if (await page.getByRole("button", { name: "Ultima!" }).isVisible()) await page.getByRole("button", { name: "Ultima!" }).click().catch(() => {});
+    else if (await page.getByRole("button", { name: /Bruno|Bot 1|Bot 2/ }).first().isVisible() && (await page.getByText("Con chi scambi la mano?").isVisible())) await page.locator(".ul-bersagli button").first().click().catch(() => {});
+    else if (await page.locator(".ul-colori").first().isVisible()) await page.locator(".ul-colori button").first().click().catch(() => {});
+    else if (await page.getByRole("button", { name: "Pesca 4" }).isVisible()) await page.getByRole("button", { name: "Pesca 4" }).click().catch(() => {});
+    else if (await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().isVisible()) await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().click({ timeout: 1000 }).catch(() => {});
+    else if (await page.getByRole("button", { name: "Passa" }).isVisible()) await page.getByRole("button", { name: "Passa" }).click().catch(() => {});
+    else if (await page.getByRole("button", { name: /^Pesca/ }).isEnabled().catch(() => false)) await page.getByRole("button", { name: /^Pesca/ }).click().catch(() => {});
+    else await page.waitForTimeout(100);
+  }
+  await expect(page.getByText("Partita finita")).toBeVisible();
+  await controllaMobile(page);
+});

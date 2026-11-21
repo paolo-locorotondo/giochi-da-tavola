@@ -1,5 +1,6 @@
 import type { RichiestaOnline } from "@gdt/engine";
-import { LIVELLI, type Livello } from "./bot";
+import { creaRng } from "@gdt/engine";
+import { LIVELLI, PROB_ULTIMA, mossaTaglioBot, type Livello } from "./bot";
 import { ErroreUltima, MAX_GIOCATORI } from "./logica";
 import { applica, nuovoStato, ultimaOnline, vistaPer, type StatoOnline, type Vista } from "./online/gioco";
 
@@ -62,18 +63,55 @@ export function botDiTurno(p: PartitaLocale): number | null {
   return s.partita.turno === IO ? null : s.partita.turno;
 }
 
+/**
+ * Reazione dei bot a un taglio: mai prima di 1 s (così chi gioca col telefono in mano ha il vantaggio del tocco)
+ * e mai oltre 2,5 s (la finestra dura 3 s), altrimenti la pausa scelta per i bot.
+ */
+export const TAGLIO_BOT_MIN_MS = 1000;
+export const TAGLIO_BOT_MAX_MS = 2500;
+export const ritardoTaglioBot = (velocita: Velocita): number => Math.min(TAGLIO_BOT_MAX_MS, Math.max(TAGLIO_BOT_MIN_MS, VELOCITA[velocita]));
+
 /** Pausa prima della prossima mossa di un bot: se ho dimenticato «Ultima!» lascio almeno il tempo di dirlo. */
 export function pausaBot(p: PartitaLocale, velocita: Velocita): number {
-  const u = p.stato.partita?.ultima;
-  const dimenticata = u && u.posto === IO && !u.dichiarata;
-  return dimenticata ? Math.max(VELOCITA[velocita], RITARDO_BECCATO_MS) : VELOCITA[velocita];
+  const dimenticata = p.stato.partita?.ultime.some((u) => u.posto === IO && !u.dichiarata);
+  let pausa = dimenticata ? Math.max(VELOCITA[velocita], RITARDO_BECCATO_MS) : VELOCITA[velocita];
+  // Se un bot ha un taglio da fare, il bot di turno aspetta che l'abbia fatto.
+  if (botDelTaglio(p) !== null) pausa = Math.max(pausa, ritardoTaglioBot(velocita) + 150);
+  return pausa;
 }
 
-/** Il bot di turno fa la sua mossa (anche «Beccato!» se ho dimenticato «Ultima!»). */
-export function muoviBot(p: PartitaLocale): PartitaLocale {
+/** Il bot di turno fa la sua mossa (anche «Beccato!» se ho dimenticato «Ultima!»). `ora` apre la finestra di taglio. */
+export function muoviBot(p: PartitaLocale, ora: number = Date.now()): PartitaLocale {
   const posto = botDiTurno(p);
   if (posto === null) return p;
-  return { ...p, stato: applica(p.stato, { tipo: "bot", posto, livello: p.livello }) };
+  return { ...p, stato: applica(p.stato, { tipo: "bot", posto, livello: p.livello, ora }) };
+}
+
+/** Il caso del taglio dipende solo dallo stato, così la decisione non cambia a ogni controllo. */
+function rngTaglio(p: PartitaLocale, posto: number) {
+  const s = p.stato;
+  return creaRng((s.seme ^ Math.imul(s.mosse + 3, 0x85ebca6b) ^ Math.imul(posto, 0xc2b2ae35)) >>> 0);
+}
+
+/**
+ * Il bot che taglia adesso (se c'è): il posto più basso tra quelli con una carta identica che «se ne accorgono»
+ * (probabilità del livello). Deterministico con il seme. La finestra la controlla chi chiama (UI, con l'ora).
+ */
+export function botDelTaglio(p: PartitaLocale): { posto: number; carta: number } | null {
+  const s = p.stato;
+  if (s.fase !== "partita" || !s.partita || s.partita.fine || !s.partita.apertaTaglio) return null;
+  for (let posto = 1; posto <= s.nomi.length; posto++) {
+    if (posto === IO) continue;
+    const carta = mossaTaglioBot(s.partita, posto, p.livello, rngTaglio(p, posto));
+    if (carta !== null) return { posto, carta };
+  }
+  return null;
+}
+
+/** Il bot taglia. Lancia un `ErroreUltima` (`tagliTardi`…) se la finestra non c'è più. */
+export function tagliaBot(p: PartitaLocale, taglio: { posto: number; carta: number }, ora: number = Date.now()): PartitaLocale {
+  const dichiara = rngTaglio(p, taglio.posto).next() < PROB_ULTIMA[p.livello];
+  return { ...p, stato: applica(p.stato, { tipo: "taglia", chi: taglio.posto, carta: taglio.carta, ora, dichiara }) };
 }
 
 /** Cosa vedo io: la mia mano, degli altri solo quante carte hanno. Tutti risultano collegati. */

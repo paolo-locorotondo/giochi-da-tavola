@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Ban, Droplet, Flame, Leaf, Layers, Sun, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Ban, Check, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Scissors, Sun, type LucideIcon } from "lucide-react";
 import type { Traduttore } from "@gdt/i18n";
 import type { Carta as DatiCarta, Colore } from "../logica";
 import type { it } from "../locales/it";
@@ -25,6 +25,24 @@ export function nomeCarta(t: T, c: DatiCarta, colore: Colore | null = null): str
       return colore ? t("carta_jollyColore", { colore: nomeColore(t, colore) }) : t("carta_jolly");
     case "piu4":
       return colore ? t("carta_piu4Colore", { colore: nomeColore(t, colore) }) : t("carta_piu4");
+    case "scambio":
+      return colore ? t("carta_scambioColore", { colore: nomeColore(t, colore) }) : t("carta_scambio");
+    case "rotazione":
+      return colore ? t("carta_rotazioneColore", { colore: nomeColore(t, colore) }) : t("carta_rotazione");
+  }
+}
+
+/** Nome corto scritto sulla carta senza colore. */
+function nomeJolly(t: T, c: DatiCarta): string {
+  switch (c.tipo) {
+    case "piu4":
+      return t("carta_piu4");
+    case "scambio":
+      return t("carta_scambio");
+    case "rotazione":
+      return t("carta_rotazione");
+    default:
+      return t("carta_jolly");
   }
 }
 
@@ -42,6 +60,10 @@ function Simbolo({ carta }: { carta: DatiCarta }) {
       return <Layers size={22} aria-hidden="true" />;
     case "piu4":
       return <>+4</>;
+    case "scambio":
+      return <Handshake size={22} aria-hidden="true" />;
+    case "rotazione":
+      return <RotateCw size={22} aria-hidden="true" />;
   }
 }
 
@@ -55,21 +77,31 @@ interface Props {
   /** Attenuata: non si può giocare ora. */
   spenta?: boolean;
   grande?: boolean;
+  /** Modalità «Più carte»: la carta è un interruttore (scelta o no). */
+  scelta?: boolean;
+  /** Taglio: questa carta è identica a quella appena calata (si taglia dal pulsante, non toccando la carta). */
+  tagliabile?: boolean;
 }
 
-export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false }: Props) {
+export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false, scelta, tagliabile = false }: Props) {
   const col = "colore" in carta ? carta.colore : colore;
   const Icona = col ? ICONA_COLORE[col] : null;
   const nome = nomeCarta(t, carta, colore);
-  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}`;
+  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}${scelta ? " ul-scelta" : ""}${tagliabile ? " ul-tagliabile" : ""}`;
   const contenuto = (
     <>
       <span className="ul-valore">
         <Simbolo carta={carta} />
       </span>
-      {Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />}
+      {scelta ? (
+        <Check className="ul-seme ul-spunta" size={24} aria-hidden="true" />
+      ) : tagliabile ? (
+        <Scissors className="ul-seme" size={24} aria-hidden="true" />
+      ) : (
+        Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />
+      )}
       <span className="ul-nome" aria-hidden="true">
-        {col ? nomeColore(t, col) : carta.tipo === "piu4" ? t("carta_piu4") : t("carta_jolly")}
+        {col ? nomeColore(t, col) : nomeJolly(t, carta)}
       </span>
     </>
   );
@@ -81,7 +113,14 @@ export function Carta({ carta, t, colore = null, onClick, spenta = false, grande
     );
   }
   return (
-    <button type="button" className={classe} aria-label={spenta ? t("cartaNonGiocabile", { carta: nome }) : nome} aria-disabled={spenta} onClick={onClick}>
+    <button
+      type="button"
+      className={classe}
+      aria-label={spenta ? t("cartaNonGiocabile", { carta: nome }) : nome}
+      aria-disabled={spenta}
+      aria-pressed={scelta === undefined ? undefined : scelta}
+      onClick={onClick}
+    >
       {contenuto}
     </button>
   );

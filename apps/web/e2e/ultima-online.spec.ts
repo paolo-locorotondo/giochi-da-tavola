@@ -105,3 +105,31 @@ test("ultima: partita a punti, prossimo round e chiusura", async ({ browser }) =
     await Promise.all(contesti.map((c) => c.close()));
   }
 });
+
+test("ultima online: le varianti scelte alla creazione si vedono in sala e sul tavolo", async ({ browser }) => {
+  test.setTimeout(120_000);
+  const contesti = await Promise.all([1, 2].map(() => browser.newContext(telefono)));
+  const [host, bruno] = await Promise.all(contesti.map((c) => c.newPage()));
+  await fissaCaso(host!);
+  await fissaCaso(bruno!);
+  await host!.goto("/ultima");
+  await host!.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
+  await host!.getByLabel("Nome del giocatore 1").fill("Anna");
+  await host!.getByLabel("Nome del giocatore 2").fill("Bruno");
+  const gruppo = host!.getByRole("group", { name: "Varianti" });
+  await expect(gruppo.getByRole("checkbox")).toHaveCount(4);
+  await gruppo.getByRole("checkbox", { name: /Somma dei \+2/ }).check();
+  await gruppo.getByRole("checkbox", { name: /Taglio/ }).check();
+  await schermata(host!, "crea-varianti");
+  await host!.getByRole("button", { name: "Crea la partita" }).click();
+  await host!.getByRole("button", { name: "Anna", exact: true }).click();
+  await expect(host!.getByText("Varianti: Somma dei +2, Taglio")).toBeVisible();
+  const codice = host!.url().split("/").pop()!;
+  await bruno!.goto(`/ultima/${codice}`);
+  await expect(bruno!.getByText("Varianti: Somma dei +2, Taglio")).toBeVisible();
+  await bruno!.getByRole("button", { name: "Bruno", exact: true }).click();
+  await host!.getByRole("button", { name: "Inizia la partita" }).click();
+  await expect(host!.getByText(/^Varianti: /)).toBeVisible();
+  await expect(bruno!.getByRole("group", { name: "La tua mano" })).toBeVisible();
+  for (const c of contesti) await c.close();
+});

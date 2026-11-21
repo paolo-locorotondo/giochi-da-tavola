@@ -5,6 +5,8 @@ import {
   MAX_EVENTI,
   MAX_GIOCATORI,
   MIN_GIOCATORI,
+  NOMI_VARIANTI,
+  VARIANTI_BASE,
   accetta,
   avanza,
   beccato,
@@ -13,14 +15,19 @@ import {
   nuovoRound,
   passa,
   pesca,
+  pescaCumulo,
   scegliColore,
   sfida,
+  taglia,
   ultima,
   valorePunti,
+  carteTagliabili,
   type Carta,
   type Colore,
   type Evento,
   type Partita,
+  type UltimaAperta,
+  type Varianti,
 } from "../logica";
 
 /**
@@ -37,6 +44,8 @@ export interface ConfigOnline {
   modo: ModoPunteggio;
   /** Punti da raggiungere nella partita a punti. */
   soglia: number;
+  /** Impostazioni iniziali della stanza (regole facoltative), spente di base. */
+  varianti: Varianti;
 }
 
 export const SOGLIA_PREDEFINITA = 500;
@@ -66,7 +75,10 @@ export type AzioneOnline =
   | { tipo: "occupa"; posto: number }
   | { tipo: "libera"; posto: number }
   | { tipo: "avvia"; seme: number }
-  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown }
+  /** `ora` la aggiunge `traduci` (da `ctx.ora()`): apre la finestra di taglio. Non viene dal telefono. */
+  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown; scambiaCon?: unknown; insieme?: unknown; ora?: number }
+  /** `dichiara`: solo per i bot offline, che dicono «Ultima!» insieme al taglio. */
+  | { tipo: "taglia"; chi: number; carta: number; ora: number; dichiara?: boolean }
   | { tipo: "pesca"; chi: number }
   | { tipo: "passa"; chi: number }
   | { tipo: "scegliColore"; chi: number; colore: unknown }
@@ -74,11 +86,12 @@ export type AzioneOnline =
   | { tipo: "accetta"; chi: number }
   | { tipo: "ultima"; chi: number }
   | { tipo: "beccato"; chi: number; bersaglio: number }
+  | { tipo: "pescaCumulo"; chi: number }
   /**
    * Il bot fa una mossa per `posto`. Online la chiede l'organizzatore (livello difficile, evento «mossa
    * simulata dal bot»); offline la macchina a stati la usa per gli avversari, con il loro `livello`.
    */
-  | { tipo: "bot"; posto: number; livello?: Livello }
+  | { tipo: "bot"; posto: number; livello?: Livello; ora?: number }
   | { tipo: "prossimoRound"; seme: number }
   | { tipo: "ricomincia"; seme: number };
 
@@ -91,7 +104,17 @@ export function leggiConfig(grezza: unknown): ConfigOnline {
   if (typeof soglia !== "number" || !Number.isInteger(soglia) || soglia < SOGLIA_MIN || soglia > SOGLIA_MAX) {
     throw new ErroreUltima("configNonValida");
   }
-  return { modo, soglia };
+  const grezze = c.varianti === undefined ? {} : c.varianti;
+  if (typeof grezze !== "object" || grezze === null || Array.isArray(grezze)) throw new ErroreUltima("configNonValida");
+  const g = grezze as Record<string, unknown>;
+  const varianti = { ...VARIANTI_BASE };
+  for (const nome of NOMI_VARIANTI) {
+    const v = g[nome];
+    if (v === undefined) continue;
+    if (typeof v !== "boolean") throw new ErroreUltima("configNonValida");
+    varianti[nome] = v;
+  }
+  return { modo, soglia, varianti };
 }
 
 export function nuovoStato(nomi: string[], config: unknown): StatoOnline {
@@ -127,7 +150,7 @@ function iniziaRound(s: StatoOnline, seme: number, primo: number, round: number,
   return {
     ...s,
     fase: "partita",
-    partita: nuovoRound(s.nomi.length, creaRng(seme), eventi, primo),
+    partita: nuovoRound(s.nomi.length, creaRng(seme), eventi, primo, s.config.varianti),
     primo,
     punti,
     round,
@@ -180,7 +203,7 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
   }
 }
 
-function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca" | "passa" | "scegliColore" | "sfida" | "accetta" | "ultima" | "beccato" | "bot" }>): StatoOnline {
+function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca" | "passa" | "scegliColore" | "sfida" | "accetta" | "ultima" | "beccato" | "pescaCumulo" | "taglia" | "bot" }>): StatoOnline {
   if (s.fase !== "partita" || !s.partita) throw new ErroreUltima("nonInCorso");
   const n = s.nomi.length;
   const p = s.partita;
@@ -189,7 +212,7 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
   if (!eUnPosto(s, chi)) throw new ErroreUltima("nonPartecipa");
   switch (a.tipo) {
     case "gioca":
-      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng));
+      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng, false, { scambiaCon: a.scambiaCon, insieme: a.insieme, ora: a.ora }));
     case "pesca":
       return dopoMossa(s, pesca(p, chi, rng));
     case "passa":
@@ -200,6 +223,10 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
       return dopoMossa(s, sfida(p, n, chi, rng));
     case "accetta":
       return dopoMossa(s, accetta(p, n, chi, rng));
+    case "pescaCumulo":
+      return dopoMossa(s, pescaCumulo(p, n, chi, rng));
+    case "taglia":
+      return dopoMossa(s, taglia(p, n, chi, a.carta, a.ora, rng, a.dichiara === true));
     case "ultima":
       return dopoMossa(s, ultima(p, chi));
     case "beccato":
@@ -217,7 +244,7 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
       const dichiara = rng.next() < PROB_ULTIMA[livello];
       // L'evento «mossa simulata dal bot» precede quello della mossa, così si legge in ordine.
       const conEvento: Partita = a.livello ? p : { ...p, eventi: [...p.eventi, { tipo: "bot" as const, posto: chi }].slice(-MAX_EVENTI) };
-      return dopoMossa(s, eseguiMossa(conEvento, n, chi, m, rng, dichiara));
+      return dopoMossa(s, eseguiMossa(conEvento, n, chi, m, rng, dichiara, a.ora));
     }
   }
 }
@@ -270,8 +297,14 @@ export interface Vista {
   sceltaColore: boolean;
   /** Un +4 da subire: il mio caso se `turno` sono io. `sospetto` è pubblico, la legalità no. */
   sfida: { contro: number; sospetto: boolean } | null;
-  /** Finestra di «Ultima!»: chi, e se l'ha già detto. */
-  ultima: { posto: number; dichiarata: boolean } | null;
+  /** Finestre di «Ultima!»: chi, e se l'ha già detto. */
+  ultime: UltimaAperta[];
+  /** Taglio: la carta appena calata e chi l'ha calata, finché si può tagliare. Il tempo lo conta il telefono. */
+  taglio: { posto: number; carta: Carta } | null;
+  /** Id delle mie carte identiche, se posso tagliare adesso. */
+  puoTagliare: number[];
+  /** Somma dei +2: chi deve rispondere con un +2 o pescare, e quante carte. */
+  cumulo: { posto: number; quante: number; da: number | null } | null;
   eventi: Evento[];
   /** Il round è finito: chi ha vinto e quanti punti ha preso. */
   fineRound: { vincitore: number; punti: number } | null;
@@ -312,7 +345,10 @@ export function vistaPer(s: StatoOnline, posto: number | null, host: boolean): V
     sceltaColore: mioTurno && p !== null && p.colore === null,
     // L'esito segreto della sfida (`illegale`) non esce mai dal server.
     sfida: p?.sfida ? { contro: p.sfida.contro, sospetto: p.sfida.sospetto } : null,
-    ultima: p?.ultima ?? null,
+    ultime: p?.ultime ?? [],
+    cumulo: p?.cumulo ?? null,
+    taglio: inRound && p?.apertaTaglio ? { posto: p.apertaTaglio.posto, carta: p.apertaTaglio.carta } : null,
+    puoTagliare: inRound && p && posto !== null ? carteTagliabili(p, posto).map((c) => c.id) : [],
     eventi: p ? p.eventi : [],
     fineRound: p?.fine ?? null,
     vincitore: s.vincitore,
@@ -352,13 +388,21 @@ export const ultimaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
         return { tipo: "ricomincia", seme: ctx.seme() };
       case "mossaBot":
         soloHost();
-        return { tipo: "bot", posto: Number(a.posto) };
+        return { tipo: "bot", posto: Number(a.posto), ora: ctx.ora() };
       case "gioca":
-        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore };
+        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore, scambiaCon: a.scambiaCon === undefined ? undefined : Number(a.scambiaCon),
+          // La lista la controlla la logica (variante, mano, stesso valore); qui solo numeri.
+          insieme: a.insieme === undefined ? undefined : Array.isArray(a.insieme) ? a.insieme.slice(0, 20).map(Number) : a.insieme,
+          ora: ctx.ora(),
+        };
+      case "taglia":
+        // Solo dal proprio telefono, mai con «Simula mossa»: la gara la decide l'ordine di arrivo al server.
+        return { tipo: "taglia", chi: partecipa(), carta: Number(a.carta), ora: ctx.ora() };
       case "scegliColore":
         return { tipo: "scegliColore", chi: partecipa(), colore: a.colore };
       case "beccato":
         return { tipo: "beccato", chi: partecipa(), bersaglio: Number(a.posto) };
+      case "pescaCumulo":
       case "pesca":
       case "passa":
       case "sfida":

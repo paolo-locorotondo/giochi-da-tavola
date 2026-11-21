@@ -245,7 +245,7 @@ describe("stanze veloci sul server", () => {
 
   it("Ultima!: 3 in sala di 6, apriAdesso → partita a 3 con la config dell'apertura, 7 carte ciascuno", () => {
     const m = nuove();
-    const a = entra(m, "ultima", "ta", "Anna", { apri: { posti: 6, config: { modo: "punti", soglia: 200 } } });
+    const a = entra(m, "ultima", "ta", "Anna", { apri: { posti: 6, config: { modo: "punti", soglia: 200, varianti: { sommaPiu2: true } } } });
     entra(m, "ultima", "tb", "Bruno");
     entra(m, "ultima", "tc", "Carla");
     expect(vistaSalaDi(a.stanza, "ta", 0).host).toBe(true);
@@ -255,7 +255,12 @@ describe("stanze veloci sul server", () => {
     avviaSala(a.stanza);
     const v = vistaDi(a.stanza, "tb");
     expect(v.mano).toHaveLength(7);
-    expect(a.stanza.stato.config).toEqual({ modo: "punti", soglia: 200 });
+    // Le varianti scelte da chi apre arrivano alla partita; quelle non dette restano spente.
+    expect(a.stanza.stato.config).toEqual({
+      modo: "punti",
+      soglia: 200,
+      varianti: { sommaPiu2: true, piuUguali: false, taglio: false, scambioRotazione: false },
+    });
     expect(a.stanza.stato.nomi).toEqual(["Anna", "Bruno", "Carla"]);
     // Dopo l'avvio chi arriva col codice è uno spettatore, come per ogni stanza.
     const spett = vistaDi(a.stanza, "nuovo");

@@ -1,7 +1,7 @@
 import { creaRng } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
-import { carteGiocabili, coloreMigliore, eseguiMossa, mossaBot } from "./bot";
-import { nuovoRound, pesca, type Carta, type Colore, type Partita } from "./logica";
+import { LIVELLI, PROB_TAGLIO, PROB_ULTIMA, carteGiocabili, mossaTaglioBot,  coloreMigliore, eseguiMossa, mossaBot, mossaBotLivello } from "./bot";
+import { VARIANTI_BASE, gioca, nuovoRound, pesca, taglia, type Carta, type Colore, type Partita, type Varianti } from "./logica";
 
 let prossimoId = 5000;
 const num = (colore: Colore, valore: number): Carta => ({ id: prossimoId++, tipo: "numero", colore, valore });
@@ -19,7 +19,10 @@ function partita(mani: Carta[][], opz: Partial<Partita> = {}): Partita {
     colore: "rosso",
     haPescato: false,
     pescata: null,
-    ultima: null,
+    ultime: [],
+    varianti: VARIANTI_BASE,
+    cumulo: null,
+    apertaTaglio: null,
     sfida: null,
     fine: null,
     eventi: [],
@@ -114,31 +117,31 @@ describe("mossaBot: sfida del +4", () => {
 
 describe("mossaBot: Ultima!", () => {
   it("chi resta con una carta la dichiara, anche fuori turno", () => {
-    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: false } });
+    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
     expect(mossaBot(p, 2, 1)).toEqual({ tipo: "ultima" });
   });
   it("non la dichiara due volte e fuori turno non fa altro", () => {
-    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: true } });
+    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: true }] });
     expect(() => mossaBot(p, 2, 1)).toThrow("nonTocca");
   });
   it("dichiara subito se cala la penultima carta", () => {
     const c = num("rosso", 4);
     const p = partita([[c, num("blu", 1)], altri(4)]);
     const dopo = eseguiMossa(p, 2, 1, mossaBot(p, 2, 1), creaRng(1));
-    expect(dopo.ultima).toEqual({ posto: 1, dichiarata: true });
+    expect(dopo.ultime).toEqual([{ posto: 1, dichiarata: true }]);
   });
 });
 
 describe("mossaBot: Beccato!", () => {
-  const dimentico = () => partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: false } });
+  const dimentico = () => partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
   it("becca chi ha una carta sola e non ha detto «Ultima!»", () => {
     expect(mossaBot(dimentico(), 2, 2)).toEqual({ tipo: "beccato", bersaglio: 1 });
     const dopo = eseguiMossa(dimentico(), 2, 2, { tipo: "beccato", bersaglio: 1 }, creaRng(1));
     expect(dopo.mani[0]).toHaveLength(3);
-    expect(dopo.ultima).toBeNull();
+    expect(dopo.ultime).toEqual([]);
   });
   it("non becca chi ha già dichiarato", () => {
-    const detto = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: true } });
+    const detto = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: true }] });
     expect(mossaBot(detto, 2, 2).tipo).not.toBe("beccato");
   });
 });
@@ -159,7 +162,7 @@ describe("partite giocate solo dai bot", () => {
     while (!p.fine) {
       if (++mosse > 5000) throw new Error(`partita infinita (n=${n}, seme=${seme})`);
       // Prima chi deve dichiarare «Ultima!» (ma solo se non è già di turno); poi chi di turno.
-      const dichiara = p.ultima && !p.ultima.dichiarata ? p.ultima.posto : null;
+      const dichiara = p.ultime.find((u) => !u.dichiarata)?.posto ?? null;
       const chi = dichiara ?? p.turno;
       p = eseguiMossa(p, n, chi, mossaBot(p, n, chi), rng);
     }
@@ -185,5 +188,238 @@ describe("partite giocate solo dai bot", () => {
   });
   it("sono riproducibili con lo stesso seme", () => {
     expect(giocaFinoInFondo(4, 12).p).toEqual(giocaFinoInFondo(4, 12).p);
+  });
+});
+
+describe("bot con la somma dei +2", () => {
+  const V = { ...VARIANTI_BASE, sommaPiu2: true };
+  it("con un +2 in mano rilancia, senza paga il cumulo", () => {
+    const due = sim("piu2", "verde");
+    const col = partita([[num("rosso", 1)], [due, num("blu", 2)], [num("verde", 1)]], {
+      varianti: V,
+      turno: 2,
+      cumulo: { posto: 2, quante: 2, da: 1 },
+    });
+    expect(mossaBot(col, 3, 2)).toEqual({ tipo: "gioca", carta: due.id });
+    const senza = partita([[num("rosso", 1)], [num("blu", 2), num("blu", 3)], [num("verde", 1)]], {
+      varianti: V,
+      turno: 2,
+      cumulo: { posto: 2, quante: 2, da: 1 },
+    });
+    expect(mossaBot(senza, 3, 2)).toEqual({ tipo: "pescaCumulo" });
+    const dopo = eseguiMossa(senza, 3, 2, { tipo: "pescaCumulo" }, creaRng(1));
+    expect(dopo.mani[1]).toHaveLength(4);
+  });
+  it("a ogni livello le mosse con un cumulo sono lecite", () => {
+    const due = sim("piu2", "verde");
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 30; s++) {
+        const p = partita([[num("rosso", 1)], [due, num("blu", 2)], [num("verde", 1)]], { varianti: V, turno: 2, cumulo: { posto: 2, quante: 2, da: 1 } });
+        const m = mossaBotLivello(p, 3, 2, livello, creaRng(s));
+        expect(["pescaCumulo", "gioca"]).toContain(m.tipo);
+        expect(() => eseguiMossa(p, 3, 2, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+const ORA = 50_000;
+
+/** Gioca partite intere di bot a ogni livello con una combinazione di varianti. */
+function partiteConVarianti(varianti: Varianti, tot: number) {
+  for (const livello of LIVELLI) {
+    for (const n of [2, 3, 4, 7]) {
+      for (let seme = 0; seme < tot; seme++) {
+        const rng = creaRng(seme + 100);
+        let p = nuovoRound(n, rng, [], 1, varianti);
+        let mosse = 0;
+        let tagli = 0;
+        while (!p.fine) {
+          if (++mosse > 8000) throw new Error(`partita infinita (n=${n}, seme=${seme}, ${livello})`);
+          const dichiara = p.ultime.find((u) => !u.dichiarata)?.posto ?? null;
+          const chi = dichiara ?? p.turno;
+          const prima = p;
+          p = eseguiMossa(p, n, chi, mossaBotLivello(p, n, chi, livello, rng), rng, rng.next() < PROB_ULTIMA[livello], ORA);
+          // Subito dopo una giocata i bot con la carta identica tagliano (il posto più basso vince la gara).
+          if (varianti.taglio && !p.fine && p.apertaTaglio) {
+            for (let posto = 1; posto <= n; posto++) {
+              const id = mossaTaglioBot(p, posto, livello, rng);
+              if (id !== null) {
+                p = taglia(p, n, posto, id, ORA + 500, rng);
+                tagli++;
+                break;
+              }
+            }
+          }
+          void prima;
+        }
+        const tutte = [...p.mazzo, ...p.scarto, ...p.mani.flat()];
+        expect(tutte).toHaveLength(varianti.scambioRotazione ? 112 : 108);
+        expect(new Set(tutte.map((c) => c.id)).size).toBe(tutte.length);
+      }
+    }
+  }
+}
+
+describe("partite di bot con le varianti", () => {
+  it("somma dei +2: finiscono sempre e non perdono carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, sommaPiu2: true }, 15);
+  });
+});
+
+describe("bot con Scambio e Rotazione", () => {
+  const V = { ...VARIANTI_BASE, scambioRotazione: true };
+  const scambio = (): Carta => ({ id: prossimoId++, tipo: "scambio" });
+  const rotazione = (): Carta => ({ id: prossimoId++, tipo: "rotazione" });
+  const mano = (k: number) => Array.from({ length: k }, () => num("verde", 2));
+
+  it("cala Scambio con chi ha meno carte quando ne ha almeno 3 in più", () => {
+    const s = scambio();
+    const p = partita([[s, ...mano(6)], mano(2), mano(5)], { varianti: V });
+    expect(mossaBot(p, 3, 1)).toMatchObject({ tipo: "gioca", carta: s.id, scambiaCon: 2 });
+  });
+  it("non cala Scambio se la differenza è piccola: gioca prima le altre carte", () => {
+    const s = scambio();
+    const normale = num("rosso", 1);
+    const p = partita([[s, normale, ...mano(2)], mano(3), mano(4)], { varianti: V });
+    expect(mossaBot(p, 3, 1)).toMatchObject({ tipo: "gioca", carta: normale.id });
+  });
+  it("cala Rotazione solo se la mano che gli passa il giocatore precedente è più piccola di almeno 3", () => {
+    const r = rotazione();
+    // Posto 1: precedente nel verso orario è il 3.
+    const buona = partita([[r, ...mano(6)], mano(7), mano(2)], { varianti: V });
+    expect(mossaBot(buona, 3, 1)).toMatchObject({ tipo: "gioca", carta: r.id });
+    const normale = num("rosso", 1);
+    const cattiva = partita([[r, normale, ...mano(5)], mano(2), mano(7)], { varianti: V });
+    expect(mossaBot(cattiva, 3, 1)).toMatchObject({ tipo: "gioca", carta: normale.id });
+  });
+  it("sceglie la stessa mossa con mani altrui diverse ma lo stesso numero di carte (non guarda le carte)", () => {
+    const s = scambio();
+    const a = partita([[s, ...mano(6)], mano(2), mano(5)], { varianti: V });
+    const b = partita([[s, ...mano(6)], [num("blu", 9), num("giallo", 0)], Array.from({ length: 5 }, () => sim("piu2", "blu"))], { varianti: V });
+    expect(mossaBot(a, 3, 1)).toEqual(mossaBot(b, 3, 1));
+  });
+  it("a ogni livello le mosse con Scambio e Rotazione sono lecite", () => {
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 40; s++) {
+        const p = partita([[scambio(), rotazione(), num("rosso", 1), ...mano(3)], mano(3), mano(4)], { varianti: V });
+        const m = mossaBotLivello(p, 3, 1, livello, creaRng(s));
+        expect(() => eseguiMossa(p, 3, 1, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("partite di bot con Scambio e Rotazione e altre varianti", () => {
+  it("Scambio e Rotazione: finiscono sempre, 112 carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, scambioRotazione: true }, 15);
+  });
+  it("Scambio e Rotazione con la somma dei +2", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, scambioRotazione: true, sommaPiu2: true }, 10);
+  });
+});
+
+describe("bot con Più carte uguali", () => {
+  const V = { ...VARIANTI_BASE, piuUguali: true };
+  it("cala tutto il gruppo di numeri uguali, con in cima una carta giocabile", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const v5 = num("verde", 5);
+    const p = partita([[r5, b5, v5, num("giallo", 1), num("giallo", 2)], altri(3)], { varianti: V });
+    const m = mossaBot(p, 2, 1);
+    expect(m.tipo).toBe("gioca");
+    if (m.tipo !== "gioca") return;
+    const ids = [m.carta, ...(m.insieme ?? [])].sort();
+    expect(ids).toEqual([r5.id, b5.id, v5.id].sort());
+    expect(carteGiocabili(p, 1).map((c) => c.id)).toContain(m.carta);
+    const dopo = eseguiMossa(p, 2, 1, m, creaRng(1));
+    expect(dopo.mani[0]).toHaveLength(2);
+  });
+  it("preferisce il gruppo che scarica più punti", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "blu");
+    const n9 = num("rosso", 9);
+    const p = partita([[s1, s2, n9, num("verde", 1)], altri(5)], { varianti: V });
+    const m = mossaBot(p, 2, 1);
+    expect(m).toMatchObject({ tipo: "gioca" });
+    expect([m.tipo === "gioca" ? m.carta : -1, ...(m.tipo === "gioca" ? (m.insieme ?? []) : [])].sort()).toEqual([s1.id, s2.id].sort());
+  });
+  it("senza la variante non cala mai gruppi", () => {
+    const r5 = num("rosso", 5);
+    const p = partita([[r5, num("blu", 5), num("giallo", 1)], altri(5)]);
+    const m = mossaBot(p, 2, 1);
+    expect(m).toMatchObject({ tipo: "gioca" });
+    expect(m.tipo === "gioca" ? m.insieme : null).toBeUndefined();
+  });
+  it("a ogni livello le mosse con i gruppi sono lecite", () => {
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 40; s++) {
+        const p = partita([[num("rosso", 5), num("blu", 5), num("verde", 5), sim("salta", "rosso"), sim("salta", "blu"), num("giallo", 1)], altri(3)], { varianti: V });
+        const m = mossaBotLivello(p, 2, 1, livello, creaRng(s));
+        expect(() => eseguiMossa(p, 2, 1, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("bot e taglio", () => {
+  const V = { ...VARIANTI_BASE, taglio: true };
+  /** Il posto 1 cala un 5 rosso: il 3 ha un 5 rosso identico. */
+  function situazione(opz: Partial<Partita> = {}) {
+    const r5 = num("rosso", 5);
+    const mia = num("rosso", 5);
+    const p = partita([[r5, num("blu", 1)], [num("verde", 2)], [mia, num("verde", 3)]], { varianti: V, ...opz });
+    return { p: gioca(p, 3, 1, r5.id, undefined, creaRng(1), false, { ora: ORA }), mia };
+  }
+  it("taglia con la probabilità del livello (facile 50 %, medio 85 %, difficile sempre)", () => {
+    const { p, mia } = situazione();
+    for (const livello of LIVELLI) {
+      let si = 0;
+      const prove = 2000;
+      for (let s = 0; s < prove; s++) if (mossaTaglioBot(p, 3, livello, creaRng(s)) === mia.id) si++;
+      expect(Math.abs(si / prove - PROB_TAGLIO[livello])).toBeLessThan(0.05);
+    }
+  });
+  it("non taglia senza carta identica, né il giocatore di turno, né chi ha calato", () => {
+    const { p } = situazione();
+    expect(mossaTaglioBot(p, 2, "difficile", creaRng(1))).toBeNull();
+    expect(mossaTaglioBot(p, 1, "difficile", creaRng(1))).toBeNull();
+  });
+  it("non taglia sopra un cumulo o una sfida", () => {
+    const { p } = situazione();
+    expect(mossaTaglioBot({ ...p, cumulo: { posto: 2, quante: 2, da: 1 } }, 3, "difficile", creaRng(1))).toBeNull();
+    expect(mossaTaglioBot({ ...p, sfida: { contro: 1, sospetto: false, illegale: false } }, 3, "difficile", creaRng(1))).toBeNull();
+  });
+  it("a ogni livello i tagli dei bot sono leciti e le partite finiscono", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, taglio: true }, 12);
+  });
+});
+
+describe("tutte le combinazioni di varianti", () => {
+  it("con tutte e quattro insieme le partite finiscono e non perdono carte", () => {
+    partiteConVarianti({ sommaPiu2: true, piuUguali: true, taglio: true, scambioRotazione: true }, 8);
+  });
+  it("tutte le 16 combinazioni giocano partite complete con 3 giocatori", () => {
+    for (let m = 0; m < 16; m++) {
+      const v = { sommaPiu2: !!(m & 1), piuUguali: !!(m & 2), taglio: !!(m & 4), scambioRotazione: !!(m & 8) };
+      for (let seme = 0; seme < 6; seme++) {
+        const rng = creaRng(seme + 700);
+        let p = nuovoRound(3, rng, [], 1, v);
+        let k = 0;
+        while (!p.fine) {
+          if (++k > 8000) throw new Error(`infinita ${JSON.stringify(v)} ${seme}`);
+          const chi = p.ultime.find((u) => !u.dichiarata)?.posto ?? p.turno;
+          p = eseguiMossa(p, 3, chi, mossaBotLivello(p, 3, chi, "medio", rng), rng, true, ORA);
+        }
+        expect([...p.mazzo, ...p.scarto, ...p.mani.flat()]).toHaveLength(v.scambioRotazione ? 112 : 108);
+      }
+    }
+  });
+});
+
+describe("partite di bot con Più carte uguali", () => {
+  it("da sole e con tutte le altre varianti finiscono sempre, senza perdere carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, piuUguali: true }, 15);
+    partiteConVarianti({ sommaPiu2: true, piuUguali: true, taglio: false, scambioRotazione: true }, 10);
   });
 });

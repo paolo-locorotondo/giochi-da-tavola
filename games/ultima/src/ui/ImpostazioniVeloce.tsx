@@ -2,17 +2,20 @@ import { useState } from "react";
 import { usaT } from "@gdt/i18n";
 import type { ImpostazioniVeloce } from "@gdt/collegamento";
 import { dizionari } from "../locales";
+import { VARIANTI_BASE } from "../logica";
 import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, type ConfigOnline } from "../online";
+import { Varianti } from "./Varianti";
 
 /**
  * Impostazioni di Ultima! scelte da chi apre una stanza veloce (stesse della creazione: modo di
- * punteggio e soglia). Le nuove opzioni della partita (varianti) si aggiungono qui e in `leggiConfig`.
+ * punteggio, soglia e varianti). Le nuove opzioni della partita si aggiungono qui e in `leggiConfig`.
  */
 function Campi({ config, cambia }: { config: ConfigOnline; cambia: (c: ConfigOnline) => void }) {
   const t = usaT(dizionari);
   const [testo, setTesto] = useState(String(config.soglia));
   const sogliaOk = sogliaValida(config.soglia);
   return (
+    <>
     <fieldset className="ul-nomi-crea ul-senza-bordo">
       <legend>{t("comeSiVince")}</legend>
       {(["singolo", "punti"] as const).map((m) => (
@@ -45,13 +48,15 @@ function Campi({ config, cambia }: { config: ConfigOnline; cambia: (c: ConfigOnl
         </label>
       )}
     </fieldset>
+    <Varianti valore={config.varianti} onCambia={(varianti) => cambia({ ...config, varianti })} />
+    </>
   );
 }
 
 const sogliaValida = (s: number) => Number.isInteger(s) && s >= SOGLIA_MIN && s <= SOGLIA_MAX;
 
 export const impostazioniVeloce: ImpostazioniVeloce<ConfigOnline> = {
-  iniziale: { modo: "singolo", soglia: SOGLIA_PREDEFINITA },
+  iniziale: { modo: "singolo", soglia: SOGLIA_PREDEFINITA, varianti: { ...VARIANTI_BASE } },
   disegna: (config, cambia) => <Campi config={config} cambia={cambia} />,
   valida: (config) => config.modo === "singolo" || sogliaValida(config.soglia),
 };

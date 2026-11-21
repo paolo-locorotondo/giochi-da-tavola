@@ -69,6 +69,10 @@ Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi det
 - Fine round: punti e classifica; «Prossimo round» solo all'organizzatore; a fine partita «Ricomincia».
 - Refresh o schermo bloccato: si rientra nel proprio posto, con la propria mano.
 - Contro i bot: da 1 a 9 bot con nomi modificabili; i bot giocano da soli alla velocità scelta; con la rete spenta la partita va avanti; se dimentichi «Ultima!» un bot difficile ti becca dopo un attimo; «Esci dalla partita» chiede conferma.
+- Taglio: dopo una giocata sotto lo scarto compare la barra di 3 secondi; chi ha la stessa carta vede «Taglia con …»; chi arriva secondo vede «Qualcuno è stato più veloce»; con più telefoni la gara la vince il primo; i jolly non si tagliano.
+- Più carte uguali: il pulsante «Più carte» compare solo con due carte uguali giocabili; in selezione le carte scelte hanno la spunta, la barra dice quante e di che valore, con più cime possibili si sceglie quale resta sopra.
+- Scambio e Rotazione: la carta mostra la mano (Scambio) o la freccia (Rotazione); dopo il colore lo Scambio chiede con chi (pulsanti a tutta larghezza, nome e numero di carte); le mani cambiate sono evidenziate; chi resta con una carta può dire «Ultima!» anche se non ha giocato lui.
+- Varianti: in creazione la sezione «Varianti» ha quattro interruttori spenti; quelle accese compaiono in sala e sul tavolo. Con la somma dei +2: il cumulo è scritto sul mazzo («cumulo 4»), chi lo ha davanti vede «Pesca N» e può calare solo i +2; gli altri vedono chi deve rispondere.
 - Tema chiaro e scuro, inglese, nessuno scroll orizzontale a 375 px.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
@@ -80,7 +84,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - `src/offline.ts`: la partita contro i bot sul telefono (`nuovaPartitaLocale`, `agisci`, `muoviBot`, `pausaBot`, `vistaLocale`), con test in `offline.test.ts`.
 - `src/online/gioco.ts`: stato della stanza (round, punti, soglia), azioni, permessi (`traduci`) e `vistaPer` (mai le carte altrui né l'esito segreto della sfida); registrato in `apps/server/src/giochi.ts`. Il seme di ogni mossa deriva dal seme del round, così con lo stesso seme la partita si ripete identica.
 - `src/locales/{it,en}.ts` e `src/manifest.ts`: tutti i testi e il regolamento.
-- `src/ui/`: `Ultima.tsx` (scelta della modalità), `UltimaLocale.tsx` (contro i bot), `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Tavolo.tsx` (il tavolo, comune alle due modalità), `Carta.tsx` e `ultima.css` (solo token del tema).
+- `src/ui/`: `Ultima.tsx` (scelta della modalità), `UltimaLocale.tsx` (contro i bot), `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Tavolo.tsx` (il tavolo, comune alle due modalità), `Varianti.tsx` (interruttori delle varianti, riusati da ogni creazione, e riepilogo), `Carta.tsx` e `ultima.css` (solo token del tema).
 - Test: `logica.test.ts`, `bot.test.ts`, `online/gioco.test.ts`, `apps/server/src/ultima.test.ts` ed e2e in `apps/web/e2e/ultima-online.spec.ts` (tre telefoni) e `ultima-bot.spec.ts` (contro i bot, anche offline).
 - Le carte sono fisse (le regole stanno nel codice): non c'è una cartella `data/`.
 
@@ -92,15 +96,29 @@ Nella sala d'attesa tutti vedono chi c'è e il tempo che resta. La partita parte
 
 Dichiarazione in `src/online/gioco.ts`: `veloce: { posti: intervalloPosti(2, 10), anticipato: true, configVeloce: leggiConfig }`; le impostazioni scelte all'apertura sono in `src/ui/ImpostazioniVeloce.tsx`. Le **nuove varianti** della partita sono chiavi di `leggiConfig`: basta aggiungerle anche a quel componente per averle nella partita veloce.
 
-## Varianti possibili
+## Varianti
 
-Non ci sono nella prima versione (solo regole ufficiali). Ognuna diventerebbe un'opzione della stanza, spenta di base:
+Sono **impostazioni iniziali della stanza**: le sceglie chi crea la partita (online, contro i bot, o chi apre una partita veloce) nella sezione «Varianti» della creazione, sono **tutte spente di base** e valgono per tutta la partita. Chi entra le vede riassunte in sala e sul tavolo («Varianti: …»). Si possono combinare. Con tutte spente il gioco è quello ufficiale. Piano completo: [piano-ultima-varianti.md](../../docs/piano-ultima-varianti.md).
 
-- **Somma dei +2** (e dei +4): chi riceve un +2 può rispondere con un +2 e il totale passa al successivo.
-- **Più carte uguali insieme**: si calano in una volta tutte le carte con lo stesso numero.
+Nella configurazione della stanza sono la chiave `varianti` (`{ sommaPiu2, piuUguali, taglio, scambioRotazione }`, booleani): `leggiConfig` in `src/online/gioco.ts` le controlla (assenti = spente, non booleane = `configNonValida`), così valgono uguali per «Crea», per la partita veloce e contro i bot.
+
+### Fatte
+
+- **Somma dei +2** (`sommaPiu2`): chi riceve un +2 non pesca subito, ha davanti un **cumulo**. Può rispondere con un +2 di **qualunque colore** (il cumulo cresce di 2 e passa al successivo) oppure **pescare tutto il cumulo** e saltare il turno (pulsante «Pesca N»). Con un cumulo aperto non si pesca una carta sola, non si passa e non si gioca nient'altro (`rispondiCumulo`). Un +2 non risponde a un +4 né un +4 a un +2. Se la prima carta scoperta è un +2, il cumulo di 2 vale per il primo giocatore, con la stessa scelta. Un +2 che svuota la mano chiude il round senza cumulo. I bot rilanciano se hanno un +2, altrimenti pagano (facile e medio a volte pagano anche potendo rilanciare).
+
+- **Scambio e Rotazione** (`scambioRotazione`): due nuove carte **jolly**, **due copie ciascuna** (il mazzo passa a **112**, id 108–111), da **50 punti**. Si giocano sempre, come il Jolly, e **chi le cala sceglie il colore**; non si giocano sopra un cumulo di +2 né sopra un +4. Non possono essere la prima carta scoperta (si rimettono nel mazzo). Icone `Handshake` e `RotateCw`.
+  - **Scambio**: dopo il colore si sceglie un altro giocatore («Bruno · 5 carte»); le due mani si scambiano. Il turno passa al successivo.
+  - **Rotazione**: ogni mano passa al posto successivo nel verso del gioco. Il turno passa al successivo.
+  - Se sono l'ultima carta, chi le cala vince il round e basta (nessun effetto). Dopo l'effetto, chiunque resti con **una carta sola** ha la sua finestra di «Ultima!» (anche più di uno: `Partita.ultime` è una lista). Nell'elenco dei giocatori le mani cambiate sono evidenziate (bordo tratteggiato, senza animazione con il movimento ridotto) e una riga dice cosa è successo.
+  - **Bot**: usano solo i numeri di carte (pubblici). Scambio se ha almeno 3 carte più di chi ne ha meno, e sceglie lui; Rotazione se la mano di chi lo precede ha almeno 3 carte meno della sua. Altrimenti le tengono come jolly di scorta (facile e medio ogni tanto le calano a caso).
+
+- **Più carte uguali** (`piuUguali`): in un turno si calano insieme **tutte o alcune carte dello stesso valore**, anche di colori diversi: numeri uguali, **Salta** (ognuno salta un giocatore in più, ma mai chi li cala) e **+2** (2 carte in più per carta, o il cumulo cresce di 2 per carta). **Non** Inverti né jolly. Un gruppo è di un solo valore. Chi gioca sceglie la **cima**: deve essere giocabile sulla scoperta e ne decide il colore; le altre vanno sotto (anche se di colore diverso). Non si fa dopo aver pescato. Se il gruppo lascia una carta si apre «Ultima!»; se svuota la mano il round finisce. In logica: `gioca(..., { insieme: [id…] })` (retrocompatibile: senza `insieme` è una carta sola; con la variante spenta `insieme` dà `variantaSpenta`), `gruppiPossibili`/`gruppiDellaMano`. In UI il pulsante **«Più carte»** sopra la mano apre la selezione (carte scelte con spunta e bordo tratteggiato, le altre di valore diverso si spengono), la barra annuncia «N carte di valore X», i chip scelgono la cima, «Cala N carte» conferma. **Bot**: calano il gruppo che scarica più punti (a meno che possano colpire chi è in pericolo); facile a caso.
+
+- **Taglio** (`taglio`): quando qualcuno cala una **carta colorata**, chi ha una carta **identica** (stesso colore e stesso numero o simbolo) può giocarla subito, **anche fuori turno**, entro **3 secondi** (`TAGLIO_MS`, più 1 s di tolleranza di rete sul server). Il turno passa al tagliatore e prosegue dal suo posto (l'effetto della carta vale come se l'avesse giocata lui). **Vince chi arriva per primo** (il server applica le richieste una alla volta): chi arriva dopo riceve «Qualcuno è stato più veloce». Il taglio è di **una carta sola**, non apre un'altra finestra, e **non si taglia**: un jolly, un +4, un +2 sopra un cumulo, la carta di chi è di turno o di chi l'ha calata. Un taglio altrui **non chiude** la finestra «Ultima!» di chi ha una carta sola. La logica pura non legge l'orologio: l'azione porta l'`ora` che il chiamante prende da `ctx.ora()` (`ContestoOnline.ora`, già nel contratto). In UI sotto lo scarto compare una barra di 3 secondi (testo che conta con il movimento ridotto) e, se hai la carta, il pulsante **«Taglia con …»** (toccare la carta in mano non taglia: evita i tagli per sbaglio; la carta ha forbici e bordo tratteggiato). **Bot**: tagliano con probabilità 50 % (facile), 85 % (medio), 100 % (difficile) (`PROB_TAGLIO`), mai sopra un cumulo o una sfida; contro i bot reagiscono dopo almeno 1 s e al massimo 2,5 s (`ritardoTaglioBot`), così chi gioca ha il vantaggio del tocco; a parità vince il posto più basso. Il taglio non passa da «Simula mossa col bot».
+
+### Possibili (non ancora fatte)
+
 - **Pesca finché non puoi giocare** invece di una carta sola.
-- **Sette e zero**: con il 7 si scambia la mano con un altro, con lo 0 tutte le mani passano nel verso del gioco.
-- **Taglio**: chi ha una carta identica a quella appena calata può giocarla anche fuori turno.
 - **+4 senza sfida** (si gioca sempre, niente controllo).
 - **Penalità per «Ultima!»** diversa da 2.
 
