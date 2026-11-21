@@ -1,4 +1,4 @@
-import { SEMI_ITALIANI, type Carta } from "@gdt/carte/src/tipi";
+import { SEMI_ITALIANI, type Carta } from "@gdt/carte/logica";
 import { PRIMIERA_SERVE_OGNI_SEME, SEME_DENARI, SETTEBELLO, VALORE_PRIMIERA } from "./regole";
 
 /** Squadra: a 2 giocatori ognuno è una squadra; a 4 le coppie. */

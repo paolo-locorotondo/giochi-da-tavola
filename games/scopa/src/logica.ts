@@ -1,6 +1,4 @@
-// Import diretti dai moduli puri di @gdt/carte: l'indice importa anche i CSS della UI, che il server (tsx) non sa caricare.
-import { mazzoItaliano, mescola } from "@gdt/carte/src/mazzi";
-import type { Carta } from "@gdt/carte/src/tipi";
+import { mazzoItaliano, mescola, type Carta } from "@gdt/carte/logica";
 import type { Rng } from "@gdt/engine";
 import { combinazioniPresa, stessaPresa } from "./prese";
 import { puntiRound, type PuntiRound, type Squadra } from "./punti";

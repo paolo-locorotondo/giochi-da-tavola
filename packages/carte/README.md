@@ -24,6 +24,11 @@ function Esempio({ mano }: { mano: Carta[] }) {
 }
 ```
 
+## Ingressi
+
+- `@gdt/carte`: tutto, con i componenti (importa i CSS: solo per la UI).
+- `@gdt/carte/logica`: solo tipi, mazzi, mescolata, ordinamenti, nomi e testi, senza CSS né React. Per la logica dei giochi e per il server.
+
 ## API
 
 - `Carta { id, seme, valore }`: serializzabile. Francese: valore 1-13 (11 fante, 12 regina, 13 re). Italiano: 1-10 (8 fante, 9 cavallo, 10 re). Jolly: `seme: null`, `valore: 0`.
