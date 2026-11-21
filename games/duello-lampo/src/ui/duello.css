@@ -699,3 +699,224 @@ div.dl-zona {
   line-height: 1.4;
   text-align: center;
 }
+
+/* Bersagli: griglia quadrata di celle, in alcune compare un cerchio che sparisce da solo */
+.dl-bersagli-info {
+  flex: none;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.3rem;
+  margin: -0.45rem 0 -0.4rem;
+  line-height: 1.4;
+}
+
+.dl-bersagli-stato {
+  margin: 0;
+  min-height: 1.4em;
+  font-weight: 700;
+  text-align: left;
+}
+
+.dl-bersagli-tempo {
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--mu);
+}
+
+.dl-bersagli-barra {
+  grid-column: 1 / -1;
+  display: block;
+  height: 0.3rem;
+  overflow: hidden;
+  background: var(--s1);
+  border-radius: 999px;
+}
+
+.dl-bersagli-barra-pieno {
+  display: block;
+  height: 100%;
+  background: var(--ac);
+  transform-origin: left center;
+  animation: dl-riduci var(--dl-durata, 8s) linear forwards;
+}
+
+@keyframes dl-riduci {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.dl-bersagli {
+  container-type: size;
+  padding: 0.2rem;
+}
+
+.dl-bersagli-griglia {
+  display: grid;
+  grid-template-columns: repeat(var(--dl-lato, 3), minmax(0, 1fr));
+  gap: 0.3rem;
+  width: min(100cqw, 100cqh, calc(var(--dl-lato, 3) * 6rem));
+  aspect-ratio: 1;
+}
+
+.dl-bersagli-cella {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: calc(var(--r) - 6px);
+}
+
+.dl-bersaglio {
+  display: grid;
+  place-items: center;
+  width: 80%;
+  height: 80%;
+  max-width: 4rem;
+  max-height: 4rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--on-ac);
+  background: var(--ac);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  animation: dl-compare 150ms ease-out;
+}
+
+.dl-bersaglio:focus-visible {
+  outline: 3px solid var(--fg);
+  outline-offset: 2px;
+}
+
+.dl-bersaglio-icona {
+  width: 70%;
+  height: 70%;
+}
+
+@keyframes dl-compare {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* Colpito (anello verde) o a vuoto (bordo di errore): c'è sempre anche il testo nello stato */
+.dl-bersagli-effetto {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: dl-effetto 250ms ease-out forwards;
+}
+
+.dl-bersagli-effetto--colpito {
+  border: 3px solid var(--ac2);
+}
+
+.dl-bersagli-effetto--vuoto {
+  border: 3px solid var(--errore);
+}
+
+@keyframes dl-effetto {
+  to {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-bersaglio {
+    animation: none;
+  }
+  .dl-bersagli-effetto {
+    animation: none;
+    display: none;
+  }
+  /* La barra ferma non direbbe nulla: resta il numero dei secondi */
+  .dl-bersagli-barra {
+    display: none;
+  }
+}
+
+/* Il più grande: numeri in griglia, si tocca il maggiore */
+.dl-piugrande-stato {
+  margin: 0;
+  min-height: 1.4em;
+  font-weight: 700;
+}
+
+.dl-piugrande-griglia {
+  display: grid;
+  grid-template-columns: repeat(var(--dl-colonne, 3), minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.dl-numero {
+  position: relative;
+  min-width: 0;
+  min-height: 3.5rem;
+  padding: 0.4rem;
+  font: inherit;
+  font-family: var(--font-titoli);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+  color: var(--fg);
+  background: var(--s1);
+  border: 2px solid var(--bd-ctrl);
+  border-radius: calc(var(--r) - 4px);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-numero:focus-visible {
+  outline: 3px solid var(--ac);
+  outline-offset: 2px;
+}
+
+.dl-numero:active:not([aria-disabled="true"]) {
+  transform: scale(0.98);
+  border-color: var(--ac);
+}
+
+.dl-numero[aria-disabled="true"] {
+  cursor: default;
+}
+
+.dl-numero--giusto {
+  color: var(--on-ac2);
+  background: var(--ac2);
+  border-color: var(--ac2);
+}
+
+.dl-numero--sbagliato {
+  color: var(--on-pericolo);
+  background: var(--pericolo);
+  border-color: var(--pericolo);
+}
+
+.dl-numero-segno {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-numero:active {
+    transform: none;
+  }
+}
