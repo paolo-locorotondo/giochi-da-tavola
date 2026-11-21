@@ -69,6 +69,9 @@ importers:
       '@gdt/preferenze':
         specifier: workspace:*
         version: link:../../packages/preferenze
+      '@gdt/scopa':
+        specifier: workspace:*
+        version: link:../../games/scopa
       '@gdt/suoni':
         specifier: workspace:*
         version: link:../../packages/suoni
