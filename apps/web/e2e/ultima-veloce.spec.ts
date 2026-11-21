@@ -63,7 +63,8 @@ test("ultima veloce: Anna apre, Bruno e Carla entrano, Anna apre con 3 su 4", as
     // L'organizzatore apre prima che la stanza sia piena.
     await anna.getByRole("button", { name: "Apri adesso con 3 giocatori" }).click();
     for (const p of pagine) await expect(p.getByRole("heading", { name: "La tua mano" })).toBeVisible();
-    await expect(anna.locator(".ul-mano > *")).toHaveCount(7);
+    // 7 carte, o 9 se la prima carta scoperta è un +2 (il primo giocatore ne pesca 2).
+    await expect.poll(async () => anna.locator(".ul-mano > *").count()).toBeGreaterThanOrEqual(7);
   } finally {
     await chiudi();
   }
