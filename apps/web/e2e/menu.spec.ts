@@ -274,7 +274,7 @@ test("menu: ordinamento dei giochi con le frecce, salvato sul telefono", async (
   // «Annulla» non salva.
   await page.getByRole("button", { name: "Ordina i giochi" }).click();
   await page.getByRole("button", { name: "Sposta giù Tris" }).click();
-  expect((await nomi(page))[0]).toBe("Dadi");
+  expect((await nomi(page))[0]).toBe("Burraco");
   await page.getByRole("button", { name: "Annulla" }).click();
   expect((await nomi(page))[0]).toBe("Tris");
 
