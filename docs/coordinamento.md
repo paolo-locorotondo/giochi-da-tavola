@@ -99,5 +99,5 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | 4 Duello Lampo (Bersagli, Il più grande) | main | unito e rilasciato 0.26.0 (2026-11-21) |
 | 1 Partita veloce (server + UI) | main | unito (2026-11-21); resta: «Apri adesso» a sala piena con squadre «scelte in sala»; entry-point di @gdt/carte senza CSS |
 | 5 Ultima! varianti | main | unito (2026-11-21); e2e di Ultima! verdi due volte di fila in scuro, chiaro, coda-scuro, coda-chiaro |
-| 3 Scopa | main + lavoro/scopa | uniti blocchi 1-4; l'agente esegue e corregge gli e2e di Scopa (ha le porte 5199/8081) |
-| 2 Burraco | main | blocchi A-D uniti (2026-11-21), regole verificate sul Codice FIBUR 2026; e2e da eseguire (screenshot del menu da rigenerare); manca partita veloce |
+| 3 Scopa | main | uniti blocchi 1-4 (2026-11-21); e2e verdi due volte di fila (14/14); manca partita veloce |
+| 2 Burraco | main + lavoro/burraco | blocchi A-D uniti (2026-11-21); l'agente esegue e corregge gli e2e (ha le porte 5199/8081) |
