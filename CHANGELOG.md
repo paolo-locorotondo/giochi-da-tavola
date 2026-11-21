@@ -11,9 +11,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 - Contratto della partita veloce a stanze aperte in `@gdt/engine` (tipi `PartitaVeloceOnline`, `AperturaVeloce`, `AnteprimaVeloce`, `VistaSalaVeloce`, `intervalloPosti`, costanti d'attesa e di conto) e `ContestoOnline.ora()` per le logiche con finestre di tempo. Solo contratto: nessun cambio di comportamento.
 - Interno: nuovo pacchetto `@gdt/carte` (mazzo francese anche doppio con jolly, mazzo italiano da 40, mescolata con `Rng`, ordinamenti, `CartaGrafica` e `Mano` con selezione e riordino, it/en) e token `--carta-*` nel tema; base per Burraco e Scopa, nessun gioco lo usa ancora.
-- Duello Lampo: due nuovi mini giochi. **Bersagli**: compaiono cerchi in una griglia (2×2, 3×3, 4×4) e si toccano prima che spariscano; vince chi ne colpisce di più, a parità chi è più veloce. **Il più grande**: compaiono 4, 6 o 9 numeri e vince chi tocca per primo il più grande; chi tocca un altro numero perde il round. Ognuno ha le sue impostazioni (durata, griglia, vita e ritmo dei bersagli; quanti numeri, cifre, scarto minimo) e «Gli errori contano −1». La sfida di base passa a 10 mini giochi e 20 round (2 mani ciascuno).
-
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
+
+## [0.26.0] - 2026-11-21
+
+### Aggiunto
+
+- Duello Lampo: due nuovi mini giochi. **Bersagli**: compaiono cerchi in una griglia (2×2, 3×3, 4×4) e si toccano prima che spariscano; vince chi ne colpisce di più, a parità chi è più veloce. **Il più grande**: compaiono 4, 6 o 9 numeri e vince chi tocca per primo il più grande; chi tocca un altro numero perde il round. Ognuno ha le sue impostazioni (durata, griglia, vita e ritmo dei bersagli; quanti numeri, cifre, scarto minimo) e «Gli errori contano −1». La sfida di base passa a 10 mini giochi e 20 round (2 mani ciascuno).
 
 ## [0.25.0] - 2026-11-20
 
