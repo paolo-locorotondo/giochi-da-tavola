@@ -131,7 +131,7 @@ describe("vista", () => {
 });
 
 describe("traduci (permessi)", () => {
-  const ctx = (posto: number | null, host = false) => ({ posto, host, seme: () => 0 });
+  const ctx = (posto: number | null, host = false) => ({ posto, host, seme: () => 0, ora: () => 0 });
   const s = avviata();
   it("solo l'organizzatore avvia", () => {
     expect(() => trisOnline.traduci(inSala(), ctx(2), { tipo: "avvia" })).toThrow();

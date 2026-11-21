@@ -15,4 +15,23 @@ export type { DefinizioneFasi, Macchina } from "./fasi";
 export { creaGiocatori } from "./giocatori";
 export type { Giocatore } from "./giocatori";
 export { MAX_CARATTERI_NOME, limitaRighe, limitaTesto } from "./testo";
-export type { ContestoOnline, GiocoOnline, MomentoOnline, PresenzeOnline, RichiestaOnline } from "./online";
+export type {
+  AnteprimaVeloce,
+  AperturaVeloce,
+  ContestoOnline,
+  GiocoOnline,
+  ModoSquadre,
+  MomentoOnline,
+  MomentoSala,
+  PartitaVeloceOnline,
+  PresenzeOnline,
+  RichiestaOnline,
+  VistaSalaVeloce,
+} from "./online";
+export {
+  ATTESA_VELOCE_PREDEFINITA_MS,
+  ATTESE_VELOCE_MS,
+  CONTO_VELOCE_MS,
+  CONTO_VELOCE_SCELTE_MS,
+  intervalloPosti,
+} from "./online";

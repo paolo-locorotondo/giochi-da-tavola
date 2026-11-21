@@ -165,7 +165,7 @@ export function eseguiAzione(stanza: Stanza, token: string, a: AzioneClient, con
       break;
     }
     default: {
-      const azione = g.traduci(stanza.stato, { posto: mio, host, seme: () => randomInt(2 ** 32) }, a as RichiestaOnline);
+      const azione = g.traduci(stanza.stato, { posto: mio, host, seme: () => randomInt(2 ** 32), ora: () => Date.now() }, a as RichiestaOnline);
       if (azione === null) return;
       stanza.stato = g.applica(stanza.stato, azione);
     }

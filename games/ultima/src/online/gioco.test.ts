@@ -19,7 +19,7 @@ const inSala = (nomi = NOMI, config: unknown = {}) => {
   return s;
 };
 const avviata = (seme = 5, nomi = NOMI, config: unknown = {}) => applica(inSala(nomi, config), { tipo: "avvia", seme });
-const ctx = (posto: number | null, host = false) => ({ posto, host, seme: () => 42 });
+const ctx = (posto: number | null, host = false) => ({ posto, host, seme: () => 42, ora: () => 0 });
 const traduci = (s: StatoOnline, posto: number | null, host: boolean, richiesta: { tipo: string; [k: string]: unknown }) =>
   ultimaOnline.traduci(s, ctx(posto, host), richiesta);
 
