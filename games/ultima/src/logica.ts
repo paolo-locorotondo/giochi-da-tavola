@@ -37,6 +37,8 @@ export interface Varianti {
   /** Nel mazzo ci sono Scambio e Rotazione (due copie ciascuna). */
   scambioRotazione: boolean;
 }
+/** Carte massime calate in una volta con «Più carte uguali» (limite di sicurezza sulla rete). */
+export const MAX_GRUPPO = 10;
 export const NOMI_VARIANTI = ["sommaPiu2", "piuUguali", "taglio", "scambioRotazione"] as const;
 export const VARIANTI_BASE: Varianti = { sommaPiu2: false, piuUguali: false, taglio: false, scambioRotazione: false };
 
@@ -52,12 +54,12 @@ export class ErroreUltima extends Error {
 /** Azioni del round, visibili a tutti: mai la mano di nessuno (le carte pescate restano coperte). */
 export type Evento =
   | { tipo: "nuovoRound" }
-  | { tipo: "gioca"; posto: number; carta: Carta; colore: Colore | null }
+  | { tipo: "gioca"; posto: number; carta: Carta; colore: Colore | null; quante?: number }
   | { tipo: "pesca"; posto: number }
   | { tipo: "passa"; posto: number }
   | { tipo: "salta"; posto: number }
   | { tipo: "inverti" }
-  | { tipo: "piu2"; posto: number }
+  | { tipo: "piu2"; posto: number; quante?: number }
   | { tipo: "piu4"; posto: number }
   | { tipo: "sfida"; posto: number; contro: number; legale: boolean }
   | { tipo: "accetta"; posto: number }
@@ -202,6 +204,33 @@ export function giocabili(p: Partita, posto: number): Carta[] {
   return p.mani[posto - 1]!.filter((c) => (!p.haPescato || p.pescata === c.id) && (p.cumulo ? c.tipo === "piu2" : puoGiocare(c, p.colore, sopra)));
 }
 
+/** Chiave del gruppo di una carta: stesso numero, oppure Salta, oppure +2. Null = non si cala in gruppo. */
+export function valoreGruppo(c: Carta): string | null {
+  if (c.tipo === "numero") return `n${c.valore}`;
+  if (c.tipo === "salta" || c.tipo === "piu2") return c.tipo;
+  return null;
+}
+
+/**
+ * Gruppi che `posto` può calare adesso con «Più carte uguali»: tutte le carte di uno stesso valore
+ * (almeno due) di cui almeno una può stare in cima. Vuoto se la variante è spenta o se ha già pescato.
+ */
+export function gruppiPossibili(p: Partita, posto: number): Carta[][] {
+  if (!p.varianti.piuUguali || p.haPescato) return [];
+  return gruppiDellaMano(p.mani[posto - 1]!, giocabili(p, posto).map((c) => c.id));
+}
+
+/** Come `gruppiPossibili`, dalla sola mano e dalle carte che possono stare in cima (la UI ha solo queste). */
+export function gruppiDellaMano(mano: readonly Carta[], giocabiliIds: readonly number[]): Carta[][] {
+  const cime = new Set(giocabiliIds);
+  const per = new Map<string, Carta[]>();
+  for (const c of mano) {
+    const k = valoreGruppo(c);
+    if (k !== null) per.set(k, [...(per.get(k) ?? []), c]);
+  }
+  return [...per.values()].filter((g) => g.length >= 2 && g.some((c) => cime.has(c.id)));
+}
+
 /** Controlli comuni a chi agisce nel proprio turno. */
 function turnoLibero(p: Partita, chi: number): void {
   if (p.fine) throw new ErroreUltima("roundFinito");
@@ -296,8 +325,11 @@ export function gioca(
   colore: unknown,
   rng: Rng,
   dichiaraSubito = false,
-  /** `scambiaCon`: il posto con cui si scambia la mano (solo per la carta Scambio). */
-  opzioni: { scambiaCon?: unknown } = {},
+  /**
+   * `scambiaCon`: il posto con cui si scambia la mano (solo per la carta Scambio).
+   * `insieme`: con «Più carte uguali», le altre carte dello stesso valore calate sotto la cima (`id`).
+   */
+  opzioni: { scambiaCon?: unknown; insieme?: unknown } = {},
 ): Partita {
   const p = clona(p0);
   turnoLibero(p, chi);
@@ -307,6 +339,7 @@ export function gioca(
   if (indice < 0) throw new ErroreUltima("cartaNonInMano");
   const carta = mano[indice]!;
   if (p.cumulo && carta.tipo !== "piu2") throw new ErroreUltima("rispondiCumulo");
+  const sotto = leggiGruppo(p, mano, carta, opzioni.insieme);
 
   let coloreScelto: Colore | null = null;
   if (eJolly(carta)) {
@@ -320,13 +353,16 @@ export function gioca(
   const illegale = carta.tipo === "piu4" && mano.some((c) => eColorata(c) && c.colore === p.colore);
   const sospetto = p.haPescato;
 
-  mano.splice(indice, 1);
-  p.scarto.push(carta);
+  // Le altre carte del gruppo vanno sotto, la cima sopra: il colore in corso è quello della cima.
+  for (const c of sotto) mano.splice(mano.indexOf(c), 1);
+  mano.splice(mano.indexOf(carta), 1);
+  p.scarto.push(...sotto, carta);
+  const k = 1 + sotto.length;
   p.colore = eColorata(carta) ? carta.colore : coloreScelto;
   p.haPescato = false;
   p.pescata = null;
   p.ultime = [];
-  registra(p, { tipo: "gioca", posto: chi, carta, colore: p.colore });
+  registra(p, k > 1 ? { tipo: "gioca", posto: chi, carta, colore: p.colore, quante: k } : { tipo: "gioca", posto: chi, carta, colore: p.colore });
 
   if (mano.length === 0) {
     const punti = p.mani.reduce((somma, m, i) => (i + 1 === chi ? somma : somma + m.reduce((s, c) => s + valorePunti(c), 0)), 0);
@@ -349,8 +385,10 @@ export function gioca(
   } else if (carta.tipo === "numero" || carta.tipo === "jolly") {
     p.turno = avanza(chi, p.verso, n);
   } else if (carta.tipo === "salta") {
-    registra(p, { tipo: "salta", posto: avanza(chi, p.verso, n) });
-    p.turno = avanza(chi, p.verso, n, 2);
+    // k Salta saltano k giocatori, mai chi li cala: oltre gli altri, rigioca lui.
+    const salti = Math.min(k, n - 1);
+    for (let s = 1; s <= salti; s++) registra(p, { tipo: "salta", posto: avanza(chi, p.verso, n, s) });
+    p.turno = avanza(chi, p.verso, n, 1 + salti);
   } else if (carta.tipo === "inverti") {
     registra(p, { tipo: "inverti" });
     // In due giocatori Inverti vale come Salta: si torna a chi ha giocato.
@@ -377,17 +415,33 @@ export function gioca(
   } else if (p.varianti.sommaPiu2) {
     // Il +2 non si paga subito: la vittima risponde con un +2 o pesca tutto il cumulo.
     const vittima = avanza(chi, p.verso, n);
-    const quante = (p.cumulo?.quante ?? 0) + 2;
+    const quante = (p.cumulo?.quante ?? 0) + 2 * k;
     p.cumulo = { posto: vittima, quante, da: chi };
     registra(p, { tipo: "cumulo", posto: vittima, quante });
     p.turno = vittima;
   } else {
     const vittima = avanza(chi, p.verso, n);
-    registra(p, { tipo: "piu2", posto: vittima });
-    pescaCarte(p, vittima, 2, rng);
+    registra(p, k > 1 ? { tipo: "piu2", posto: vittima, quante: 2 * k } : { tipo: "piu2", posto: vittima });
+    pescaCarte(p, vittima, 2 * k, rng);
     p.turno = avanza(vittima, p.verso, n);
   }
   return p;
+}
+
+/** Le carte calate insieme alla cima (`insieme`), controllate: variante attiva, in mano, stesso valore, senza doppioni. */
+function leggiGruppo(p: Partita, mano: Carta[], cima: Carta, insieme: unknown): Carta[] {
+  if (insieme === undefined || (Array.isArray(insieme) && insieme.length === 0)) return [];
+  if (!p.varianti.piuUguali) throw new ErroreUltima("variantaSpenta");
+  if (!Array.isArray(insieme) || insieme.length > MAX_GRUPPO - 1) throw new ErroreUltima("gruppoNonValido");
+  if (p.haPescato) throw new ErroreUltima("soloLaPescata");
+  const valore = valoreGruppo(cima);
+  const visti = new Set<number>([cima.id]);
+  return insieme.map((id) => {
+    const c = typeof id === "number" ? mano.find((x) => x.id === id) : undefined;
+    if (!c || visti.has(c.id) || valore === null || valoreGruppo(c) !== valore) throw new ErroreUltima("gruppoNonValido");
+    visti.add(c.id);
+    return c;
+  });
 }
 
 /** Dopo uno scambio di mani: chiunque abbia una carta sola ha la finestra di «Ultima!» (chi ha giocato può dichiarare subito). */

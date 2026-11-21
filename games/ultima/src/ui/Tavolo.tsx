@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Bell, Bot, Handshake, RotateCw } from "lucide-react";
+import { Bell, Bot, Copy, Handshake, RotateCw } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { COLORI, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
+import { COLORI, gruppiDellaMano, valoreGruppo, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
 import type { Vista } from "../online";
 import { Carta, ICONA_COLORE, nomeCarta, nomeColore } from "./Carta";
 import { RiepilogoVarianti } from "./Varianti";
@@ -22,10 +22,10 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
   switch (e.tipo) {
     case "nuovoRound":
       return t("ev_nuovoRound");
-    case "gioca": {
-      const base = t("ev_gioca", { nome: nome(e.posto), carta: nomeCarta(t, e.carta, e.colore) });
-      return base;
-    }
+    case "gioca":
+      return e.quante && e.quante > 1
+        ? t("ev_giocaPiu", { nome: nome(e.posto), n: e.quante, carta: nomeCarta(t, e.carta, e.colore) })
+        : t("ev_gioca", { nome: nome(e.posto), carta: nomeCarta(t, e.carta, e.colore) });
     case "pesca":
       return t("ev_pesca", { nome: nome(e.posto) });
     case "passa":
@@ -39,7 +39,7 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
     case "rotazione":
       return t("ev_rotazione");
     case "piu2":
-      return t("ev_piu2", { nome: nome(e.posto) });
+      return e.quante ? t("ev_piu2Piu", { nome: nome(e.posto), n: e.quante }) : t("ev_piu2", { nome: nome(e.posto) });
     case "piu4":
       return t("ev_piu4", { nome: nome(e.posto) });
     case "cumulo":
@@ -88,6 +88,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const [jolly, setJolly] = useState<DatiCarta | null>(null);
   /** Uno Scambio con il colore già scelto: aspetta il giocatore con cui scambiare. */
   const [scambio, setScambio] = useState<{ carta: DatiCarta; colore: Colore } | null>(null);
+  /** «Più carte»: null = modalità spenta; altrimenti gli id scelti e quello che resta in cima (null = il primo giocabile). */
+  const [gruppo, setGruppo] = useState<{ ids: number[]; cima: number | null } | null>(null);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
   const turno = v.turno;
   const giocabili = new Set(v.giocabili);
@@ -99,10 +101,31 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
     if (!v.mioTurno) {
       setJolly(null);
       setScambio(null);
+      setGruppo(null);
     }
   }, [v.mioTurno]);
 
+  const gruppiMano = v.config.varianti.piuUguali && v.mioTurno && !v.haPescato && !sfidaIo ? gruppiDellaMano(v.mano, v.giocabili) : [];
+  const idsInGruppi = new Set(gruppiMano.flat().map((c) => c.id));
+  const scelte = gruppo ? gruppo.ids.map((id) => v.mano.find((c) => c.id === id)).filter((c): c is DatiCarta => c !== undefined) : [];
+  const valoreScelto = scelte[0] ? valoreGruppo(scelte[0]) : null;
+  const cimeScelte = scelte.filter((c) => giocabili.has(c.id));
+  const cima = cimeScelte.find((c) => c.id === gruppo?.cima) ?? cimeScelte[0] ?? null;
+  const toccaInGruppo = (carta: DatiCarta) => {
+    if (!gruppo) return;
+    const dentro = gruppo.ids.includes(carta.id);
+    if (!dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))) return;
+    setGruppo({ ids: dentro ? gruppo.ids.filter((x) => x !== carta.id) : [...gruppo.ids, carta.id], cima: gruppo.cima });
+  };
+  const calaGruppo = () => {
+    if (!cima || scelte.length < 2) return;
+    c.azione({ tipo: "gioca", carta: cima.id, insieme: scelte.filter((x) => x.id !== cima.id).map((x) => x.id) });
+    setGruppo(null);
+  };
+  const nomeValore = (carta: DatiCarta) => (carta.tipo === "numero" ? String(carta.valore) : carta.tipo === "salta" ? t("valoreSalta") : t("valorePiu2"));
+
   const tocca = (carta: DatiCarta) => {
+    if (gruppo) return toccaInGruppo(carta);
     if (!v.mioTurno || !giocabili.has(carta.id)) return;
     if (carta.tipo === "jolly" || carta.tipo === "piu4" || carta.tipo === "scambio" || carta.tipo === "rotazione") setJolly(carta);
     else c.azione({ tipo: "gioca", carta: carta.id });
@@ -280,10 +303,46 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       {v.io !== null && (
         <>
           <h3 style={{ margin: 0 }}>{t("tuaMano")}</h3>
+          {gruppiMano.length > 0 && !gruppo && (
+            <button type="button" className="btn" onClick={() => setGruppo({ ids: [], cima: null })}>
+              <Copy size={18} aria-hidden="true" /> {t("piuCarteBtn")}
+            </button>
+          )}
+          {gruppo && (
+            <div className="ul-avviso ul-gruppo">
+              <p className="muted" role="status">
+                {scelte.length === 0 || !scelte[0]
+                  ? t("piuCarteAiuto")
+                  : scelte.length < 2
+                    ? t("piuCarteNessuna")
+                    : t("piuCarteBarraAria", { n: scelte.length, valore: nomeValore(scelte[0]) })}
+              </p>
+              {cimeScelte.length > 1 && (
+                <div className="ul-cime" role="group" aria-label={t("piuCarteCima")}>
+                  <span>{t("piuCarteCima")}</span>
+                  {cimeScelte.map((x) => (
+                    <Carta key={x.id} carta={x} t={t} scelta={cima?.id === x.id} onClick={() => setGruppo({ ...gruppo, cima: x.id })} />
+                  ))}
+                </div>
+              )}
+              <div className="ul-azioni">
+                <button type="button" className="btn primario" disabled={!cima || scelte.length < 2} onClick={calaGruppo}>
+                  {t("piuCarteCala", { n: scelte.length })}
+                </button>
+                <button type="button" className="btn" onClick={() => setGruppo(null)}>
+                  {t("annulla")}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="ul-mano" role="group" aria-label={t("tuaMano")}>
-            {v.mano.map((carta) => (
-              <Carta key={carta.id} carta={carta} t={t} onClick={() => tocca(carta)} spenta={!v.mioTurno || !giocabili.has(carta.id)} />
-            ))}
+            {v.mano.map((carta) => {
+              const dentro = gruppo?.ids.includes(carta.id) ?? false;
+              const spenta = gruppo
+                ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
+                : !v.mioTurno || !giocabili.has(carta.id);
+              return <Carta key={carta.id} carta={carta} t={t} onClick={() => tocca(carta)} spenta={spenta} scelta={gruppo ? dentro : undefined} />;
+            })}
           </div>
         </>
       )}

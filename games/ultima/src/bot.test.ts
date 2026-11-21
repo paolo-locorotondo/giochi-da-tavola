@@ -301,3 +301,53 @@ describe("partite di bot con Scambio e Rotazione e altre varianti", () => {
     partiteConVarianti({ ...VARIANTI_BASE, scambioRotazione: true, sommaPiu2: true }, 10);
   });
 });
+
+describe("bot con Più carte uguali", () => {
+  const V = { ...VARIANTI_BASE, piuUguali: true };
+  it("cala tutto il gruppo di numeri uguali, con in cima una carta giocabile", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const v5 = num("verde", 5);
+    const p = partita([[r5, b5, v5, num("giallo", 1), num("giallo", 2)], altri(3)], { varianti: V });
+    const m = mossaBot(p, 2, 1);
+    expect(m.tipo).toBe("gioca");
+    if (m.tipo !== "gioca") return;
+    const ids = [m.carta, ...(m.insieme ?? [])].sort();
+    expect(ids).toEqual([r5.id, b5.id, v5.id].sort());
+    expect(carteGiocabili(p, 1).map((c) => c.id)).toContain(m.carta);
+    const dopo = eseguiMossa(p, 2, 1, m, creaRng(1));
+    expect(dopo.mani[0]).toHaveLength(2);
+  });
+  it("preferisce il gruppo che scarica più punti", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "blu");
+    const n9 = num("rosso", 9);
+    const p = partita([[s1, s2, n9, num("verde", 1)], altri(5)], { varianti: V });
+    const m = mossaBot(p, 2, 1);
+    expect(m).toMatchObject({ tipo: "gioca" });
+    expect([m.tipo === "gioca" ? m.carta : -1, ...(m.tipo === "gioca" ? (m.insieme ?? []) : [])].sort()).toEqual([s1.id, s2.id].sort());
+  });
+  it("senza la variante non cala mai gruppi", () => {
+    const r5 = num("rosso", 5);
+    const p = partita([[r5, num("blu", 5), num("giallo", 1)], altri(5)]);
+    const m = mossaBot(p, 2, 1);
+    expect(m).toMatchObject({ tipo: "gioca" });
+    expect(m.tipo === "gioca" ? m.insieme : null).toBeUndefined();
+  });
+  it("a ogni livello le mosse con i gruppi sono lecite", () => {
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 40; s++) {
+        const p = partita([[num("rosso", 5), num("blu", 5), num("verde", 5), sim("salta", "rosso"), sim("salta", "blu"), num("giallo", 1)], altri(3)], { varianti: V });
+        const m = mossaBotLivello(p, 2, 1, livello, creaRng(s));
+        expect(() => eseguiMossa(p, 2, 1, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("partite di bot con Più carte uguali", () => {
+  it("da sole e con tutte le altre varianti finiscono sempre, senza perdere carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, piuUguali: true }, 15);
+    partiteConVarianti({ sommaPiu2: true, piuUguali: true, taglio: false, scambioRotazione: true }, 10);
+  });
+});

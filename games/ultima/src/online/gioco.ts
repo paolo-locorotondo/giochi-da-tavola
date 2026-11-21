@@ -73,7 +73,7 @@ export type AzioneOnline =
   | { tipo: "occupa"; posto: number }
   | { tipo: "libera"; posto: number }
   | { tipo: "avvia"; seme: number }
-  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown; scambiaCon?: unknown }
+  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown; scambiaCon?: unknown; insieme?: unknown }
   | { tipo: "pesca"; chi: number }
   | { tipo: "passa"; chi: number }
   | { tipo: "scegliColore"; chi: number; colore: unknown }
@@ -207,7 +207,7 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
   if (!eUnPosto(s, chi)) throw new ErroreUltima("nonPartecipa");
   switch (a.tipo) {
     case "gioca":
-      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng, false, { scambiaCon: a.scambiaCon }));
+      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng, false, { scambiaCon: a.scambiaCon, insieme: a.insieme }));
     case "pesca":
       return dopoMossa(s, pesca(p, chi, rng));
     case "passa":
@@ -375,7 +375,10 @@ export const ultimaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
         soloHost();
         return { tipo: "bot", posto: Number(a.posto) };
       case "gioca":
-        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore, scambiaCon: a.scambiaCon === undefined ? undefined : Number(a.scambiaCon) };
+        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore, scambiaCon: a.scambiaCon === undefined ? undefined : Number(a.scambiaCon),
+          // La lista la controlla la logica (variante, mano, stesso valore); qui solo numeri.
+          insieme: a.insieme === undefined ? undefined : Array.isArray(a.insieme) ? a.insieme.slice(0, 20).map(Number) : a.insieme,
+        };
       case "scegliColore":
         return { tipo: "scegliColore", chi: partecipa(), colore: a.colore };
       case "beccato":

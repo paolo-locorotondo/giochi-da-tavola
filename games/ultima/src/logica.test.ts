@@ -7,6 +7,7 @@ import {
   beccato,
   gioca,
   giocabili,
+  gruppiPossibili,
   pescaCumulo,
   VARIANTI_BASE,
   mazzoCompleto,
@@ -650,5 +651,101 @@ describe("Scambio e Rotazione", () => {
     // Il posto 3 ha una carta: dopo la rotazione l'1 la riceve e, se dichiara subito, è dichiarata.
     const p = gioca(conCarte([[r, num("blu", 1), num("blu", 2)], [num("verde", 1), num("verde", 2)], [num("giallo", 1)]]), 3, 1, r.id, "giallo", rng(), true);
     expect(p.ultime).toEqual([{ posto: 1, dichiarata: true }]);
+  });
+});
+
+describe("Più carte uguali", () => {
+  const V = { ...VARIANTI_BASE, piuUguali: true };
+  const conV = (mani: Carta[][], opz: Partial<Partita> = {}) => partita(mani, { varianti: V, ...opz });
+  const gioc = (p: Partita, n: number, chi: number, cima: Carta, insieme: Carta[], colore?: Colore) =>
+    gioca(p, n, chi, cima.id, colore, rng(), false, { insieme: insieme.map((c) => c.id) });
+
+  it("numeri uguali di colori diversi: la cima decide il colore, le altre vanno sotto", () => {
+    const r5 = num("rosso", 5);
+    const v5 = num("verde", 5);
+    const b5 = num("blu", 5);
+    const p = gioc(conV([[r5, v5, b5, num("giallo", 1)], [num("verde", 2)]]), 2, 1, v5, [r5, b5]);
+    expect(p.mani[0]).toHaveLength(1);
+    expect(p.scarto.slice(-3).map((c) => c.id)).toEqual([r5.id, b5.id, v5.id]);
+    expect(p.colore).toBe("verde");
+    expect(p.eventi.find((e) => e.tipo === "gioca")).toMatchObject({ quante: 3, carta: { id: v5.id } });
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: false }]);
+  });
+  it("la cima deve essere giocabile; le altre possono non esserlo", () => {
+    const b7 = num("blu", 7);
+    const g7 = num("giallo", 7);
+    const base = conV([[b7, g7, num("rosso", 1)], [num("verde", 2)]]);
+    expect(codice(() => gioc(base, 2, 1, b7, [g7]))).toBe("nonGiocabile");
+    const r7 = num("rosso", 7);
+    expect(gioc(conV([[b7, r7, num("rosso", 1)], [num("verde", 2)]]), 2, 1, r7, [b7]).colore).toBe("rosso");
+  });
+  it("gruppi misti, di Inverti o di jolly, doppioni e carte non in mano sono rifiutati", () => {
+    const r5 = num("rosso", 5);
+    const r6 = num("rosso", 6);
+    const i1 = sim("inverti", "rosso");
+    const i2 = sim("inverti", "blu");
+    const j1 = jolly();
+    const j2 = jolly();
+    const base = conV([[r5, r6, i1, i2, j1, j2, num("giallo", 1)], [num("verde", 2)]]);
+    expect(codice(() => gioc(base, 2, 1, r5, [r6]))).toBe("gruppoNonValido");
+    expect(codice(() => gioc(base, 2, 1, i1, [i2]))).toBe("gruppoNonValido");
+    expect(codice(() => gioc(base, 2, 1, j1, [j2], "blu"))).toBe("gruppoNonValido");
+    expect(codice(() => gioca(base, 2, 1, r5.id, undefined, rng(), false, { insieme: [r5.id] }))).toBe("gruppoNonValido");
+    expect(codice(() => gioca(base, 2, 1, r5.id, undefined, rng(), false, { insieme: [424242] }))).toBe("gruppoNonValido");
+    expect(codice(() => gioca(base, 2, 1, r5.id, undefined, rng(), false, { insieme: "x" }))).toBe("gruppoNonValido");
+  });
+  it("con la variante spenta un gruppo è rifiutato; una lista vuota vale come carta singola", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const spenta = partita([[r5, b5, num("giallo", 1)], [num("verde", 2)]]);
+    expect(codice(() => gioc(spenta, 2, 1, r5, [b5]))).toBe("variantaSpenta");
+    expect(gioca(spenta, 2, 1, r5.id, undefined, rng(), false, { insieme: [] }).mani[0]).toHaveLength(2);
+  });
+  it("Salta in gruppo salta un giocatore per carta", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "blu");
+    const p = gioc(conV([[s1, s2, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)], [num("verde", 4)]]), 4, 1, s1, [s2]);
+    expect(p.turno).toBe(4);
+    expect(p.eventi.filter((e) => e.tipo === "salta").map((e) => (e as { posto: number }).posto)).toEqual([2, 3]);
+  });
+  it("in due giocatori più Salta tornano comunque a chi li cala", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "blu");
+    const s3 = sim("salta", "verde");
+    const p = gioc(conV([[s1, s2, s3, num("giallo", 1)], [num("verde", 2)]]), 2, 1, s1, [s2, s3]);
+    expect(p.turno).toBe(1);
+  });
+  it("+2 in gruppo: senza somma fa pescare 2 per carta; con la somma il cumulo cresce di 2 per carta", () => {
+    const a = sim("piu2", "rosso");
+    const b = sim("piu2", "blu");
+    const p = gioc(conV([[a, b, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)]]), 3, 1, a, [b]);
+    expect(p.mani[1]).toHaveLength(5);
+    expect(p.turno).toBe(3);
+    const c = sim("piu2", "rosso");
+    const d = sim("piu2", "blu");
+    const conSomma = gioca(conV([[c, d, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)]], { varianti: { ...V, sommaPiu2: true } }), 3, 1, c.id, undefined, rng(), false, { insieme: [d.id] });
+    expect(conSomma.cumulo).toEqual({ posto: 2, quante: 4, da: 1 });
+  });
+  it("un gruppo che svuota la mano chiude il round", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const p = gioc(conV([[r5, b5], [num("verde", 2)]]), 2, 1, r5, [b5]);
+    expect(p.fine).toEqual({ vincitore: 1, punti: 2 });
+  });
+  it("dopo una pesca non si calano gruppi", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const p = conV([[r5, b5, num("giallo", 1)], [num("verde", 2)]], { haPescato: true, pescata: r5.id });
+    expect(codice(() => gioc(p, 2, 1, r5, [b5]))).toBe("soloLaPescata");
+    expect(gruppiPossibili(p, 1)).toEqual([]);
+  });
+  it("gruppiPossibili: almeno due carte dello stesso valore, con almeno una giocabile in cima", () => {
+    const r5 = num("rosso", 5);
+    const b5 = num("blu", 5);
+    const b9 = num("blu", 9);
+    const g9 = num("giallo", 9);
+    const p = conV([[r5, b5, b9, g9, sim("inverti", "rosso"), sim("inverti", "blu")], [num("verde", 2)]]);
+    expect(gruppiPossibili(p, 1).map((g) => g.map((c) => c.id))).toEqual([[r5.id, b5.id]]);
+    expect(gruppiPossibili(partita(p.mani), 1)).toEqual([]);
   });
 });

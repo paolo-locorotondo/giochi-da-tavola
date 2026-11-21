@@ -69,6 +69,7 @@ Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi det
 - Fine round: punti e classifica; «Prossimo round» solo all'organizzatore; a fine partita «Ricomincia».
 - Refresh o schermo bloccato: si rientra nel proprio posto, con la propria mano.
 - Contro i bot: da 1 a 9 bot con nomi modificabili; i bot giocano da soli alla velocità scelta; con la rete spenta la partita va avanti; se dimentichi «Ultima!» un bot difficile ti becca dopo un attimo; «Esci dalla partita» chiede conferma.
+- Più carte uguali: il pulsante «Più carte» compare solo con due carte uguali giocabili; in selezione le carte scelte hanno la spunta, la barra dice quante e di che valore, con più cime possibili si sceglie quale resta sopra.
 - Scambio e Rotazione: la carta mostra la mano (Scambio) o la freccia (Rotazione); dopo il colore lo Scambio chiede con chi (pulsanti a tutta larghezza, nome e numero di carte); le mani cambiate sono evidenziate; chi resta con una carta può dire «Ultima!» anche se non ha giocato lui.
 - Varianti: in creazione la sezione «Varianti» ha quattro interruttori spenti; quelle accese compaiono in sala e sul tavolo. Con la somma dei +2: il cumulo è scritto sul mazzo («cumulo 4»), chi lo ha davanti vede «Pesca N» e può calare solo i +2; gli altri vedono chi deve rispondere.
 - Tema chiaro e scuro, inglese, nessuno scroll orizzontale a 375 px.
@@ -106,9 +107,11 @@ Nella configurazione della stanza sono la chiave `varianti` (`{ sommaPiu2, piuUg
   - Se sono l'ultima carta, chi le cala vince il round e basta (nessun effetto). Dopo l'effetto, chiunque resti con **una carta sola** ha la sua finestra di «Ultima!» (anche più di uno: `Partita.ultime` è una lista). Nell'elenco dei giocatori le mani cambiate sono evidenziate (bordo tratteggiato, senza animazione con il movimento ridotto) e una riga dice cosa è successo.
   - **Bot**: usano solo i numeri di carte (pubblici). Scambio se ha almeno 3 carte più di chi ne ha meno, e sceglie lui; Rotazione se la mano di chi lo precede ha almeno 3 carte meno della sua. Altrimenti le tengono come jolly di scorta (facile e medio ogni tanto le calano a caso).
 
+- **Più carte uguali** (`piuUguali`): in un turno si calano insieme **tutte o alcune carte dello stesso valore**, anche di colori diversi: numeri uguali, **Salta** (ognuno salta un giocatore in più, ma mai chi li cala) e **+2** (2 carte in più per carta, o il cumulo cresce di 2 per carta). **Non** Inverti né jolly. Un gruppo è di un solo valore. Chi gioca sceglie la **cima**: deve essere giocabile sulla scoperta e ne decide il colore; le altre vanno sotto (anche se di colore diverso). Non si fa dopo aver pescato. Se il gruppo lascia una carta si apre «Ultima!»; se svuota la mano il round finisce. In logica: `gioca(..., { insieme: [id…] })` (retrocompatibile: senza `insieme` è una carta sola; con la variante spenta `insieme` dà `variantaSpenta`), `gruppiPossibili`/`gruppiDellaMano`. In UI il pulsante **«Più carte»** sopra la mano apre la selezione (carte scelte con spunta e bordo tratteggiato, le altre di valore diverso si spengono), la barra annuncia «N carte di valore X», i chip scelgono la cima, «Cala N carte» conferma. **Bot**: calano il gruppo che scarica più punti (a meno che possano colpire chi è in pericolo); facile a caso.
+
 ### Possibili (non ancora fatte)
 
-- **Più carte uguali insieme**, **Taglio**: in lavorazione, vedi il piano.
+- **Taglio**: in lavorazione, vedi il piano.
 - **Pesca finché non puoi giocare** invece di una carta sola.
 - **+4 senza sfida** (si gioca sempre, niente controllo).
 - **Penalità per «Ultima!»** diversa da 2.

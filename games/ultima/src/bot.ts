@@ -8,6 +8,7 @@ import {
   eJolly,
   giocabili,
   gioca,
+  gruppiPossibili,
   passa,
   pesca,
   pescaCumulo,
@@ -28,7 +29,7 @@ import {
  */
 
 export type MossaBot =
-  | { tipo: "gioca"; carta: number; colore?: Colore; scambiaCon?: number }
+  | { tipo: "gioca"; carta: number; colore?: Colore; scambiaCon?: number; insieme?: number[] }
   | { tipo: "pesca" }
   | { tipo: "passa" }
   | { tipo: "scegliColore"; colore: Colore }
@@ -143,6 +144,8 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
     const migliore = [...giocabili].sort(
       (a, b) => punteggioMossa(b, mano, prossimoInPericolo, utile(b)) - punteggioMossa(a, mano, prossimoInPericolo, utile(a)) || a.id - b.id,
     )[0]!;
+    const gruppo = scegliGruppo(p, posto, migliore, prossimoInPericolo);
+    if (gruppo) return gruppo;
     if (migliore.tipo === "scambio") {
       // Se non conviene si cala comunque (come un jolly di scorta) scegliendo chi ha meno carte.
       const altri = altriPosti(n, posto);
@@ -159,11 +162,37 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
   return p.haPescato ? { tipo: "passa" } : { tipo: "pesca" };
 }
 
+/** Il gruppo con cui giocare invece della carta singola `migliore`, o null. Usa solo la mano e i dati pubblici. */
+function scegliGruppo(p: Partita, posto: number, migliore: Carta, prossimoInPericolo: boolean): MossaBot | null {
+  const gruppi = gruppiPossibili(p, posto);
+  if (gruppi.length === 0) return null;
+  const mano = p.mani[posto - 1]!;
+  const punti = (g: Carta[]) => g.reduce((s, c) => s + valorePunti(c), 0);
+  const colpisce = migliore.tipo === "piu2" || migliore.tipo === "salta";
+  const suo = gruppi.find((g) => g.some((c) => c.id === migliore.id)) ?? null;
+  // Se si può colpire chi è in pericolo si resta sulla carta che colpisce (col suo gruppo, se c'è).
+  let scelto = suo;
+  if (!(prossimoInPericolo && colpisce)) {
+    const piuPunti = [...gruppi].sort((a, b) => punti(b) - punti(a) || b.length - a.length)[0]!;
+    if (!suo || punti(piuPunti) > punti(suo)) scelto = piuPunti;
+  }
+  return scelto ? mossaGruppo(p, posto, scelto, mano, prossimoInPericolo) : null;
+}
+
+/** Cala il gruppo: in cima la carta giocabile che vale di più (quella scelta di norma), le altre sotto. */
+function mossaGruppo(p: Partita, posto: number, gruppo: Carta[], mano: readonly Carta[], prossimoInPericolo: boolean): MossaBot {
+  const ok = new Set(carteGiocabili(p, posto).map((c) => c.id));
+  const cima = gruppo
+    .filter((c) => ok.has(c.id))
+    .sort((a, b) => punteggioMossa(b, mano, prossimoInPericolo) - punteggioMossa(a, mano, prossimoInPericolo) || a.id - b.id)[0]!;
+  return { tipo: "gioca", carta: cima.id, insieme: gruppo.filter((c) => c.id !== cima.id).map((c) => c.id) };
+}
+
 /** Esegue sulla logica la mossa scelta dal bot per `posto`. `dichiara`: se cala la penultima carta dice «Ultima!» subito. */
 export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng, dichiara = true): Partita {
   switch (m.tipo) {
     case "gioca":
-      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara, { scambiaCon: m.scambiaCon });
+      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara, { scambiaCon: m.scambiaCon, insieme: m.insieme });
     case "pesca":
       return pesca(p, posto, rng);
     case "passa":
@@ -221,7 +250,11 @@ export function mossaBotLivello(p: Partita, n: number, posto: number, livello: L
         const altri = altriPosti(n, posto);
         return { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]!, scambiaCon: altri[rng.intero(altri.length)]! };
       }
-      return eJolly(carta) ? { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]! } : { tipo: "gioca", carta: carta.id };
+      if (eJolly(carta)) return { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]! };
+      // A caso anche i gruppi: se la carta ne fa parte, una volta su due la si cala con le altre.
+      const gruppo = gruppiPossibili(p, posto).find((g) => g.some((c) => c.id === carta.id));
+      if (gruppo && rng.next() < 0.5) return { tipo: "gioca", carta: carta.id, insieme: gruppo.filter((c) => c.id !== carta.id).map((c) => c.id) };
+      return { tipo: "gioca", carta: carta.id };
     }
     case "scegliColore":
       return { tipo: "scegliColore", colore: COLORI[rng.intero(COLORI.length)]! };

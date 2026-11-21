@@ -1,7 +1,7 @@
 import { creaRng } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
 import { mossaBot } from "../bot";
-import { ErroreUltima, VARIANTI_BASE, type Carta } from "../logica";
+import { ErroreUltima, VARIANTI_BASE, gruppiDellaMano, type Carta } from "../logica";
 import { applica, mancanti, nuovoStato, ultimaOnline, vistaPer, type StatoOnline } from "./gioco";
 
 const codice = (f: () => unknown) => {
@@ -444,6 +444,47 @@ describe("Scambio e Rotazione online", () => {
   it("partite intere con il bot arrivano alla fine con tutte le varianti attive", () => {
     for (let seme = 0; seme < 10; seme++) {
       const s = giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true, scambioRotazione: true } }));
+      expect(s.fase).toBe("fine");
+    }
+  });
+});
+
+describe("Più carte uguali online", () => {
+  const cfg = { varianti: { piuUguali: true } };
+  it("traduci inoltra `insieme` come lista di numeri; la logica lo controlla", () => {
+    const s = avviata(3, NOMI, cfg);
+    const turno = s.partita!.turno;
+    const a = traduci(s, turno, false, { tipo: "gioca", carta: 1, insieme: ["2", 3] });
+    expect(a).toMatchObject({ tipo: "gioca", insieme: [2, 3] });
+    expect(codice(() => applica(s, { tipo: "gioca", chi: turno, carta: s.partita!.mani[turno - 1]![0]!.id, insieme: [s.partita!.mani[turno - 1]![0]!.id] }))).toBe("gruppoNonValido");
+  });
+  it("con la variante spenta `insieme` è rifiutato", () => {
+    const s = avviata(3);
+    const turno = s.partita!.turno;
+    const mano = s.partita!.mani[turno - 1]!;
+    expect(codice(() => applica(s, { tipo: "gioca", chi: turno, carta: mano[0]!.id, insieme: [mano[1]!.id] }))).toBe("variantaSpenta");
+  });
+  it("un gruppo calato da un telefono finisce nello scarto e negli eventi", () => {
+    for (let seme = 0; seme < 400; seme++) {
+      const s = avviata(seme, NOMI, cfg);
+      const p = s.partita!;
+      const turno = p.turno;
+      const v = vistaPer(s, turno, false);
+      const gruppi = gruppiDellaMano(v.mano, v.giocabili);
+      if (gruppi.length === 0) continue;
+      const g = gruppi[0]!;
+      const cima = g.find((c) => v.giocabili.includes(c.id))!;
+      const dopo = applica(s, { tipo: "gioca", chi: turno, carta: cima.id, colore: undefined, insieme: g.filter((c) => c.id !== cima.id).map((c) => c.id) });
+      expect(dopo.partita!.scarto.slice(-g.length).map((c) => c.id)).toContain(cima.id);
+      expect(dopo.partita!.mani[turno - 1]!.length).toBe(p.mani[turno - 1]!.length - g.length);
+      expect(dopo.partita!.eventi.some((e) => e.tipo === "gioca" && e.quante === g.length)).toBe(true);
+      return;
+    }
+    throw new Error("nessun gruppo trovato");
+  });
+  it("partite intere con il bot, con tutte le varianti insieme", () => {
+    for (let seme = 0; seme < 10; seme++) {
+      const s = giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true, piuUguali: true, scambioRotazione: true } }));
       expect(s.fase).toBe("fine");
     }
   });

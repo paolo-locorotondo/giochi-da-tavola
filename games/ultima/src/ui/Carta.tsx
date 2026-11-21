@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Ban, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Sun, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Ban, Check, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Sun, type LucideIcon } from "lucide-react";
 import type { Traduttore } from "@gdt/i18n";
 import type { Carta as DatiCarta, Colore } from "../logica";
 import type { it } from "../locales/it";
@@ -77,19 +77,21 @@ interface Props {
   /** Attenuata: non si può giocare ora. */
   spenta?: boolean;
   grande?: boolean;
+  /** Modalità «Più carte»: la carta è un interruttore (scelta o no). */
+  scelta?: boolean;
 }
 
-export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false }: Props) {
+export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false, scelta }: Props) {
   const col = "colore" in carta ? carta.colore : colore;
   const Icona = col ? ICONA_COLORE[col] : null;
   const nome = nomeCarta(t, carta, colore);
-  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}`;
+  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}${scelta ? " ul-scelta" : ""}`;
   const contenuto = (
     <>
       <span className="ul-valore">
         <Simbolo carta={carta} />
       </span>
-      {Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />}
+      {scelta ? <Check className="ul-seme ul-spunta" size={24} aria-hidden="true" /> : Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />}
       <span className="ul-nome" aria-hidden="true">
         {col ? nomeColore(t, col) : nomeJolly(t, carta)}
       </span>
@@ -103,7 +105,14 @@ export function Carta({ carta, t, colore = null, onClick, spenta = false, grande
     );
   }
   return (
-    <button type="button" className={classe} aria-label={spenta ? t("cartaNonGiocabile", { carta: nome }) : nome} aria-disabled={spenta} onClick={onClick}>
+    <button
+      type="button"
+      className={classe}
+      aria-label={spenta ? t("cartaNonGiocabile", { carta: nome }) : nome}
+      aria-disabled={spenta}
+      aria-pressed={scelta === undefined ? undefined : scelta}
+      onClick={onClick}
+    >
       {contenuto}
     </button>
   );
