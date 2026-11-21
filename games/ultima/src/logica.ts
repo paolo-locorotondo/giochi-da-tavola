@@ -26,6 +26,20 @@ export const PUNTI_JOLLY = 50;
 /** Quanti eventi restano nell'elenco mostrato a tutti. */
 export const MAX_EVENTI = 12;
 
+/** Le varianti scelte alla creazione della stanza; tutte spente di base. */
+export interface Varianti {
+  /** Un +2 si può rispondere con un +2: il cumulo passa al successivo. */
+  sommaPiu2: boolean;
+  /** Si calano insieme più carte dello stesso numero (o Salta, o +2). */
+  piuUguali: boolean;
+  /** Chi ha una carta identica alla appena calata può giocarla fuori turno, entro 3 secondi. */
+  taglio: boolean;
+  /** Nel mazzo ci sono Scambio e Rotazione (due copie ciascuna). */
+  scambioRotazione: boolean;
+}
+export const NOMI_VARIANTI = ["sommaPiu2", "piuUguali", "taglio", "scambioRotazione"] as const;
+export const VARIANTI_BASE: Varianti = { sommaPiu2: false, piuUguali: false, taglio: false, scambioRotazione: false };
+
 export class ErroreUltima extends Error {
   readonly codice: string;
   constructor(codice: string) {
@@ -51,8 +65,16 @@ export type Evento =
   | { tipo: "ultima"; posto: number }
   | { tipo: "beccato"; posto: number; chi: number }
   | { tipo: "bot"; posto: number }
+  | { tipo: "cumulo"; posto: number; quante: number }
+  | { tipo: "pescaCumulo"; posto: number; quante: number }
   | { tipo: "mazzoRimescolato" }
   | { tipo: "fineRound"; posto: number; punti: number };
+
+/** Chi ha una carta sola: può dire «Ultima!», o essere beccato. */
+export interface UltimaAperta {
+  posto: number;
+  dichiarata: boolean;
+}
 
 /** Un round in corso. Il punteggio e la partita a punti stanno in `gioco.ts`. */
 export interface Partita {
@@ -69,8 +91,12 @@ export interface Partita {
   haPescato: boolean;
   /** Id della carta appena pescata; null se non c'era niente da pescare. */
   pescata: number | null;
-  /** Finestra di «Ultima!»: aperta finché il giocatore successivo non agisce. */
-  ultima: { posto: number; dichiarata: boolean } | null;
+  /** Finestre di «Ultima!»: aperte finché il giocatore successivo non agisce (più d'una dopo una Rotazione). */
+  ultime: UltimaAperta[];
+  /** Le varianti attive (copia della configurazione della stanza). */
+  varianti: Varianti;
+  /** Somma dei +2: chi è "posto" risponde con un +2 o pesca "quante" carte; "da" ha giocato l'ultimo +2 (null: la prima carta). */
+  cumulo: { posto: number; quante: number; da: number | null } | null;
   /**
    * Un +4 da subire. `sospetto` è pubblico (chi l'ha giocato aveva appena pescato);
    * `illegale` resta segreto e si scopre con la sfida.
@@ -137,7 +163,8 @@ function clona(p: Partita): Partita {
     mazzo: [...p.mazzo],
     scarto: [...p.scarto],
     mani: p.mani.map((m) => [...m]),
-    ultima: p.ultima ? { ...p.ultima } : null,
+    ultime: p.ultime.map((u) => ({ ...u })),
+    cumulo: p.cumulo ? { ...p.cumulo } : null,
     sfida: p.sfida ? { ...p.sfida } : null,
     eventi: [...p.eventi],
   };
@@ -163,7 +190,8 @@ function pescaCarte(p: Partita, posto: number, quante: number, rng: Rng): void {
 export function giocabili(p: Partita, posto: number): Carta[] {
   if (p.fine || p.sfida || p.colore === null || p.turno !== posto) return [];
   const sopra = scoperta(p);
-  return p.mani[posto - 1]!.filter((c) => (!p.haPescato || p.pescata === c.id) && puoGiocare(c, p.colore, sopra));
+  // Con un cumulo aperto si risponde solo con un +2, di qualunque colore.
+  return p.mani[posto - 1]!.filter((c) => (!p.haPescato || p.pescata === c.id) && (p.cumulo ? c.tipo === "piu2" : puoGiocare(c, p.colore, sopra)));
 }
 
 /** Controlli comuni a chi agisce nel proprio turno. */
@@ -174,13 +202,19 @@ function turnoLibero(p: Partita, chi: number): void {
   if (p.turno !== chi) throw new ErroreUltima("nonTocca");
 }
 
+/** Come "turnoLibero", ma con un cumulo di +2 aperto non si pesca né si passa. */
+function turnoSenzaCumulo(p: Partita, chi: number): void {
+  turnoLibero(p, chi);
+  if (p.cumulo) throw new ErroreUltima("rispondiCumulo");
+}
+
 /**
  * Primo round: mazzo mescolato, 7 carte a testa, prima carta scoperta. Un +4 si rimette nel
  * mazzo e se ne gira un'altra. Il suo effetto vale per `primo` (chi inizia il round): Salta
  * lo fa saltare, +2 gli fa pescare 2; Inverti cambia verso e a iniziare è chi siede prima di
  * lui (in due giocatori vale come Salta). Un Jolly lo fa scegliere a `primo`.
  */
-export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [], primo = 1): Partita {
+export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [], primo = 1, varianti: Varianti = VARIANTI_BASE): Partita {
   if (!Number.isInteger(n) || n < MIN_GIOCATORI || n > MAX_GIOCATORI) throw new ErroreUltima("numeroGiocatori");
   const mazzo = rng.mescola(mazzoCompleto());
   const mani: Carta[][] = Array.from({ length: n }, () => []);
@@ -201,7 +235,9 @@ export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [],
     colore: eColorata(prima) ? prima.colore : null,
     haPescato: false,
     pescata: null,
-    ultima: null,
+    ultime: [],
+    varianti: { ...varianti },
+    cumulo: null,
     sfida: null,
     fine: null,
     eventi: [...eventiPrecedenti, { tipo: "nuovoRound" } as Evento].slice(-MAX_EVENTI),
@@ -225,6 +261,12 @@ export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [],
       }
       break;
     case "piu2":
+      if (varianti.sommaPiu2) {
+        // Il primo giocatore ha la stessa scelta di tutti: rispondere con un +2 o pescare 2.
+        registra(p, { tipo: "cumulo", posto: primo, quante: 2 });
+        p.cumulo = { posto: primo, quante: 2, da: null };
+        break;
+      }
       registra(p, { tipo: "piu2", posto: primo });
       pescaCarte(p, primo, 2, rng);
       p.turno = avanza(primo, 1, n);
@@ -245,12 +287,13 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
   const indice = mano.findIndex((c) => c.id === id);
   if (indice < 0) throw new ErroreUltima("cartaNonInMano");
   const carta = mano[indice]!;
+  if (p.cumulo && carta.tipo !== "piu2") throw new ErroreUltima("rispondiCumulo");
 
   let coloreScelto: Colore | null = null;
   if (eJolly(carta)) {
     if (!isColore(colore)) throw new ErroreUltima("coloreMancante");
     coloreScelto = colore;
-  } else if (!puoGiocare(carta, p.colore, scoperta(p))) {
+  } else if (!p.cumulo && !puoGiocare(carta, p.colore, scoperta(p))) {
     throw new ErroreUltima("nonGiocabile");
   }
 
@@ -263,7 +306,7 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
   p.colore = eColorata(carta) ? carta.colore : coloreScelto;
   p.haPescato = false;
   p.pescata = null;
-  p.ultima = null;
+  p.ultime = [];
   registra(p, { tipo: "gioca", posto: chi, carta, colore: p.colore });
 
   if (mano.length === 0) {
@@ -273,7 +316,7 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
     return p;
   }
   if (mano.length === 1) {
-    p.ultima = { posto: chi, dichiarata: dichiaraSubito };
+    p.ultime = [{ posto: chi, dichiarata: dichiaraSubito }];
     // Chi dichiara subito (il bot) lascia comunque traccia, come chi preme il pulsante.
     if (dichiaraSubito) registra(p, { tipo: "ultima", posto: chi });
   }
@@ -297,6 +340,13 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
       p.verso = p.verso === 1 ? -1 : 1;
       p.turno = avanza(chi, p.verso, n);
     }
+  } else if (p.varianti.sommaPiu2) {
+    // Il +2 non si paga subito: la vittima risponde con un +2 o pesca tutto il cumulo.
+    const vittima = avanza(chi, p.verso, n);
+    const quante = (p.cumulo?.quante ?? 0) + 2;
+    p.cumulo = { posto: vittima, quante, da: chi };
+    registra(p, { tipo: "cumulo", posto: vittima, quante });
+    p.turno = vittima;
   } else {
     const vittima = avanza(chi, p.verso, n);
     registra(p, { tipo: "piu2", posto: vittima });
@@ -309,9 +359,9 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
 /** Pesca una carta, una volta per turno. Se la si può giocare la si può calare subito; altrimenti si passa. */
 export function pesca(p0: Partita, chi: number, rng: Rng): Partita {
   const p = clona(p0);
-  turnoLibero(p, chi);
+  turnoSenzaCumulo(p, chi);
   if (p.haPescato) throw new ErroreUltima("giaPescato");
-  p.ultima = null;
+  p.ultime = [];
   const mano = p.mani[chi - 1]!;
   const prima = mano.length;
   pescaCarte(p, chi, 1, rng);
@@ -325,9 +375,9 @@ export function pesca(p0: Partita, chi: number, rng: Rng): Partita {
 /** Passa il turno: solo dopo aver pescato (o se non c'era niente da pescare). */
 export function passa(p0: Partita, n: number, chi: number): Partita {
   const p = clona(p0);
-  turnoLibero(p, chi);
+  turnoSenzaCumulo(p, chi);
   if (!p.haPescato) throw new ErroreUltima("devePescare");
-  p.ultima = null;
+  p.ultime = [];
   p.haPescato = false;
   p.pescata = null;
   p.turno = avanza(chi, p.verso, n);
@@ -356,7 +406,7 @@ export function sfida(p0: Partita, n: number, chi: number, rng: Rng): Partita {
   if (p.turno !== chi) throw new ErroreUltima("nonTocca");
   const { contro, illegale } = p.sfida;
   p.sfida = null;
-  p.ultima = null;
+  p.ultime = [];
   p.haPescato = false;
   p.pescata = null;
   if (illegale) {
@@ -375,7 +425,7 @@ export function accetta(p0: Partita, n: number, chi: number, rng: Rng): Partita 
   if (!p.sfida) throw new ErroreUltima("nonInSfida");
   if (p.turno !== chi) throw new ErroreUltima("nonTocca");
   p.sfida = null;
-  p.ultima = null;
+  p.ultime = [];
   p.haPescato = false;
   p.pescata = null;
   pescaCarte(p, chi, 4, rng);
@@ -384,12 +434,30 @@ export function accetta(p0: Partita, n: number, chi: number, rng: Rng): Partita 
   return p;
 }
 
+/** Chi ha un cumulo di +2 davanti lo paga tutto: pesca le carte del cumulo e perde il turno. */
+export function pescaCumulo(p0: Partita, n: number, chi: number, rng: Rng): Partita {
+  const p = clona(p0);
+  if (p.fine) throw new ErroreUltima("roundFinito");
+  if (!p.cumulo) throw new ErroreUltima("nessunCumulo");
+  if (p.turno !== chi || p.cumulo.posto !== chi) throw new ErroreUltima("nonTocca");
+  const { quante } = p.cumulo;
+  p.cumulo = null;
+  p.ultime = [];
+  p.haPescato = false;
+  p.pescata = null;
+  pescaCarte(p, chi, quante, rng);
+  p.turno = avanza(chi, p.verso, n);
+  registra(p, { tipo: "pescaCumulo", posto: chi, quante });
+  return p;
+}
+
 /** Chi resta con una carta preme «Ultima!» prima che il giocatore successivo agisca. */
 export function ultima(p0: Partita, chi: number): Partita {
   const p = clona(p0);
-  if (!p.ultima || p.ultima.posto !== chi || p.mani[chi - 1]!.length !== 1) throw new ErroreUltima("nonDichiarabile");
-  if (p.ultima.dichiarata) throw new ErroreUltima("giaDichiarata");
-  p.ultima = { posto: chi, dichiarata: true };
+  const u = p.ultime.find((x) => x.posto === chi);
+  if (!u || p.mani[chi - 1]!.length !== 1) throw new ErroreUltima("nonDichiarabile");
+  if (u.dichiarata) throw new ErroreUltima("giaDichiarata");
+  u.dichiarata = true;
   registra(p, { tipo: "ultima", posto: chi });
   return p;
 }
@@ -397,12 +465,11 @@ export function ultima(p0: Partita, chi: number): Partita {
 /** «Beccato!»: chi ha dimenticato «Ultima!» pesca 2, finché la finestra è aperta. */
 export function beccato(p0: Partita, chi: number, bersaglio: number, rng: Rng): Partita {
   const p = clona(p0);
-  if (!p.ultima || p.ultima.dichiarata || p.ultima.posto !== bersaglio || chi === bersaglio) {
-    throw new ErroreUltima("nonBeccabile");
-  }
+  const u = p.ultime.find((x) => x.posto === bersaglio);
+  if (!u || u.dichiarata || chi === bersaglio) throw new ErroreUltima("nonBeccabile");
   if (p.mani[bersaglio - 1]!.length !== 1) throw new ErroreUltima("nonBeccabile");
   pescaCarte(p, bersaglio, 2, rng);
-  p.ultima = null;
+  p.ultime = p.ultime.filter((x) => x.posto !== bersaglio);
   registra(p, { tipo: "beccato", posto: bersaglio, chi });
   return p;
 }

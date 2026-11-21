@@ -90,7 +90,7 @@ describe("stanza di Ultima! sul server", () => {
     const s = avviata();
     for (let i = 0; i < 4000 && vistaDi(s, "host").fase === "partita"; i++) {
       const p = s.stato.partita;
-      const chi = p.ultima && !p.ultima.dichiarata ? p.ultima.posto : p.turno;
+      const chi = p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno;
       eseguiAzione(s, "host", { tipo: "mossaBot", posto: chi });
     }
     expect(vistaDi(s, "host").fase).toBe("fine");
@@ -101,7 +101,7 @@ describe("stanza di Ultima! sul server", () => {
     const s = avviata({ modo: "punti", soglia: 2000 });
     for (let i = 0; i < 4000 && vistaDi(s, "host").fase === "partita"; i++) {
       const p = s.stato.partita;
-      eseguiAzione(s, "host", { tipo: "mossaBot", posto: p.ultima && !p.ultima.dichiarata ? p.ultima.posto : p.turno });
+      eseguiAzione(s, "host", { tipo: "mossaBot", posto: p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno });
     }
     expect(vistaDi(s, "host").fase).toBe("fineRound");
     expect(() => eseguiAzione(s, "t2", { tipo: "prossimoRound" })).toThrow("soloHost");
@@ -128,5 +128,22 @@ describe("stanza di Ultima! sul server", () => {
 
   it("senza partita veloce: il gioco non la offre", () => {
     expect(() => creaStanza("ABCDE", ["A", "B"], {}, "h", "ultima")).not.toThrow();
+  });
+});
+
+describe("varianti sul server", () => {
+  it("la configurazione con le varianti viene controllata alla creazione", () => {
+    expect(() => creaStanza("ABCDE", ["A", "B"], { varianti: { sommaPiu2: true } }, "h", "ultima")).not.toThrow();
+    expect(() => creaStanza("ABCDE", ["A", "B"], { varianti: { sommaPiu2: "boh" } }, "h", "ultima")).toThrow("configNonValida");
+  });
+  it("la vista porta le varianti scelte e una partita simulata arriva alla fine", () => {
+    const s = avviata({ varianti: { sommaPiu2: true } });
+    expect(vistaDi(s, "host").config.varianti.sommaPiu2).toBe(true);
+    for (let i = 0; i < 4000 && vistaDi(s, "host").fase === "partita"; i++) {
+      const p = s.stato.partita;
+      const chi = p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno;
+      eseguiAzione(s, "host", { tipo: "mossaBot", posto: chi });
+    }
+    expect(vistaDi(s, "host").fase).toBe("fine");
   });
 });

@@ -1,7 +1,7 @@
 import { creaRng } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
-import { carteGiocabili, coloreMigliore, eseguiMossa, mossaBot } from "./bot";
-import { nuovoRound, pesca, type Carta, type Colore, type Partita } from "./logica";
+import { LIVELLI, PROB_ULTIMA, carteGiocabili, coloreMigliore, eseguiMossa, mossaBot, mossaBotLivello } from "./bot";
+import { VARIANTI_BASE, nuovoRound, pesca, type Carta, type Colore, type Partita, type Varianti } from "./logica";
 
 let prossimoId = 5000;
 const num = (colore: Colore, valore: number): Carta => ({ id: prossimoId++, tipo: "numero", colore, valore });
@@ -19,7 +19,9 @@ function partita(mani: Carta[][], opz: Partial<Partita> = {}): Partita {
     colore: "rosso",
     haPescato: false,
     pescata: null,
-    ultima: null,
+    ultime: [],
+    varianti: VARIANTI_BASE,
+    cumulo: null,
     sfida: null,
     fine: null,
     eventi: [],
@@ -114,31 +116,31 @@ describe("mossaBot: sfida del +4", () => {
 
 describe("mossaBot: Ultima!", () => {
   it("chi resta con una carta la dichiara, anche fuori turno", () => {
-    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: false } });
+    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
     expect(mossaBot(p, 2, 1)).toEqual({ tipo: "ultima" });
   });
   it("non la dichiara due volte e fuori turno non fa altro", () => {
-    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: true } });
+    const p = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: true }] });
     expect(() => mossaBot(p, 2, 1)).toThrow("nonTocca");
   });
   it("dichiara subito se cala la penultima carta", () => {
     const c = num("rosso", 4);
     const p = partita([[c, num("blu", 1)], altri(4)]);
     const dopo = eseguiMossa(p, 2, 1, mossaBot(p, 2, 1), creaRng(1));
-    expect(dopo.ultima).toEqual({ posto: 1, dichiarata: true });
+    expect(dopo.ultime).toEqual([{ posto: 1, dichiarata: true }]);
   });
 });
 
 describe("mossaBot: Beccato!", () => {
-  const dimentico = () => partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: false } });
+  const dimentico = () => partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
   it("becca chi ha una carta sola e non ha detto «Ultima!»", () => {
     expect(mossaBot(dimentico(), 2, 2)).toEqual({ tipo: "beccato", bersaglio: 1 });
     const dopo = eseguiMossa(dimentico(), 2, 2, { tipo: "beccato", bersaglio: 1 }, creaRng(1));
     expect(dopo.mani[0]).toHaveLength(3);
-    expect(dopo.ultima).toBeNull();
+    expect(dopo.ultime).toEqual([]);
   });
   it("non becca chi ha già dichiarato", () => {
-    const detto = partita([[num("blu", 1)], altri(4)], { turno: 2, ultima: { posto: 1, dichiarata: true } });
+    const detto = partita([[num("blu", 1)], altri(4)], { turno: 2, ultime: [{ posto: 1, dichiarata: true }] });
     expect(mossaBot(detto, 2, 2).tipo).not.toBe("beccato");
   });
 });
@@ -159,7 +161,7 @@ describe("partite giocate solo dai bot", () => {
     while (!p.fine) {
       if (++mosse > 5000) throw new Error(`partita infinita (n=${n}, seme=${seme})`);
       // Prima chi deve dichiarare «Ultima!» (ma solo se non è già di turno); poi chi di turno.
-      const dichiara = p.ultima && !p.ultima.dichiarata ? p.ultima.posto : null;
+      const dichiara = p.ultime.find((u) => !u.dichiarata)?.posto ?? null;
       const chi = dichiara ?? p.turno;
       p = eseguiMossa(p, n, chi, mossaBot(p, n, chi), rng);
     }
@@ -185,5 +187,65 @@ describe("partite giocate solo dai bot", () => {
   });
   it("sono riproducibili con lo stesso seme", () => {
     expect(giocaFinoInFondo(4, 12).p).toEqual(giocaFinoInFondo(4, 12).p);
+  });
+});
+
+describe("bot con la somma dei +2", () => {
+  const V = { ...VARIANTI_BASE, sommaPiu2: true };
+  it("con un +2 in mano rilancia, senza paga il cumulo", () => {
+    const due = sim("piu2", "verde");
+    const col = partita([[num("rosso", 1)], [due, num("blu", 2)], [num("verde", 1)]], {
+      varianti: V,
+      turno: 2,
+      cumulo: { posto: 2, quante: 2, da: 1 },
+    });
+    expect(mossaBot(col, 3, 2)).toEqual({ tipo: "gioca", carta: due.id });
+    const senza = partita([[num("rosso", 1)], [num("blu", 2), num("blu", 3)], [num("verde", 1)]], {
+      varianti: V,
+      turno: 2,
+      cumulo: { posto: 2, quante: 2, da: 1 },
+    });
+    expect(mossaBot(senza, 3, 2)).toEqual({ tipo: "pescaCumulo" });
+    const dopo = eseguiMossa(senza, 3, 2, { tipo: "pescaCumulo" }, creaRng(1));
+    expect(dopo.mani[1]).toHaveLength(4);
+  });
+  it("a ogni livello le mosse con un cumulo sono lecite", () => {
+    const due = sim("piu2", "verde");
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 30; s++) {
+        const p = partita([[num("rosso", 1)], [due, num("blu", 2)], [num("verde", 1)]], { varianti: V, turno: 2, cumulo: { posto: 2, quante: 2, da: 1 } });
+        const m = mossaBotLivello(p, 3, 2, livello, creaRng(s));
+        expect(["pescaCumulo", "gioca"]).toContain(m.tipo);
+        expect(() => eseguiMossa(p, 3, 2, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+/** Gioca partite intere di bot a ogni livello con una combinazione di varianti. */
+function partiteConVarianti(varianti: Varianti, tot: number) {
+  for (const livello of LIVELLI) {
+    for (const n of [2, 3, 4, 7]) {
+      for (let seme = 0; seme < tot; seme++) {
+        const rng = creaRng(seme + 100);
+        let p = nuovoRound(n, rng, [], 1, varianti);
+        let mosse = 0;
+        while (!p.fine) {
+          if (++mosse > 8000) throw new Error(`partita infinita (n=${n}, seme=${seme}, ${livello})`);
+          const dichiara = p.ultime.find((u) => !u.dichiarata)?.posto ?? null;
+          const chi = dichiara ?? p.turno;
+          p = eseguiMossa(p, n, chi, mossaBotLivello(p, n, chi, livello, rng), rng, rng.next() < PROB_ULTIMA[livello]);
+        }
+        const tutte = [...p.mazzo, ...p.scarto, ...p.mani.flat()];
+        expect(tutte).toHaveLength(varianti.scambioRotazione ? 112 : 108);
+        expect(new Set(tutte.map((c) => c.id)).size).toBe(tutte.length);
+      }
+    }
+  }
+}
+
+describe("partite di bot con le varianti", () => {
+  it("somma dei +2: finiscono sempre e non perdono carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, sommaPiu2: true }, 15);
   });
 });

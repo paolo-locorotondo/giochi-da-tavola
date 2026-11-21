@@ -265,6 +265,12 @@ button.ul-carta:focus-visible {
   border: 2px solid var(--ac);
 }
 
+.ul-riepilogo-varianti {
+  margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
 .ul-nomi-crea {
   display: grid;
   gap: 0.6rem;

@@ -69,6 +69,7 @@ Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi det
 - Fine round: punti e classifica; «Prossimo round» solo all'organizzatore; a fine partita «Ricomincia».
 - Refresh o schermo bloccato: si rientra nel proprio posto, con la propria mano.
 - Contro i bot: da 1 a 9 bot con nomi modificabili; i bot giocano da soli alla velocità scelta; con la rete spenta la partita va avanti; se dimentichi «Ultima!» un bot difficile ti becca dopo un attimo; «Esci dalla partita» chiede conferma.
+- Varianti: in creazione la sezione «Varianti» ha quattro interruttori spenti; quelle accese compaiono in sala e sul tavolo. Con la somma dei +2: il cumulo è scritto sul mazzo («cumulo 4»), chi lo ha davanti vede «Pesca N» e può calare solo i +2; gli altri vedono chi deve rispondere.
 - Tema chiaro e scuro, inglese, nessuno scroll orizzontale a 375 px.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
@@ -80,7 +81,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - `src/offline.ts`: la partita contro i bot sul telefono (`nuovaPartitaLocale`, `agisci`, `muoviBot`, `pausaBot`, `vistaLocale`), con test in `offline.test.ts`.
 - `src/online/gioco.ts`: stato della stanza (round, punti, soglia), azioni, permessi (`traduci`) e `vistaPer` (mai le carte altrui né l'esito segreto della sfida); registrato in `apps/server/src/giochi.ts`. Il seme di ogni mossa deriva dal seme del round, così con lo stesso seme la partita si ripete identica.
 - `src/locales/{it,en}.ts` e `src/manifest.ts`: tutti i testi e il regolamento.
-- `src/ui/`: `Ultima.tsx` (scelta della modalità), `UltimaLocale.tsx` (contro i bot), `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Tavolo.tsx` (il tavolo, comune alle due modalità), `Carta.tsx` e `ultima.css` (solo token del tema).
+- `src/ui/`: `Ultima.tsx` (scelta della modalità), `UltimaLocale.tsx` (contro i bot), `UltimaOnline.tsx` (usa `@gdt/collegamento`), `Tavolo.tsx` (il tavolo, comune alle due modalità), `Varianti.tsx` (interruttori delle varianti, riusati da ogni creazione, e riepilogo), `Carta.tsx` e `ultima.css` (solo token del tema).
 - Test: `logica.test.ts`, `bot.test.ts`, `online/gioco.test.ts`, `apps/server/src/ultima.test.ts` ed e2e in `apps/web/e2e/ultima-online.spec.ts` (tre telefoni) e `ultima-bot.spec.ts` (contro i bot, anche offline).
 - Le carte sono fisse (le regole stanno nel codice): non c'è una cartella `data/`.
 
@@ -88,15 +89,20 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 Non c'è ancora: con più di 2 giocatori serve una coda «a stanze aperte» comune a tutti i giochi, descritta e ancora da decidere in [decisioni.md](../../docs/decisioni.md) (voce «Partita veloce a stanze aperte»).
 
-## Varianti possibili
+## Varianti
 
-Non ci sono nella prima versione (solo regole ufficiali). Ognuna diventerebbe un'opzione della stanza, spenta di base:
+Sono **impostazioni iniziali della stanza**: le sceglie chi crea la partita (online, contro i bot, o chi apre una partita veloce) nella sezione «Varianti» della creazione, sono **tutte spente di base** e valgono per tutta la partita. Chi entra le vede riassunte in sala e sul tavolo («Varianti: …»). Si possono combinare. Con tutte spente il gioco è quello ufficiale. Piano completo: [piano-ultima-varianti.md](../../docs/piano-ultima-varianti.md).
 
-- **Somma dei +2** (e dei +4): chi riceve un +2 può rispondere con un +2 e il totale passa al successivo.
-- **Più carte uguali insieme**: si calano in una volta tutte le carte con lo stesso numero.
+Nella configurazione della stanza sono la chiave `varianti` (`{ sommaPiu2, piuUguali, taglio, scambioRotazione }`, booleani): `leggiConfig` in `src/online/gioco.ts` le controlla (assenti = spente, non booleane = `configNonValida`), così valgono uguali per «Crea», per la partita veloce e contro i bot.
+
+### Fatte
+
+- **Somma dei +2** (`sommaPiu2`): chi riceve un +2 non pesca subito, ha davanti un **cumulo**. Può rispondere con un +2 di **qualunque colore** (il cumulo cresce di 2 e passa al successivo) oppure **pescare tutto il cumulo** e saltare il turno (pulsante «Pesca N»). Con un cumulo aperto non si pesca una carta sola, non si passa e non si gioca nient'altro (`rispondiCumulo`). Un +2 non risponde a un +4 né un +4 a un +2. Se la prima carta scoperta è un +2, il cumulo di 2 vale per il primo giocatore, con la stessa scelta. Un +2 che svuota la mano chiude il round senza cumulo. I bot rilanciano se hanno un +2, altrimenti pagano (facile e medio a volte pagano anche potendo rilanciare).
+
+### Possibili (non ancora fatte)
+
+- **Più carte uguali insieme**, **Taglio**, **Scambio e Rotazione**: in lavorazione, vedi il piano.
 - **Pesca finché non puoi giocare** invece di una carta sola.
-- **Sette e zero**: con il 7 si scambia la mano con un altro, con lo 0 tutte le mani passano nel verso del gioco.
-- **Taglio**: chi ha una carta identica a quella appena calata può giocarla anche fuori turno.
 - **+4 senza sfida** (si gioca sempre, niente controllo).
 - **Penalità per «Ultima!»** diversa da 2.
 

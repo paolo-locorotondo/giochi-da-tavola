@@ -1,7 +1,7 @@
 import { creaRng } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
 import { mossaBot } from "../bot";
-import { ErroreUltima, type Carta } from "../logica";
+import { ErroreUltima, VARIANTI_BASE, type Carta } from "../logica";
 import { applica, mancanti, nuovoStato, ultimaOnline, vistaPer, type StatoOnline } from "./gioco";
 
 const codice = (f: () => unknown) => {
@@ -33,11 +33,11 @@ describe("nuovoStato", () => {
     expect(codice(() => nuovoStato(Array.from({ length: 10 }, (_, i) => `G${i}`), {}))).toBeNull();
   });
   it("di base è un round singolo con soglia 500", () => {
-    expect(nuovoStato(NOMI, {}).config).toEqual({ modo: "singolo", soglia: 500 });
-    expect(nuovoStato(NOMI, undefined).config).toEqual({ modo: "singolo", soglia: 500 });
+    expect(nuovoStato(NOMI, {}).config).toEqual({ modo: "singolo", soglia: 500, varianti: VARIANTI_BASE });
+    expect(nuovoStato(NOMI, undefined).config).toEqual({ modo: "singolo", soglia: 500, varianti: VARIANTI_BASE });
   });
   it("controlla la configurazione che arriva dalla rete", () => {
-    expect(nuovoStato(NOMI, { modo: "punti", soglia: 300 }).config).toEqual({ modo: "punti", soglia: 300 });
+    expect(nuovoStato(NOMI, { modo: "punti", soglia: 300 }).config).toEqual({ modo: "punti", soglia: 300, varianti: VARIANTI_BASE });
     expect(codice(() => nuovoStato(NOMI, { modo: "altro" }))).toBe("configNonValida");
     expect(codice(() => nuovoStato(NOMI, { modo: "punti", soglia: "x" }))).toBe("configNonValida");
     expect(codice(() => nuovoStato(NOMI, { modo: "punti", soglia: 10 }))).toBe("configNonValida");
@@ -175,7 +175,7 @@ function giocaConBot(s0: StatoOnline, tetto = 4000): StatoOnline {
   let s = s0;
   for (let i = 0; i < tetto && s.fase === "partita"; i++) {
     const p = s.partita!;
-    const chi = p.ultima && !p.ultima.dichiarata ? p.ultima.posto : p.turno;
+    const chi = p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno;
     s = applica(s, { tipo: "bot", posto: chi });
   }
   return s;
@@ -273,7 +273,7 @@ describe("Ultima! e Beccato! online", () => {
       let s = avviata(seme);
       for (let i = 0; i < 400 && s.fase === "partita"; i++) {
         const p = s.partita!;
-        if (p.ultima && !p.ultima.dichiarata) return s;
+        if (p.ultime.some((u) => !u.dichiarata)) return s;
         s = applica(s, { tipo: "bot", posto: p.turno });
         // Il bot dichiara sempre: per forzare la dimenticanza uso `gioca` diretto sul turno di chi ha 2 carte.
         const q = s.partita!;
@@ -283,7 +283,7 @@ describe("Ultima! e Beccato! online", () => {
           const giocabile = mano.find((c: Carta) => ultimaOnline.vistaPer(s, q.turno, false, { collegati: new Set(), organizzatore: null }).giocabili.includes(c.id));
           if (giocabile && giocabile.tipo !== "piu4" && giocabile.tipo !== "jolly") {
             const dopo = applica(s, { tipo: "gioca", chi: q.turno, carta: giocabile.id });
-            if (dopo.partita!.ultima && !dopo.partita!.fine) return dopo;
+            if (dopo.partita!.ultime.length > 0 && !dopo.partita!.fine) return dopo;
           }
         }
       }
@@ -293,7 +293,7 @@ describe("Ultima! e Beccato! online", () => {
   it("chi dimentica «Ultima!» viene beccato da un altro e pesca 2", () => {
     const s = conUltima();
     expect(s).not.toBeNull();
-    const dimentico = s!.partita!.ultima!.posto;
+    const dimentico = s!.partita!.ultime[0]!.posto;
     const beccatore = dimentico === 1 ? 2 : 1;
     const dopo = applica(s!, { tipo: "beccato", chi: beccatore, bersaglio: dimentico });
     expect(dopo.partita!.mani[dimentico - 1]).toHaveLength(3);
@@ -301,7 +301,7 @@ describe("Ultima! e Beccato! online", () => {
   });
   it("chi la dichiara non si può più beccare", () => {
     const s = conUltima()!;
-    const dimentico = s.partita!.ultima!.posto;
+    const dimentico = s.partita!.ultime[0]!.posto;
     const detto = applica(s, { tipo: "ultima", chi: dimentico });
     const altro = dimentico === 1 ? 2 : 1;
     expect(codice(() => applica(detto, { tipo: "beccato", chi: altro, bersaglio: dimentico }))).toBe("nonBeccabile");
@@ -320,7 +320,7 @@ describe("il bot becca chi dimentica «Ultima!»", () => {
           const c = mano.find((x) => v.giocabili.includes(x.id) && x.tipo === "numero");
           if (c) {
             const dopo = applica(s, { tipo: "gioca", chi: p.turno, carta: c.id });
-            if (dopo.partita!.ultima && !dopo.partita!.fine) {
+            if (dopo.partita!.ultime.length > 0 && !dopo.partita!.fine) {
               const umano = p.turno;
               const finale = applica(dopo, { tipo: "bot", posto: dopo.partita!.turno });
               expect(finale.partita!.mani[umano - 1]).toHaveLength(3);
@@ -329,7 +329,7 @@ describe("il bot becca chi dimentica «Ultima!»", () => {
             }
           }
         }
-        s = applica(s, { tipo: "bot", posto: p.ultima && !p.ultima.dichiarata ? p.ultima.posto : p.turno });
+        s = applica(s, { tipo: "bot", posto: p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno });
       }
     }
     throw new Error("situazione non trovata");
@@ -340,5 +340,64 @@ describe("determinismo", () => {
   it("lo stesso seme dà lo stesso round", () => {
     expect(avviata(33)).toEqual(avviata(33));
     expect(creaRng(1).next()).toBe(creaRng(1).next());
+  });
+});
+
+describe("varianti nella configurazione", () => {
+  it("assenti = spente; una config vecchia resta valida", () => {
+    expect(nuovoStato(NOMI, { modo: "punti", soglia: 100 }).config.varianti).toEqual(VARIANTI_BASE);
+    expect(nuovoStato(NOMI, { varianti: {} }).config.varianti).toEqual(VARIANTI_BASE);
+  });
+  it("legge i booleani noti e ignora le chiavi sconosciute", () => {
+    expect(nuovoStato(NOMI, { varianti: { sommaPiu2: true, taglio: false, boh: 1 } }).config.varianti).toEqual({ ...VARIANTI_BASE, sommaPiu2: true });
+  });
+  it("rifiuta valori non booleani o non oggetto", () => {
+    expect(codice(() => nuovoStato(NOMI, { varianti: { sommaPiu2: "si" } }))).toBe("configNonValida");
+    expect(codice(() => nuovoStato(NOMI, { varianti: { piuUguali: 1 } }))).toBe("configNonValida");
+    expect(codice(() => nuovoStato(NOMI, { varianti: true }))).toBe("configNonValida");
+    expect(codice(() => nuovoStato(NOMI, { varianti: [] }))).toBe("configNonValida");
+    expect(codice(() => nuovoStato(NOMI, { varianti: null }))).toBe("configNonValida");
+  });
+  it("il round parte con le varianti della stanza", () => {
+    const s = avviata(5, NOMI, { varianti: { sommaPiu2: true } });
+    expect(s.partita!.varianti.sommaPiu2).toBe(true);
+    expect(vistaPer(s, 1, true).config.varianti.sommaPiu2).toBe(true);
+  });
+});
+
+describe("somma dei +2 online", () => {
+  const conCumulo = () => {
+    for (let seme = 0; seme < 4000; seme++) {
+      let s = avviata(seme, NOMI, { varianti: { sommaPiu2: true } });
+      for (let i = 0; i < 300 && s.fase === "partita" && !s.partita!.fine; i++) {
+        if (s.partita!.cumulo) return s;
+        const p = s.partita!;
+        s = applica(s, { tipo: "bot", posto: p.ultime.find((u) => !u.dichiarata)?.posto ?? p.turno });
+      }
+    }
+    throw new Error("nessun cumulo trovato");
+  };
+  it("il cumulo è pubblico e solo chi lo ha lo paga", () => {
+    const s = conCumulo();
+    const { posto, quante } = s.partita!.cumulo!;
+    const altro = posto === 1 ? 2 : 1;
+    expect(vistaPer(s, altro, false).cumulo).toMatchObject({ posto, quante });
+    expect(traduci(s, posto, false, { tipo: "pescaCumulo" })).toEqual({ tipo: "pescaCumulo", chi: posto });
+    expect(codice(() => applica(s, { tipo: "pescaCumulo", chi: altro }))).toBe("nonTocca");
+    expect(codice(() => traduci(s, null, false, { tipo: "pescaCumulo" }))).toBe("nonPartecipa");
+    const dopo = applica(s, { tipo: "pescaCumulo", chi: posto });
+    expect(dopo.partita!.cumulo).toBeNull();
+    expect(dopo.partita!.mani[posto - 1]!.length).toBeGreaterThanOrEqual(s.partita!.mani[posto - 1]!.length + quante - 1);
+  });
+  it("la pesca singola è rifiutata e giocabili sono solo i +2", () => {
+    const s = conCumulo();
+    const { posto } = s.partita!.cumulo!;
+    expect(codice(() => applica(s, { tipo: "pesca", chi: posto }))).toBe("rispondiCumulo");
+    const v = vistaPer(s, posto, false);
+    const mano = new Map(v.mano.map((c) => [c.id, c.tipo]));
+    expect(v.giocabili.every((id) => mano.get(id) === "piu2")).toBe(true);
+  });
+  it("una partita intera con il bot arriva alla fine", () => {
+    for (let seme = 0; seme < 15; seme++) expect(giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true } })).fase).toBe("fine");
   });
 });

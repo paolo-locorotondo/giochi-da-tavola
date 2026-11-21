@@ -64,8 +64,7 @@ export function botDiTurno(p: PartitaLocale): number | null {
 
 /** Pausa prima della prossima mossa di un bot: se ho dimenticato «Ultima!» lascio almeno il tempo di dirlo. */
 export function pausaBot(p: PartitaLocale, velocita: Velocita): number {
-  const u = p.stato.partita?.ultima;
-  const dimenticata = u && u.posto === IO && !u.dichiarata;
+  const dimenticata = p.stato.partita?.ultime.some((u) => u.posto === IO && !u.dichiarata);
   return dimenticata ? Math.max(VELOCITA[velocita], RITARDO_BECCATO_MS) : VELOCITA[velocita];
 }
 

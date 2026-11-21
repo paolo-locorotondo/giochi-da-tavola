@@ -10,6 +10,7 @@ import {
   gioca,
   passa,
   pesca,
+  pescaCumulo,
   scegliColore,
   sfida,
   ultima,
@@ -33,6 +34,8 @@ export type MossaBot =
   | { tipo: "scegliColore"; colore: Colore }
   | { tipo: "sfida" }
   | { tipo: "accetta" }
+  /** Con un cumulo di +2 davanti e nessun +2 da rispondere: si paga tutto. */
+  | { tipo: "pescaCumulo" }
   | { tipo: "ultima" }
   /** Un altro ha una carta sola e non ha detto «Ultima!»: lo si becca. */
   | { tipo: "beccato"; bersaglio: number };
@@ -85,13 +88,11 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
   if (p.fine) throw new Error("roundFinito");
 
   // «Ultima!»: chi resta con una carta la dichiara sempre (anche se il turno è di un altro).
-  if (p.ultima && p.ultima.posto === posto && !p.ultima.dichiarata) return { tipo: "ultima" };
+  if (p.ultime.some((u) => u.posto === posto && !u.dichiarata)) return { tipo: "ultima" };
 
   // «Beccato!»: dato pubblico (una carta sola, finestra aperta, nessuna dichiarazione).
-  const aperta = p.ultima;
-  if (aperta && !aperta.dichiarata && aperta.posto !== posto && p.mani[aperta.posto - 1]!.length === 1) {
-    return { tipo: "beccato", bersaglio: aperta.posto };
-  }
+  const aperta = p.ultime.find((u) => !u.dichiarata && u.posto !== posto && p.mani[u.posto - 1]!.length === 1);
+  if (aperta) return { tipo: "beccato", bersaglio: aperta.posto };
 
   if (p.turno !== posto) throw new Error("nonTocca");
 
@@ -102,6 +103,9 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
   }
 
   if (p.colore === null) return { tipo: "scegliColore", colore: coloreMigliore(mano) };
+
+  // Cumulo di +2: se ho un +2 lo rilancio (il colore non conta), altrimenti pago tutto.
+  if (p.cumulo && carteGiocabili(p, posto).length === 0) return { tipo: "pescaCumulo" };
 
   // Del giocatore successivo si usa solo quante carte ha (dato pubblico).
   const prossimoInPericolo = p.mani[avanza(posto, p.verso, n) - 1]!.length <= POCHE_CARTE;
@@ -136,6 +140,8 @@ export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, r
       return sfida(p, n, posto, rng);
     case "accetta":
       return accetta(p, n, posto, rng);
+    case "pescaCumulo":
+      return pescaCumulo(p, n, posto, rng);
     case "ultima":
       return ultima(p, posto);
     case "beccato":
@@ -166,13 +172,15 @@ export function mossaBotLivello(p: Partita, n: number, posto: number, livello: L
 
   if (base.tipo === "beccato") {
     // Chi non becca gioca semplicemente il proprio turno (e la finestra si chiude).
-    return rng.next() < PROB_BECCA[livello] ? base : mossaBot({ ...p, ultima: null }, n, posto);
+    return rng.next() < PROB_BECCA[livello] ? base : mossaBot({ ...p, ultime: [] }, n, posto);
   }
   const casuale = livello === "facile" || rng.next() >= PERCENTUALE_MEDIO;
   if (!casuale) return base;
 
   switch (base.tipo) {
     case "gioca": {
+      // Con un cumulo di +2 a volte il bot sceglie di pagare invece di rilanciare.
+      if (p.cumulo && rng.next() < 0.5) return { tipo: "pescaCumulo" };
       const lecite = carteGiocabili(p, posto);
       const carta = lecite[rng.intero(lecite.length)]!;
       return eJolly(carta) ? { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]! } : { tipo: "gioca", carta: carta.id };

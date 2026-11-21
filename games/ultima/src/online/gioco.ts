@@ -5,6 +5,8 @@ import {
   MAX_EVENTI,
   MAX_GIOCATORI,
   MIN_GIOCATORI,
+  NOMI_VARIANTI,
+  VARIANTI_BASE,
   accetta,
   avanza,
   beccato,
@@ -13,6 +15,7 @@ import {
   nuovoRound,
   passa,
   pesca,
+  pescaCumulo,
   scegliColore,
   sfida,
   ultima,
@@ -21,6 +24,8 @@ import {
   type Colore,
   type Evento,
   type Partita,
+  type UltimaAperta,
+  type Varianti,
 } from "../logica";
 
 /**
@@ -37,6 +42,8 @@ export interface ConfigOnline {
   modo: ModoPunteggio;
   /** Punti da raggiungere nella partita a punti. */
   soglia: number;
+  /** Impostazioni iniziali della stanza (regole facoltative), spente di base. */
+  varianti: Varianti;
 }
 
 export const SOGLIA_PREDEFINITA = 500;
@@ -74,6 +81,7 @@ export type AzioneOnline =
   | { tipo: "accetta"; chi: number }
   | { tipo: "ultima"; chi: number }
   | { tipo: "beccato"; chi: number; bersaglio: number }
+  | { tipo: "pescaCumulo"; chi: number }
   /**
    * Il bot fa una mossa per `posto`. Online la chiede l'organizzatore (livello difficile, evento «mossa
    * simulata dal bot»); offline la macchina a stati la usa per gli avversari, con il loro `livello`.
@@ -91,7 +99,17 @@ export function leggiConfig(grezza: unknown): ConfigOnline {
   if (typeof soglia !== "number" || !Number.isInteger(soglia) || soglia < SOGLIA_MIN || soglia > SOGLIA_MAX) {
     throw new ErroreUltima("configNonValida");
   }
-  return { modo, soglia };
+  const grezze = c.varianti === undefined ? {} : c.varianti;
+  if (typeof grezze !== "object" || grezze === null || Array.isArray(grezze)) throw new ErroreUltima("configNonValida");
+  const g = grezze as Record<string, unknown>;
+  const varianti = { ...VARIANTI_BASE };
+  for (const nome of NOMI_VARIANTI) {
+    const v = g[nome];
+    if (v === undefined) continue;
+    if (typeof v !== "boolean") throw new ErroreUltima("configNonValida");
+    varianti[nome] = v;
+  }
+  return { modo, soglia, varianti };
 }
 
 export function nuovoStato(nomi: string[], config: unknown): StatoOnline {
@@ -127,7 +145,7 @@ function iniziaRound(s: StatoOnline, seme: number, primo: number, round: number,
   return {
     ...s,
     fase: "partita",
-    partita: nuovoRound(s.nomi.length, creaRng(seme), eventi, primo),
+    partita: nuovoRound(s.nomi.length, creaRng(seme), eventi, primo, s.config.varianti),
     primo,
     punti,
     round,
@@ -180,7 +198,7 @@ export function applica(s: StatoOnline, a: AzioneOnline): StatoOnline {
   }
 }
 
-function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca" | "passa" | "scegliColore" | "sfida" | "accetta" | "ultima" | "beccato" | "bot" }>): StatoOnline {
+function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca" | "passa" | "scegliColore" | "sfida" | "accetta" | "ultima" | "beccato" | "pescaCumulo" | "bot" }>): StatoOnline {
   if (s.fase !== "partita" || !s.partita) throw new ErroreUltima("nonInCorso");
   const n = s.nomi.length;
   const p = s.partita;
@@ -200,6 +218,8 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
       return dopoMossa(s, sfida(p, n, chi, rng));
     case "accetta":
       return dopoMossa(s, accetta(p, n, chi, rng));
+    case "pescaCumulo":
+      return dopoMossa(s, pescaCumulo(p, n, chi, rng));
     case "ultima":
       return dopoMossa(s, ultima(p, chi));
     case "beccato":
@@ -270,8 +290,10 @@ export interface Vista {
   sceltaColore: boolean;
   /** Un +4 da subire: il mio caso se `turno` sono io. `sospetto` è pubblico, la legalità no. */
   sfida: { contro: number; sospetto: boolean } | null;
-  /** Finestra di «Ultima!»: chi, e se l'ha già detto. */
-  ultima: { posto: number; dichiarata: boolean } | null;
+  /** Finestre di «Ultima!»: chi, e se l'ha già detto. */
+  ultime: UltimaAperta[];
+  /** Somma dei +2: chi deve rispondere con un +2 o pescare, e quante carte. */
+  cumulo: { posto: number; quante: number; da: number | null } | null;
   eventi: Evento[];
   /** Il round è finito: chi ha vinto e quanti punti ha preso. */
   fineRound: { vincitore: number; punti: number } | null;
@@ -312,7 +334,8 @@ export function vistaPer(s: StatoOnline, posto: number | null, host: boolean): V
     sceltaColore: mioTurno && p !== null && p.colore === null,
     // L'esito segreto della sfida (`illegale`) non esce mai dal server.
     sfida: p?.sfida ? { contro: p.sfida.contro, sospetto: p.sfida.sospetto } : null,
-    ultima: p?.ultima ?? null,
+    ultime: p?.ultime ?? [],
+    cumulo: p?.cumulo ?? null,
     eventi: p ? p.eventi : [],
     fineRound: p?.fine ?? null,
     vincitore: s.vincitore,
@@ -357,6 +380,7 @@ export const ultimaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
         return { tipo: "scegliColore", chi: partecipa(), colore: a.colore };
       case "beccato":
         return { tipo: "beccato", chi: partecipa(), bersaglio: Number(a.posto) };
+      case "pescaCumulo":
       case "pesca":
       case "passa":
       case "sfida":

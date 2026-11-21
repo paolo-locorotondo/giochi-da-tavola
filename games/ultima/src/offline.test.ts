@@ -142,7 +142,7 @@ describe("«Ultima!» e «Beccato!» contro i bot", () => {
           const c = mano.find((x) => v.giocabili.includes(x.id) && x.tipo === "numero");
           if (c) {
             const dopo = agisci(p, { tipo: "gioca", carta: c.id }, seme);
-            if (dopo.stato.partita!.ultima && !dopo.stato.partita!.fine) return dopo;
+            if (dopo.stato.partita!.ultime.length > 0 && !dopo.stato.partita!.fine) return dopo;
           }
         }
         const m = mossaBot(st, 2, IO);
@@ -188,5 +188,37 @@ describe("livelli dei bot", () => {
       if (JSON.stringify(a) !== JSON.stringify(mossaBot(p, 3, p.turno))) diverse++;
     }
     expect(diverse).toBeGreaterThan(0);
+  });
+});
+
+describe("varianti contro i bot", () => {
+  it("la partita parte con le varianti scelte e finisce a ogni livello", () => {
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 6; s++) {
+        const p = partita(livello, ["Io", "Bot 1", "Bot 2"], { varianti: { sommaPiu2: true } }, s);
+        expect(p.stato.partita!.varianti.sommaPiu2).toBe(true);
+        expect(finoInFondo(p).stato.fase).toBe("fine");
+      }
+    }
+  });
+  it("io pago il cumulo con «pescaCumulo»", () => {
+    for (let s = 0; s < 3000; s++) {
+      let p = partita("difficile", ["Io", "Bot"], { varianti: { sommaPiu2: true } }, s);
+      for (let i = 0; i < 400 && p.stato.fase === "partita"; i++) {
+        if (botDiTurno(p) !== null) {
+          p = muoviBot(p);
+          continue;
+        }
+        const st = p.stato.partita!;
+        if (st.cumulo?.posto === IO) {
+          const dopo = agisci(p, { tipo: "pescaCumulo" }, seme);
+          expect(dopo.stato.partita!.cumulo).toBeNull();
+          return;
+        }
+        const m = mossaBot(st, 2, IO);
+        p = agisci(p, m.tipo === "beccato" ? { tipo: "beccato", posto: m.bersaglio } : { ...m }, seme);
+      }
+    }
+    throw new Error("nessun cumulo per me");
   });
 });

@@ -5,6 +5,7 @@ import { dizionari } from "../locales";
 import { COLORI, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
 import type { Vista } from "../online";
 import { Carta, ICONA_COLORE, nomeCarta, nomeColore } from "./Carta";
+import { RiepilogoVarianti } from "./Varianti";
 
 type T = ReturnType<typeof usaT<typeof dizionari.it>>;
 
@@ -37,6 +38,10 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
       return t("ev_piu2", { nome: nome(e.posto) });
     case "piu4":
       return t("ev_piu4", { nome: nome(e.posto) });
+    case "cumulo":
+      return t("ev_cumulo", { nome: nome(e.posto), n: e.quante });
+    case "pescaCumulo":
+      return t("ev_pescaCumulo", { nome: nome(e.posto), n: e.quante });
     case "sfida":
       return e.legale
         ? t("ev_sfidaPersa", { nome: nome(e.posto) })
@@ -91,8 +96,12 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   })();
 
   const turnoGiocatore = v.nomi.find((n) => n.posto === turno);
-  const ultimaAperta = v.ultima && !v.ultima.dichiarata ? v.ultima : null;
-  const possoDirUltima = inRound && v.io !== null && v.ultima?.posto === v.io && !v.ultima.dichiarata;
+  const aperte = v.ultime.filter((u) => !u.dichiarata && u.posto !== v.io);
+  const ultimaAperta = aperte[0] ?? null;
+  const mia = v.ultime.find((u) => u.posto === v.io);
+  const possoDirUltima = inRound && v.io !== null && mia !== undefined && !mia.dichiarata;
+  const cumuloIo = inRound && v.mioTurno && v.cumulo !== null && v.cumulo.posto === v.io ? v.cumulo : null;
+  const conPiu2 = cumuloIo !== null && v.giocabili.length > 0;
   const posso = inRound && v.io !== null;
   const mazzoVuoto = v.mazzo === 0;
   const nessunaGiocabile = v.mioTurno && !sfidaIo && !v.sceltaColore && giocabili.size === 0;
@@ -105,6 +114,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       <p className="muted" style={{ margin: 0, textAlign: "center" }}>
         {t("round", { n: v.round })} · {v.config.modo === "singolo" ? t("riepilogoSingolo") : t("riepilogoPunti", { soglia: v.config.soglia })}
       </p>
+      <RiepilogoVarianti varianti={v.config.varianti} />
 
       {v.fase !== "partita" || v.fineRound ? <FineRound c={c} v={v} nome={nome} /> : null}
 
@@ -116,12 +126,12 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
           <button
             type="button"
             className="ul-mazzo"
-            disabled={!(v.mioTurno && !v.haPescato && !sfidaIo && !v.sceltaColore)}
+            disabled={!(v.mioTurno && !v.haPescato && !sfidaIo && !v.sceltaColore && !cumuloIo)}
             aria-label={t("pescaAria", { n: v.mazzo })}
             onClick={() => c.azione({ tipo: "pesca" })}
           >
             <span>{t("pesca")}</span>
-            <span>{t("mazzo", { n: v.mazzo })}</span>
+            <span>{v.cumulo ? t("mazzoConCumulo", { n: v.mazzo, c: v.cumulo.quante }) : t("mazzo", { n: v.mazzo })}</span>
           </button>
           <div className="ul-info">
             {v.colore ? <ColoreInCorso t={t} colore={v.colore} /> : <span className="muted">{t("aspettoColore", { nome: nome(turno) })}</span>}
@@ -137,6 +147,20 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
           <SceltaColore t={t} onScegli={(colore) => c.azione({ tipo: "scegliColore", colore })} />
         </div>
       )}
+
+      {cumuloIo && (
+        <div className="ul-avviso">
+          <h3>{t("cumuloTitolo")}</h3>
+          <p>{cumuloIo.da === null ? t("cumuloTestoPrima", { n: cumuloIo.quante }) : t("cumuloTesto", { nome: nome(cumuloIo.da), n: cumuloIo.quante })}</p>
+          <p className="muted">{conPiu2 ? t("cumuloAiuto") : t("cumuloNessun2")}</p>
+          <div className="ul-azioni">
+            <button className="btn primario" onClick={() => c.azione({ tipo: "pescaCumulo" })}>
+              {t("cumuloPesca", { n: cumuloIo.quante })}
+            </button>
+          </div>
+        </div>
+      )}
+      {inRound && v.cumulo && !cumuloIo && <p className="avviso">{t("inAttesaCumulo", { nome: nome(v.cumulo.posto), n: v.cumulo.quante })}</p>}
 
       {sfidaIo && v.sfida && (
         <div className="ul-avviso">
@@ -181,19 +205,19 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
               {t("ultima")}
             </button>
           )}
-          {ultimaAperta && ultimaAperta.posto !== v.io && (
-            <button className="btn pericolo" onClick={() => c.azione({ tipo: "beccato", posto: ultimaAperta.posto })} aria-describedby="ul-beccato-aiuto">
-              {t("beccato", { nome: nome(ultimaAperta.posto) })}
+          {aperte.map((u) => (
+            <button key={u.posto} className="btn pericolo" onClick={() => c.azione({ tipo: "beccato", posto: u.posto })} aria-describedby="ul-beccato-aiuto">
+              {t("beccato", { nome: nome(u.posto) })}
             </button>
-          )}
+          ))}
         </div>
       )}
-      {posso && ultimaAperta && ultimaAperta.posto !== v.io && (
+      {posso && ultimaAperta && (
         <p className="muted" id="ul-beccato-aiuto">
           {t("beccatoAiuto", { nome: nome(ultimaAperta.posto) })}
         </p>
       )}
-      {v.io !== null && v.ultima?.posto === v.io && v.ultima.dichiarata && inRound && <p className="muted">{t("ultimaDetto")}</p>}
+      {mia?.dichiarata && inRound && <p className="muted">{t("ultimaDetto")}</p>}
 
       {v.io !== null && (
         <>

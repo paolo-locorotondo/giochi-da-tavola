@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- Ultima!: **varianti** come impostazioni iniziali della stanza, scelte da chi crea la partita (online e contro i bot) e spente di base; quelle accese si vedono in sala e sul tavolo. Prima variante: **Somma dei +2** (un +2 si risponde con un +2 di qualunque colore, chi non risponde pesca tutto il cumulo). La finestra di «Ultima!» ora può riguardare più giocatori insieme (serve per Scambio e Rotazione).
+
 - Contratto della partita veloce a stanze aperte in `@gdt/engine` (tipi `PartitaVeloceOnline`, `AperturaVeloce`, `AnteprimaVeloce`, `VistaSalaVeloce`, `intervalloPosti`, costanti d'attesa e di conto) e `ContestoOnline.ora()` per le logiche con finestre di tempo. Solo contratto: nessun cambio di comportamento.
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 

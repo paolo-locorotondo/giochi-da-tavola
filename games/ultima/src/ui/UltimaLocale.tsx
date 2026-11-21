@@ -5,7 +5,7 @@ import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
 import { LIVELLI, type Livello } from "../bot";
-import { MAX_GIOCATORI, MIN_GIOCATORI } from "../logica";
+import { MAX_GIOCATORI, MIN_GIOCATORI, NOMI_VARIANTI, VARIANTI_BASE, type Varianti as DatiVarianti } from "../logica";
 import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, type ModoPunteggio } from "../online";
 import {
   VELOCITA,
@@ -20,6 +20,7 @@ import {
   type Velocita,
 } from "../offline";
 import { Tavolo } from "./Tavolo";
+import { Varianti } from "./Varianti";
 
 /** Un numero casuale a 32 bit per il seme di ogni mano. */
 const caso = () => Math.floor(Math.random() * 2 ** 32);
@@ -27,19 +28,27 @@ const caso = () => Math.floor(Math.random() * 2 ** 32);
 const CHIAVE = "gdt.ultima.offline";
 
 /** Le ultime scelte sul telefono (nomi, livello, velocità): solo comodità, mai necessarie. */
-function leggiSalvate(): Partial<{ nomi: string[]; livello: Livello; velocita: Velocita }> {
+function leggiSalvate(): Partial<{ nomi: string[]; livello: Livello; velocita: Velocita; varianti: DatiVarianti }> {
   try {
     const g = JSON.parse(localStorage.getItem(CHIAVE) ?? "{}") as Record<string, unknown>;
     return {
       nomi: Array.isArray(g.nomi) && g.nomi.every((n) => typeof n === "string") && g.nomi.length >= MIN_GIOCATORI && g.nomi.length <= MAX_GIOCATORI ? (g.nomi as string[]) : undefined,
       livello: LIVELLI.includes(g.livello as Livello) ? (g.livello as Livello) : undefined,
       velocita: g.velocita === "lenta" || g.velocita === "normale" || g.velocita === "veloce" ? g.velocita : undefined,
+      varianti: leggiVarianti(g.varianti),
     };
   } catch {
     return {};
   }
 }
-function salva(dati: { nomi: string[]; livello: Livello; velocita: Velocita }) {
+/** Varianti salvate: solo i campi booleani noti, il resto spento. */
+function leggiVarianti(g: unknown): DatiVarianti | undefined {
+  if (typeof g !== "object" || g === null) return undefined;
+  const r = { ...VARIANTI_BASE };
+  for (const n of NOMI_VARIANTI) r[n] = (g as Record<string, unknown>)[n] === true;
+  return r;
+}
+function salva(dati: { nomi: string[]; livello: Livello; velocita: Velocita; varianti: DatiVarianti }) {
   try {
     localStorage.setItem(CHIAVE, JSON.stringify(dati));
   } catch {
@@ -62,6 +71,7 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
   const [livello, setLivello] = useState<Livello>(salvate.livello ?? "medio");
   const [modo, setModo] = useState<ModoPunteggio>("singolo");
   const [soglia, setSoglia] = useState(SOGLIA_PREDEFINITA);
+  const [varianti, setVarianti] = useState<DatiVarianti>(salvate.varianti ?? VARIANTI_BASE);
   const [errore, setErrore] = useState<string | null>(null);
   const puliti = nomi.map((n) => n.trim());
   const distinti = new Set(puliti.map((n) => n.toLowerCase())).size === puliti.length;
@@ -82,8 +92,8 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
         e.preventDefault();
         if (!validi) return;
         try {
-          salva({ nomi: puliti, livello, velocita });
-          onAvvia(nuovaPartitaLocale({ nomi: puliti, livello, config: { modo, soglia } }, caso()));
+          salva({ nomi: puliti, livello, velocita, varianti });
+          onAvvia(nuovaPartitaLocale({ nomi: puliti, livello, config: { modo, soglia, varianti } }, caso()));
         } catch (err) {
           setErrore(err instanceof Error ? err.message : "sconosciuto");
         }
@@ -147,6 +157,8 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
           </label>
         )}
       </fieldset>
+
+      <Varianti valore={varianti} onCambia={setVarianti} />
 
       {errore && (
         <p className="errore" role="alert">

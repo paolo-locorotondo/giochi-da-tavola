@@ -5,9 +5,10 @@ import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
-import { MAX_GIOCATORI, MIN_GIOCATORI } from "../logica";
+import { MAX_GIOCATORI, MIN_GIOCATORI, VARIANTI_BASE } from "../logica";
 import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, type ModoPunteggio, type Vista } from "../online";
 import { Tavolo } from "./Tavolo";
+import { RiepilogoVarianti, Varianti } from "./Varianti";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 
 export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: string | null; onLocale?: () => void }) {
@@ -95,6 +96,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
   const [nomi, setNomi] = useState<string[]>(["", ""]);
   const [modo, setModo] = useState<ModoPunteggio>("singolo");
   const [soglia, setSoglia] = useState(SOGLIA_PREDEFINITA);
+  const [varianti, setVarianti] = useState(VARIANTI_BASE);
   const puliti = nomi.map((n) => n.trim());
   const distinti = new Set(puliti.map((n) => n.toLowerCase())).size === puliti.length;
   const sogliaOk = Number.isInteger(soglia) && soglia >= SOGLIA_MIN && soglia <= SOGLIA_MAX;
@@ -105,7 +107,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       className="schermata allineata"
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
-        if (validi) c.invia({ t: "crea", gioco: "ultima", nomi: puliti, config: { modo, soglia } });
+        if (validi) c.invia({ t: "crea", gioco: "ultima", nomi: puliti, config: { modo, soglia, varianti } });
       }}
     >
       <fieldset className="ul-nomi-crea" style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
@@ -160,6 +162,8 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
           </label>
         )}
       </fieldset>
+
+      <Varianti valore={varianti} onCambia={setVarianti} />
 
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso || !validi}>
@@ -334,6 +338,7 @@ function Sala({ c, v }: { c: Collegamento; v: Vista }) {
   return (
     <section className="schermata allineata">
       <p className="muted">{v.config.modo === "singolo" ? t("riepilogoSingolo") : t("riepilogoPunti", { soglia: v.config.soglia })}</p>
+      <RiepilogoVarianti varianti={v.config.varianti} />
       {v.io === null ? (
         <>
           <h2>{t("chiSei")}</h2>

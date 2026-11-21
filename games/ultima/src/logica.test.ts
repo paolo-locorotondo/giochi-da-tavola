@@ -6,6 +6,9 @@ import {
   avanza,
   beccato,
   gioca,
+  giocabili,
+  pescaCumulo,
+  VARIANTI_BASE,
   mazzoCompleto,
   nuovoRound,
   passa,
@@ -48,7 +51,9 @@ function partita(mani: Carta[][], opz: Partial<Partita> = {}): Partita {
     colore: "rosso",
     haPescato: false,
     pescata: null,
-    ultima: null,
+    ultime: [],
+    varianti: VARIANTI_BASE,
+    cumulo: null,
     sfida: null,
     fine: null,
     eventi: [],
@@ -233,7 +238,7 @@ describe("gioca", () => {
     const base = partita([[c], [num("verde", 2), jolly()], [sim("salta", "blu")]]);
     const p = gioca(base, 3, 1, c.id, undefined, rng());
     expect(p.fine).toEqual({ vincitore: 1, punti: 2 + 50 + 20 });
-    expect(p.ultima).toBeNull();
+    expect(p.ultime).toEqual([]);
   });
   it("niente più mosse a round finito", () => {
     const c = num("rosso", 4);
@@ -244,12 +249,12 @@ describe("gioca", () => {
   it("con una carta in mano si apre la finestra di «Ultima!»", () => {
     const c = num("rosso", 4);
     const p = gioca(partita([[c, num("blu", 1)], [num("verde", 2)]]), 2, 1, c.id, undefined, rng());
-    expect(p.ultima).toEqual({ posto: 1, dichiarata: false });
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: false }]);
   });
   it("il bot dichiara «Ultima!» subito", () => {
     const c = num("rosso", 4);
     const p = gioca(partita([[c, num("blu", 1)], [num("verde", 2)]]), 2, 1, c.id, undefined, rng(), true);
-    expect(p.ultima).toEqual({ posto: 1, dichiarata: true });
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: true }]);
     expect(p.eventi.some((e) => e.tipo === "ultima" && e.posto === 1)).toBe(true);
   });
 });
@@ -282,8 +287,8 @@ describe("pesca e passa", () => {
     expect(passa(dopo, 2, 1).turno).toBe(2);
   });
   it("pescare cancella la finestra di «Ultima!» di chi ha una carta", () => {
-    const p = partita([[num("blu", 9)], [num("verde", 2)]], { turno: 2, ultima: { posto: 1, dichiarata: false } });
-    expect(pesca(p, 2, rng()).ultima).toBeNull();
+    const p = partita([[num("blu", 9)], [num("verde", 2)]], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
+    expect(pesca(p, 2, rng()).ultime).toEqual([]);
   });
 });
 
@@ -392,14 +397,14 @@ describe("Ultima! e Beccato!", () => {
   };
   it("chi ha una carta può dichiarare «Ultima!», una volta", () => {
     const p = ultima(penultima(), 1);
-    expect(p.ultima).toEqual({ posto: 1, dichiarata: true });
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: true }]);
     expect(codice(() => ultima(p, 1))).toBe("giaDichiarata");
     expect(codice(() => ultima(penultima(), 2))).toBe("nonDichiarabile");
   });
   it("chi ha dimenticato viene beccato e pesca 2", () => {
     const p = beccato(penultima(), 3, 1, rng());
     expect(p.mani[0]).toHaveLength(3);
-    expect(p.ultima).toBeNull();
+    expect(p.ultime).toEqual([]);
   });
   it("non si becca chi ha dichiarato, né se stessi, né a finestra chiusa", () => {
     expect(codice(() => beccato(ultima(penultima(), 1), 2, 1, rng()))).toBe("nonBeccabile");
@@ -411,6 +416,128 @@ describe("Ultima! e Beccato!", () => {
     const base = penultima();
     const c = base.mani[1]![0]!;
     const dopo = gioca(base, 3, 2, c.id, undefined, rng());
-    expect(dopo.ultima).toBeNull();
+    expect(dopo.ultime).toEqual([]);
+  });
+});
+
+describe("varianti: base spenta", () => {
+  it("con le varianti spente il +2 si paga subito e il mazzo ha 108 carte", () => {
+    expect(mazzoCompleto()).toHaveLength(108);
+    expect(nuovoRound(3, rng()).varianti).toEqual(VARIANTI_BASE);
+    const c = sim("piu2", "rosso");
+    const p = gioca(partita([[c, num("blu", 1)], [num("verde", 2)], [num("verde", 3)]]), 3, 1, c.id, undefined, rng());
+    expect(p.cumulo).toBeNull();
+    expect(p.mani[1]).toHaveLength(3);
+  });
+});
+
+describe("Somma dei +2", () => {
+  const V = { ...VARIANTI_BASE, sommaPiu2: true };
+  const conCumulo = (mani: Carta[][], opz: Partial<Partita> = {}) => partita(mani, { varianti: V, ...opz });
+
+  it("un +2 non fa pescare subito: apre un cumulo di 2 per chi lo riceve", () => {
+    const c = sim("piu2", "rosso");
+    const p = gioca(conCumulo([[c, num("blu", 1)], [num("verde", 2)], [num("verde", 3)]]), 3, 1, c.id, undefined, rng());
+    expect(p.cumulo).toEqual({ posto: 2, quante: 2, da: 1 });
+    expect(p.turno).toBe(2);
+    expect(p.mani[1]).toHaveLength(1);
+    expect(p.eventi.some((e) => e.tipo === "cumulo" && e.posto === 2 && e.quante === 2)).toBe(true);
+  });
+  it("si risponde con un +2 di qualunque colore e il cumulo cresce di 2", () => {
+    const a = sim("piu2", "rosso");
+    const b = sim("piu2", "blu");
+    const c = sim("piu2", "verde");
+    let p = conCumulo([[a, num("blu", 1)], [b, num("verde", 2)], [c, num("verde", 3)]]);
+    p = gioca(p, 3, 1, a.id, undefined, rng());
+    p = gioca(p, 3, 2, b.id, undefined, rng());
+    expect(p.cumulo).toEqual({ posto: 3, quante: 4, da: 2 });
+    p = gioca(p, 3, 3, c.id, undefined, rng());
+    expect(p.cumulo).toEqual({ posto: 1, quante: 6, da: 3 });
+    expect(p.turno).toBe(1);
+  });
+  it("con un cumulo aperto le altre carte e la pesca singola sono vietate", () => {
+    const a = sim("piu2", "rosso");
+    const altra = num("rosso", 9);
+    const p = gioca(conCumulo([[a, num("blu", 1)], [altra, sim("piu2", "blu")], [num("verde", 3)]]), 3, 1, a.id, undefined, rng());
+    expect(codice(() => gioca(p, 3, 2, altra.id, undefined, rng()))).toBe("rispondiCumulo");
+    expect(codice(() => pesca(p, 2, rng()))).toBe("rispondiCumulo");
+    expect(codice(() => passa(p, 3, 2))).toBe("rispondiCumulo");
+    expect(giocabili(p, 2).map((c) => c.tipo)).toEqual(["piu2"]);
+  });
+  it("pescaCumulo paga tutto, azzera il cumulo e fa saltare il turno", () => {
+    const a = sim("piu2", "rosso");
+    const b = sim("piu2", "blu");
+    let p = conCumulo([[a, num("blu", 1)], [b, num("verde", 2)], [num("verde", 3)]]);
+    p = gioca(p, 3, 1, a.id, undefined, rng());
+    p = gioca(p, 3, 2, b.id, undefined, rng());
+    p = pescaCumulo(p, 3, 3, rng());
+    expect(p.cumulo).toBeNull();
+    expect(p.mani[2]).toHaveLength(5);
+    expect(p.turno).toBe(1);
+    expect(p.eventi.some((e) => e.tipo === "pescaCumulo" && e.posto === 3 && e.quante === 4)).toBe(true);
+  });
+  it("pescaCumulo solo a chi ha il cumulo, e solo se c'è", () => {
+    const a = sim("piu2", "rosso");
+    const p = gioca(conCumulo([[a, num("blu", 1)], [num("verde", 2)], [num("verde", 3)]]), 3, 1, a.id, undefined, rng());
+    expect(codice(() => pescaCumulo(p, 3, 3, rng()))).toBe("nonTocca");
+    expect(codice(() => pescaCumulo(conCumulo([[num("blu", 1)], [num("verde", 2)]]), 2, 1, rng()))).toBe("nessunCumulo");
+  });
+  it("un +4 non risponde a un +2 e un +2 non risponde a un +4", () => {
+    const a = sim("piu2", "rosso");
+    const j = piu4();
+    const p = gioca(conCumulo([[a, num("blu", 1)], [j, num("verde", 2)], [num("verde", 3)]]), 3, 1, a.id, undefined, rng());
+    expect(codice(() => gioca(p, 3, 2, j.id, "blu", rng()))).toBe("rispondiCumulo");
+    // Sopra un +4 si risponde con la sfida: un +2 non è ammesso.
+    const q = piu4();
+    const due = sim("piu2", "blu");
+    const sotto = gioca(conCumulo([[q, num("verde", 1)], [due, num("verde", 2)], [num("verde", 3)]]), 3, 1, q.id, "blu", rng());
+    expect(sotto.sfida).not.toBeNull();
+    expect(codice(() => gioca(sotto, 3, 2, due.id, undefined, rng()))).toBe("rispondiSfida");
+  });
+  it("un +2 che svuota la mano chiude il round senza cumulo", () => {
+    const a = sim("piu2", "rosso");
+    const p = gioca(conCumulo([[a], [num("verde", 2)]]), 2, 1, a.id, undefined, rng());
+    expect(p.fine?.vincitore).toBe(1);
+    expect(p.cumulo).toBeNull();
+  });
+  it("la prima carta +2 dà al primo giocatore la scelta: rispondere o pescare 2", () => {
+    for (let seme = 0; seme < 3000; seme++) {
+      const p = nuovoRound(3, creaRng(seme), [], 1, V);
+      if (p.scarto[0]!.tipo !== "piu2") continue;
+      expect(p.cumulo).toEqual({ posto: 1, quante: 2, da: null });
+      expect(p.turno).toBe(1);
+      expect(p.mani[0]).toHaveLength(7);
+      return;
+    }
+    throw new Error("nessun seme con +2 iniziale");
+  });
+  it("con 2 giocatori il cumulo torna a chi ha giocato", () => {
+    const a = sim("piu2", "rosso");
+    const b = sim("piu2", "blu");
+    let p = conCumulo([[a, sim("piu2", "verde"), num("blu", 1)], [b, num("verde", 2)]]);
+    p = gioca(p, 2, 1, a.id, undefined, rng());
+    p = gioca(p, 2, 2, b.id, undefined, rng());
+    expect(p.cumulo).toEqual({ posto: 1, quante: 4, da: 2 });
+  });
+});
+
+describe("Ultima! con più finestre", () => {
+  it("dichiarare e beccare riguardano solo il posto indicato", () => {
+    const p = partita([[num("blu", 1)], [num("verde", 1)], [num("verde", 2), num("verde", 3)]], {
+      turno: 3,
+      ultime: [
+        { posto: 1, dichiarata: false },
+        { posto: 2, dichiarata: false },
+      ],
+    });
+    const detto = ultima(p, 1);
+    expect(detto.ultime).toEqual([
+      { posto: 1, dichiarata: true },
+      { posto: 2, dichiarata: false },
+    ]);
+    expect(codice(() => beccato(detto, 3, 1, rng()))).toBe("nonBeccabile");
+    const becc = beccato(detto, 3, 2, rng());
+    expect(becc.mani[1]).toHaveLength(3);
+    expect(becc.ultime).toEqual([{ posto: 1, dichiarata: true }]);
   });
 });
