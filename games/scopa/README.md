@@ -96,7 +96,7 @@ src/
   ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, Riepilogo, scopa.css
 ```
 
-Le carte e la mescolata vengono da `@gdt/carte` (la logica importa i moduli puri `src/mazzi` e `src/tipi`, perché l'indice del pacchetto carica anche il CSS, che il server non legge). Nessun `data/`: le 40 carte sono fisse e le regole stanno nel codice.
+Le carte e la mescolata vengono da `@gdt/carte`: la logica importa `@gdt/carte/logica` (senza CSS né React, adatto al server), la UI l'indice.
 
 ## Partita veloce
 

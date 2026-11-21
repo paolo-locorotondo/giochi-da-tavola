@@ -20,6 +20,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@gdt/burraco':
+        specifier: workspace:*
+        version: link:../../games/burraco
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -54,6 +57,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@gdt/burraco':
+        specifier: workspace:*
+        version: link:../../games/burraco
       '@gdt/dadi':
         specifier: workspace:*
         version: link:../../games/dadi
@@ -115,6 +121,40 @@ importers:
       vite-plugin-pwa:
         specifier: ^0.21.1
         version: 0.21.2(vite@5.4.21(@types/node@20.19.43)(terser@5.51.2))(workbox-build@7.4.1(@types/babel__core@7.20.5))(workbox-window@7.4.1)
+
+  games/burraco:
+    dependencies:
+      '@gdt/carte':
+        specifier: workspace:*
+        version: link:../../packages/carte
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
+      '@gdt/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@gdt/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
+      lucide-react:
+        specifier: ^1.69.0
+        version: 1.69.0(@types/react@18.3.31)(react@18.3.1)
+      qrcode:
+        specifier: 1.5.4
+        version: 1.5.4
+    devDependencies:
+      '@types/qrcode':
+        specifier: 1.5.5
+        version: 1.5.5
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@20.19.43)(terser@5.51.2)
 
   games/dadi:
     dependencies:

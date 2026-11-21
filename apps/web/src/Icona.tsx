@@ -37,6 +37,13 @@ const Ventaglio = createLucideIcon("carte-a-ventaglio", [
   ["path", { d: "M10 21l-1-4M10 21l4 1M10 21l-3-1", key: "rametti" }],
 ]);
 
+/* Burraco: due carte aperte a ventaglio, una con l'asso (A) e il seme a punta: diverse dal mazzo con il «1» di Ultima!. */
+const AssoESette = createLucideIcon("asso-e-sette", [
+  ["rect", { x: 3, y: 5, width: 11, height: 15, rx: 2, key: "carta" }],
+  ["path", { d: "M17.5 7.5l2.4.9a2 2 0 0 1 1.2 2.6L18.6 18", key: "ventaglio" }],
+  ["path", { d: "M6.2 15l2.3-6 2.3 6M7 13h3", key: "a" }],
+]);
+
 /* Solo le icone usate: l'import per nome tiene fuori dal bundle tutte le altre. */
 const ICONE = {
   sole: Sun,
@@ -47,6 +54,7 @@ const ICONE = {
   griglia: Grid3x3,
   carte: Carte,
   ventaglio: Ventaglio,
+  "asso-e-sette": AssoESette,
   fulmine: Zap,
   indietro: ArrowLeft,
   impostazioni: Settings,

@@ -3,24 +3,24 @@ import { fissaCaso, schermata } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
-test("menu: elenca gli otto giochi", async ({ page }) => {
+test("menu: elenca i nove giochi", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Giochi da tavola" })).toBeVisible();
   // Il titolo sta su una riga anche con i tre tasti accanto.
   const titolo = page.getByRole("heading", { name: "Giochi da tavola" });
   const altezza = await titolo.evaluate((h) => h.getBoundingClientRect().height / parseFloat(getComputedStyle(h).lineHeight));
   expect(altezza).toBeLessThan(1.5);
-  await expect(page.locator("a.gioco")).toHaveCount(8);
-  // Tutti si giocano offline; Impostore, Tris, Ultima! e Scopa anche online.
-  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(8);
-  await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(4);
+  await expect(page.locator("a.gioco")).toHaveCount(9);
+  // Tutti si giocano offline; Impostore, Tris, Ultima!, Scopa e Burraco anche online.
+  await expect(page.getByRole("img", { name: "Si gioca offline, con un solo telefono" })).toHaveCount(9);
+  await expect(page.getByRole("img", { name: "Si gioca anche online, ognuno col suo telefono" })).toHaveCount(5);
   await expect(page.locator("a.gioco", { hasText: "Impostore" }).getByRole("img", { name: /online/ })).toHaveCount(1);
   await schermata(page, "menu");
 });
 
 test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator(".gioco-nome")).toHaveText(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
+  await expect(page.locator(".gioco-nome")).toHaveText(["Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
   await expect(page.getByRole("searchbox")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
@@ -36,7 +36,7 @@ test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }
 
   await page.getByRole("button", { name: "Cerca un gioco" }).click();
   await expect(page.getByRole("searchbox")).toHaveCount(0);
-  await expect(page.locator("a.gioco")).toHaveCount(8);
+  await expect(page.locator("a.gioco")).toHaveCount(9);
 });
 
 test("ogni gioco si apre dal suo indirizzo", async ({ page }) => {
@@ -234,26 +234,26 @@ test("menu: ordinamento dei giochi con le frecce, salvato sul telefono", async (
 
   await ordina.click();
   await expect(ordina).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".ordina-riga")).toHaveCount(8);
+  await expect(page.locator(".ordina-riga")).toHaveCount(9);
   await expect(page.getByText("Sposta i giochi con le frecce")).toBeVisible();
   // Durante l'ordinamento la ricerca è spenta e i giochi non si aprono.
   await expect(page.getByRole("button", { name: "Cerca un gioco" })).toBeDisabled();
   await page.locator("a.gioco", { hasText: "Tris" }).click({ force: true });
   await expect(page).toHaveURL(/\/$/);
   // Il primo non sale e l'ultimo non scende; «Ordine alfabetico» è spento finché non c'è un ordine salvato.
-  await expect(page.getByRole("button", { name: "Sposta su Dadi" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Sposta su Burraco" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Sposta giù Ultima!" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Ordine alfabetico" })).toBeDisabled();
 
-  // Tris sale in cima con sei tocchi; il fuoco resta sulla freccia.
+  // Tris sale in cima con sette tocchi; il fuoco resta sulla freccia.
   const su = page.getByRole("button", { name: "Sposta su Tris" });
   await su.click();
   await expect(su).toBeFocused();
-  for (let i = 0; i < 5; i++) await su.click();
+  for (let i = 0; i < 6; i++) await su.click();
   // In cima la freccia «su» si spegne e il fuoco passa alla freccia «giù» dello stesso gioco.
   await expect(su).toBeDisabled();
   await expect(page.getByRole("button", { name: "Sposta giù Tris" })).toBeFocused();
-  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
+  expect(await nomi(page)).toEqual(["Tris", "Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
   // I pulsanti stanno fissi in fondo e la pagina lascia spazio sotto: scorrendo fino in fondo l'ultimo
   // gioco resta tutto sopra la barra. Schermata della finestra, non della pagina intera (la barra è fissa).
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
@@ -265,11 +265,11 @@ test("menu: ordinamento dei giochi con le frecce, salvato sul telefono", async (
 
   await page.getByRole("button", { name: "Salva l'ordinamento" }).click();
   await expect(page.locator(".ordina-riga")).toHaveCount(0);
-  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
+  expect(await nomi(page)).toEqual(["Tris", "Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
 
   // Resta dopo un ricaricamento.
   await page.reload();
-  expect(await nomi(page)).toEqual(["Tris", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
+  expect(await nomi(page)).toEqual(["Tris", "Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Ultima!"]);
 
   // «Annulla» non salva.
   await page.getByRole("button", { name: "Ordina i giochi" }).click();
@@ -281,9 +281,9 @@ test("menu: ordinamento dei giochi con le frecce, salvato sul telefono", async (
   // «Ordine alfabetico» torna all'ordine di base, anche dopo un ricaricamento.
   await page.getByRole("button", { name: "Ordina i giochi" }).click();
   await page.getByRole("button", { name: "Ordine alfabetico" }).click();
-  expect(await nomi(page)).toEqual(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
+  expect(await nomi(page)).toEqual(["Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
   await page.reload();
-  expect(await nomi(page)).toEqual(["Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
+  expect(await nomi(page)).toEqual(["Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);
 });
 
 test("menu: l'ordinamento chiude la ricerca aperta e la ricerca filtra nell'ordine salvato", async ({ page }) => {
@@ -292,7 +292,7 @@ test("menu: l'ordinamento chiude la ricerca aperta e la ricerca filtra nell'ordi
   await page.getByRole("searchbox", { name: "Cerca un gioco" }).fill("tr");
   await page.getByRole("button", { name: "Ordina i giochi" }).click();
   await expect(page.getByRole("searchbox")).toHaveCount(0);
-  await expect(page.locator("a.gioco")).toHaveCount(8);
+  await expect(page.locator("a.gioco")).toHaveCount(9);
 });
 
 test("barra in alto: resta visibile scorrendo, nella home e dentro un gioco", async ({ page }) => {

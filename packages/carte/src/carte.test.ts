@@ -111,3 +111,14 @@ describe("nomi e lingue", () => {
     }
   });
 });
+
+describe("ingresso senza interfaccia (logica)", () => {
+  it("esporta le stesse funzioni dell'indice, senza componenti", async () => {
+    const logica = await import("./logica");
+    expect(logica.mazzoItaliano()).toHaveLength(40);
+    expect(logica.mazzoFrancese({ mazzi: 2, jolly: 4 })).toHaveLength(108);
+    expect(logica.mescola).toBe(mescola);
+    expect(logica.nomeCarta).toBe(nomeCarta);
+    expect("CartaGrafica" in logica).toBe(false);
+  });
+});
