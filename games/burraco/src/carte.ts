@@ -1,4 +1,4 @@
-import { mazzoFrancese, type Carta, type Seme } from "@gdt/carte";
+import { mazzoFrancese, type Carta, type Seme } from "@gdt/carte/logica";
 
 export type { Carta, Seme };
 
