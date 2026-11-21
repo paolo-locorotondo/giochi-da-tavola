@@ -150,6 +150,7 @@ describe("varianti sul server", () => {
 
 describe("taglio sul server", () => {
   /** Porta la stanza a una finestra di taglio con un telefono che ha la carta identica. */
+  /** Una partita con una finestra di taglio aperta. Chi taglia ha più di una carta, così il taglio non chiude il round. */
   function conFinestra() {
     for (let i = 0; i < 400; i++) {
       const s = avviata({ varianti: { taglio: true } });
@@ -159,7 +160,7 @@ describe("taglio sul server", () => {
         if (ap) {
           for (const posto of [1, 2, 3]) {
             const v = vistaDi(s, tokenDi(s, posto));
-            if (v.puoTagliare.length > 0) return { s, posto, carta: v.puoTagliare[0]! };
+            if (v.puoTagliare.length > 0 && v.mano.length > 1) return { s, posto, carta: v.puoTagliare[0]! };
           }
         }
         eseguiAzione(s, "host", { tipo: "mossaBot", posto: p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno });
