@@ -34,12 +34,12 @@ test("scopa contro i bot: la partita si gioca da sola fino alla fine (anche offl
     if (await page.getByRole("heading", { name: "Partita finita" }).isVisible()) break;
     const prossimo = page.getByRole("button", { name: "Prossimo round" });
     if (await prossimo.isVisible()) {
-      await prossimo.click().catch(() => {});
+      await prossimo.click({ timeout: 1000 }).catch(() => {});
       continue;
     }
     const presa = page.locator(".sc-combinazione").first();
     if (await presa.isVisible()) {
-      await presa.click().catch(() => {});
+      await presa.click({ timeout: 1000 }).catch(() => {});
       continue;
     }
     const carta = page.locator(".sc-mano button:not(:disabled)").first();
@@ -58,7 +58,7 @@ test("scopa: la scelta della presa mostra le prese e annulla", async ({ page }) 
   for (let i = 0; i < 1500; i++) {
     if (await page.locator(".sc-presa").isVisible()) break;
     const prossimo = page.getByRole("button", { name: "Prossimo round" });
-    if (await prossimo.isVisible()) await prossimo.click().catch(() => {});
+    if (await prossimo.isVisible()) await prossimo.click({ timeout: 1000 }).catch(() => {});
     const carta = page.locator(".sc-mano button:not(:disabled)").first();
     if (await carta.isVisible()) await carta.click({ timeout: 1000 }).catch(() => {});
     await page.waitForTimeout(60);
