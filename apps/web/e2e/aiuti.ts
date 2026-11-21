@@ -1,14 +1,17 @@
 import { expect, type Page } from "@playwright/test";
 
 /** Rende deterministico Math.random: i semi delle partite (e quindi parole, ruoli, ordine) non cambiano tra le esecuzioni. */
-export async function fissaCaso(page: Page) {
-  await page.addInitScript(() => {
+export async function fissaCaso(page: Page, { avvisoBeta = false } = {}) {
+  await page.addInitScript((mostraBeta) => {
+    // L'avviso dei giochi in beta copre la schermata: di base si finge già letto.
+    if (mostraBeta) sessionStorage.removeItem("gdt-beta-letto");
+    else if (!sessionStorage.getItem("gdt-beta-letto")) sessionStorage.setItem("gdt-beta-letto", JSON.stringify(["scopa", "burraco", "ultima"]));
     let x = 12345;
     Math.random = () => {
       x = (Math.imul(x, 1664525) + 1013904223) >>> 0;
       return x / 2 ** 32;
     };
-  });
+  }, avvisoBeta);
 }
 
 /** Vale per ogni schermata: niente scorrimento orizzontale e bersagli toccabili di almeno 44 px d'altezza. */

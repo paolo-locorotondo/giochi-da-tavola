@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Wifi, WifiOff } from "lucide-react";
+import { AvvisoBetaTesto } from "@gdt/collegamento";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { BurracoLocale } from "./BurracoLocale";
@@ -46,6 +47,7 @@ export function BurracoApp() {
 
   return (
     <section className="schermata scelta-modo">
+      <AvvisoBetaTesto />
       <h2>{t("comeGiocate")}</h2>
       <button type="button" className="modo" onClick={() => scegli("locale")}>
         <span className="modo-icona modo-icona--locale">

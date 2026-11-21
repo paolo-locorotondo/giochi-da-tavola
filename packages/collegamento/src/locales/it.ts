@@ -1,5 +1,6 @@
 /** Testi della sala d'attesa e dell'apertura della partita veloce: comuni a tutti i giochi. */
 export const it = {
+  betaTesto: "Questa versione del gioco è in fase di testing, se scopri errori o problemi di qualsiasi tipo segnalalo all'amministratore.",
   partitaVeloce: "Partita veloce",
   veloceTesto: "Scrivi il tuo nome: entri nella prima stanza aperta, oppure ne apri una tu.",
   veloceTestoSemplice: "Scrivi solo il tuo nome: ti abbino al primo avversario che cerca una partita, senza codici.",

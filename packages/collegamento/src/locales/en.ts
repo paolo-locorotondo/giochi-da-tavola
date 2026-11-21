@@ -2,6 +2,7 @@ import type { Dizionario } from "@gdt/i18n";
 import type { it } from "./it";
 
 export const en: Dizionario<typeof it> = {
+  betaTesto: "This version of the game is being tested. If you find errors or problems of any kind, please report them to the administrator.",
   partitaVeloce: "Quick match",
   veloceTesto: "Enter your name: you join the first open room, or open one yourself.",
   veloceTestoSemplice: "Enter just your name: you are paired with the first opponent looking for a game, no codes.",

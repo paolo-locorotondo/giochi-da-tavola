@@ -591,6 +591,55 @@ a.tema-btn {
   color: var(--ac2);
 }
 
+/* Giochi in beta testing: bordo rosso nell'elenco e verme rosso accanto alle modalità */
+.modo-badge--beta {
+  color: var(--errore);
+}
+
+.gioco--beta {
+  border: 2px solid var(--errore);
+}
+
+.beta-sfondo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.6);
+}
+
+.beta-avviso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 24rem;
+  padding: 1.25rem;
+  background: var(--s1);
+  color: var(--fg);
+  border: var(--bw) solid var(--errore);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+}
+
+.beta-avviso h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--errore);
+}
+
+.beta-avviso button {
+  min-height: var(--tocco);
+}
+
+.beta-avviso p {
+  margin: 0;
+}
+
 .link {
   text-decoration: none;
   display: inline-flex;

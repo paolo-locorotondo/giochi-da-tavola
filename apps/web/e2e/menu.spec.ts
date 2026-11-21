@@ -18,6 +18,22 @@ test("menu: elenca i nove giochi", async ({ page }) => {
   await schermata(page, "menu");
 });
 
+test("giochi in beta: bordo rosso nell'elenco e avviso all'apertura", async ({ page }) => {
+  await fissaCaso(page, { avvisoBeta: true });
+  await page.goto("/");
+  await expect(page.locator("a.gioco--beta")).toHaveCount(3);
+  await expect(page.locator("a.gioco--beta", { hasText: "Scopa" }).getByRole("img", { name: "In beta testing: versione in prova" })).toHaveCount(1);
+  await expect(page.locator("a.gioco", { hasText: "Tris" })).not.toHaveClass(/gioco--beta/);
+  await schermata(page, "menu-beta");
+
+  await page.locator("a.gioco--beta", { hasText: "Scopa" }).click();
+  const avviso = page.getByRole("alertdialog");
+  await expect(avviso).toContainText("fase di testing");
+  await schermata(page, "avviso-beta");
+  await avviso.getByRole("button", { name: "Ho capito" }).click();
+  await expect(avviso).toHaveCount(0);
+});
+
 test("menu: giochi in ordine alfabetico e ricerca con la lente", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".gioco-nome")).toHaveText(["Burraco", "Dadi", "Duello Lampo", "Impostore", "Lupus in fabula", "Scopa", "Tabù", "Tris", "Ultima!"]);

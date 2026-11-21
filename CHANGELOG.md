@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Aggiunto
+
+- **Giochi in beta testing**: un gioco con `beta: true` nel manifest ha il bordo rosso nell'elenco, un verme rosso accanto alle icone offline/online, un avviso in rosso sopra «Come giocate?» e, aprendolo, una finestra «Questa versione del gioco è in fase di testing…» da chiudere con «Ho capito» (non ricompare nella stessa sessione del browser). Per ora in beta: Scopa, Burraco e Ultima!. Avviso condiviso in `@gdt/collegamento` (`AvvisoBetaTesto`), testi it/en.
+
 ## [0.27.0] - 2026-11-21
 
 ### Aggiunto

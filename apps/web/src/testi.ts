@@ -30,6 +30,10 @@ const it = {
   iPersonaggi: "I personaggi",
   giocaOffline: "Si gioca offline, con un solo telefono",
   giocaOnline: "Si gioca anche online, ognuno col suo telefono",
+  inBeta: "In beta testing: versione in prova",
+  betaTitolo: "Beta testing",
+  betaAvviso: "Questa versione del gioco è in fase di testing, se scopri errori o problemi di qualsiasi tipo segnalalo all'amministratore.",
+  betaCapito: "Ho capito",
 } as const;
 
 export const dizionari: Dizionari<typeof it> = {
@@ -64,5 +68,9 @@ export const dizionari: Dizionari<typeof it> = {
     iPersonaggi: "The characters",
     giocaOffline: "Playable offline, on one phone",
     giocaOnline: "Also playable online, one phone each",
+    inBeta: "Beta testing: trial version",
+    betaTitolo: "Beta testing",
+    betaAvviso: "This version of the game is being tested. If you find errors or problems of any kind, please report them to the administrator.",
+    betaCapito: "Got it",
   },
 };

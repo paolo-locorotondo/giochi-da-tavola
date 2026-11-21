@@ -23,6 +23,8 @@ interface ManifestGioco {
   online?: boolean;
   /** true = si gioca solo online (niente badge «offline»). */
   soloOnline?: boolean;
+  /** true = versione in prova: bordo rosso nell'elenco e avviso all'apertura. */
+  beta?: boolean;
   testi: (lingua: Lingua) => TestiGioco;
 }
 
@@ -50,7 +52,7 @@ function giocoDaPercorso(percorso: string): VoceGioco | undefined {
 
 /** Il gioco con i testi nella lingua corrente, come lo vogliono le schede (regolamento, impostazioni). */
 function conTesti(g: VoceGioco, lingua: Lingua): GiocoConRegole {
-  return { id: g.id, online: g.online === true, soloOnline: g.soloOnline === true, ...g.testi(lingua) };
+  return { id: g.id, online: g.online === true, soloOnline: g.soloOnline === true, beta: g.beta === true, ...g.testi(lingua) };
 }
 
 function usaPercorso(): [string, (a: string) => void] {
@@ -78,6 +80,48 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   burraco: "asso-e-sette",
   "duello-lampo": "fulmine",
 };
+
+/** Giochi di cui l'avviso beta è già stato letto in questa sessione del browser. */
+const CHIAVE_BETA = "gdt-beta-letto";
+function betaLetto(id: string): boolean {
+  try {
+    return (JSON.parse(sessionStorage.getItem(CHIAVE_BETA) ?? "[]") as string[]).includes(id);
+  } catch {
+    return false;
+  }
+}
+function segnaBetaLetto(id: string) {
+  try {
+    const letti = JSON.parse(sessionStorage.getItem(CHIAVE_BETA) ?? "[]") as string[];
+    sessionStorage.setItem(CHIAVE_BETA, JSON.stringify([...new Set([...letti, id])]));
+  } catch {
+    /* senza sessionStorage l'avviso si rivede a ogni apertura: va bene */
+  }
+}
+
+/** Avviso all'apertura di un gioco in beta: si chiude con «Ho capito» (o Esc) e per quella sessione non torna. */
+function AvvisoBeta({ id, nome }: { id: string; nome: string }) {
+  const t = usaT(dizionari);
+  const [aperto, setAperto] = useState(() => !betaLetto(id));
+  if (!aperto) return null;
+  const chiudi = () => {
+    segnaBetaLetto(id);
+    setAperto(false);
+  };
+  return (
+    <div className="beta-sfondo" onKeyDown={(e) => e.key === "Escape" && chiudi()}>
+      <div className="beta-avviso" role="alertdialog" aria-modal="true" aria-labelledby="beta-titolo" aria-describedby="beta-testo">
+        <h2 id="beta-titolo">
+          <Icona nome="bug" dimensione={24} /> {t("betaTitolo")} · {nome}
+        </h2>
+        <p id="beta-testo">{t("betaAvviso")}</p>
+        <button type="button" className="btn primario" autoFocus onClick={chiudi}>
+          {t("betaCapito")}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 /** Nome dell'ordine dei giochi della home nelle preferenze del telefono. */
 const ORDINE_HOME = "home";
@@ -178,6 +222,7 @@ export function App() {
           <Impostazioni gioco={gioco} />
         </header>
         <Componente />
+        {gioco.beta && <AvvisoBeta key={gioco.id} id={gioco.id} nome={gioco.nome} />}
         <Versione />
       </main>
     );
@@ -271,7 +316,7 @@ export function App() {
               </div>
             )}
             <a
-              className="gioco"
+              className={`gioco${g.beta ? " gioco--beta" : ""}`}
               href={`/${g.id}`}
               // Durante l'ordinamento le righe non si aprono: si spostano.
               onClick={inOrdinamento ? (e) => e.preventDefault() : naviga(`/${g.id}`)}
@@ -285,6 +330,11 @@ export function App() {
                 <span className="gioco-titolo">
                   <span className="gioco-nome">{g.nome}</span>
                   <span className="gioco-modi">
+                    {g.beta && (
+                      <span className="modo-badge modo-badge--beta" role="img" aria-label={t("inBeta")}>
+                        <Icona nome="bug" dimensione={20} />
+                      </span>
+                    )}
                     {!g.soloOnline && (
                       <span className="modo-badge modo-badge--offline" role="img" aria-label={t("giocaOffline")}>
                         <Icona nome="wifi-barrato" dimensione={20} />

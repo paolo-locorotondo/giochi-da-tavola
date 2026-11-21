@@ -128,3 +128,21 @@
   text-align: center;
   line-height: 1.25;
 }
+
+/* Avviso dei giochi in beta testing sulla schermata iniziale */
+.sv-beta {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--errore);
+  border: var(--bw) solid var(--errore);
+  border-radius: var(--r);
+  font-weight: 600;
+}
+
+.sv-beta svg {
+  flex: none;
+  margin-top: 0.1rem;
+}
