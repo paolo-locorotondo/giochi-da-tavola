@@ -91,6 +91,6 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | 0b `@gdt/carte` | main | unito (2026-11-21) |
 | 4 Duello Lampo (Bersagli, Il più grande) | main | unito e rilasciato 0.26.0 (2026-11-21) |
 | 1 Partita veloce (server + UI) | main | unito (2026-11-21); resta: «Apri adesso» a sala piena con squadre «scelte in sala»; entry-point di @gdt/carte senza CSS |
-| 5 Ultima! varianti | lavoro/ultima-varianti | pronto da unire (2026-11-21) |
-| 3 Scopa | lavoro/scopa | blocchi 1-4 pronti da unire; manca partita veloce (blocco 5) |
+| 5 Ultima! varianti | main | unito (2026-11-21), anche nella partita veloce; e2e in verifica |
+| 3 Scopa | main | blocchi 1-4 uniti (2026-11-21); e2e in verifica; manca partita veloce (blocco 5) |
 | 2 Burraco | lavoro/burraco | in corso (2026-11-21) |
