@@ -3,6 +3,20 @@
 Per giocare "ognuno col suo telefono" senza internet: il tuo PC fa da server e i telefoni si collegano.
 Serve una **rete locale** (non internet): il WiFi di casa degli amici oppure l'hotspot di un telefono.
 
+## Docker o `pnpm dev`?
+
+Per giocare in rete locale vanno bene entrambi, e in nessuno dei due si consumano dati: il traffico resta tra PC e telefoni.
+
+| | Docker (`docker compose up`) | `pnpm dev` |
+|---|---|---|
+| Cosa serve sul PC | Solo Docker Desktop e il progetto | Node, pnpm e `pnpm install` |
+| Versione | Quella di produzione, già compilata: come sarà pubblicata | Codice di sviluppo, non compilato: pagine più pesanti e avvio più lento |
+| Indirizzo per i telefoni | `http://IP-DEL-PC:8080` | `http://IP-DEL-PC:5173` (il sito inoltra da solo il gioco online al server) |
+| Porta da aprire nel firewall | 8080 | 5173 |
+| Quando usarlo | Per giocare tra amici e per provare la versione vera | Per sviluppare: le modifiche al codice si vedono subito |
+
+Il resto della guida descrive Docker; con `pnpm dev` cambiano solo l'indirizzo e la porta.
+
 ## Prima di partire (con internet, a casa)
 
 1. Installa **Docker Desktop** e avvialo.
@@ -35,7 +49,8 @@ Per fermare: Ctrl+C nel terminale.
   Per togliere la regola: `Remove-NetFirewallRule -DisplayName "Giochi da tavola 8080"`.
   Per controllare che il problema sia davvero il firewall, dal PC apri `http://192.168.1.20:8080` (con il tuo IP): se qui funziona e dal telefono no, è il firewall o la rete.
 - **Router che isola i dispositivi** (hotel, locali pubblici, alcune reti ospiti): i telefoni non vedono il PC. In casa di solito va bene. Alternativa: hotspot.
-- **Hotspot di un telefono**: non consuma dati (il traffico resta tra i dispositivi). Regge circa 8–10 dispositivi; su alcuni telefoni serve la SIM inserita.
+- **Hotspot di un telefono**: il gioco non usa internet, il traffico resta tra i dispositivi. Ma il contatore dei dati dell'hotspot conta **tutto** ciò che passa dal telefono: WhatsApp, aggiornamenti e sincronizzazioni dei dispositivi collegati (PC compreso, anche Docker Desktop e Windows Update) usano internet attraverso quel telefono e fanno salire il consumo anche senza giocare. **Per non consumare dati, chi ha l'hotspot acceso deve disattivare i dati mobili** (su alcuni telefoni l'hotspot non si accende senza dati o senza SIM: in quel caso il consumo di fondo non si può evitare). Regge circa 8–10 dispositivi.
+  *Prova fatta (2026-11-21)*: PC collegato all'hotspot del telefono, dati mobili del telefono disattivati, partita a Ultima! giocata normalmente: il contatore dell'hotspot è rimasto fermo. Il PC collegato invece al WiFi di casa ha il suo traffico: controlla di essere sulla rete giusta (con la rete sbagliata i telefoni vedono «Connessione persa»).
 - **Niente HTTPS** su `http://192.168...`: il tasto "Condividi" e l'installazione dell'app non funzionano. L'invito si fa con il **QR code** che l'organizzatore trova nella stanza (apre il link, senza bisogno di "Condividi"), oppure leggendo il codice o l'indirizzo a voce.
 - **Se il PC si riavvia o si ferma il programma**, le partite in corso si perdono (sono in memoria).
 - **Nessuna rete, nemmeno hotspot**: usa "Un solo telefono" (funziona anche in modalità aereo, se l'app è già stata aperta una volta con internet).
