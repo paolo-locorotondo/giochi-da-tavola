@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Ban, Check, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Sun, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Ban, Check, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Scissors, Sun, type LucideIcon } from "lucide-react";
 import type { Traduttore } from "@gdt/i18n";
 import type { Carta as DatiCarta, Colore } from "../logica";
 import type { it } from "../locales/it";
@@ -79,19 +79,27 @@ interface Props {
   grande?: boolean;
   /** Modalità «Più carte»: la carta è un interruttore (scelta o no). */
   scelta?: boolean;
+  /** Taglio: questa carta è identica a quella appena calata (si taglia dal pulsante, non toccando la carta). */
+  tagliabile?: boolean;
 }
 
-export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false, scelta }: Props) {
+export function Carta({ carta, t, colore = null, onClick, spenta = false, grande = false, scelta, tagliabile = false }: Props) {
   const col = "colore" in carta ? carta.colore : colore;
   const Icona = col ? ICONA_COLORE[col] : null;
   const nome = nomeCarta(t, carta, colore);
-  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}${scelta ? " ul-scelta" : ""}`;
+  const classe = `ul-carta ul-${"colore" in carta ? carta.colore : "jolly"}${spenta ? " ul-spenta" : ""}${grande ? " ul-grande" : ""}${scelta ? " ul-scelta" : ""}${tagliabile ? " ul-tagliabile" : ""}`;
   const contenuto = (
     <>
       <span className="ul-valore">
         <Simbolo carta={carta} />
       </span>
-      {scelta ? <Check className="ul-seme ul-spunta" size={24} aria-hidden="true" /> : Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />}
+      {scelta ? (
+        <Check className="ul-seme ul-spunta" size={24} aria-hidden="true" />
+      ) : tagliabile ? (
+        <Scissors className="ul-seme" size={24} aria-hidden="true" />
+      ) : (
+        Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />
+      )}
       <span className="ul-nome" aria-hidden="true">
         {col ? nomeColore(t, col) : nomeJolly(t, carta)}
       </span>

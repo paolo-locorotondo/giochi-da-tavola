@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Bell, Bot, Copy, Handshake, RotateCw } from "lucide-react";
+import { Bell, Bot, Copy, Handshake, RotateCw, Scissors } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { COLORI, gruppiDellaMano, valoreGruppo, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
+import { COLORI, TAGLIO_MS, gruppiDellaMano, valoreGruppo, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
 import type { Vista } from "../online";
 import { Carta, ICONA_COLORE, nomeCarta, nomeColore } from "./Carta";
 import { RiepilogoVarianti } from "./Varianti";
@@ -34,6 +34,8 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
       return t("ev_salta", { nome: nome(e.posto) });
     case "inverti":
       return t("ev_inverti");
+    case "taglio":
+      return t("ev_taglio", { nome: nome(e.posto), carta: nomeCarta(t, e.carta) });
     case "scambio":
       return t("ev_scambio", { nome: nome(e.posto), con: nome(e.con) });
     case "rotazione":
@@ -79,6 +81,27 @@ function maniCambiate(v: Vista): { tipo: "scambio" | "rotazione"; posti: number[
     if (MOSSE.has(e.tipo)) return null;
   }
   return null;
+}
+
+/**
+ * Secondi rimasti per tagliare, contati dal momento in cui il telefono riceve la finestra
+ * (il server tiene l'ora vera, con un secondo di tolleranza). 0 = finestra scaduta o assente.
+ */
+function useSecondiTaglio(taglio: Vista["taglio"]): number {
+  const chiave = taglio ? `${taglio.posto}:${taglio.carta.id}` : null;
+  const [restano, setRestano] = useState(0);
+  useEffect(() => {
+    if (!chiave) {
+      setRestano(0);
+      return;
+    }
+    const fine = Date.now() + TAGLIO_MS;
+    const aggiorna = () => setRestano(Math.max(0, Math.ceil((fine - Date.now()) / 1000)));
+    aggiorna();
+    const id = setInterval(aggiorna, 250);
+    return () => clearInterval(id);
+  }, [chiave]);
+  return restano;
 }
 
 export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
@@ -152,6 +175,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const posso = inRound && v.io !== null;
   const mazzoVuoto = v.mazzo === 0;
   const cambiate = inRound ? maniCambiate(v) : null;
+  const secondiTaglio = useSecondiTaglio(inRound ? v.taglio : null);
+  const tagliabili = secondiTaglio > 0 ? v.mano.filter((x) => v.puoTagliare.includes(x.id)) : [];
   const nessunaGiocabile = v.mioTurno && !sfidaIo && !v.sceltaColore && giocabili.size === 0;
 
   return (
@@ -191,6 +216,38 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
             {v.colore ? <ColoreInCorso t={t} colore={v.colore} /> : <span className="muted">{t("aspettoColore", { nome: nome(turno) })}</span>}
             <span className="muted">{t("verso", { verso: v.verso === 1 ? t("versoOrario") : t("versoAntiorario") })}</span>
           </div>
+        </div>
+      )}
+
+      {inRound && v.taglio && secondiTaglio > 0 && (
+        <div className="ul-taglio">
+          <div
+            className="ul-taglio-barra"
+            role="progressbar"
+            aria-label={t("tagliaBarra")}
+            aria-valuemin={0}
+            aria-valuemax={TAGLIO_MS / 1000}
+            aria-valuenow={secondiTaglio}
+            aria-valuetext={t("tagliaFinestra", { n: secondiTaglio })}
+          >
+            <span key={`${v.taglio.posto}:${v.taglio.carta.id}`} />
+          </div>
+          {tagliabili.length > 0 ? (
+            <>
+              <p className="muted" id="ul-taglia-aiuto">
+                {t("tagliaAiuto")} {t("tagliaFinestra", { n: secondiTaglio })}
+              </p>
+              <div className="ul-azioni">
+                {tagliabili.map((x) => (
+                  <button key={x.id} className="btn primario" aria-describedby="ul-taglia-aiuto" onClick={() => c.azione({ tipo: "taglia", carta: x.id })}>
+                    <Scissors size={18} aria-hidden="true" /> {t("tagliaBtn", { carta: nomeCarta(t, x) })}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="muted">{t("tagliaAltri", { carta: nomeCarta(t, v.taglio.carta), nome: nome(v.taglio.posto), n: secondiTaglio })}</p>
+          )}
         </div>
       )}
 
@@ -341,7 +398,17 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
               const spenta = gruppo
                 ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
                 : !v.mioTurno || !giocabili.has(carta.id);
-              return <Carta key={carta.id} carta={carta} t={t} onClick={() => tocca(carta)} spenta={spenta} scelta={gruppo ? dentro : undefined} />;
+              return (
+                <Carta
+                  key={carta.id}
+                  carta={carta}
+                  t={t}
+                  onClick={() => tocca(carta)}
+                  spenta={spenta}
+                  scelta={gruppo ? dentro : undefined}
+                  tagliabile={!gruppo && tagliabili.includes(carta)}
+                />
+              );
             })}
           </div>
         </>

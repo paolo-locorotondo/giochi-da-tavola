@@ -143,7 +143,7 @@ describe("traduci: permessi", () => {
   it("«Simula mossa col bot» solo per l'organizzatore", () => {
     const s = avviata();
     expect(() => traduci(s, 2, false, { tipo: "mossaBot", posto: s.partita!.turno })).toThrow("soloHost");
-    expect(traduci(s, 1, true, { tipo: "mossaBot", posto: 2 })).toEqual({ tipo: "bot", posto: 2 });
+    expect(traduci(s, 1, true, { tipo: "mossaBot", posto: 2 })).toEqual({ tipo: "bot", posto: 2, ora: 0 });
   });
   it("il giocatore non può dichiararsi un altro posto: chi è il suo", () => {
     const s = avviata();
@@ -487,5 +487,70 @@ describe("Più carte uguali online", () => {
       const s = giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true, piuUguali: true, scambioRotazione: true } }));
       expect(s.fase).toBe("fine");
     }
+  });
+});
+
+describe("Taglio online", () => {
+  const cfg = { varianti: { taglio: true } };
+  /** Una giocata del bot con `ora` finta: apre la finestra. Ritorna lo stato e chi può tagliare (se qualcuno). */
+  function conFinestra(seme0 = 0): { s: StatoOnline; posto: number; carta: Carta } | null {
+    for (let seme = seme0; seme < seme0 + 4000; seme++) {
+      let s = avviata(seme, NOMI, cfg);
+      for (let i = 0; i < 300 && s.fase === "partita" && !s.partita!.fine; i++) {
+        const p = s.partita!;
+        if (p.apertaTaglio) {
+          const posto = [1, 2, 3].find((x) => x !== p.apertaTaglio!.posto && x !== p.turno && p.mani[x - 1]!.some((c) => c.id !== undefined && identicaA(c, p.apertaTaglio!.carta)));
+          if (posto !== undefined) return { s, posto, carta: p.mani[posto - 1]!.find((c) => identicaA(c, p.apertaTaglio!.carta))! };
+        }
+        s = applica(s, { tipo: "bot", posto: p.ultime.find((u) => !u.dichiarata)?.posto ?? p.turno, ora: 1 } as never);
+      }
+    }
+    return null;
+  }
+  const identicaA = (a: Carta, b: Carta) => a.tipo !== "numero" ? a.tipo === b.tipo && "colore" in a && "colore" in b && a.colore === b.colore : b.tipo === "numero" && a.tipo === "numero" && a.colore === b.colore && a.valore === b.valore;
+
+  it("la giocata apre la finestra con l'ora del server; `vistaPer` la mostra a tutti", () => {
+    const r = conFinestra();
+    expect(r).not.toBeNull();
+    const { s, posto } = r!;
+    const ap = s.partita!.apertaTaglio!;
+    // Il bot ha giocato con ora = 1 (orologio finto): la finestra dura 3 s da lì.
+    expect(ap.fino).toBe(1 + 3000);
+    const vista = vistaPer(s, posto, false);
+    expect(vista.taglio).toEqual({ posto: ap.posto, carta: ap.carta });
+    expect(vista.puoTagliare.length).toBeGreaterThan(0);
+    expect(vistaPer(s, s.partita!.turno, false).puoTagliare).toEqual([]);
+  });
+  it("solo chi ha un posto e la carta può tagliare; chi guarda no; «Simula mossa» non taglia", () => {
+    const r = conFinestra();
+    const { s, posto, carta } = r!;
+    expect(traduci(s, posto, false, { tipo: "taglia", carta: carta.id })).toEqual({ tipo: "taglia", chi: posto, carta: carta.id, ora: 0 });
+    expect(codice(() => traduci(s, null, false, { tipo: "taglia", carta: carta.id }))).toBe("nonPartecipa");
+    expect(traduci(s, 1, true, { tipo: "mossaBot", posto: s.partita!.turno })).toMatchObject({ tipo: "bot" });
+  });
+  it("una gara: il primo taglio arriva, il secondo riceve «tagliTardi»", () => {
+    const r = conFinestra(100);
+    const { s, posto, carta } = r!;
+    const altro = [1, 2, 3].find((x) => x !== posto && x !== s.partita!.apertaTaglio!.posto && x !== s.partita!.turno && s.partita!.mani[x - 1]!.some((c) => identicaA(c, carta)));
+    const primo = applica(s, { tipo: "taglia", chi: posto, carta: carta.id, ora: s.partita!.apertaTaglio!.fino - 100 });
+    expect(primo.partita!.eventi.some((e) => e.tipo === "taglio" && e.posto === posto)).toBe(true);
+    expect(primo.partita!.apertaTaglio).toBeNull();
+    // Il secondo arriva a finestra chiusa (anche se ha la stessa carta): messaggio neutro.
+    const c2 = altro !== undefined ? s.partita!.mani[altro - 1]!.find((c) => identicaA(c, carta))! : carta;
+    expect(codice(() => applica(primo, { tipo: "taglia", chi: altro ?? posto, carta: c2.id, ora: 0 }))).toBe("tagliTardi");
+    expect(codice(() => applica(s, { tipo: "taglia", chi: posto, carta: carta.id, ora: s.partita!.apertaTaglio!.fino + 5000 }))).toBe("tagliTardi");
+  });
+  it("i telefoni non vedono le mani altrui dopo un taglio", () => {
+    const r = conFinestra(200);
+    const { s, posto, carta } = r!;
+    const dopo = applica(s, { tipo: "taglia", chi: posto, carta: carta.id, ora: s.partita!.apertaTaglio!.fino - 1 });
+    for (const q of [1, 2, 3]) {
+      const v = vistaPer(dopo, q, false);
+      expect(v.taglio).toBeNull();
+      expect(v.mano.map((c) => c.id)).toEqual(dopo.partita!.mani[q - 1]!.map((c) => c.id));
+    }
+  });
+  it("partite intere con il taglio attivo finiscono", () => {
+    for (let seme = 0; seme < 8; seme++) expect(giocaConBot(avviata(seme, NOMI, cfg)).fase).toBe("fine");
   });
 });

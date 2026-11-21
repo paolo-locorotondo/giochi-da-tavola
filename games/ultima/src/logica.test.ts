@@ -7,6 +7,11 @@ import {
   beccato,
   gioca,
   giocabili,
+  carteTagliabili,
+  identica,
+  taglia,
+  TAGLIO_MS,
+  TAGLIO_TOLLERANZA_MS,
   gruppiPossibili,
   pescaCumulo,
   VARIANTI_BASE,
@@ -55,6 +60,7 @@ function partita(mani: Carta[][], opz: Partial<Partita> = {}): Partita {
     ultime: [],
     varianti: VARIANTI_BASE,
     cumulo: null,
+    apertaTaglio: null,
     sfida: null,
     fine: null,
     eventi: [],
@@ -747,5 +753,110 @@ describe("Più carte uguali", () => {
     const p = conV([[r5, b5, b9, g9, sim("inverti", "rosso"), sim("inverti", "blu")], [num("verde", 2)]]);
     expect(gruppiPossibili(p, 1).map((g) => g.map((c) => c.id))).toEqual([[r5.id, b5.id]]);
     expect(gruppiPossibili(partita(p.mani), 1)).toEqual([]);
+  });
+});
+
+describe("Taglio", () => {
+  const V = { ...VARIANTI_BASE, taglio: true };
+  const conV = (mani: Carta[][], opz: Partial<Partita> = {}) => partita(mani, { varianti: V, ...opz });
+  const ORA = 10_000;
+  /** Il posto 1 cala un 5 rosso alle ORA: la finestra di taglio si apre. */
+  const aperta = (mani: Carta[][], opz: Partial<Partita> = {}) => {
+    const r5 = num("rosso", 5);
+    const p = gioca(conV([[r5, ...mani[0]!], ...mani.slice(1)], opz), mani.length, 1, r5.id, undefined, rng(), false, { ora: ORA });
+    return { p, r5 };
+  };
+
+  it("una giocata apre la finestra di 3 s; con la variante spenta o senza ora no", () => {
+    const { p, r5 } = aperta([[num("blu", 1)], [num("verde", 2)], [num("verde", 3)]]);
+    expect(p.apertaTaglio).toEqual({ posto: 1, carta: r5, fino: ORA + TAGLIO_MS });
+    const r = num("rosso", 5);
+    expect(gioca(partita([[r, num("blu", 1)], [num("verde", 2)]]), 2, 1, r.id, undefined, rng(), false, { ora: ORA }).apertaTaglio).toBeNull();
+    const r2 = num("rosso", 5);
+    expect(gioca(conV([[r2, num("blu", 1)], [num("verde", 2)]]), 2, 1, r2.id, undefined, rng()).apertaTaglio).toBeNull();
+  });
+  it("chi ha la carta identica taglia: il turno passa a lui e poi prosegue dal suo posto", () => {
+    const mia = num("rosso", 5);
+    const { p } = aperta([[num("blu", 1)], [num("verde", 2)], [mia, num("verde", 3), num("verde", 4)], [num("verde", 6)]]);
+    expect(p.turno).toBe(2);
+    expect(carteTagliabili(p, 3)).toEqual([mia]);
+    expect(carteTagliabili(p, 2)).toEqual([]); // di turno
+    const t = taglia(p, 4, 3, mia.id, ORA + 1000, rng());
+    expect(t.mani[2]).toHaveLength(2);
+    expect(t.turno).toBe(4);
+    expect(t.apertaTaglio).toBeNull();
+    expect(t.eventi.some((e) => e.tipo === "taglio" && e.posto === 3)).toBe(true);
+    // Il giocatore che era di turno resta con la sua mano.
+    expect(t.mani[1]).toEqual(p.mani[1]);
+  });
+  it("la carta deve essere identica: stesso colore e stesso valore o simbolo", () => {
+    const b5 = num("blu", 5);
+    const r6 = num("rosso", 6);
+    const { p } = aperta([[num("blu", 1)], [num("verde", 2)], [b5, r6, num("verde", 3)]]);
+    expect(codice(() => taglia(p, 3, 3, b5.id, ORA, rng()))).toBe("nonTagliabile");
+    expect(codice(() => taglia(p, 3, 3, r6.id, ORA, rng()))).toBe("nonTagliabile");
+    expect(identica(sim("salta", "rosso"), sim("salta", "rosso"))).toBe(true);
+    expect(identica(sim("salta", "rosso"), sim("salta", "blu"))).toBe(false);
+    expect(identica(jolly(), jolly())).toBe(false);
+  });
+  it("dopo la scadenza (più la tolleranza) è tardi; il secondo taglio è tardi", () => {
+    const a = num("rosso", 5);
+    const b = num("rosso", 5);
+    const { p } = aperta([[num("blu", 1)], [num("verde", 2)], [a, num("verde", 3)], [b, num("verde", 4)]]);
+    expect(codice(() => taglia(p, 4, 3, a.id, ORA + TAGLIO_MS + TAGLIO_TOLLERANZA_MS + 1, rng()))).toBe("tagliTardi");
+    expect(codice(() => taglia(p, 4, 3, a.id, ORA + TAGLIO_MS + TAGLIO_TOLLERANZA_MS, rng()))).toBeNull();
+    const primo = taglia(p, 4, 3, a.id, ORA + 500, rng());
+    expect(codice(() => taglia(primo, 4, 4, b.id, ORA + 600, rng()))).toBe("tagliTardi");
+  });
+  it("chi ha calato e chi è di turno non tagliano; non si taglia con la variante spenta", () => {
+    const a = num("rosso", 5);
+    const b = num("rosso", 5);
+    const { p } = aperta([[a, num("blu", 1)], [b, num("verde", 2)], [num("verde", 3)]]);
+    expect(codice(() => taglia(p, 3, 1, a.id, ORA, rng()))).toBe("nonTagliabile");
+    expect(codice(() => taglia(p, 3, 2, b.id, ORA, rng()))).toBe("nonTagliabile");
+    expect(codice(() => taglia({ ...p, varianti: VARIANTI_BASE }, 3, 3, a.id, ORA, rng()))).toBe("variantaSpenta");
+  });
+  it("una qualsiasi azione del turno chiude la finestra", () => {
+    const { p } = aperta([[num("blu", 1)], [num("rosso", 2), num("verde", 2)], [num("verde", 3)]]);
+    expect(pesca(p, 2, rng()).apertaTaglio).toBeNull();
+    const rossa = p.mani[1]![0]!;
+    expect(gioca(p, 3, 2, rossa.id, undefined, rng()).apertaTaglio?.posto).toBeUndefined();
+  });
+  it("il taglio ha l'effetto della carta: Salta salta il successivo del tagliatore", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "rosso");
+    const p = gioca(conV([[s1, num("blu", 1)], [num("verde", 2)], [s2, num("verde", 3)], [num("verde", 4)]]), 4, 1, s1.id, undefined, rng(), false, { ora: ORA });
+    expect(p.turno).toBe(3);
+    // Il 3 è di turno: non può tagliare. Con 5 giocatori taglia il 4.
+    const s3 = sim("salta", "rosso");
+    const q = gioca(conV([[s3, num("blu", 1)], [num("verde", 2)], [num("verde", 3)], [s2, num("verde", 4)], [num("verde", 5)]]), 5, 1, s3.id, undefined, rng(), false, { ora: ORA });
+    const t = taglia(q, 5, 4, s2.id, ORA, rng());
+    expect(t.turno).toBe(1);
+  });
+  it("non si taglia sopra un cumulo, un +4 o un jolly", () => {
+    const due = sim("piu2", "rosso");
+    const p = gioca(conV([[due, num("blu", 1)], [num("verde", 2)], [sim("piu2", "rosso"), num("verde", 3)]], { varianti: { ...V, sommaPiu2: true } }), 3, 1, due.id, undefined, rng(), false, { ora: ORA });
+    expect(p.apertaTaglio).toBeNull();
+    const j = jolly();
+    expect(gioca(conV([[j, num("blu", 1)], [jolly(), num("verde", 2)], [num("verde", 3)]]), 3, 1, j.id, "blu", rng(), false, { ora: ORA }).apertaTaglio).toBeNull();
+  });
+  it("un taglio che svuota la mano vince il round", () => {
+    const mia = num("rosso", 5);
+    const { p } = aperta([[num("blu", 1)], [num("verde", 2)], [mia]]);
+    const t = taglia(p, 3, 3, mia.id, ORA, rng());
+    expect(t.fine?.vincitore).toBe(3);
+  });
+  it("un taglio altrui non chiude la finestra «Ultima!» di chi ha una carta sola", () => {
+    const mia = num("rosso", 5);
+    // Il posto 1 cala la penultima carta senza dire «Ultima!».
+    const { p } = aperta([[num("blu", 1)], [num("verde", 2), num("verde", 7)], [mia, num("verde", 3)]]);
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: false }]);
+    const t = taglia(p, 3, 3, mia.id, ORA, rng());
+    // Anche il tagliatore resta con una carta: entrambe le finestre aperte.
+    expect(t.ultime).toEqual([
+      { posto: 1, dichiarata: false },
+      { posto: 3, dichiarata: false },
+    ]);
+    expect(beccato(t, 2, 1, rng()).mani[0]).toHaveLength(3);
   });
 });

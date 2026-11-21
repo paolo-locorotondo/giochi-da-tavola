@@ -1,7 +1,7 @@
 import { creaRng } from "@gdt/engine";
 import { describe, expect, it } from "vitest";
-import { LIVELLI, PROB_ULTIMA, carteGiocabili, coloreMigliore, eseguiMossa, mossaBot, mossaBotLivello } from "./bot";
-import { VARIANTI_BASE, nuovoRound, pesca, type Carta, type Colore, type Partita, type Varianti } from "./logica";
+import { LIVELLI, PROB_TAGLIO, PROB_ULTIMA, carteGiocabili, mossaTaglioBot,  coloreMigliore, eseguiMossa, mossaBot, mossaBotLivello } from "./bot";
+import { VARIANTI_BASE, gioca, nuovoRound, pesca, taglia, type Carta, type Colore, type Partita, type Varianti } from "./logica";
 
 let prossimoId = 5000;
 const num = (colore: Colore, valore: number): Carta => ({ id: prossimoId++, tipo: "numero", colore, valore });
@@ -22,6 +22,7 @@ function partita(mani: Carta[][], opz: Partial<Partita> = {}): Partita {
     ultime: [],
     varianti: VARIANTI_BASE,
     cumulo: null,
+    apertaTaglio: null,
     sfida: null,
     fine: null,
     eventi: [],
@@ -222,6 +223,8 @@ describe("bot con la somma dei +2", () => {
   });
 });
 
+const ORA = 50_000;
+
 /** Gioca partite intere di bot a ogni livello con una combinazione di varianti. */
 function partiteConVarianti(varianti: Varianti, tot: number) {
   for (const livello of LIVELLI) {
@@ -230,11 +233,25 @@ function partiteConVarianti(varianti: Varianti, tot: number) {
         const rng = creaRng(seme + 100);
         let p = nuovoRound(n, rng, [], 1, varianti);
         let mosse = 0;
+        let tagli = 0;
         while (!p.fine) {
           if (++mosse > 8000) throw new Error(`partita infinita (n=${n}, seme=${seme}, ${livello})`);
           const dichiara = p.ultime.find((u) => !u.dichiarata)?.posto ?? null;
           const chi = dichiara ?? p.turno;
-          p = eseguiMossa(p, n, chi, mossaBotLivello(p, n, chi, livello, rng), rng, rng.next() < PROB_ULTIMA[livello]);
+          const prima = p;
+          p = eseguiMossa(p, n, chi, mossaBotLivello(p, n, chi, livello, rng), rng, rng.next() < PROB_ULTIMA[livello], ORA);
+          // Subito dopo una giocata i bot con la carta identica tagliano (il posto più basso vince la gara).
+          if (varianti.taglio && !p.fine && p.apertaTaglio) {
+            for (let posto = 1; posto <= n; posto++) {
+              const id = mossaTaglioBot(p, posto, livello, rng);
+              if (id !== null) {
+                p = taglia(p, n, posto, id, ORA + 500, rng);
+                tagli++;
+                break;
+              }
+            }
+          }
+          void prima;
         }
         const tutte = [...p.mazzo, ...p.scarto, ...p.mani.flat()];
         expect(tutte).toHaveLength(varianti.scambioRotazione ? 112 : 108);
@@ -340,6 +357,61 @@ describe("bot con Più carte uguali", () => {
         const p = partita([[num("rosso", 5), num("blu", 5), num("verde", 5), sim("salta", "rosso"), sim("salta", "blu"), num("giallo", 1)], altri(3)], { varianti: V });
         const m = mossaBotLivello(p, 2, 1, livello, creaRng(s));
         expect(() => eseguiMossa(p, 2, 1, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("bot e taglio", () => {
+  const V = { ...VARIANTI_BASE, taglio: true };
+  /** Il posto 1 cala un 5 rosso: il 3 ha un 5 rosso identico. */
+  function situazione(opz: Partial<Partita> = {}) {
+    const r5 = num("rosso", 5);
+    const mia = num("rosso", 5);
+    const p = partita([[r5, num("blu", 1)], [num("verde", 2)], [mia, num("verde", 3)]], { varianti: V, ...opz });
+    return { p: gioca(p, 3, 1, r5.id, undefined, creaRng(1), false, { ora: ORA }), mia };
+  }
+  it("taglia con la probabilità del livello (facile 50 %, medio 85 %, difficile sempre)", () => {
+    const { p, mia } = situazione();
+    for (const livello of LIVELLI) {
+      let si = 0;
+      const prove = 2000;
+      for (let s = 0; s < prove; s++) if (mossaTaglioBot(p, 3, livello, creaRng(s)) === mia.id) si++;
+      expect(Math.abs(si / prove - PROB_TAGLIO[livello])).toBeLessThan(0.05);
+    }
+  });
+  it("non taglia senza carta identica, né il giocatore di turno, né chi ha calato", () => {
+    const { p } = situazione();
+    expect(mossaTaglioBot(p, 2, "difficile", creaRng(1))).toBeNull();
+    expect(mossaTaglioBot(p, 1, "difficile", creaRng(1))).toBeNull();
+  });
+  it("non taglia sopra un cumulo o una sfida", () => {
+    const { p } = situazione();
+    expect(mossaTaglioBot({ ...p, cumulo: { posto: 2, quante: 2, da: 1 } }, 3, "difficile", creaRng(1))).toBeNull();
+    expect(mossaTaglioBot({ ...p, sfida: { contro: 1, sospetto: false, illegale: false } }, 3, "difficile", creaRng(1))).toBeNull();
+  });
+  it("a ogni livello i tagli dei bot sono leciti e le partite finiscono", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, taglio: true }, 12);
+  });
+});
+
+describe("tutte le combinazioni di varianti", () => {
+  it("con tutte e quattro insieme le partite finiscono e non perdono carte", () => {
+    partiteConVarianti({ sommaPiu2: true, piuUguali: true, taglio: true, scambioRotazione: true }, 8);
+  });
+  it("tutte le 16 combinazioni giocano partite complete con 3 giocatori", () => {
+    for (let m = 0; m < 16; m++) {
+      const v = { sommaPiu2: !!(m & 1), piuUguali: !!(m & 2), taglio: !!(m & 4), scambioRotazione: !!(m & 8) };
+      for (let seme = 0; seme < 6; seme++) {
+        const rng = creaRng(seme + 700);
+        let p = nuovoRound(3, rng, [], 1, v);
+        let k = 0;
+        while (!p.fine) {
+          if (++k > 8000) throw new Error(`infinita ${JSON.stringify(v)} ${seme}`);
+          const chi = p.ultime.find((u) => !u.dichiarata)?.posto ?? p.turno;
+          p = eseguiMossa(p, 3, chi, mossaBotLivello(p, 3, chi, "medio", rng), rng, true, ORA);
+        }
+        expect([...p.mazzo, ...p.scarto, ...p.mani.flat()]).toHaveLength(v.scambioRotazione ? 112 : 108);
       }
     }
   });

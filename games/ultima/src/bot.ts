@@ -4,6 +4,7 @@ import {
   accetta,
   avanza,
   beccato,
+  carteTagliabili,
   eColorata,
   eJolly,
   giocabili,
@@ -189,10 +190,10 @@ function mossaGruppo(p: Partita, posto: number, gruppo: Carta[], mano: readonly 
 }
 
 /** Esegue sulla logica la mossa scelta dal bot per `posto`. `dichiara`: se cala la penultima carta dice «Ultima!» subito. */
-export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng, dichiara = true): Partita {
+export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng, dichiara = true, ora?: number): Partita {
   switch (m.tipo) {
     case "gioca":
-      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara, { scambiaCon: m.scambiaCon, insieme: m.insieme });
+      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara, { scambiaCon: m.scambiaCon, insieme: m.insieme, ora });
     case "pesca":
       return pesca(p, posto, rng);
     case "passa":
@@ -210,6 +211,20 @@ export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, r
     case "beccato":
       return beccato(p, posto, m.bersaglio, rng);
   }
+}
+
+/** Probabilità che il bot tagli quando ha la carta identica (come `PROB_ULTIMA`). */
+export const PROB_TAGLIO: Record<Livello, number> = { facile: 0.5, medio: 0.85, difficile: 1 };
+
+/**
+ * Taglio del bot `posto`: l'id della carta identica con cui taglia, o null (finestra chiusa, nessuna carta,
+ * oppure il bot «non se ne accorge», con la probabilità del livello). Mai sopra un cumulo o una sfida.
+ */
+export function mossaTaglioBot(p: Partita, posto: number, livello: Livello, rng: Rng): number | null {
+  if (p.cumulo || p.sfida) return null;
+  const carte = carteTagliabili(p, posto);
+  if (carte.length === 0) return null;
+  return rng.next() < PROB_TAGLIO[livello] ? carte[0]!.id : null;
 }
 
 /** Come gioca un bot: come in Tris, facile a caso, medio sbaglia spesso, difficile gioca sempre la mossa migliore. */

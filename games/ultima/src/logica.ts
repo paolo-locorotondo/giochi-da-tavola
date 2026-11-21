@@ -37,6 +37,9 @@ export interface Varianti {
   /** Nel mazzo ci sono Scambio e Rotazione (due copie ciascuna). */
   scambioRotazione: boolean;
 }
+/** Durata della finestra di taglio e tolleranza di rete lato server, in millisecondi. */
+export const TAGLIO_MS = 3000;
+export const TAGLIO_TOLLERANZA_MS = 1000;
 /** Carte massime calate in una volta con «Più carte uguali» (limite di sicurezza sulla rete). */
 export const MAX_GRUPPO = 10;
 export const NOMI_VARIANTI = ["sommaPiu2", "piuUguali", "taglio", "scambioRotazione"] as const;
@@ -67,6 +70,7 @@ export type Evento =
   | { tipo: "ultima"; posto: number }
   | { tipo: "beccato"; posto: number; chi: number }
   | { tipo: "bot"; posto: number }
+  | { tipo: "taglio"; posto: number; carta: Carta }
   | { tipo: "scambio"; posto: number; con: number }
   | { tipo: "rotazione" }
   | { tipo: "cumulo"; posto: number; quante: number }
@@ -101,6 +105,8 @@ export interface Partita {
   varianti: Varianti;
   /** Somma dei +2: chi è "posto" risponde con un +2 o pesca "quante" carte; "da" ha giocato l'ultimo +2 (null: la prima carta). */
   cumulo: { posto: number; quante: number; da: number | null } | null;
+  /** Taglio: la carta appena calata da `posto`, tagliabile fino a `fino` (ms, l'orologio lo dà chi chiama). */
+  apertaTaglio: { posto: number; carta: Carta; fino: number } | null;
   /**
    * Un +4 da subire. `sospetto` è pubblico (chi l'ha giocato aveva appena pescato);
    * `illegale` resta segreto e si scopre con la sfida.
@@ -175,6 +181,7 @@ function clona(p: Partita): Partita {
     mani: p.mani.map((m) => [...m]),
     ultime: p.ultime.map((u) => ({ ...u })),
     cumulo: p.cumulo ? { ...p.cumulo } : null,
+    apertaTaglio: p.apertaTaglio ? { ...p.apertaTaglio } : null,
     sfida: p.sfida ? { ...p.sfida } : null,
     eventi: [...p.eventi],
   };
@@ -202,6 +209,19 @@ export function giocabili(p: Partita, posto: number): Carta[] {
   const sopra = scoperta(p);
   // Con un cumulo aperto si risponde solo con un +2, di qualunque colore.
   return p.mani[posto - 1]!.filter((c) => (!p.haPescato || p.pescata === c.id) && (p.cumulo ? c.tipo === "piu2" : puoGiocare(c, p.colore, sopra)));
+}
+
+/** Due carte sono identiche per il taglio: stesso colore e stesso numero o simbolo. I jolly non lo sono mai. */
+export function identica(a: Carta, b: Carta): boolean {
+  if (!eColorata(a) || !eColorata(b) || a.colore !== b.colore || a.tipo !== b.tipo) return false;
+  return a.tipo !== "numero" || (b.tipo === "numero" && a.valore === b.valore);
+}
+
+/** Le carte con cui `posto` può tagliare adesso (finestra aperta; non chi ha calato né chi è di turno). */
+export function carteTagliabili(p: Partita, posto: number): Carta[] {
+  const a = p.apertaTaglio;
+  if (!p.varianti.taglio || !a || p.fine || posto === a.posto || posto === p.turno) return [];
+  return p.mani[posto - 1]!.filter((c) => identica(c, a.carta));
 }
 
 /** Chiave del gruppo di una carta: stesso numero, oppure Salta, oppure +2. Null = non si cala in gruppo. */
@@ -276,6 +296,7 @@ export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [],
     ultime: [],
     varianti: { ...varianti },
     cumulo: null,
+    apertaTaglio: null,
     sfida: null,
     fine: null,
     eventi: [...eventiPrecedenti, { tipo: "nuovoRound" } as Evento].slice(-MAX_EVENTI),
@@ -328,8 +349,9 @@ export function gioca(
   /**
    * `scambiaCon`: il posto con cui si scambia la mano (solo per la carta Scambio).
    * `insieme`: con «Più carte uguali», le altre carte dello stesso valore calate sotto la cima (`id`).
+   * `ora`: l'orologio di chi chiama (apre la finestra di taglio); `daTaglio`: la giocata è un taglio, che non ne apre un'altra.
    */
-  opzioni: { scambiaCon?: unknown; insieme?: unknown } = {},
+  opzioni: { scambiaCon?: unknown; insieme?: unknown; ora?: number; daTaglio?: boolean } = {},
 ): Partita {
   const p = clona(p0);
   turnoLibero(p, chi);
@@ -340,6 +362,7 @@ export function gioca(
   const carta = mano[indice]!;
   if (p.cumulo && carta.tipo !== "piu2") throw new ErroreUltima("rispondiCumulo");
   const sotto = leggiGruppo(p, mano, carta, opzioni.insieme);
+  p.apertaTaglio = null;
 
   let coloreScelto: Colore | null = null;
   if (eJolly(carta)) {
@@ -425,7 +448,37 @@ export function gioca(
     pescaCarte(p, vittima, 2 * k, rng);
     p.turno = avanza(vittima, p.verso, n);
   }
+  // Finestra di taglio: solo per una carta colorata, e non sopra un cumulo, una sfida o un colore da scegliere.
+  if (p.varianti.taglio && typeof opzioni.ora === "number" && !opzioni.daTaglio && eColorata(carta) && !p.cumulo && !p.sfida) {
+    p.apertaTaglio = { posto: chi, carta, fino: opzioni.ora + TAGLIO_MS };
+  }
   return p;
+}
+
+/**
+ * Taglio: chi non è di turno e ha una carta identica alla appena calata la gioca subito, entro la finestra.
+ * Vale come se la giocasse lui: il turno passa a lui e poi prosegue dal suo posto. Non apre un'altra finestra
+ * e non chiude quella di «Ultima!» di chi ha una carta sola.
+ */
+export function taglia(p0: Partita, n: number, chi: number, id: number, ora: number, rng: Rng, dichiaraSubito = false): Partita {
+  const p = clona(p0);
+  if (p.fine) throw new ErroreUltima("roundFinito");
+  if (!p.varianti.taglio) throw new ErroreUltima("variantaSpenta");
+  const a = p.apertaTaglio;
+  if (!a || typeof ora !== "number" || !(ora <= a.fino + TAGLIO_TOLLERANZA_MS)) throw new ErroreUltima("tagliTardi");
+  if (chi === a.posto || chi === p.turno) throw new ErroreUltima("nonTagliabile");
+  const carta = p.mani[chi - 1]!.find((c) => c.id === id);
+  if (!carta || !identica(carta, a.carta)) throw new ErroreUltima("nonTagliabile");
+  const precedenti = p.ultime.filter((u) => u.posto !== chi);
+  p.apertaTaglio = null;
+  p.turno = chi;
+  p.haPescato = false;
+  p.pescata = null;
+  registra(p, { tipo: "taglio", posto: chi, carta });
+  const dopo = gioca(p, n, chi, id, undefined, rng, dichiaraSubito, { daTaglio: true });
+  // Le finestre di prima restano (il taglio non salva chi ha dimenticato «Ultima!»), salvo per chi ha pescato per l'effetto.
+  if (!dopo.fine) dopo.ultime = [...precedenti.filter((u) => dopo.mani[u.posto - 1]!.length === 1), ...dopo.ultime];
+  return dopo;
 }
 
 /** Le carte calate insieme alla cima (`insieme`), controllate: variante attiva, in mano, stesso valore, senza doppioni. */
@@ -456,6 +509,7 @@ export function pesca(p0: Partita, chi: number, rng: Rng): Partita {
   turnoSenzaCumulo(p, chi);
   if (p.haPescato) throw new ErroreUltima("giaPescato");
   p.ultime = [];
+  p.apertaTaglio = null;
   const mano = p.mani[chi - 1]!;
   const prima = mano.length;
   pescaCarte(p, chi, 1, rng);
@@ -472,6 +526,7 @@ export function passa(p0: Partita, n: number, chi: number): Partita {
   turnoSenzaCumulo(p, chi);
   if (!p.haPescato) throw new ErroreUltima("devePescare");
   p.ultime = [];
+  p.apertaTaglio = null;
   p.haPescato = false;
   p.pescata = null;
   p.turno = avanza(chi, p.verso, n);
@@ -501,6 +556,7 @@ export function sfida(p0: Partita, n: number, chi: number, rng: Rng): Partita {
   const { contro, illegale } = p.sfida;
   p.sfida = null;
   p.ultime = [];
+  p.apertaTaglio = null;
   p.haPescato = false;
   p.pescata = null;
   if (illegale) {
@@ -520,6 +576,7 @@ export function accetta(p0: Partita, n: number, chi: number, rng: Rng): Partita 
   if (p.turno !== chi) throw new ErroreUltima("nonTocca");
   p.sfida = null;
   p.ultime = [];
+  p.apertaTaglio = null;
   p.haPescato = false;
   p.pescata = null;
   pescaCarte(p, chi, 4, rng);
@@ -536,6 +593,7 @@ export function pescaCumulo(p0: Partita, n: number, chi: number, rng: Rng): Part
   if (p.turno !== chi || p.cumulo.posto !== chi) throw new ErroreUltima("nonTocca");
   const { quante } = p.cumulo;
   p.cumulo = null;
+  p.apertaTaglio = null;
   p.ultime = [];
   p.haPescato = false;
   p.pescata = null;

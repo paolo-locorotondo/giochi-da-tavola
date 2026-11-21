@@ -11,8 +11,11 @@ import {
   VELOCITA,
   VELOCITA_PREDEFINITA,
   agisci,
+  botDelTaglio,
   botDiTurno,
   muoviBot,
+  ritardoTaglioBot,
+  tagliaBot,
   nuovaPartitaLocale,
   pausaBot,
   vistaLocale,
@@ -238,6 +241,20 @@ function Partita({
     }, pausaBot(partita, velocita));
     return () => clearTimeout(id);
     // Si riparte a ogni cambio di stato (nuova mossa) o di velocità.
+  }, [partita.stato, velocita]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Taglio dei bot: se un bot ha la carta identica taglia dopo una pausa (mai prima di 1 s: il mio tocco ha il vantaggio).
+  useEffect(() => {
+    const taglio = botDelTaglio(partita);
+    if (!taglio) return;
+    const id = setTimeout(() => {
+      try {
+        onPartita(tagliaBot(corrente.current, taglio));
+      } catch {
+        /* finestra già chiusa: nessun taglio */
+      }
+    }, ritardoTaglioBot(velocita));
+    return () => clearTimeout(id);
   }, [partita.stato, velocita]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Gli errori transitori spariscono dopo qualche secondo.

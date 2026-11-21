@@ -7,7 +7,10 @@ import {
   RITARDO_BECCATO_MS,
   VELOCITA,
   agisci,
+  botDelTaglio,
   botDiTurno,
+  ritardoTaglioBot,
+  tagliaBot,
   muoviBot,
   nuovaPartitaLocale,
   pausaBot,
@@ -220,5 +223,58 @@ describe("varianti contro i bot", () => {
       }
     }
     throw new Error("nessun cumulo per me");
+  });
+});
+
+describe("taglio contro i bot", () => {
+  it("un bot con la carta identica taglia dopo la mia giocata, e le partite finiscono", () => {
+    let tagliati = 0;
+    for (let s = 0; s < 40; s++) {
+      let p = partita("difficile", ["Io", "Bot 1", "Bot 2"], { varianti: { taglio: true } }, s);
+      for (let i = 0; i < 1500 && p.stato.fase === "partita"; i++) {
+        const t = botDelTaglio(p);
+        if (t) {
+          p = tagliaBot(p, t, Date.now());
+          tagliati++;
+          continue;
+        }
+        if (botDiTurno(p) !== null) {
+          p = muoviBot(p, Date.now());
+          continue;
+        }
+        const st = p.stato.partita!;
+        const m = mossaBot(st, 3, IO);
+        p = agisci(p, m.tipo === "beccato" ? { tipo: "beccato", posto: m.bersaglio } : { ...m }, seme);
+      }
+      expect(p.stato.fase).toBe("fine");
+    }
+    expect(tagliati).toBeGreaterThan(0);
+  });
+  it("il ritardo del taglio dei bot sta fra 1 e 2,5 secondi a ogni velocità", () => {
+    for (const v of ["lenta", "normale", "veloce"] as const) {
+      expect(ritardoTaglioBot(v)).toBeGreaterThanOrEqual(1000);
+      expect(ritardoTaglioBot(v)).toBeLessThanOrEqual(2500);
+    }
+  });
+  it("il mio taglio passa dalla stessa azione e fuori finestra è «tagliTardi»", () => {
+    for (let s = 0; s < 300; s++) {
+      let p = partita("difficile", ["Io", "Bot 1", "Bot 2"], { varianti: { taglio: true } }, s);
+      for (let i = 0; i < 600 && p.stato.fase === "partita"; i++) {
+        const st = p.stato.partita!;
+        const v = vistaLocale(p);
+        if (v.puoTagliare.length > 0) {
+          expect(() => agisci(p, { tipo: "taglia", carta: v.puoTagliare[0] }, seme)).not.toThrow();
+          const dopo = agisci(p, { tipo: "taglia", carta: v.puoTagliare[0] }, seme);
+          expect(dopo.stato.partita!.eventi.some((e) => e.tipo === "taglio" && e.posto === IO)).toBe(true);
+          return;
+        }
+        if (botDiTurno(p) !== null) p = muoviBot(p, Date.now());
+        else {
+          const m = mossaBot(st, 3, IO);
+          p = agisci(p, m.tipo === "beccato" ? { tipo: "beccato", posto: m.bersaglio } : { ...m }, seme);
+        }
+      }
+    }
+    throw new Error("nessuna finestra di taglio per me");
   });
 });

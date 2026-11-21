@@ -81,6 +81,45 @@ button.ul-carta:focus-visible {
   outline-offset: 1px;
 }
 
+.ul-carta.ul-tagliabile {
+  border-style: dashed;
+  background: var(--s2);
+}
+
+/* Taglio: barra di 3 secondi sotto lo scarto (con movimento ridotto resta il testo che conta) */
+.ul-taglio {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ul-taglio-barra {
+  height: 4px;
+  overflow: hidden;
+  background: var(--s2);
+  border-radius: 999px;
+}
+
+.ul-taglio-barra span {
+  display: block;
+  height: 100%;
+  background: var(--ac);
+  transform-origin: left center;
+  animation: ul-scade 3000ms linear forwards;
+}
+
+@keyframes ul-scade {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.ul-taglio p {
+  margin: 0;
+}
+
 .ul-gruppo {
   gap: 0.6rem;
 }
@@ -377,6 +416,9 @@ button.ul-carta:focus-visible {
   }
   .ul-giocatore.ul-cambiata {
     animation: none;
+  }
+  .ul-taglio-barra {
+    display: none;
   }
 }
 

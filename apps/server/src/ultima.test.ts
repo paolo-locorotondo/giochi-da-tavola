@@ -147,3 +147,48 @@ describe("varianti sul server", () => {
     expect(vistaDi(s, "host").fase).toBe("fine");
   });
 });
+
+describe("taglio sul server", () => {
+  /** Porta la stanza a una finestra di taglio con un telefono che ha la carta identica. */
+  function conFinestra() {
+    for (let i = 0; i < 400; i++) {
+      const s = avviata({ varianti: { taglio: true } });
+      for (let k = 0; k < 300 && vistaDi(s, "host").fase === "partita"; k++) {
+        const p = s.stato.partita;
+        const ap = p.apertaTaglio as { posto: number; carta: unknown } | null;
+        if (ap) {
+          for (const posto of [1, 2, 3]) {
+            const v = vistaDi(s, tokenDi(s, posto));
+            if (v.puoTagliare.length > 0) return { s, posto, carta: v.puoTagliare[0]! };
+          }
+        }
+        eseguiAzione(s, "host", { tipo: "mossaBot", posto: p.ultime.find((u: { dichiarata: boolean }) => !u.dichiarata)?.posto ?? p.turno });
+      }
+    }
+    throw new Error("nessuna finestra di taglio");
+  }
+
+  it("la finestra si apre con l'ora del server e chi ha la carta taglia", () => {
+    const { s, posto, carta } = conFinestra();
+    const fino = s.stato.partita.apertaTaglio.fino as number;
+    expect(Math.abs(fino - 3000 - Date.now())).toBeLessThan(60_000);
+    eseguiAzione(s, tokenDi(s, posto), { tipo: "taglia", carta });
+    expect(vistaDi(s, "host").taglio).toBeNull();
+    expect(vistaDi(s, "host").eventi.some((e) => e.tipo === "taglio" && e.posto === posto)).toBe(true);
+  });
+  it("gara: il secondo taglio arriva a finestra chiusa e riceve un messaggio neutro", () => {
+    const { s, posto, carta } = conFinestra();
+    eseguiAzione(s, tokenDi(s, posto), { tipo: "taglia", carta });
+    expect(() => eseguiAzione(s, tokenDi(s, posto), { tipo: "taglia", carta })).toThrow("tagliTardi");
+  });
+  it("chi guarda non taglia e «Simula mossa» non è un taglio", () => {
+    const { s, carta } = conFinestra();
+    s.telefoni.set("spett", null);
+    expect(() => eseguiAzione(s, "spett", { tipo: "taglia", carta })).toThrow("nonPartecipa");
+  });
+  it("chi non ha la carta o è di turno non taglia", () => {
+    const { s } = conFinestra();
+    const turno = s.stato.partita.turno as number;
+    expect(() => eseguiAzione(s, tokenDi(s, turno), { tipo: "taglia", carta: 999999 })).toThrow("nonTagliabile");
+  });
+});
