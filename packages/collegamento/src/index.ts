@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { suona } from "@gdt/suoni";
+import type { AnteprimaVeloce, AperturaVeloce, ComandoSala, VistaSalaVeloce } from "@gdt/engine";
+
+export { SalaVeloce, formatoTempo, testoErroreVeloce, usaTestiVeloce } from "./SalaVeloce";
+export { ApriVeloce, type ImpostazioniVeloce } from "./ApriVeloce";
+export type { AnteprimaVeloce, AperturaVeloce, ComandoSala, VistaSalaVeloce };
 
 /** Messaggi verso il server (specchio di apps/server/src/stanze.ts). */
 export type Messaggio =
@@ -8,16 +13,19 @@ export type Messaggio =
   | { t: "azione"; azione: Record<string, unknown> }
   | { t: "sollecita" }
   | { t: "chiudi" }
-  | { t: "coda"; gioco: string; nome: string }
-  | { t: "esciDaCoda" };
+  | { t: "anteprimaVeloce"; gioco: string }
+  | { t: "veloce"; gioco: string; nome: string; codice?: string; apri?: AperturaVeloce }
+  | { t: "esciDaSala" }
+  | ({ t: "sala" } & ComandoSala);
 
 type DaServer<V> =
   | { t: "benvenuto"; codice: string; token: string }
   | { t: "vista"; vista: V }
   | { t: "sollecito" }
   | { t: "chiusa" }
-  | { t: "inCoda"; in: boolean }
-  | { t: "codaScaduta" }
+  | { t: "anteprima"; gioco: string; sala: AnteprimaVeloce | null }
+  | { t: "salaVeloce"; sala: VistaSalaVeloce }
+  | { t: "fuoriSala"; motivo: "uscito" | "scaduta" | "chiusa" }
   | { t: "errore"; messaggio: string };
 
 const ATTESA_MASSIMA_MS = 8000;
@@ -59,13 +67,18 @@ export interface Collegamento<V> {
   sollecitato: boolean;
   /** La partita è stata chiusa dall'organizzatore. */
   chiusa: boolean;
-  /** Partita veloce: in coda in attesa di un avversario. */
-  inCoda: boolean;
-  /** Nessun avversario è arrivato in tempo (si azzera rimettendosi in coda). */
-  codaScaduta: boolean;
-  /** Mi metto in coda con il mio nome; quando arriva un avversario entro nella partita già avviata. */
-  cercaAvversario: (nome: string) => void;
-  annullaCoda: () => void;
+  /** Partita veloce: la sala d'attesa in cui mi trovo (finché la partita non parte). */
+  sala: VistaSalaVeloce | null;
+  /** La stanza veloce aperta di questo gioco: undefined = non ancora chiesta, null = nessuna. */
+  anteprima: AnteprimaVeloce | null | undefined;
+  /** Perché sono uscito dalla sala (si azzera entrando di nuovo). */
+  fuoriSala: "uscito" | "scaduta" | "chiusa" | null;
+  /** Chiede com'è la stanza veloce aperta (risposta in `anteprima`). */
+  chiediAnteprima: () => void;
+  /** Entra nella stanza vista (`codice`), ne apre una (`apri`) o, senza opzioni, entra nella prima o ne apre una di base. */
+  entraVeloce: (nome: string, opzioni?: { codice?: string; apri?: AperturaVeloce }) => void;
+  esciDaSala: () => void;
+  comandoSala: (c: ComandoSala) => void;
   invia: (m: Messaggio) => void;
   azione: (a: Record<string, unknown>) => void;
   azzeraErrore: () => void;
@@ -87,10 +100,9 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
   const ws = useRef<WebSocket | null>(null);
   const codiceRef = useRef<string | null>(codiceIniziale);
   const inAttesa = useRef<Messaggio[]>([]);
-  const [inCoda, setInCoda] = useState(false);
-  const [codaScaduta, setCodaScaduta] = useState(false);
-  /** Nome con cui sono in coda: se la connessione cade, al rientro mi rimetto in coda. */
-  const nomeInCoda = useRef<string | null>(null);
+  const [sala, setSala] = useState<VistaSalaVeloce | null>(null);
+  const [anteprima, setAnteprima] = useState<AnteprimaVeloce | null | undefined>(undefined);
+  const [fuoriSala, setFuoriSala] = useState<"uscito" | "scaduta" | "chiusa" | null>(null);
 
   // Se per troppo tempo non c'è connessione, lo si dice invece di restare in attesa all'infinito.
   useEffect(() => {
@@ -120,23 +132,18 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
         const c = codiceRef.current;
         // Rientro: se conosco già il codice, mi riaggancio con il mio token.
         if (c) s.send(JSON.stringify({ t: "entra", codice: c, token: leggiToken(gioco, c) }));
-        else if (nomeInCoda.current !== null) {
-          // Il server toglie dalla coda chi si scollega: al rientro ci si rimette (in fondo).
-          inAttesa.current = inAttesa.current.filter((m) => m.t !== "coda");
-          s.send(JSON.stringify({ t: "coda", gioco, nome: nomeInCoda.current }));
-        }
         for (const m of inAttesa.current.splice(0)) s.send(JSON.stringify(m));
       };
       s.onmessage = (e) => {
         const m = JSON.parse(String(e.data)) as DaServer<V>;
         if (m.t === "benvenuto") {
-          nomeInCoda.current = null;
-          setInCoda(false);
+          setFuoriSala(null);
           codiceRef.current = m.codice;
           setCodice(m.codice);
           salvaToken(gioco, m.codice, m.token);
           window.history.replaceState(window.history.state, "", `/${gioco}/${m.codice}`);
         } else if (m.t === "vista") {
+          setSala(null);
           setVista(m.vista);
           setSollecitato(false);
         } else if (m.t === "chiusa") {
@@ -148,23 +155,24 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
           setVista(null);
           setCodice(null);
           window.history.replaceState(window.history.state, "", `/${gioco}`);
-        } else if (m.t === "inCoda") {
-          if (!m.in) nomeInCoda.current = null;
-          setInCoda(m.in);
-        } else if (m.t === "codaScaduta") {
-          nomeInCoda.current = null;
-          setInCoda(false);
-          setCodaScaduta(true);
+        } else if (m.t === "anteprima") {
+          setAnteprima(m.sala);
+        } else if (m.t === "salaVeloce") {
+          setSala(m.sala);
+        } else if (m.t === "fuoriSala") {
+          // Fuori dalla sala (uscito, scaduta, chiusa): il token non serve più.
+          const c = codiceRef.current;
+          if (c) cancellaToken(gioco, c);
+          codiceRef.current = null;
+          setSala(null);
+          setCodice(null);
+          setFuoriSala(m.motivo);
+          window.history.replaceState(window.history.state, "", `/${gioco}`);
         } else if (m.t === "sollecito") {
           setSollecitato(true);
           navigator.vibrate?.([200, 100, 200]);
           suona("sollecito");
         } else {
-          // Un errore mentre cerco un avversario (es. server pieno) mi toglie dalla coda.
-          if (nomeInCoda.current !== null && !codiceRef.current) {
-            nomeInCoda.current = null;
-            setInCoda(false);
-          }
           setErrore(m.messaggio);
         }
       };
@@ -190,28 +198,26 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
     };
   }, [gioco]);
 
-  const cercaAvversario = useCallback(
-    (nome: string) => {
-      nomeInCoda.current = nome;
-      setCodaScaduta(false);
-      setInCoda(true);
-      invia({ t: "coda", gioco, nome });
+  const chiediAnteprima = useCallback(() => invia({ t: "anteprimaVeloce", gioco }), [gioco, invia]);
+  const entraVeloce = useCallback(
+    (nome: string, opzioni?: { codice?: string; apri?: AperturaVeloce }) => {
+      setFuoriSala(null);
+      invia({ t: "veloce", gioco, nome, ...opzioni });
     },
     [gioco, invia],
   );
-  const annullaCoda = useCallback(() => {
-    nomeInCoda.current = null;
-    setInCoda(false);
-    inAttesa.current = inAttesa.current.filter((m) => m.t !== "coda");
-    invia({ t: "esciDaCoda" });
-  }, [invia]);
+  const esciDaSala = useCallback(() => invia({ t: "esciDaSala" }), [invia]);
+  const comandoSala = useCallback((c: ComandoSala) => invia({ t: "sala", ...c }), [invia]);
 
   return {
     vista,
-    inCoda,
-    codaScaduta,
-    cercaAvversario,
-    annullaCoda,
+    sala,
+    anteprima,
+    fuoriSala,
+    chiediAnteprima,
+    entraVeloce,
+    esciDaSala,
+    comandoSala,
     codice,
     connesso,
     nonRaggiungibile,

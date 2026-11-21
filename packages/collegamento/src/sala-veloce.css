@@ -1,0 +1,129 @@
+/* Partita veloce: sala d'attesa e apertura. Solo token del tema. */
+
+.sv-riepilogo {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.sv-stato,
+.sv-timer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.sv-timer {
+  font-variant-numeric: tabular-nums;
+  color: var(--mu);
+}
+
+.sv-conto p {
+  margin: 0.25rem 0;
+}
+
+.sv-contatore {
+  font-family: var(--font-titoli);
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--ac);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.sv-colonna {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.sv-colonna > .chip {
+  width: 100%;
+  min-width: 0;
+}
+
+.sv-nome {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.sv-vuoto {
+  border-style: dashed;
+  color: var(--mu);
+}
+
+.sv-squadre {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.8rem;
+}
+
+.sv-squadra {
+  padding: 0.7rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.sv-squadra h3 {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-titoli);
+  font-size: 1rem;
+}
+
+.sv-voce {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.sv-voce > .chip-elenco > .chip {
+  width: 100%;
+}
+
+.btn.piccolo {
+  min-height: 44px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.sv-scheda {
+  padding: 0.8rem 1rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+}
+
+.sv-scheda h3 {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-titoli);
+}
+
+.sv-scheda p {
+  margin: 0.2rem 0;
+}
+
+.sv-stepper {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr 3.2rem;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+
+.sv-valore {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sv-opzioni-larghe {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+}
+
+.sv-opzioni-larghe .scelta-opzione span {
+  padding: 0.3rem 0.5rem;
+  text-align: center;
+  line-height: 1.25;
+}
