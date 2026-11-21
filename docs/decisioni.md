@@ -243,4 +243,5 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
   - stanze veloci e stanze con codice: separate, oppure una stanza con codice può diventare «aperta» ai giocatori della partita veloce;
   - chi esce dalla sala prima dell'avvio libera il posto; scadenza di una stanza aperta che non si riempie (oggi 2 minuti per la coda);
   - contratto `GiocoOnline`: probabilmente `coda` diventa `{ min, max }` o `{ posti }` e il server smette di avviare da solo; i nomi arrivano uno alla volta (oggi `nuovoStato` riceve tutti i nomi alla creazione).
+- TODO **Impostore, partita veloce**: per ora no (deciso il 2026-11-21); si potrà aggiungere dichiarando `veloce` nel modulo online quando la partita veloce a stanze aperte sarà pronta.
 - TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

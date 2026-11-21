@@ -31,6 +31,8 @@ Serve il server di gioco ([giocare con il PC](../../docs/guida-giocare-con-il-pc
 
 Come funzionano stanze, token e sicurezza: [architettura-tecnica.md](../../docs/architettura-tecnica.md).
 
+TODO **Partita veloce**: Impostore non ha ancora la partita veloce a stanze aperte (chi tocca «Partita veloce» si aggancia alla prima stanza aperta). Si può aggiungere dichiarando `veloce` nel modulo online, dopo che la partita veloce sarà pronta per Tris e Ultima! ([piano](../../docs/piano-partita-veloce.md)).
+
 ## Provarlo
 
 ```
