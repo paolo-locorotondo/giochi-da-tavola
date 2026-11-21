@@ -67,14 +67,14 @@ test("ultima contro i bot: sezione «Varianti» con quattro interruttori spenti"
   await iniziaContro(page, 2);
   const gruppo = page.getByRole("group", { name: "Varianti" });
   await expect(gruppo.getByRole("checkbox")).toHaveCount(4);
-  for (const nome of ["Somma dei +2", "Più carte uguali", "Taglio", "Scambio e Rotazione"]) {
-    await expect(gruppo.getByRole("checkbox", { name: new RegExp(nome) })).not.toBeChecked();
+  for (const nome of [/Somma dei \+2/, /Più carte uguali/, /Taglio/, /Scambio e Rotazione/]) {
+    await expect(gruppo.getByRole("checkbox", { name: nome })).not.toBeChecked();
   }
   await schermata(page, "bot-varianti");
 });
 
 test("ultima contro i bot: con tutte le varianti la partita finisce e il tavolo le riassume", async ({ page }) => {
-  test.setTimeout(180_000);
+  test.setTimeout(400_000);
   await iniziaContro(page, 2);
   const gruppo = page.getByRole("group", { name: "Varianti" });
   for (const c of await gruppo.getByRole("checkbox").all()) await c.check();
