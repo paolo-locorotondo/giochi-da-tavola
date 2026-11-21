@@ -82,7 +82,7 @@ Gli e2e usano le porte 5199 e 8081: **un solo agente alla volta** li lancia.
 
 ## Prossimo rilascio
 
-Partita veloce, Scopa e varianti di Ultima! sono su `main` ma non ancora in una versione: si rilascia (MINOR, 0.27.0) quando la suite e2e completa è verde.
+Partita veloce, Scopa, Burraco e varianti di Ultima! sono su `main` ma non ancora in una versione: si rilascia (MINOR, 0.27.0) quando la suite e2e completa è verde.
 
 ## Stato
 
@@ -96,5 +96,5 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | 4 Duello Lampo (Bersagli, Il più grande) | main | unito e rilasciato 0.26.0 (2026-11-21) |
 | 1 Partita veloce (server + UI) | main | unito (2026-11-21); resta: «Apri adesso» a sala piena con squadre «scelte in sala»; entry-point di @gdt/carte senza CSS |
 | 5 Ultima! varianti | main + lavoro/ultima-varianti | unito (2026-11-21); l'agente corregge gli e2e falliti dopo il merge (ha le porte e2e) |
-| 3 Scopa | main + lavoro/scopa | blocchi 1-4 uniti (2026-11-21); e2e da correggere (dopo Ultima!), ingresso senza CSS di @gdt/carte; manca partita veloce |
-| 2 Burraco | lavoro/burraco | in corso (2026-11-21) |
+| 3 Scopa | main | blocchi 1-4 e correzioni degli e2e uniti (2026-11-21), ingresso @gdt/carte/logica; e2e da eseguire; manca partita veloce |
+| 2 Burraco | main | blocchi A-D uniti (2026-11-21), regole verificate sul Codice FIBUR 2026; e2e da eseguire (screenshot del menu da rigenerare); manca partita veloce |
