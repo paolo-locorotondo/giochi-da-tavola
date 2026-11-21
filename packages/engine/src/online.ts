@@ -103,6 +103,12 @@ export interface AnteprimaVeloce {
   attesaMs: number;
 }
 
+/** Comandi di un telefono nella sala d'attesa veloce (quelli di sala solo per l'organizzatore). */
+export type ComandoSala =
+  | { comando: "apriAdesso" | "annullaAvvio" | "aspettaAncora" | "chiudiSala" }
+  /** `id` = chi spostare: sé stessi, o chiunque se si è l'organizzatore. */
+  | { comando: "squadra"; id: number; squadra: number };
+
 export type MomentoSala = "attesa" | "conto" | "scaduta";
 
 /** La sala d'attesa veloce vista da un telefono (generica per tutti i giochi). */
@@ -153,12 +159,6 @@ export interface GiocoOnline<Stato, Azione extends { tipo: string }, Vista> {
   inGioco(stato: Stato): readonly number[];
   /** Posti che il gioco sta aspettando (per il pulsante «sollecita»). */
   mancanti?(stato: Stato): readonly number[];
-  /**
-   * Il gioco supporta la «partita veloce»: il server mette in coda i telefoni e, in `giocatori`,
-   * li siede ai posti 1..n nell'ordine di arrivo (il primo è l'organizzatore) e avvia la partita
-   * con l'azione `avvia`. Il gioco deve accettare `nuovoStato(nomi, {})`.
-   */
-  coda?: { giocatori: number };
   /**
    * Partita veloce a stanze aperte: il server tiene la sala d'attesa fuori dallo stato del gioco;
    * all'avvio chiama `nuovoStato(nomi, veloce.configVeloce(config, n))`, siede i telefoni ai posti

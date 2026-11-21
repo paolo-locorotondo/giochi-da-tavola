@@ -3,9 +3,22 @@ import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
 import { WebSocketServer, type WebSocket } from "ws";
-import { Code } from "./coda";
-import { giocoOnline } from "./giochi";
-import { creaStanza, creaStanzaDaCoda, eseguiAzione, mancantiDi, nuovoCodice, nuovoToken, vistaDi, type DaClient, type DaServer, type Stanza } from "./stanze";
+import {
+  anteprimaDi,
+  avviaSala,
+  creaStanza,
+  entraVeloce,
+  eseguiAzione,
+  mancantiDi,
+  nuovoCodice,
+  nuovoToken,
+  vistaDi,
+  vistaSalaDi,
+  type DaClient,
+  type DaServer,
+  type Stanza,
+} from "./stanze";
+import { comando, esci, tick, type Effetto } from "./veloce";
 
 /**
  * Server di gioco: serve l'app (cartella `STATIC_DIR`) e tiene le partite via WebSocket su `/ws`.
@@ -24,13 +37,6 @@ const MAX_NOMI = 60;
 const stanze = new Map<string, Stanza>();
 /** Connessioni aperte per stanza: token → socket. Più schede dello stesso browser condividono il token. */
 const connessioni = new Map<string, Map<string, Set<WebSocket>>>();
-
-/** Telefono in coda per la partita veloce: sa entrare nella stanza quando viene abbinato. */
-interface InCoda {
-  ws: WebSocket;
-  entra(stanza: Stanza, token: string): void;
-}
-const code = new Code<InCoda>();
 
 const eConnesso = (codice: string) => (token: string) => (connessioni.get(codice)?.get(token)?.size ?? 0) > 0;
 
@@ -99,10 +105,46 @@ function invia(ws: WebSocket, m: DaServer) {
 
 function aggiornaTutti(stanza: Stanza) {
   const connesso = eConnesso(stanza.codice);
+  const ora = Date.now();
   for (const [token, socket] of connessioni.get(stanza.codice) ?? []) {
-    const m: DaServer = { t: "vista", vista: vistaDi(stanza, token, connesso) };
+    const m: DaServer = stanza.sala
+      ? { t: "salaVeloce", sala: vistaSalaDi(stanza, token, ora, connesso) }
+      : { t: "vista", vista: vistaDi(stanza, token, connesso) };
     for (const ws of socket) invia(ws, m);
   }
+}
+
+function inviaA(codice: string, token: string, m: DaServer) {
+  for (const ws of connessioni.get(codice)?.get(token) ?? []) invia(ws, m);
+}
+
+function chiudiStanza(stanza: Stanza, m: DaServer | null) {
+  if (m) for (const socket of connessioni.get(stanza.codice)?.values() ?? []) for (const w of socket) invia(w, m);
+  stanze.delete(stanza.codice);
+  connessioni.delete(stanza.codice);
+}
+
+/** Esegue ciò che chiede la sala d'attesa veloce dopo un'operazione o un passo del tempo. */
+function applicaEffetto(stanza: Stanza, effetto: Effetto) {
+  if (effetto.t === "niente") return;
+  if (effetto.t === "chiudi") {
+    chiudiStanza(stanza, effetto.motivo === "vuota" ? null : { t: "fuoriSala", motivo: effetto.motivo });
+    return;
+  }
+  if (effetto.t === "avvia") {
+    try {
+      avviaSala(stanza);
+    } catch (e) {
+      // Non dovrebbe succedere (il gioco accetta la sua config): si chiude invece di restare a metà.
+      chiudiStanza(stanza, { t: "errore", messaggio: e instanceof Error ? e.message : "sconosciuto" });
+      return;
+    }
+  } else if (stanza.sala) {
+    // L'organizzatore della sala è il primo arrivato rimasto.
+    stanza.tokenHost = stanza.sala.arrivati[0]!.token;
+  }
+  stanza.ultimaAttivita = Date.now();
+  aggiornaTutti(stanza);
 }
 
 function collega(ws: WebSocket, stanza: Stanza, token: string) {
@@ -122,14 +164,6 @@ wss.on("connection", (ws) => {
   let stanza: Stanza | null = null;
   let token = "";
   let vivo = true;
-  const io: InCoda = {
-    ws,
-    entra(s, t) {
-      stanza = s;
-      token = t;
-      collega(ws, s, t);
-    },
-  };
   ws.on("pong", () => (vivo = true));
   const battito = setInterval(() => {
     if (!vivo) return ws.terminate();
@@ -144,6 +178,8 @@ wss.on("connection", (ws) => {
     } catch {
       return;
     }
+    // La stanza può essere stata chiusa da un altro telefono (o dal tempo, per le sale veloci).
+    if (stanza && !stanze.has(stanza.codice)) stanza = null;
     try {
       switch (m.t) {
         case "crea": {
@@ -159,34 +195,61 @@ wss.on("connection", (ws) => {
         case "entra": {
           const s = stanze.get(String(m.codice).toUpperCase());
           if (!s) throw new Error("partitaNonTrovata");
+          // Sala d'attesa veloce: rientra solo chi c'era già (con il suo token).
+          if (s.sala && !(typeof m.token === "string" && s.sala.arrivati.some((a) => a.token === m.token))) throw new Error("stanzaVeloce");
           stanza = s;
           // Il token vale solo se la stanza lo conosce: uno sconosciuto ne riceve uno nuovo.
           token = typeof m.token === "string" && s.telefoni.has(m.token) ? m.token : nuovoToken();
           collega(ws, s, token);
           break;
         }
+        case "anteprimaVeloce":
+          invia(ws, { t: "anteprima", gioco: String(m.gioco), sala: anteprimaDi(stanze, String(m.gioco)) });
+          break;
+        case "veloce":
         case "coda": {
-          if (stanza) throw new Error("giaInPartita");
+          if (stanza) throw new Error(stanza.sala ? "giaInSala" : "giaInPartita");
           const gioco = typeof m.gioco === "string" ? m.gioco : "impostore";
-          const g = giocoOnline(gioco);
-          if (!g.coda) throw new Error("noPartitaVeloce");
-          const nome = String(m.nome ?? "").trim();
-          if (!nome) throw new Error("nomiNonValidi");
-          if (stanze.size >= MAX_STANZE) throw new Error("serverPieno");
-          const gruppo = code.aggiungi(gioco, { token: nuovoToken(), nome, conn: io, dal: Date.now() }, g.coda.giocatori);
-          if (!gruppo) {
-            invia(ws, { t: "inCoda", in: true });
-            break;
+          const opz = m.t === "veloce" ? { codice: m.codice, apri: m.apri } : {};
+          const nuovo = nuovoToken();
+          let esito: ReturnType<typeof entraVeloce>;
+          try {
+            esito = entraVeloce(stanze, gioco, nuovo, m.nome, opz, Date.now(), MAX_STANZE);
+          } catch (e) {
+            // La stanza vista prima è cambiata: si manda l'errore e la situazione di adesso.
+            const motivo = e instanceof Error ? e.message : "";
+            if (motivo === "salaCambiata" || motivo === "salaApertaNelFrattempo") {
+              invia(ws, { t: "errore", messaggio: motivo });
+              invia(ws, { t: "anteprima", gioco, sala: anteprimaDi(stanze, gioco) });
+              break;
+            }
+            throw e;
           }
-          const codice = nuovoCodice(stanze);
-          const nuova = creaStanzaDaCoda(codice, gioco, gruppo);
-          stanze.set(codice, nuova);
-          for (const v of gruppo) v.conn.entra(nuova, v.token);
+          stanza = esito.stanza;
+          token = nuovo;
+          // Prima il collegamento (benvenuto e token salvato), poi l'eventuale avvio con tutti.
+          collega(ws, stanza, token);
+          applicaEffetto(stanza, esito.effetto);
+          if (!stanze.has(stanza.codice)) stanza = null;
           break;
         }
-        case "esciDaCoda":
-          if (code.togli(io)) invia(ws, { t: "inCoda", in: false });
+        case "esciDaSala":
+        case "esciDaCoda": {
+          if (!stanza?.sala || !stanza.gioco.veloce) break;
+          const s = stanza;
+          const effetto = esci(s.sala!, s.gioco.veloce!, token, Date.now());
+          inviaA(s.codice, token, { t: "fuoriSala", motivo: "uscito" });
+          s.telefoni.delete(token);
+          connessioni.get(s.codice)?.delete(token);
+          stanza = null;
+          applicaEffetto(s, effetto);
           break;
+        }
+        case "sala": {
+          if (!stanza?.sala || !stanza.gioco.veloce) throw new Error("nonInSala");
+          applicaEffetto(stanza, comando(stanza.sala, stanza.gioco.veloce, token, m, Date.now()));
+          break;
+        }
         case "azione":
           if (!stanza) throw new Error("nonInPartita");
           eseguiAzione(stanza, token, m.azione, eConnesso(stanza.codice));
@@ -203,10 +266,7 @@ wss.on("connection", (ws) => {
         }
         case "chiudi": {
           if (!stanza || token !== stanza.tokenHost) throw new Error("soloHostChiude");
-          const codice = stanza.codice;
-          for (const socket of connessioni.get(codice)?.values() ?? []) for (const w of socket) invia(w, { t: "chiusa" });
-          stanze.delete(codice);
-          connessioni.delete(codice);
+          chiudiStanza(stanza, stanza.sala ? { t: "fuoriSala", motivo: "chiusa" } : { t: "chiusa" });
           stanza = null;
           break;
         }
@@ -218,7 +278,7 @@ wss.on("connection", (ws) => {
 
   ws.on("close", () => {
     clearInterval(battito);
-    code.togli(io);
+    // In sala veloce il posto non si libera subito: lo tiene la grazia (vedi `tick`).
     if (stanza) {
       const mappa = connessioni.get(stanza.codice);
       const insieme = mappa?.get(token);
@@ -241,10 +301,22 @@ setInterval(() => {
   }
 }, 600_000);
 
-// Chi aspetta un avversario da troppo tempo viene avvisato e tolto dalla coda.
+// Sale d'attesa veloci: un solo orologio da 1 s fa scorrere attese, conti e grazie.
 setInterval(() => {
-  for (const v of code.scadute(Date.now())) invia(v.conn.ws, { t: "codaScaduta" });
-}, 5_000);
+  const ora = Date.now();
+  for (const s of [...stanze.values()]) {
+    if (!s.sala || !s.gioco.veloce) continue;
+    try {
+      const prima = s.sala.arrivati.map((x) => x.token);
+      const effetto = tick(s.sala, s.gioco.veloce, ora, eConnesso(s.codice));
+      // Chi ha perso il posto per la grazia non è più della stanza (il suo token non vale più).
+      if (s.sala) for (const t of prima) if (!s.sala.arrivati.some((x) => x.token === t)) s.telefoni.delete(t);
+      applicaEffetto(s, effetto);
+    } catch (e) {
+      console.error("sala veloce", s.codice, e);
+    }
+  }
+}, 1_000);
 
 http.listen(PORTA, () => {
   if (SOLO_SERVER) {

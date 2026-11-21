@@ -1,4 +1,4 @@
-import { MAX_CARATTERI_NOME, creaRng, limitaTesto, type GiocoOnline, type Rng } from "@gdt/engine";
+import { MAX_CARATTERI_NOME, creaRng, intervalloPosti, limitaTesto, type GiocoOnline, type Rng } from "@gdt/engine";
 import { PROB_ULTIMA, eseguiMossa, mossaBotLivello, type Livello } from "../bot";
 import {
   ErroreUltima,
@@ -328,6 +328,8 @@ export const ultimaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
   momento: (s) => (s.fase === "sala" ? "sala" : s.fase === "fine" ? "fine" : "inCorso"),
   inGioco: (s) => (s.fase === "sala" ? [] : POSTI(s)),
   mancanti,
+  /** Partita veloce: da 2 a 10, l'organizzatore può aprire prima; le impostazioni sono quelle di `leggiConfig`. */
+  veloce: { posti: intervalloPosti(MIN_GIOCATORI, MAX_GIOCATORI), anticipato: true, configVeloce: (grezza) => leggiConfig(grezza) },
 
   traduci(_s, ctx, a) {
     const mio = ctx.posto;
