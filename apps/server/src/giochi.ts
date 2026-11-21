@@ -1,6 +1,7 @@
 import type { GiocoOnline } from "@gdt/engine";
 import { impostoreOnline } from "@gdt/impostore/online";
 import { trisOnline } from "@gdt/tic-tac-toe/online";
+import { scopaOnline } from "@gdt/scopa/online";
 import { ultimaOnline } from "@gdt/ultima/online";
 
 /**
@@ -13,6 +14,7 @@ export type GiocoQualsiasi = GiocoOnline<any, any, any>;
 export const GIOCHI_ONLINE: Readonly<Record<string, GiocoQualsiasi>> = {
   [impostoreOnline.id]: impostoreOnline,
   [trisOnline.id]: trisOnline,
+  [scopaOnline.id]: scopaOnline,
   [ultimaOnline.id]: ultimaOnline,
 };
 

@@ -7,6 +7,7 @@ import { LupusApp, manifest as lupus } from "@gdt/lupus";
 import { TabuApp, manifest as tabu } from "@gdt/tabu";
 import { TrisApp, manifest as tris } from "@gdt/tic-tac-toe";
 import { UltimaApp, manifest as ultima } from "@gdt/ultima";
+import { ScopaApp, manifest as scopa } from "@gdt/scopa";
 
 import { applicaLingua, usaLingua, usaT, type Lingua, type TestiGioco } from "@gdt/i18n";
 
@@ -35,6 +36,7 @@ const giochi: VoceGioco[] = [
   { ...dadi, Componente: DadiApp },
   { ...tris, Componente: TrisApp },
   { ...ultima, Componente: UltimaApp },
+  { ...scopa, Componente: ScopaApp },
   { ...duelloLampo, Componente: DuelloLampoApp },
 ];
 
@@ -70,6 +72,7 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   dadi: "dadi",
   tris: "griglia",
   ultima: "carte",
+  scopa: "ventaglio",
   "duello-lampo": "fulmine",
 };
 

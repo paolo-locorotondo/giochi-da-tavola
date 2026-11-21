@@ -21,6 +21,7 @@
     "@gdt/suoni": "workspace:*",
     "@gdt/tabu": "workspace:*",
     "@gdt/tic-tac-toe": "workspace:*",
+    "@gdt/scopa": "workspace:*",
     "@gdt/ultima": "workspace:*",
     "lucide-react": "^1.69.0",
     "react": "^18.3.1",

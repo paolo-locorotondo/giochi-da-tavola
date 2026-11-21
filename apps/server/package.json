@@ -15,6 +15,7 @@
     "@gdt/tic-tac-toe": "workspace:*",
     "ws": "^8.18.0",
     "tsx": "^4.19.2",
+    "@gdt/scopa": "workspace:*",
     "@gdt/ultima": "workspace:*"
   },
   "devDependencies": {

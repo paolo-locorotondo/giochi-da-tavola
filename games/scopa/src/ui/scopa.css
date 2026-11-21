@@ -1,0 +1,205 @@
+/* Scopa: solo token del tema, nessun colore scritto a mano. Le carte sono di @gdt/carte. */
+
+.sc-tavolo {
+  gap: 1rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.sc-testa { display: grid; gap: 0.25rem; text-align: center; }
+
+.sc-stato {
+  margin: 0;
+  font-family: var(--font-titoli);
+  font-size: 1.25rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.sc-sotto { margin: 0; color: var(--mu); font-size: 0.9rem; }
+
+.sc-punteggio {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 0.8rem;
+  font-weight: 700;
+}
+
+.sc-punti { overflow-wrap: anywhere; }
+.sc-mia { color: var(--ac); }
+.sc-soglia { color: var(--mu); font-weight: 400; }
+
+/* Avversari e compagno */
+.sc-giocatori {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+
+.sc-giocatore {
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.sc-giocatore.sc-turno { border: 2px solid var(--ac); }
+.sc-giocatore-nome { font-weight: 700; overflow-wrap: anywhere; }
+.sc-giocatore-dati { font-size: 0.85rem; color: var(--mu); }
+
+.sc-ruolo {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--s2);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: 999px;
+}
+
+/* Aree: tavolo e mano */
+.sc-area {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  min-width: 0;
+}
+
+.sc-titoletto { margin: 0; font-family: var(--font-titoli); font-size: 1rem; }
+.sc-vuoto, .sc-aiuto { margin: 0; }
+
+.sc-carte-tavolo,
+.sc-mano {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.sc-mano { gap: 0.6rem; padding-top: 0.8rem; }
+
+/* Carte più grandi di quelle della mano di @gdt/carte: il tavolo ne mostra fino a una dozzina */
+.sc-area .cg-normale { --cg-fs: 0.9375rem; }
+
+.sc-contatori { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; color: var(--mu); font-size: 0.9rem; }
+.sc-contatore { display: inline-flex; align-items: center; gap: 0.5rem; }
+
+/* Scelta della presa: pannello sotto il tavolo, non una modale */
+.sc-presa {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+}
+
+.sc-presa h3, .sc-presa p { margin: 0; }
+
+.sc-combinazioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.sc-combinazione {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  min-height: 3.5rem;
+  padding: 0.5rem;
+}
+
+.sc-combinazione[aria-pressed="true"] { border: 2px solid var(--ac); }
+.sc-comb-carte { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
+
+.sc-azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.7rem;
+}
+
+.sc-eventi { margin: 0; padding: 0 0 0 1.2rem; display: grid; gap: 0.3rem; }
+
+/* Riepilogo */
+.sc-riepilogo {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+  min-width: 0;
+}
+
+.sc-riepilogo h3, .sc-riepilogo h4, .sc-riepilogo p { margin: 0; }
+.sc-esito { font-family: var(--font-titoli); font-size: 1.15rem; font-weight: 700; color: var(--ac); }
+
+.sc-tabella { width: 100%; border-collapse: collapse; font-size: 0.9rem; table-layout: fixed; }
+
+.sc-tabella th,
+.sc-tabella td {
+  padding: 0.45rem 0.4rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--bw) solid var(--bd);
+  overflow-wrap: anywhere;
+}
+
+.sc-tabella thead th { font-size: 0.85rem; }
+.sc-tabella tbody th { font-weight: 600; width: 34%; }
+.sc-tabella td.sc-vinto { font-weight: 700; color: var(--ac); }
+.sc-tabella tr.sc-totale th, .sc-tabella tr.sc-totale td { font-weight: 700; border-bottom: 2px solid var(--bd-ctrl); }
+.sc-punto-testo { font-weight: 600; }
+.sc-pari { display: block; font-weight: 400; font-size: 0.8rem; color: var(--mu); }
+
+.sc-prese-di { display: grid; gap: 0.4rem; padding-bottom: 0.6rem; }
+.sc-prese-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+/* Creazione */
+.sc-gruppo { display: grid; gap: 0.6rem; }
+.sc-senza-bordo { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+.sc-opzione {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 56px;
+  padding: 0.6rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+}
+
+.sc-opzione:has(input:checked) { border: 2px solid var(--ac); }
+.sc-opzione input { width: 1.4rem; height: 1.4rem; flex: none; }
+
+.sc-segmento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+
+.sc-segmento .btn[aria-pressed="true"] {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+  font-weight: 600;
+}
+
+.sc-coppie { display: grid; gap: 0.6rem; }
+.sc-coppie h3 { margin: 0; }
+.sc-coppie-lista { margin: 0; padding: 0 0 0 1.2rem; display: grid; gap: 0.25rem; font-weight: 700; }
+.sc-coppie .btn[aria-pressed="true"] { border: 2px solid var(--ac); }
