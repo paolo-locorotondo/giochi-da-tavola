@@ -90,7 +90,7 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | 0a Contratto `veloce` + `ctx.ora()` in engine | main | unito (2026-11-21) |
 | 0b `@gdt/carte` | main | unito (2026-11-21) |
 | 4 Duello Lampo (Bersagli, Il più grande) | main | unito e rilasciato 0.26.0 (2026-11-21) |
-| 1 Partita veloce (server + UI) | lavoro/partita-veloce | codice pronto, da unire: restano e2e, screenshot, «Apri adesso» a sala piena nelle squadre «scelte in sala» |
-| 5 Ultima! varianti | lavoro/ultima-varianti | in corso (2026-11-21) |
-| 3 Scopa | lavoro/scopa | in corso (2026-11-21) |
+| 1 Partita veloce (server + UI) | main | unito (2026-11-21); resta: «Apri adesso» a sala piena con squadre «scelte in sala»; entry-point di @gdt/carte senza CSS |
+| 5 Ultima! varianti | lavoro/ultima-varianti | pronto da unire (2026-11-21) |
+| 3 Scopa | lavoro/scopa | blocchi 1-4 pronti da unire; manca partita veloce (blocco 5) |
 | 2 Burraco | lavoro/burraco | in corso (2026-11-21) |
