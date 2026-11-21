@@ -86,7 +86,11 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 
 ## Partita veloce
 
-Non c'è ancora: con più di 2 giocatori serve una coda «a stanze aperte» comune a tutti i giochi, descritta e ancora da decidere in [decisioni.md](../../docs/decisioni.md) (voce «Partita veloce a stanze aperte»).
+Dalla schermata di creazione online, «Partita veloce»: ognuno scrive solo il suo nome. Se c'è già una stanza aperta di Ultima! con posti liberi se ne vede la scheda («Stanza di Anna · 1 posto su 4 · A punti, fino a 200 · Attesa 2 minuti») e si tocca «Entra nella stanza»; altrimenti chi tocca sceglie le impostazioni e apre la sua: **quanti giocatori** (da 2 a 10), **come si vince** (round singolo o a punti, le stesse impostazioni di «Crea la partita») e il **tempo d'attesa** (1, 2, 3 o 5 minuti), e ne diventa l'organizzatore. Chi entra accetta le impostazioni.
+
+Nella sala d'attesa tutti vedono chi c'è e il tempo che resta. La partita parte da sola a stanza piena; l'organizzatore può aprire prima («Apri adesso con 3 giocatori») con almeno 2. Scaduto il tempo con almeno 2 giocatori parte un avviso di 10 secondi («Apri adesso» / «Continua ad aspettare»); con meno di 2 l'organizzatore sceglie «Aspetta ancora» o «Chiudi la stanza», e dopo 60 secondi senza risposta la stanza si chiude. Se l'organizzatore esce lo diventa il giocatore arrivato dopo di lui. Un telefono scollegato tiene il posto 30 secondi.
+
+Dichiarazione in `src/online/gioco.ts`: `veloce: { posti: intervalloPosti(2, 10), anticipato: true, configVeloce: leggiConfig }`; le impostazioni scelte all'apertura sono in `src/ui/ImpostazioniVeloce.tsx`. Le **nuove varianti** della partita sono chiavi di `leggiConfig`: basta aggiungerle anche a quel componente per averle nella partita veloce.
 
 ## Varianti possibili
 

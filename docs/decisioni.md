@@ -69,7 +69,7 @@ questo file):
   `nuovoStato`, `applica(azione)`, `traduci` con i permessi, `vistaPer(giocatore)`), senza
   rete: lo usa il server e si testa da solo. Il server è **generico**: ogni gioco online si
   registra in `apps/server/src/giochi.ts` (oggi Impostore, Tris e Ultima!). Un gioco può abilitare
-  anche la «partita veloce» con coda (`coda: { giocatori }`).
+  anche la «partita veloce» a stanze aperte (`veloce`).
 - Il server è **autoritativo**: controlla chi può fare cosa e tiene lo stato **in memoria**.
   Se il processo si riavvia le partite si perdono (accettato: sono brevi). Le stanze
   inattive da 6 ore vengono cancellate.
@@ -154,10 +154,10 @@ Struttura attuale:
 giochi-da-tavola/
 ├── apps/
 │   ├── web/        → PWA: menu giochi, indirizzi per gioco
-│   └── server/     → server partite WebSocket (Node) generico per gioco, con coda; serve anche l'app
+│   └── server/     → server partite WebSocket (Node) generico per gioco, con sale d'attesa veloci; serve anche l'app
 ├── packages/
 │   ├── engine/     → RNG con seme, codice partita, contratto GiocoOnline, utilità comuni
-│   ├── collegamento/ → hook WebSocket condiviso (rientro con token, coda partita veloce)
+│   ├── collegamento/ → hook WebSocket condiviso (rientro con token, sala d'attesa e apertura della partita veloce)
 │   ├── i18n/       → lingue it/en con chiavi controllate dal compilatore
 │   ├── suoni/      → suoni sintetizzati e interruttore audio
 │   └── preferenze/ → impostazioni dei giochi e ordine della home salvati sul telefono, segnale «schermo intero»
@@ -202,7 +202,7 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 ### Fatti
 
 - FATTO **Tris, modalità online** (0.10.0): server generico con registro di giochi (`GiocoOnline` in `@gdt/engine`, `apps/server/src/giochi.ts`), modulo `games/tic-tac-toe/src/online`, collegamento WebSocket condiviso in `packages/collegamento`.
-- FATTO **Tris, partita veloce con coda** (0.11.0): coda in memoria per gioco (`apps/server/src/coda.ts`), abbinamento a coppie, scadenza 2 minuti, nomi uguali distinti col suffisso «(2)». Idea dal vecchio progetto `../tic-tac-toe`.
+- FATTO **Tris, partita veloce con coda** (0.11.0, poi sostituita dalla partita veloce a stanze aperte): coda in memoria per gioco (`apps/server/src/coda.ts`, oggi `veloce.ts`), abbinamento a coppie, scadenza 2 minuti, nomi uguali distinti col suffisso «(2)». Idea dal vecchio progetto `../tic-tac-toe`.
 - FATTO **Dadi, spiegazione delle facce** (0.12.0): campo facoltativo `info` nei modelli (e nel dado personalizzato), tasto «i» accanto al dado; modello Taboo.
 - FATTO **Sito statico senza server** (es. Vercel): il pulsante online dopo 8 s avvisa che il server non risponde e propone un solo telefono (Impostore e Tris).
 - FATTO **Grafica**: stile «Tavolo» (scuro e chiaro, token CSS). Altri stili (Argilla, Quiz) solo se richiesti.
@@ -234,14 +234,7 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
-- FATTO **Ultima!** (0.24.0, poi 0.25.0): regole ufficiali, round singolo o a punti, bot su richiesta dell'organizzatore online; dalla 0.25.0 anche contro i bot su un telefono, offline, con tre livelli e velocità (`games/ultima`). Piano: [piano-ultima.md](piano-ultima.md). Restano le varianti (README del gioco), la partita veloce (vedi la voce «Partita veloce a stanze aperte») e la prova su telefoni veri.
-- TODO **Partita veloce a stanze aperte (più di 2 giocatori)**, chiesta dall'utente il 2026-11-20, da riparlarne prima di farla. Oggi la coda (`apps/server/src/coda.ts`) abbina un gruppo di dimensione fissa (`coda: { giocatori: 2 }`, solo Tris) e crea la stanza solo quando il gruppo è completo. Serve per i giochi di carte da 4 che arriveranno (burraco, scopa, briscola) e per Ultima! (2–10). Idea dell'utente: chi tocca «Partita veloce» **si aggancia alla prima stanza aperta** di quel gioco finché ci sono posti; se non ce n'è una, la crea lui (e ne diventa organizzatore). Da decidere insieme:
-  - quando parte la partita: appena i posti sono pieni, oppure quando lo decide l'organizzatore con i giocatori arrivati finora (minimo del gioco), oppure dopo un tempo;
-  - posti di una stanza veloce: fissi per gioco (4 per burraco e briscola a coppie) o scelti da chi la apre (Ultima! da 2 a 10);
-  - squadre o coppie (burraco, briscola a 4): formate in ordine di arrivo, a caso o scelte in sala;
-  - impostazioni della stanza (es. round singolo o a punti): valori di base del gioco o scelte dal primo;
-  - stanze veloci e stanze con codice: separate, oppure una stanza con codice può diventare «aperta» ai giocatori della partita veloce;
-  - chi esce dalla sala prima dell'avvio libera il posto; scadenza di una stanza aperta che non si riempie (oggi 2 minuti per la coda);
-  - contratto `GiocoOnline`: probabilmente `coda` diventa `{ min, max }` o `{ posti }` e il server smette di avviare da solo; i nomi arrivano uno alla volta (oggi `nuovoStato` riceve tutti i nomi alla creazione).
+- FATTO **Ultima!** (0.24.0, poi 0.25.0): regole ufficiali, round singolo o a punti, bot su richiesta dell'organizzatore online; dalla 0.25.0 anche contro i bot su un telefono, offline, con tre livelli e velocità (`games/ultima`). Piano: [piano-ultima.md](piano-ultima.md). Restano le varianti (README del gioco) e la prova su telefoni veri; la partita veloce è fatta (vedi la voce «Partita veloce a stanze aperte»).
+- FATTO **Partita veloce a stanze aperte (più di 2 giocatori)** (2026-11-21, piano: [piano-partita-veloce.md](piano-partita-veloce.md)): chi tocca «Partita veloce» si aggancia alla prima stanza aperta del gioco o ne apre una; sala d'attesa nel server (`apps/server/src/veloce.ts`), contratto `veloce` in `@gdt/engine` (posti, avvio anticipato, squadre, `configVeloce`), UI condivisa in `@gdt/collegamento`. Adottata da Tris (2 fissi) e Ultima! (2–10, anticipata). Scelte: tempo d'attesa 1/2/3/5 minuti scelto dall'organizzatore; conto di 10 secondi (30 per le squadre scelte in sala); niente bot; organizzatore che esce → passa al prossimo; posto tenuto 30 secondi; le varianti sono impostazioni scelte da chi apre. Il vecchio `coda` resta come alias di messaggio per una versione. Scopa e Burraco la useranno con le squadre.
 - TODO **Impostore, partita veloce**: per ora no (deciso il 2026-11-21); si potrà aggiungere dichiarando `veloce` nel modulo online quando la partita veloce a stanze aperte sarà pronta.
 - TODO **Duello Lampo: altri mini giochi** (idee: Bersagli, Il più grande), griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

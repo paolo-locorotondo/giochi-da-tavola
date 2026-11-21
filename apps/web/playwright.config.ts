@@ -15,11 +15,11 @@ export default defineConfig({
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: "disabled" } },
   use: { ...telefono, baseURL: `http://localhost:${PORTA}`, locale: "it-IT", serviceWorkers: "block" },
   projects: [
-    { name: "scuro", use: { colorScheme: "dark" }, testIgnore: /tris-coda/ },
-    { name: "chiaro", use: { colorScheme: "light" }, testIgnore: /tris-coda/ },
-    // La coda della partita veloce è condivisa dal server: i suoi test girano uno tema alla volta.
-    { name: "coda-scuro", use: { colorScheme: "dark" }, testMatch: /tris-coda/ },
-    { name: "coda-chiaro", use: { colorScheme: "light" }, testMatch: /tris-coda/, dependencies: ["coda-scuro"] },
+    { name: "scuro", use: { colorScheme: "dark" }, testIgnore: /tris-coda|veloce/ },
+    { name: "chiaro", use: { colorScheme: "light" }, testIgnore: /tris-coda|veloce/ },
+    // Le stanze veloci aperte sono condivise dal server: i loro test girano uno tema alla volta.
+    { name: "coda-scuro", use: { colorScheme: "dark" }, testMatch: /tris-coda|veloce/ },
+    { name: "coda-chiaro", use: { colorScheme: "light" }, testMatch: /tris-coda|veloce/, dependencies: ["coda-scuro"] },
   ],
   webServer: [
     {

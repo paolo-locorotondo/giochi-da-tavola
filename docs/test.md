@@ -28,7 +28,7 @@ deterministico: stesso seme, stesso risultato, nessuna rete e nessun browser.
 | `games/ultima` | mazzo da 108 carte, giocabilità, effetti di Salta/Inverti/+2/Jolly, prima carta speciale, sfida del +4 (vinta e persa), «Ultima!» e «Beccato!», mazzo esaurito, punteggio; bot (priorità, sfida, colore, «Ultima!») e partite intere giocate solo dai bot con molti semi e da 2 a 10 giocatori; modulo offline contro i bot (partita sul telefono, vista senza mani altrui, nessun bot che gioca per me, partite intere a ogni livello, «Beccato!» con ritardo minimo) e modulo online (config, permessi, vista senza carte altrui né esito segreto della sfida, round a punti, riproducibilità con il seme) |
 | `games/dadi` | lancio sempre valido e riproducibile con un seme, distribuzione uniforme anche col generatore crittografico, valori personalizzati, qualità dei modelli |
 | `games/duello-lampo` | scaletta dalle mani di ogni mini gioco (di fila, 0 = non si usa; ordine del registro, scelto dall'utente o a caso: tutti i 6 ordini possibili con tre mini giochi, riproducibile con il seme, nuovo a ogni rivincita; elenco salvato completato e ripulito), controllo delle mani, punti (anche negativi con gli errori), errori che contano −1 per ogni mini gioco, spareggio scelto a caso tra i mini giochi della sfida, pari e spareggio, regole di ogni mini gioco (partenza anticipata, risposta sbagliata, pari, chi non tocca; Colore giusto con parola e inchiostro diversi, griglie di Trova il panda / lo smile in cui a ogni passo cambiano esattamente N caselle (con il bersaglio solo all'ultimo passo, tra quelle che cambiano), figure dritte o senza rotazione, cambi che continuano dopo la comparsa senza toccare il bersaglio, impostazioni (valori di base, valori non ammessi, limiti che dipendono da altre impostazioni, ogni valore dà un round coerente), parole di Colori e nomi che combaciano solo alla fine, sequenza della memoria senza ripetizioni di fila), scelta a caso |
-| `apps/server` | permessi di ogni azione, token, codici stanza, rientro, privacy della vista per ogni telefono |
+| `apps/server` | permessi di ogni azione, token, codici stanza, rientro, privacy della vista per ogni telefono; partita veloce (`veloce.test.ts`): attesa, conto, scaduta, avvio anticipato, grazia di 30 s, squadre, nomi uguali, corse tra anteprima e aggancio, coerenza delle dichiarazioni `veloce` di ogni gioco (tempo iniettato, nessun timer vero) |
 
 Regole del progetto per i test:
 
@@ -60,6 +60,12 @@ server non raggiungibile. Per la home: ricerca, **ordinamento dei giochi con le 
 preparazione (mani, impostazioni di ogni mini gioco, ordine a caso o scelto), ogni mini gioco con i suoi casi
 (partenza anticipata, risposta sbagliata, bersaglio che compare mentre la griglia continua a cambiare), errori che
 contano −1, partita intera fino alla rivincita e barra dell'app nascosta durante la partita.
+
+Partita veloce (più contesti del browser, progetti seriali `coda-scuro` e `coda-chiaro` perché le stanze
+veloci aperte sono condivise dal server): `tris-coda.spec.ts` (due telefoni → partita avviata, «Esci dalla sala»,
+refresh in attesa che tiene il posto) e `ultima-veloce.spec.ts` (Anna apre 4 posti a punti, Bruno vede l'anteprima
+ed entra, Carla entra, «Apri adesso con 3 giocatori»; stanza da 3 che parte da sola). Negli screenshot della sala
+si mascherano il tempo che scorre e il codice. I tempi lunghi (attesa, conto, grazia) si provano solo negli unit test.
 
 Gli screenshot con elementi che cambiano nel tempo (le griglie dei «trova», il numero casuale di tocchi) si
 confrontano **mascherando** la parte che cambia (`maschera` in `schermata`), altrimenti il confronto è instabile.
