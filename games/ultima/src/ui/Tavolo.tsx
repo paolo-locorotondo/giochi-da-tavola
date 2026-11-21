@@ -404,7 +404,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
                   carta={carta}
                   t={t}
                   onClick={() => tocca(carta)}
-                  spenta={spenta}
+                  spenta={spenta && !(!gruppo && tagliabili.includes(carta))}
                   scelta={gruppo ? dentro : undefined}
                   tagliabile={!gruppo && tagliabili.includes(carta)}
                 />
