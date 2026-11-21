@@ -42,6 +42,16 @@ html[data-stile="tavolo"][data-tema="dark"] {
   --r: 14px;
   --bw: 1px;
   --sh: 0 1px 0 #ffffff12 inset, 0 6px 16px #0006;
+  /* Carte (@gdt/carte): fondo chiaro anche nel tema scuro; contrasto di segni e semi ≥ 4,5:1 sul fondo carta */
+  --carta-fondo: #ece4cc;
+  --carta-bordo: #8a7f5e;
+  --carta-fg: #1b2a22;
+  --carta-rosso: #a8231b;
+  --carta-oro: #7a5600;
+  --carta-blu: #1f4f9e;
+  --carta-verde: #17663a;
+  --carta-dorso: #1d3328;
+  --carta-dorso-segno: #e3b341;
 }
 
 /* Tavolo · chiaro */
@@ -70,4 +80,14 @@ html[data-stile="tavolo"][data-tema="light"] {
   --r: 14px;
   --bw: 1px;
   --sh: 0 1px 0 #fff inset, 0 4px 12px #3a2f1018;
+  /* Carte (@gdt/carte): contrasto di segni e semi ≥ 4,5:1 sul fondo carta */
+  --carta-fondo: #fffdf6;
+  --carta-bordo: #7d7559;
+  --carta-fg: #1b2a22;
+  --carta-rosso: #b3261e;
+  --carta-oro: #7a5600;
+  --carta-blu: #1f5bb8;
+  --carta-verde: #17733a;
+  --carta-dorso: #1a6b40;
+  --carta-dorso-segno: #e3b341;
 }

@@ -9,6 +9,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- Interno: nuovo pacchetto `@gdt/carte` (mazzo francese anche doppio con jolly, mazzo italiano da 40, mescolata con `Rng`, ordinamenti, `CartaGrafica` e `Mano` con selezione e riordino, it/en) e token `--carta-*` nel tema; base per Burraco e Scopa, nessun gioco lo usa ancora.
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
 ## [0.25.0] - 2026-11-20
