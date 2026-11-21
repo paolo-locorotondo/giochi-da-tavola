@@ -61,17 +61,36 @@ Tutte «come consigliato nei piani» salvo dove indicato.
 2. Dopo le basi: server e UI della partita veloce (1), varianti di Ultima! (5), logica e bot contro i bot di Scopa (3) e Burraco (2).
 3. Poi in sequenza: online di Scopa e Burraco, adozione della partita veloce in Tris e Ultima!, taglio e più carte uguali di Ultima!.
 
+## Come si lavora (worktree manuali)
+
+Lo strumento automatico dei worktree non funziona su questo PC (confonde `f:` e `F:`), quindi i worktree
+si creano a mano, **fuori dal repo**, in `F:\Paolo_Work\MyProjects\gdt-worktrees\<nome>`:
+
+```
+git worktree add ../gdt-worktrees/<nome> -b lavoro/<nome> main
+```
+
+Gli agenti si lanciano senza isolamento automatico, con il percorso del worktree scritto nel prompt.
+Per vedere lo stato: `git worktree list`, `git log --oneline main..lavoro/<nome>` in ogni branch.
+Gli e2e usano le porte 5199 e 8081: **un solo agente alla volta** li lancia.
+
+## Come riprendere dopo un'interruzione
+
+1. `git worktree list` e, per ogni `lavoro/*`, `git status` e `git log --oneline main..HEAD`: i commit sono già salvati; il lavoro non committato sta nella cartella del worktree.
+2. Un agente interrotto si rilancia con lo stesso prompt del filone più «Riprendi dal punto in cui è arrivato: guarda `git log` e `git status` del tuo worktree».
+3. Aggiorna la tabella qui sotto.
+
 ## Stato
 
-Aggiorna questa tabella a ogni passo (stato: da fare / in corso / unito a main).
+Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / unito a main).
 
 | Blocco | Branch / worktree | Stato |
 |---|---|---|
 | Piani (5 file) | main | unito |
-| 0a Contratto `veloce` in engine | — | da fare |
-| 0b `@gdt/carte` | — | da fare |
-| 4 Duello Lampo (Bersagli, Il più grande) | — | da fare |
-| 1 Partita veloce (server + UI) | — | da fare |
-| 5 Ultima! varianti | — | da fare |
-| 3 Scopa | — | da fare |
-| 2 Burraco | — | da fare |
+| 0a Contratto `veloce` + `ctx.ora()` in engine | lavoro/base-engine | in corso (2026-11-21) |
+| 0b `@gdt/carte` | lavoro/base-carte | in corso (2026-11-21) |
+| 4 Duello Lampo (Bersagli, Il più grande) | lavoro/duello-lampo | in corso (2026-11-21) |
+| 1 Partita veloce (server + UI) | — | da fare, dopo 0a |
+| 5 Ultima! varianti | — | da fare, dopo 0a |
+| 3 Scopa | — | da fare, dopo 0a e 0b |
+| 2 Burraco | — | da fare, dopo 0a e 0b |
