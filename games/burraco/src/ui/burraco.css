@@ -1,0 +1,275 @@
+/* Burraco: solo token del tema, nessun colore scritto a mano */
+
+.bu-tavolo {
+  gap: 0.9rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: 0;
+}
+
+.bu-testa { display: grid; gap: 0.2rem; }
+.bu-riga-mano { margin: 0; text-align: center; }
+
+.bu-stato {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-titoli);
+  font-size: 1.2rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Punteggi di squadra */
+.bu-squadre {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.bu-squadra {
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.bu-squadra.bu-nostra { border: 2px solid var(--ac); }
+.bu-squadra-nome { font-weight: 700; overflow-wrap: anywhere; }
+.bu-squadra-punti { font-family: var(--font-titoli); font-size: 1.15rem; font-weight: 800; }
+.bu-squadra-pozzetto { font-size: 0.85rem; color: var(--mu); }
+
+/* Giocatori */
+.bu-giocatori {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.bu-giocatore {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.5rem 0.7rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+}
+
+.bu-giocatore.bu-turno { border: 2px solid var(--ac); }
+.bu-giocatore-nome { font-weight: 700; overflow-wrap: anywhere; }
+.bu-giocatore-dati { font-size: 0.85rem; color: var(--mu); }
+
+/* Combinazioni sul tavolo */
+.bu-titoletto { margin: 0 0 0.4rem; font-family: var(--font-titoli); font-size: 1rem; }
+.bu-nota { margin: 0; font-size: 0.85rem; }
+
+.bu-combinazioni {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.bu-comb {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.6rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  min-width: 0;
+}
+
+.bu-comb-burraco { border: 2px solid var(--ac); }
+
+.bu-comb-testa {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem 0.6rem;
+}
+
+.bu-comb-titolo { font-weight: 700; overflow-wrap: anywhere; }
+
+.bu-badge {
+  padding: 0.15rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--on-ac);
+  background: var(--ac);
+  border-radius: 999px;
+}
+
+/* Carte sovrapposte: ogni carta mini (26 px) si sposta di 18 px, così 14 carte stanno in 270 px */
+.bu-fila {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.1rem 0 0;
+  display: flex;
+  min-width: 0;
+}
+
+.bu-posata { position: relative; flex: none; width: 1.125rem; height: 2.375rem; }
+.bu-posata:last-child { width: 1.625rem; }
+.bu-posata .cg-carta { position: absolute; left: 0; top: 0; }
+
+/* Segno «M» sulle matte: cerchietto con lettera, oltre al colore */
+.bu-matta {
+  position: absolute;
+  right: 0;
+  bottom: -0.2rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 0.95rem;
+  height: 0.95rem;
+  font-family: var(--font-testo);
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--on-ac);
+  background: var(--ac);
+  border: 1px solid var(--carta-fondo);
+  border-radius: 999px;
+}
+
+.bu-attacca { justify-self: start; }
+
+/* Centro: tallone e monte */
+.bu-centro {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.bu-pila {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd);
+  border-radius: var(--r);
+  min-width: 0;
+}
+
+.bu-pila .btn { width: 100%; }
+.bu-etichetta { font-weight: 700; font-size: 0.9rem; }
+.bu-conta { font-size: 0.85rem; }
+.bu-vuoto { display: grid; place-items: center; min-height: 5.8rem; color: var(--mu); font-size: 0.85rem; text-align: center; }
+
+.bu-monte {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Barra di azioni sotto la mano */
+.bu-barra {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 -0.25rem;
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+  background: var(--s1);
+  border-top: 2px solid var(--ac);
+  border-radius: var(--r) var(--r) 0 0;
+}
+
+.bu-tavolo .cg-mano { scroll-margin-bottom: 9rem; }
+.bu-tavolo .cg-griglia button { scroll-margin-bottom: 9rem; }
+.bu-anteprima { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.bu-conferma { margin: 0; font-weight: 700; }
+
+.bu-azioni {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: 0.6rem;
+}
+
+.bu-azioni .primario { grid-column: auto; }
+.bu-azioni-mano { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.bu-azioni-mano .btn { padding-inline: 0.4rem; line-height: 1.15; }
+.bu-tutta-riga { grid-column: 1 / -1; }
+
+.bu-avviso {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.9rem;
+  background: var(--s1);
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+}
+
+.bu-avviso h3,
+.bu-avviso p { margin: 0; }
+.bu-esito { font-family: var(--font-titoli); font-size: 1.3rem; font-weight: 800; }
+
+/* Tabella dei punti */
+.bu-punti {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.bu-punti caption { text-align: left; padding-bottom: 0.3rem; }
+.bu-punti th,
+.bu-punti td { padding: 0.35rem 0.4rem; border-bottom: var(--bw) solid var(--bd); }
+.bu-punti thead th { text-align: right; overflow-wrap: anywhere; }
+.bu-punti thead th:first-child { text-align: left; }
+.bu-punti tbody th { text-align: left; font-weight: 500; }
+.bu-punti td { text-align: right; font-variant-numeric: tabular-nums; }
+.bu-riga-totale th,
+.bu-riga-totale td { font-weight: 800; }
+
+.bu-eventi {
+  margin: 0;
+  padding: 0 0 0 1.2rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+/* Creazione e scelte */
+.bu-gruppo { display: grid; gap: 0.6rem; }
+.bu-senza-bordo { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+.bu-opzione {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  min-height: 56px;
+  padding: 0.6rem 0.8rem;
+  background: var(--s1);
+  border: var(--bw) solid var(--bd-ctrl);
+  border-radius: var(--r);
+}
+
+.bu-opzione:has(input:checked) { border: 2px solid var(--ac); }
+.bu-opzione input { width: 1.4rem; height: 1.4rem; flex: none; accent-color: var(--ac); }
+
+.bu-segmento {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.bu-segmento .btn[aria-pressed="true"] {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--on-ac);
+  font-weight: 600;
+}

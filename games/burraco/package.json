@@ -1,0 +1,33 @@
+{
+  "name": "@gdt/burraco",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./online": "./src/online/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gdt/carte": "workspace:*",
+    "@gdt/collegamento": "workspace:*",
+    "@gdt/engine": "workspace:*",
+    "@gdt/i18n": "workspace:*",
+    "lucide-react": "^1.69.0",
+    "qrcode": "1.5.4"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/qrcode": "1.5.5",
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
+    "vitest": "^2.1.8"
+  }
+}

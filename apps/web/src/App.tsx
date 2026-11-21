@@ -1,5 +1,6 @@
 import { useEffect, useState, type MouseEvent, type ReactElement } from "react";
 import { applicaOrdine, leggiOrdine, scriviOrdine, seguiSchermoIntero, spostaVoce } from "@gdt/preferenze";
+import { BurracoApp, manifest as burraco } from "@gdt/burraco";
 import { DadiApp, manifest as dadi } from "@gdt/dadi";
 import { DuelloLampoApp, manifest as duelloLampo } from "@gdt/duello-lampo";
 import { ImpostoreApp, manifest as impostore } from "@gdt/impostore";
@@ -37,6 +38,7 @@ const giochi: VoceGioco[] = [
   { ...tris, Componente: TrisApp },
   { ...ultima, Componente: UltimaApp },
   { ...scopa, Componente: ScopaApp },
+  { ...burraco, Componente: BurracoApp },
   { ...duelloLampo, Componente: DuelloLampoApp },
 ];
 
@@ -73,6 +75,7 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   tris: "griglia",
   ultima: "carte",
   scopa: "ventaglio",
+  burraco: "asso-e-sette",
   "duello-lampo": "fulmine",
 };
 

@@ -1,4 +1,5 @@
 import type { GiocoOnline } from "@gdt/engine";
+import { burracoOnline } from "@gdt/burraco/online";
 import { impostoreOnline } from "@gdt/impostore/online";
 import { trisOnline } from "@gdt/tic-tac-toe/online";
 import { scopaOnline } from "@gdt/scopa/online";
@@ -16,6 +17,7 @@ export const GIOCHI_ONLINE: Readonly<Record<string, GiocoQualsiasi>> = {
   [trisOnline.id]: trisOnline,
   [scopaOnline.id]: scopaOnline,
   [ultimaOnline.id]: ultimaOnline,
+  [burracoOnline.id]: burracoOnline,
 };
 
 /** Il gioco con questo id; quello predefinito (Impostore) se manca, per i client di prima. */
