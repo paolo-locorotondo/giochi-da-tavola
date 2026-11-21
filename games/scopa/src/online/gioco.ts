@@ -1,4 +1,4 @@
-import type { Carta } from "@gdt/carte/src/tipi";
+import type { Carta } from "@gdt/carte/logica";
 import { MAX_CARATTERI_NOME, creaRng, limitaTesto, type GiocoOnline, type Rng } from "@gdt/engine";
 import { mossaBotLivello, eseguiMossa, type Livello } from "../bot";
 import { ErroreScopa, avanza, gioca, nuovoRound, presePossibili, squadreDiBase, type Evento, type FineRound, type Partita, type Squadra } from "../logica";
