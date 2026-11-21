@@ -2,11 +2,13 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Copy, Minus, Plus } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
-import { usaT } from "@gdt/i18n";
+import { ApriVeloce, SalaVeloce, usaTestiVeloce } from "@gdt/collegamento";
+import { usaT, type Traduttore } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
 import { MAX_GIOCATORI, MIN_GIOCATORI } from "../logica";
-import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, type ModoPunteggio, type Vista } from "../online";
+import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, ultimaOnline, type ConfigOnline, type ModoPunteggio, type Vista } from "../online";
+import { impostazioniVeloce } from "./ImpostazioniVeloce";
 import { Tavolo } from "./Tavolo";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 
@@ -14,6 +16,12 @@ export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: str
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
+  const [veloce, setVeloce] = useState(false);
+
+  // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
+  useEffect(() => {
+    if (c.fuoriSala) setVeloce(true);
+  }, [c.fuoriSala]);
 
   // Gli errori transitori spariscono dopo qualche secondo.
   useEffect(() => {
@@ -59,7 +67,16 @@ export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: str
   }
 
   if (!c.vista) {
-    if (codiceIniziale) {
+    // Sala d'attesa della partita veloce (anche dopo un refresh: si rientra con il token).
+    if (c.sala) {
+      return (
+        <>
+          {stato}
+          <SalaVeloce c={c} riepilogo={riepilogoConfig(t)} testoErrore={(m) => testoMessaggio(t, m)} />
+        </>
+      );
+    }
+    if (codiceIniziale && !c.fuoriSala) {
       return (
         <section className="schermata">
           {stato}
@@ -68,11 +85,23 @@ export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: str
         </section>
       );
     }
+    if (veloce) {
+      return (
+        <ApriVeloce
+          c={c}
+          veloce={ultimaOnline.veloce!}
+          impostazioni={impostazioniVeloce}
+          riepilogo={riepilogoConfig(t)}
+          testoErrore={(m) => testoMessaggio(t, m)}
+          onIndietro={() => setVeloce(false)}
+        />
+      );
+    }
     if (inserisci) return <EntraConCodice c={c} onIndietro={() => setInserisci(false)} />;
     return (
       <>
         {stato}
-        <Crea c={c} onEntra={() => setInserisci(true)} />
+        <Crea c={c} onEntra={() => setInserisci(true)} onVeloce={() => setVeloce(true)} />
       </>
     );
   }
@@ -90,8 +119,15 @@ export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: str
   );
 }
 
-function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
+/** Il riepilogo delle impostazioni, per la sala d'attesa e l'anteprima della partita veloce. */
+const riepilogoConfig = (t: Traduttore<typeof dizionari.it>) => (config: unknown) => {
+  const cfg = config as ConfigOnline;
+  return cfg.modo === "punti" ? t("riepilogoPunti", { soglia: cfg.soglia }) : t("riepilogoSingolo");
+};
+
+function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; onVeloce: () => void }) {
   const t = usaT(dizionari);
+  const tv = usaTestiVeloce();
   const [nomi, setNomi] = useState<string[]>(["", ""]);
   const [modo, setModo] = useState<ModoPunteggio>("singolo");
   const [soglia, setSoglia] = useState(SOGLIA_PREDEFINITA);
@@ -167,6 +203,9 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       </button>
       <button className="btn" type="button" onClick={onEntra}>
         {t("hoUnCodice")}
+      </button>
+      <button className="btn" type="button" onClick={onVeloce}>
+        {tv("partitaVeloce")}
       </button>
     </form>
   );

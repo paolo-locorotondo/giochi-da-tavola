@@ -22,6 +22,7 @@ export type {
   GiocoOnline,
   ModoSquadre,
   MomentoOnline,
+  ComandoSala,
   MomentoSala,
   PartitaVeloceOnline,
   PresenzeOnline,

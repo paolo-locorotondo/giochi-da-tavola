@@ -44,6 +44,18 @@ vecchia versione con F5; il server di sviluppo lo rimuove da solo, oppure: DevTo
   Creare una nuova partita ne crea un'altra, non cancella la vecchia.
 - Limiti contro gli abusi: massimo 300 stanze contemporanee, 60 giocatori per stanza, messaggi fino a 4 KB.
 
+## La partita veloce (stanze aperte)
+
+Senza codici: chi tocca «Partita veloce» entra nella prima stanza aperta del gioco con posti liberi, o ne apre una (e ne è l'organizzatore). Un gioco la abilita con `veloce` nel suo `GiocoOnline` (posti, avvio anticipato, squadre, `configVeloce`; vedi `packages/engine/src/online.ts`).
+
+- **La sala vive nel server, fuori dallo stato del gioco** (`apps/server/src/veloce.ts`, modulo puro con tempo e connessioni iniettati). Finché la partita non parte la stanza ha `sala` e `stato` nullo e non accetta azioni; all'avvio il server chiama `nuovoStato(nomi, configVeloce(config, n))`, siede i telefoni ai posti 1..n, manda `avvia` per l'organizzatore e da lì è una stanza normale. I giochi ricevono tutti i nomi insieme, come sempre.
+- **Stati**: `attesa` (tempo scelto dall'organizzatore: 1, 2, 3 o 5 minuti, base 2) → `conto` (10 secondi, 30 con le squadre «scelte in sala») → avvio; oppure `scaduta` se non c'è il minimo (60 secondi per decidere, poi la stanza si chiude). L'organizzatore può «Apri adesso», «Continua ad aspettare» (nuova attesa piena) o «Aspetta ancora»; una sala non si rinnova oltre i 15 minuti.
+- **Un solo orologio da 1 secondo** in `index.ts` fa avanzare tutte le sale (`tick`, puro). Il client riceve `restaMs` e conta da sé.
+- **Grazia di 30 secondi**: il socket chiuso (schermo bloccato, rete) non libera il posto subito; lo libera `tick` dopo 30 secondi. «Esci dalla sala» lo libera subito. Il rientro è quello delle altre stanze (token e codice). Con un token sconosciuto il codice di una sala veloce risponde «stanzaVeloce».
+- **Squadre** (`squadre(posti)` del gioco = mappa posti → squadra): «in ordine di arrivo» (1°+3° contro 2°+4°), «a caso» (sorteggio all'avvio con `randomInt`) o «scelte in sala».
+- **Messaggi**: `anteprimaVeloce` → `anteprima`; `veloce` (con `codice` per entrare in quella vista, con `apri` per aprirne una; se nel frattempo è cambiato: `salaCambiata` / `salaApertaNelFrattempo` e nuova anteprima); `sala` (comandi); `esciDaSala`; `salaVeloce` (la vista della sala) e `fuoriSala`. I vecchi `coda` / `esciDaCoda` restano per una versione come alias per le PWA in cache.
+- I testi della sala e dell'apertura sono in `packages/collegamento/src/locales`; i giochi passano solo il riepilogo delle loro impostazioni.
+
 ## Come si riconosce un telefono
 
 Non ci sono account. Alla prima connessione il server crea un **token** casuale (16 byte, 128 bit) e lo manda al telefono.

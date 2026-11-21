@@ -9,7 +9,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gdt/suoni": "workspace:*"
+    "@gdt/engine": "workspace:*",
+    "@gdt/i18n": "workspace:*",
+    "@gdt/suoni": "workspace:*",
+    "lucide-react": "^1.69.0"
   },
   "peerDependencies": {
     "react": "^18.3.1"

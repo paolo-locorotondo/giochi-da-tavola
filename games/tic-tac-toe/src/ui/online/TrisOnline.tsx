@@ -2,10 +2,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
+import { ApriVeloce, SalaVeloce } from "@gdt/collegamento";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
 import { testoMessaggio } from "../../errori-ui";
-import type { Vista } from "../../online";
+import { trisOnline, type Vista } from "../../online";
 import { leggiToken, useCollegamento, type Collegamento } from "./collegamento";
 
 export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: string | null; onLocale: () => void }) {
@@ -13,6 +14,11 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
   const [veloce, setVeloce] = useState(false);
+
+  // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
+  useEffect(() => {
+    if (c.fuoriSala) setVeloce(true);
+  }, [c.fuoriSala]);
 
   // Gli errori transitori spariscono dopo qualche secondo.
   useEffect(() => {
@@ -53,7 +59,16 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
   }
 
   if (!c.vista) {
-    if (codiceIniziale) {
+    // Sala d'attesa della partita veloce (anche dopo un refresh: si rientra con il token).
+    if (c.sala) {
+      return (
+        <>
+          {stato}
+          <SalaVeloce c={c} riepilogo={() => ""} testoErrore={(m) => testoMessaggio(t, m)} />
+        </>
+      );
+    }
+    if (codiceIniziale && !c.fuoriSala) {
       return (
         <section className="schermata">
           {stato}
@@ -62,7 +77,18 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
         </section>
       );
     }
-    if (veloce || c.inCoda) return <PartitaVeloce c={c} onIndietro={() => setVeloce(false)} onLocale={onLocale} />;
+    if (veloce) {
+      return (
+        <ApriVeloce
+          c={c}
+          veloce={trisOnline.veloce!}
+          riepilogo={() => ""}
+          testoErrore={(m) => testoMessaggio(t, m)}
+          onIndietro={() => setVeloce(false)}
+          alternativa={{ testo: t("giocaUnTelefono"), onClick: onLocale }}
+        />
+      );
+    }
     if (inserisci) return <EntraConCodice c={c} onIndietro={() => setInserisci(false)} />;
     return (
       <>
@@ -117,57 +143,6 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
       </button>
       <button className="btn" type="button" onClick={onVeloce}>
         {t("partitaVeloce")}
-      </button>
-    </form>
-  );
-}
-
-/** Partita veloce: solo il proprio nome; il server abbina due telefoni in attesa e avvia. */
-function PartitaVeloce({ c, onIndietro, onLocale }: { c: Collegamento; onIndietro: () => void; onLocale: () => void }) {
-  const t = usaT(dizionari);
-  const [nome, setNome] = useState("");
-  const pulito = nome.trim();
-  if (c.inCoda) {
-    return (
-      <section className="schermata allineata" aria-live="polite">
-        <h2>{t("inCoda")}</h2>
-        <p className="muted">{t("inCodaTesto", { nome: pulito })}</p>
-        <button className="btn" type="button" onClick={c.annullaCoda}>
-          {t("annulla")}
-        </button>
-      </section>
-    );
-  }
-  return (
-    <form
-      className="schermata allineata"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (pulito && c.connesso) c.cercaAvversario(pulito);
-      }}
-    >
-      <h2>{t("partitaVeloce")}</h2>
-      <p className="muted">{t("partitaVeloceTesto")}</p>
-      {c.codaScaduta && (
-        <p className="avviso" role="status">
-          {t("codaScaduta")}
-        </p>
-      )}
-      <label className="campo">
-        {t("tuoNome")}
-        <input autoFocus value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setNome(e.target.value)} />
-      </label>
-      {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
-      <button className="btn primario" type="submit" disabled={!c.connesso || !pulito}>
-        {t("cercaAvversario")}
-      </button>
-      {c.codaScaduta && (
-        <button className="btn" type="button" onClick={onLocale}>
-          {t("giocaUnTelefono")}
-        </button>
-      )}
-      <button className="btn" type="button" onClick={onIndietro}>
-        {t("indietro")}
       </button>
     </form>
   );

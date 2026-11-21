@@ -159,7 +159,7 @@ export const trisOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
   momento: (s) => (s.fase === "sala" ? "sala" : s.fase === "fine" ? "fine" : "inCorso"),
   inGioco: (s) => (s.fase === "sala" ? [] : POSTI),
   mancanti,
-  coda: { giocatori: 2 },
+  veloce: { posti: [2], configVeloce: () => ({}) },
 
   traduci(_s, ctx, a) {
     const mio = ctx.posto;

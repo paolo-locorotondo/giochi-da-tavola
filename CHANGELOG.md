@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- **Partita veloce a stanze aperte** (da rilasciare come MINOR): chi tocca «Partita veloce» entra nella prima stanza aperta del gioco o ne apre una; sala d'attesa con tempo scelto dall'organizzatore (1, 2, 3 o 5 minuti), avvio anticipato, avviso di 10 secondi, grazia di 30 secondi con lo schermo bloccato. Tris (2 fissi) la usa al posto della coda (il refresh in attesa non fa più perdere il posto); Ultima! la ha da 2 a 10 giocatori con le impostazioni di punteggio scelte da chi apre. Server: `apps/server/src/veloce.ts` al posto di `coda.ts` (i vecchi messaggi `coda` restano come alias per una versione); client e componenti condivisi in `@gdt/collegamento` (`SalaVeloce`, `ApriVeloce`, testi it/en). Nuovi test unitari del server e due spec e2e (`ultima-veloce`, `tris-coda` aggiornato) da eseguire sul coordinatore.
+
 - Contratto della partita veloce a stanze aperte in `@gdt/engine` (tipi `PartitaVeloceOnline`, `AperturaVeloce`, `AnteprimaVeloce`, `VistaSalaVeloce`, `intervalloPosti`, costanti d'attesa e di conto) e `ContestoOnline.ora()` per le logiche con finestre di tempo. Solo contratto: nessun cambio di comportamento.
 - Interno: nuovo pacchetto `@gdt/carte` (mazzo francese anche doppio con jolly, mazzo italiano da 40, mescolata con `Rng`, ordinamenti, `CartaGrafica` e `Mano` con selezione e riordino, it/en) e token `--carta-*` nel tema; base per Burraco e Scopa, nessun gioco lo usa ancora.
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
