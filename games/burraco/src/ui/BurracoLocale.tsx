@@ -76,7 +76,6 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
   const [errore, setErrore] = useState<string | null>(null);
   const pulito = nome.trim();
 
-  const nomiBot = giocatori === 2 ? [t("nomeBotUnico")] : [t("botAvversario", { n: 1 }), t("botCompagno"), t("botAvversario", { n: 2 })];
   // Ordine dei posti: tu (1), avversario (2), compagno (3), avversario (4).
   const nomi = giocatori === 2 ? [pulito, t("botAvversario", { n: 1 })] : [pulito, t("botAvversario", { n: 1 }), t("botCompagno"), t("botAvversario", { n: 2 })];
 
@@ -106,7 +105,7 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
         onCambia={(v) => setGiocatori(v === "4" ? 4 : 2)}
         voci={[
           { valore: "2", titolo: t("dueGiocatori"), desc: t("dueGiocatoriDesc") },
-          { valore: "4", titolo: t("quattroGiocatori"), desc: `${t("quattroGiocatoriDesc")} (${nomiBot.join(", ")})` },
+          { valore: "4", titolo: t("quattroGiocatori"), desc: t("quattroGiocatoriDesc") },
         ]}
       />
       <Opzioni
@@ -253,7 +252,7 @@ function Partita({
         <legend>{t("velocitaBot")}</legend>
         <div className="bu-segmento">
           {(Object.keys(VELOCITA) as Velocita[]).map((x) => (
-            <button key={x} type="button" className={`btn${x === velocita ? " primario" : ""}`} aria-pressed={x === velocita} onClick={() => onVelocita(x)}>
+            <button key={x} type="button" className="btn" aria-pressed={x === velocita} onClick={() => onVelocita(x)}>
               {t(`velocita_${x}`)}
             </button>
           ))}

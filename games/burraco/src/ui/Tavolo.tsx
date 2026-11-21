@@ -224,6 +224,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       <div className="bu-nostre">
         <h3 className="bu-titoletto">{t("combinazioniNostre", { n: mie.length })}</h3>
+        {gioca && carteScelte.length > 0 && mie.length > 0 && <p className="muted bu-nota">{t("attaccaAiuto")}</p>}
         <Combinazioni
           t={t}
           tc={tc}
@@ -295,8 +296,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
                 }`}
           </p>
           {v.vietata !== null && <p className="muted bu-nota">{t("nonRiscartare")}</p>}
-          {gioca && carteScelte.length > 0 && mie.length > 0 && <p className="muted bu-nota">{t("attaccaAiuto")}</p>}
-          {confermaChiusura && unaScelta ? (
+                    {confermaChiusura && unaScelta ? (
             <div className="bu-azioni">
               <p className="bu-tutta-riga bu-conferma">{t("chiudiConferma", { carta: nomeCarta(tc, unaScelta) })}</p>
               <button className="btn primario" onClick={scarta}>
@@ -308,11 +308,11 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
             </div>
           ) : (
             <div className="bu-azioni bu-azioni-mano">
-              <button className="btn" disabled={!gioca || !lettura} onClick={cala}>
-                <Plus size={18} aria-hidden="true" /> {t("cala")}
+              <button className={`btn${gioca && lettura ? " primario" : ""}`} disabled={!gioca || !lettura} onClick={cala}>
+                {t("cala")}
               </button>
               <button
-                className={`btn${gioca ? " primario" : ""}`}
+                className={`btn${gioca && unaScelta ? " primario" : ""}`}
                 disabled={!gioca || !unaScelta}
                 onClick={scarta}
                 aria-label={unaScelta ? t("scartaAria", { carta: nomeCarta(tc, unaScelta) }) : undefined}

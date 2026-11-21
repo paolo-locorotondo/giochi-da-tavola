@@ -182,14 +182,16 @@
   bottom: 0;
   z-index: 3;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.35rem;
   margin: 0 -0.25rem;
-  padding: 0.6rem 0.75rem calc(0.6rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
   background: var(--s1);
   border-top: 2px solid var(--ac);
   border-radius: var(--r) var(--r) 0 0;
 }
 
+.bu-tavolo .cg-mano { scroll-margin-bottom: 9rem; }
+.bu-tavolo .cg-griglia button { scroll-margin-bottom: 9rem; }
 .bu-anteprima { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .bu-conferma { margin: 0; font-weight: 700; }
 
@@ -200,6 +202,8 @@
 }
 
 .bu-azioni .primario { grid-column: auto; }
+.bu-azioni-mano { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
+.bu-azioni-mano .btn { padding-inline: 0.4rem; line-height: 1.15; }
 .bu-tutta-riga { grid-column: 1 / -1; }
 
 .bu-avviso {
@@ -255,7 +259,7 @@
 }
 
 .bu-opzione:has(input:checked) { border: 2px solid var(--ac); }
-.bu-opzione input { width: 1.4rem; height: 1.4rem; flex: none; }
+.bu-opzione input { width: 1.4rem; height: 1.4rem; flex: none; accent-color: var(--ac); }
 
 .bu-segmento {
   display: grid;
