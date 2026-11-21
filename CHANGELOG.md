@@ -9,6 +9,8 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- Duello Lampo: due nuovi mini giochi. **Bersagli**: compaiono cerchi in una griglia (2×2, 3×3, 4×4) e si toccano prima che spariscano; vince chi ne colpisce di più, a parità chi è più veloce. **Il più grande**: compaiono 4, 6 o 9 numeri e vince chi tocca per primo il più grande; chi tocca un altro numero perde il round. Ognuno ha le sue impostazioni (durata, griglia, vita e ritmo dei bersagli; quanti numeri, cifre, scarto minimo) e «Gli errori contano −1». La sfida di base passa a 10 mini giochi e 20 round (2 mani ciascuno).
+
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
 ## [0.25.0] - 2026-11-20

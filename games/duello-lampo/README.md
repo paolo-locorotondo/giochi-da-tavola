@@ -24,6 +24,8 @@ Note: i tempi si misurano sul telefono dal momento in cui lo stimolo compare sul
 | **Trova il panda** | Una griglia 4×4 di animali colorati, ognuno girato in una direzione. Ogni secondo **cambiano 3 animali** a caso; a un certo punto uno di quelli che cambiano è un panda: vince chi lo tocca per primo. Gli altri animali continuano a cambiare anche dopo, così non si capisce dal fermo che è uscito. Chi tocca un altro animale (o tocca prima che compaia) perde il round. |
 | **Trova lo smile** | Come Trova il panda, ma con faccine tristi colorate e girate: vince chi tocca per primo l'unica faccina che sorride. |
 | **Memoria lampo** | Quattro caselle numerate si accendono una alla volta (4 passi); poi si ripete la sequenza nello stesso ordine. Vince chi la ripete giusta per primo; chi sbaglia una casella perde il round. |
+| **Bersagli** | Per 8 secondi compaiono cerchi in una griglia 3×3, uno ogni 0,9 secondi, e ognuno resta acceso 1,2 secondi. Si toccano per colpirli: vince chi ne colpisce di più; a parità vince chi ha reagito più in fretta (somma dei tempi). Le due metà vedono gli stessi bersagli negli stessi istanti. Un tocco a vuoto non toglie colpi: costa un punto solo con «Gli errori contano −1», una volta sola per round. |
+| **Il più grande** | Compaiono 6 numeri di due cifre: vince chi tocca per primo quello più grande (il secondo dista almeno 5). Chi tocca un altro numero perde il round. I due vedono gli stessi numeri nelle stesse posizioni. |
 
 ### Ordine dei mini giochi
 
@@ -47,12 +49,14 @@ Sotto ogni mini gioco, nella preparazione, c'è il pannello **«Impostazioni»**
 | Colori e nomi | Tempo per ogni parola: 0,8 / **1,3** / 2 s · Parole nel round: da 2 a 10 (**6**) · Parole che combaciano: da 1 al totale meno una (**1**), in posizioni casuali · Gli errori contano −1 |
 | Trova il panda, Trova lo smile (ognuno i suoi) | Griglia: 3×3 / **4×4** / 5×5 / 6×6 · Caselle che cambiano a ogni passo: da 1 a tutte (**3**) · Ogni quanto cambiano: 0,5 / 0,75 / **1** / 1,5 / 2 s · Le figure che cambiano ruotano: **sì** / no · Tutte dritte verso il giocatore (facile): sì / **no** · Gli errori contano −1 |
 | Memoria lampo | Caselle: **4** / 6 / 9 · Lunghezza della sequenza: 3 / **4** / 5 / 6 / 7 / 8 · Gli errori contano −1 |
+| Bersagli | Durata: 5 / **8** / 10 s · Griglia: 2×2 / **3×3** / 4×4 · Quanto resta acceso un bersaglio: 0,8 / **1,2** / 1,6 s · Ogni quanto compare un bersaglio: 0,6 / **0,9** / 1,2 s · Gli errori contano −1 |
+| Il più grande | Quanti numeri: 4 / **6** / 9 · Cifre: **2** / 3 · Scarto minimo tra i due più grandi: 1 / **5** / 10 · Gli errori contano −1 |
 
 Regole tra impostazioni: se rimpicciolisci la griglia, le caselle che cambiano scendono al massimo possibile (in 3×3 al massimo 9); con «Tutte dritte» l'interruttore «ruotano» si spegne. Lo spareggio usa le impostazioni scelte per il mini gioco estratto.
 
-**Gli errori contano −1** (spento di base): chi sbaglia perde anche un punto, e il punteggio può scendere sotto zero. È un errore solo una risposta sbagliata, non essere più lenti: in Via! toccare prima del via; in Colore giusto toccare un colore sbagliato; in Colori e nomi toccare quando nome e colore non combaciano; nei «trova» toccare un animale che non è il panda o una faccina triste; in Memoria lampo toccare una casella fuori sequenza. Raffica e Stop al centro non hanno errori. Nell'esito del round l'errore è segnato con «(−1)».
+**Gli errori contano −1** (spento di base): chi sbaglia perde anche un punto, e il punteggio può scendere sotto zero. È un errore solo una risposta sbagliata, non essere più lenti: in Via! toccare prima del via; in Colore giusto toccare un colore sbagliato; in Colori e nomi toccare quando nome e colore non combaciano; nei «trova» toccare un animale che non è il panda o una faccina triste; in Memoria lampo toccare una casella fuori sequenza; in Bersagli avere almeno un tocco a vuoto (la penalità è una per round, non una per tocco); in Il più grande toccare un numero che non è il più grande. Raffica e Stop al centro non hanno errori. Nell'esito del round l'errore è segnato con «(−1)».
 
-Idee per altri mini giochi: Bersagli (cerchi da colpire in 8 secondi), Il più grande (si tocca il numero più grande). Sui tablet si potranno valutare griglie più grandi di 6×6.
+Idee per altri mini giochi: nessuna in programma (le precedenti, Bersagli e Il più grande, sono fatte). Sui tablet si potranno valutare griglie più grandi di 6×6.
 
 ## Modalità di gioco
 
@@ -94,11 +98,13 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - **Colori e nomi**: la prima parola non combacia mai e la stessa parola non esce due volte di fila; chi tocca prima che combacino perde.
 - **Trova il panda / lo smile**: a ogni passo cambiano solo 3 caselle (non tutta la griglia, per non stancare la vista) e il bersaglio compare tra quelle che cambiano; dopo la comparsa le altre continuano a cambiare e il bersaglio resta fermo nella sua casella; le due metà hanno la stessa griglia e il bersaglio compare nello stesso momento; la griglia resta intera anche su telefoni bassi.
 - **Memoria lampo**: la casella accesa si riconosce anche dal numero; durante la dimostrazione i tocchi non contano.
+- **Bersagli**: i bersagli compaiono e spariscono da soli, uguali per le due metà; toccarne uno già colpito non conta né come colpo né come errore; un tocco a vuoto mostra «A vuoto»; lo stato e la barra del tempo stanno sopra la griglia; con la 4×4 i cerchi restano grandi almeno 44 px anche su telefoni bassi; con «riduci movimento» non ci sono animazioni né barra, resta il testo dei secondi.
+- **Il più grande**: i numeri sono gli stessi e nelle stesse posizioni nelle due metà; il numero toccato mostra ✓ o ✗ oltre al colore; non si rivela quale era il più grande a chi ha sbagliato; dopo il primo tocco il secondo non conta.
 - Nello spareggio compare «Spareggio» al posto del numero del round.
 - «Esci» sta nella barra centrale (non c'è durante conto alla rovescia e mini gioco, per non toccarlo per sbaglio) e chiede conferma.
 - «Avanti» resta spento per un attimo dopo l'esito, così un tocco in ritardo del round non lo salta.
 - Il colore non è mai l'unico segnale: «ORA!», «Troppo presto!» e i risultati sono sempre scritti. Con «riduci movimento» attivo non cambia nulla di essenziale (l'indicatore di Stop al centro è il gioco stesso).
-- Il suono (se l'audio è acceso): conto alla rovescia, via, punto, pari, fine.
+- Il suono (se l'audio è acceso): conto alla rovescia, via, punto, pari, fine, e un «tic» breve a ogni bersaglio colpito in Bersagli.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
 

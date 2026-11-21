@@ -756,6 +756,7 @@ div.dl-zona {
 .dl-bersagli-griglia {
   display: grid;
   grid-template-columns: repeat(var(--dl-lato, 3), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--dl-lato, 3), minmax(0, 1fr));
   gap: 0.3rem;
   width: min(100cqw, 100cqh, calc(var(--dl-lato, 3) * 6rem));
   aspect-ratio: 1;
@@ -775,12 +776,9 @@ div.dl-zona {
 .dl-bersaglio {
   display: grid;
   place-items: center;
-  width: 80%;
-  height: 80%;
-  max-width: 4rem;
-  max-height: 4rem;
-  min-width: 44px;
-  min-height: 44px;
+  /* Cerchio: 80% della cella, al massimo 4rem, mai sotto i 44 px toccabili */
+  width: max(44px, min(80%, 4rem));
+  aspect-ratio: 1;
   padding: 0;
   color: var(--on-ac);
   background: var(--ac);
@@ -789,7 +787,6 @@ div.dl-zona {
   cursor: pointer;
   touch-action: none;
   -webkit-tap-highlight-color: transparent;
-  animation: dl-compare 150ms ease-out;
 }
 
 .dl-bersaglio:focus-visible {
@@ -800,6 +797,8 @@ div.dl-zona {
 .dl-bersaglio-icona {
   width: 70%;
   height: 70%;
+  /* La scala sta sull'icona, non sul pulsante: l'area toccabile resta sempre di 44 px */
+  animation: dl-compare 150ms ease-out;
 }
 
 @keyframes dl-compare {
@@ -834,7 +833,7 @@ div.dl-zona {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dl-bersaglio {
+  .dl-bersaglio-icona {
     animation: none;
   }
   .dl-bersagli-effetto {
@@ -864,7 +863,7 @@ div.dl-zona {
 .dl-numero {
   position: relative;
   min-width: 0;
-  min-height: 3.5rem;
+  min-height: 4.5rem;
   padding: 0.4rem;
   font: inherit;
   font-family: var(--font-titoli);
