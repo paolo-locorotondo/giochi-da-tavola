@@ -69,6 +69,7 @@ Servono il sito **e** il server di gioco: `pnpm dev` li avvia insieme. Passi det
 - Fine round: punti e classifica; «Prossimo round» solo all'organizzatore; a fine partita «Ricomincia».
 - Refresh o schermo bloccato: si rientra nel proprio posto, con la propria mano.
 - Contro i bot: da 1 a 9 bot con nomi modificabili; i bot giocano da soli alla velocità scelta; con la rete spenta la partita va avanti; se dimentichi «Ultima!» un bot difficile ti becca dopo un attimo; «Esci dalla partita» chiede conferma.
+- Scambio e Rotazione: la carta mostra la mano (Scambio) o la freccia (Rotazione); dopo il colore lo Scambio chiede con chi (pulsanti a tutta larghezza, nome e numero di carte); le mani cambiate sono evidenziate; chi resta con una carta può dire «Ultima!» anche se non ha giocato lui.
 - Varianti: in creazione la sezione «Varianti» ha quattro interruttori spenti; quelle accese compaiono in sala e sul tavolo. Con la somma dei +2: il cumulo è scritto sul mazzo («cumulo 4»), chi lo ha davanti vede «Pesca N» e può calare solo i +2; gli altri vedono chi deve rispondere.
 - Tema chiaro e scuro, inglese, nessuno scroll orizzontale a 375 px.
 
@@ -99,9 +100,15 @@ Nella configurazione della stanza sono la chiave `varianti` (`{ sommaPiu2, piuUg
 
 - **Somma dei +2** (`sommaPiu2`): chi riceve un +2 non pesca subito, ha davanti un **cumulo**. Può rispondere con un +2 di **qualunque colore** (il cumulo cresce di 2 e passa al successivo) oppure **pescare tutto il cumulo** e saltare il turno (pulsante «Pesca N»). Con un cumulo aperto non si pesca una carta sola, non si passa e non si gioca nient'altro (`rispondiCumulo`). Un +2 non risponde a un +4 né un +4 a un +2. Se la prima carta scoperta è un +2, il cumulo di 2 vale per il primo giocatore, con la stessa scelta. Un +2 che svuota la mano chiude il round senza cumulo. I bot rilanciano se hanno un +2, altrimenti pagano (facile e medio a volte pagano anche potendo rilanciare).
 
+- **Scambio e Rotazione** (`scambioRotazione`): due nuove carte **jolly**, **due copie ciascuna** (il mazzo passa a **112**, id 108–111), da **50 punti**. Si giocano sempre, come il Jolly, e **chi le cala sceglie il colore**; non si giocano sopra un cumulo di +2 né sopra un +4. Non possono essere la prima carta scoperta (si rimettono nel mazzo). Icone `Handshake` e `RotateCw`.
+  - **Scambio**: dopo il colore si sceglie un altro giocatore («Bruno · 5 carte»); le due mani si scambiano. Il turno passa al successivo.
+  - **Rotazione**: ogni mano passa al posto successivo nel verso del gioco. Il turno passa al successivo.
+  - Se sono l'ultima carta, chi le cala vince il round e basta (nessun effetto). Dopo l'effetto, chiunque resti con **una carta sola** ha la sua finestra di «Ultima!» (anche più di uno: `Partita.ultime` è una lista). Nell'elenco dei giocatori le mani cambiate sono evidenziate (bordo tratteggiato, senza animazione con il movimento ridotto) e una riga dice cosa è successo.
+  - **Bot**: usano solo i numeri di carte (pubblici). Scambio se ha almeno 3 carte più di chi ne ha meno, e sceglie lui; Rotazione se la mano di chi lo precede ha almeno 3 carte meno della sua. Altrimenti le tengono come jolly di scorta (facile e medio ogni tanto le calano a caso).
+
 ### Possibili (non ancora fatte)
 
-- **Più carte uguali insieme**, **Taglio**, **Scambio e Rotazione**: in lavorazione, vedi il piano.
+- **Più carte uguali insieme**, **Taglio**: in lavorazione, vedi il piano.
 - **Pesca finché non puoi giocare** invece di una carta sola.
 - **+4 senza sfida** (si gioca sempre, niente controllo).
 - **Penalità per «Ultima!»** diversa da 2.

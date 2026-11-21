@@ -401,3 +401,50 @@ describe("somma dei +2 online", () => {
     for (let seme = 0; seme < 15; seme++) expect(giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true } })).fase).toBe("fine");
   });
 });
+
+describe("Scambio e Rotazione online", () => {
+  const cfg = { varianti: { scambioRotazione: true } };
+  it("il mazzo ha 112 carte e le mani altrui restano segrete dopo uno scambio", () => {
+    let trovato = false;
+    for (let seme = 0; seme < 60 && !trovato; seme++) {
+      let s = avviata(seme, NOMI, cfg);
+      expect(s.partita!.mazzo.length + s.partita!.scarto.length + s.partita!.mani.flat().length).toBe(112);
+      for (let i = 0; i < 400 && s.fase === "partita"; i++) {
+        const p = s.partita!;
+        if (p.eventi.some((e) => e.tipo === "scambio" || e.tipo === "rotazione")) {
+          trovato = true;
+          for (const posto of [1, 2, 3]) {
+            const v = vistaPer(s, posto, false);
+            const testo = JSON.stringify(v);
+            const altre = p.mani.filter((_, j) => j !== posto - 1).flat();
+            const pubbliche = new Set([v.scoperta?.id, ...v.eventi.flatMap((e) => (e.tipo === "gioca" ? [e.carta.id] : []))]);
+            for (const c of altre) if (!pubbliche.has(c.id)) expect(testo).not.toContain(`"id":${c.id},`);
+            expect(v.mano.map((c) => c.id)).toEqual(p.mani[posto - 1]!.map((c) => c.id));
+          }
+          break;
+        }
+        s = applica(s, { tipo: "bot", posto: p.ultime.find((u) => !u.dichiarata)?.posto ?? p.turno });
+      }
+    }
+    expect(trovato).toBe(true);
+  });
+  it("traduci inoltra scambiaCon e la logica rifiuta un posto non valido", () => {
+    const s = avviata(3, NOMI, cfg);
+    const p = s.partita!;
+    const turno = p.turno;
+    const sc = { id: 9999, tipo: "scambio" as const };
+    const mani = p.mani.map((m, i) => (i + 1 === turno ? [sc, ...m] : m));
+    const s2 = { ...s, partita: { ...p, mani, colore: "rosso" as const } };
+    const a = traduci(s2, turno, false, { tipo: "gioca", carta: 9999, colore: "blu", scambiaCon: 2 });
+    expect(a).toMatchObject({ tipo: "gioca", chi: turno, carta: 9999, colore: "blu", scambiaCon: 2 });
+    expect(codice(() => applica(s2, { tipo: "gioca", chi: turno, carta: 9999, colore: "blu", scambiaCon: turno }))).toBe("scambioNonValido");
+    const dopo = applica(s2, { tipo: "gioca", chi: turno, carta: 9999, colore: "blu", scambiaCon: turno === 1 ? 2 : 1 });
+    expect(dopo.partita!.mani.flat()).toHaveLength(p.mani.flat().length + 1 - 1);
+  });
+  it("partite intere con il bot arrivano alla fine con tutte le varianti attive", () => {
+    for (let seme = 0; seme < 10; seme++) {
+      const s = giocaConBot(avviata(seme, NOMI, { varianti: { sommaPiu2: true, scambioRotazione: true } }));
+      expect(s.fase).toBe("fine");
+    }
+  });
+});

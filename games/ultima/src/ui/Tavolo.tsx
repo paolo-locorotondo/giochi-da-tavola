@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Bot } from "lucide-react";
+import { Bell, Bot, Handshake, RotateCw } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { COLORI, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
@@ -34,6 +34,10 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
       return t("ev_salta", { nome: nome(e.posto) });
     case "inverti":
       return t("ev_inverti");
+    case "scambio":
+      return t("ev_scambio", { nome: nome(e.posto), con: nome(e.con) });
+    case "rotazione":
+      return t("ev_rotazione");
     case "piu2":
       return t("ev_piu2", { nome: nome(e.posto) });
     case "piu4":
@@ -63,11 +67,27 @@ function testoEvento(t: T, e: Evento, nome: (p: number) => string): string {
   }
 }
 
+/** Mosse che chiudono l'effetto di uno scambio di mani (dopo, le righe non sono più evidenziate). */
+const MOSSE = new Set(["gioca", "pesca", "passa", "accetta", "sfida", "pescaCumulo", "taglio", "nuovoRound"]);
+
+/** Se l'ultima mossa è stata uno Scambio o una Rotazione: quali posti evidenziare. */
+function maniCambiate(v: Vista): { tipo: "scambio" | "rotazione"; posti: number[] } | null {
+  for (let i = v.eventi.length - 1; i >= 0; i--) {
+    const e = v.eventi[i]!;
+    if (e.tipo === "scambio") return { tipo: "scambio", posti: [e.posto, e.con] };
+    if (e.tipo === "rotazione") return { tipo: "rotazione", posti: v.nomi.map((n) => n.posto) };
+    if (MOSSE.has(e.tipo)) return null;
+  }
+  return null;
+}
+
 export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const c = comandi;
   const t = usaT(dizionari);
   /** Un Jolly toccato: aspetta la scelta del colore. */
   const [jolly, setJolly] = useState<DatiCarta | null>(null);
+  /** Uno Scambio con il colore già scelto: aspetta il giocatore con cui scambiare. */
+  const [scambio, setScambio] = useState<{ carta: DatiCarta; colore: Colore } | null>(null);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
   const turno = v.turno;
   const giocabili = new Set(v.giocabili);
@@ -76,16 +96,20 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
   // Se il turno passa, la scelta del colore in sospeso non vale più.
   useEffect(() => {
-    if (!v.mioTurno) setJolly(null);
+    if (!v.mioTurno) {
+      setJolly(null);
+      setScambio(null);
+    }
   }, [v.mioTurno]);
 
   const tocca = (carta: DatiCarta) => {
     if (!v.mioTurno || !giocabili.has(carta.id)) return;
-    if (carta.tipo === "jolly" || carta.tipo === "piu4") setJolly(carta);
+    if (carta.tipo === "jolly" || carta.tipo === "piu4" || carta.tipo === "scambio" || carta.tipo === "rotazione") setJolly(carta);
     else c.azione({ tipo: "gioca", carta: carta.id });
   };
   const giocaJolly = (colore: Colore) => {
-    if (jolly) c.azione({ tipo: "gioca", carta: jolly.id, colore });
+    if (jolly?.tipo === "scambio") setScambio({ carta: jolly, colore });
+    else if (jolly) c.azione({ tipo: "gioca", carta: jolly.id, colore });
     setJolly(null);
   };
 
@@ -104,6 +128,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const conPiu2 = cumuloIo !== null && v.giocabili.length > 0;
   const posso = inRound && v.io !== null;
   const mazzoVuoto = v.mazzo === 0;
+  const cambiate = inRound ? maniCambiate(v) : null;
   const nessunaGiocabile = v.mioTurno && !sfidaIo && !v.sceltaColore && giocabili.size === 0;
 
   return (
@@ -118,7 +143,13 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       {v.fase !== "partita" || v.fineRound ? <FineRound c={c} v={v} nome={nome} /> : null}
 
-      <Giocatori v={v} />
+      <Giocatori v={v} evidenza={cambiate} />
+      {cambiate && (
+        <p className="muted ul-mani-cambiate" role="status">
+          {cambiate.tipo === "rotazione" ? <RotateCw size={18} aria-hidden="true" /> : <Handshake size={18} aria-hidden="true" />}{" "}
+          {cambiate.tipo === "rotazione" ? t("maniPassate") : t("ev_scambio", { nome: nome(cambiate.posti[0]!), con: nome(cambiate.posti[1]!) })}
+        </p>
+      )}
 
       {inRound && (
         <div className="ul-centro">
@@ -185,6 +216,33 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
           <h3>{t("sceltaColoreCarta")}</h3>
           <SceltaColore t={t} onScegli={giocaJolly} />
           <button className="btn" onClick={() => setJolly(null)}>
+            {t("annulla")}
+          </button>
+        </div>
+      )}
+
+      {scambio && (
+        <div className="ul-avviso">
+          <h3>{t("scambioTitolo")}</h3>
+          <p className="muted">{t("scambioTesto")}</p>
+          <div className="ul-bersagli">
+            {v.nomi
+              .filter((n) => n.posto !== v.io)
+              .map((n) => (
+                <button
+                  key={n.posto}
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    c.azione({ tipo: "gioca", carta: scambio.carta.id, colore: scambio.colore, scambiaCon: n.posto });
+                    setScambio(null);
+                  }}
+                >
+                  <Handshake size={18} aria-hidden="true" /> {t("scambioCon", { nome: n.nome, n: n.carte })}
+                </button>
+              ))}
+          </div>
+          <button className="btn" onClick={() => setScambio(null)}>
             {t("annulla")}
           </button>
         </div>
@@ -293,14 +351,18 @@ function SceltaColore({ t, onScegli }: { t: T; onScegli: (c: Colore) => void }) 
   );
 }
 
-function Giocatori({ v }: { v: Vista }) {
+function Giocatori({ v, evidenza }: { v: Vista; evidenza: { posti: number[] } | null }) {
   const t = usaT(dizionari);
   return (
     <ul className="ul-giocatori" aria-label={t("giocatori")}>
       {v.nomi.map((n) => {
         const inTurno = v.turno === n.posto;
         return (
-          <li key={n.posto} className={`ul-giocatore${inTurno ? " ul-turno" : ""}`} aria-current={inTurno ? "true" : undefined}>
+          <li
+            key={n.posto}
+            className={`ul-giocatore${inTurno ? " ul-turno" : ""}${evidenza?.posti.includes(n.posto) ? " ul-cambiata" : ""}`}
+            aria-current={inTurno ? "true" : undefined}
+          >
             <span className="ul-giocatore-nome">
               <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" /> {n.nome}
               {n.posto === v.io ? " ★" : ""}

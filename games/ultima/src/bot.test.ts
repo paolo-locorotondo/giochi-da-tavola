@@ -249,3 +249,55 @@ describe("partite di bot con le varianti", () => {
     partiteConVarianti({ ...VARIANTI_BASE, sommaPiu2: true }, 15);
   });
 });
+
+describe("bot con Scambio e Rotazione", () => {
+  const V = { ...VARIANTI_BASE, scambioRotazione: true };
+  const scambio = (): Carta => ({ id: prossimoId++, tipo: "scambio" });
+  const rotazione = (): Carta => ({ id: prossimoId++, tipo: "rotazione" });
+  const mano = (k: number) => Array.from({ length: k }, () => num("verde", 2));
+
+  it("cala Scambio con chi ha meno carte quando ne ha almeno 3 in più", () => {
+    const s = scambio();
+    const p = partita([[s, ...mano(6)], mano(2), mano(5)], { varianti: V });
+    expect(mossaBot(p, 3, 1)).toMatchObject({ tipo: "gioca", carta: s.id, scambiaCon: 2 });
+  });
+  it("non cala Scambio se la differenza è piccola: gioca prima le altre carte", () => {
+    const s = scambio();
+    const normale = num("rosso", 1);
+    const p = partita([[s, normale, ...mano(2)], mano(3), mano(4)], { varianti: V });
+    expect(mossaBot(p, 3, 1)).toMatchObject({ tipo: "gioca", carta: normale.id });
+  });
+  it("cala Rotazione solo se la mano che gli passa il giocatore precedente è più piccola di almeno 3", () => {
+    const r = rotazione();
+    // Posto 1: precedente nel verso orario è il 3.
+    const buona = partita([[r, ...mano(6)], mano(7), mano(2)], { varianti: V });
+    expect(mossaBot(buona, 3, 1)).toMatchObject({ tipo: "gioca", carta: r.id });
+    const normale = num("rosso", 1);
+    const cattiva = partita([[r, normale, ...mano(5)], mano(2), mano(7)], { varianti: V });
+    expect(mossaBot(cattiva, 3, 1)).toMatchObject({ tipo: "gioca", carta: normale.id });
+  });
+  it("sceglie la stessa mossa con mani altrui diverse ma lo stesso numero di carte (non guarda le carte)", () => {
+    const s = scambio();
+    const a = partita([[s, ...mano(6)], mano(2), mano(5)], { varianti: V });
+    const b = partita([[s, ...mano(6)], [num("blu", 9), num("giallo", 0)], Array.from({ length: 5 }, () => sim("piu2", "blu"))], { varianti: V });
+    expect(mossaBot(a, 3, 1)).toEqual(mossaBot(b, 3, 1));
+  });
+  it("a ogni livello le mosse con Scambio e Rotazione sono lecite", () => {
+    for (const livello of LIVELLI) {
+      for (let s = 0; s < 40; s++) {
+        const p = partita([[scambio(), rotazione(), num("rosso", 1), ...mano(3)], mano(3), mano(4)], { varianti: V });
+        const m = mossaBotLivello(p, 3, 1, livello, creaRng(s));
+        expect(() => eseguiMossa(p, 3, 1, m, creaRng(s))).not.toThrow();
+      }
+    }
+  });
+});
+
+describe("partite di bot con Scambio e Rotazione e altre varianti", () => {
+  it("Scambio e Rotazione: finiscono sempre, 112 carte", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, scambioRotazione: true }, 15);
+  });
+  it("Scambio e Rotazione con la somma dei +2", () => {
+    partiteConVarianti({ ...VARIANTI_BASE, scambioRotazione: true, sommaPiu2: true }, 10);
+  });
+});

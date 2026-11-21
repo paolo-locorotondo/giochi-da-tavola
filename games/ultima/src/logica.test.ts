@@ -541,3 +541,114 @@ describe("Ultima! con più finestre", () => {
     expect(becc.ultime).toEqual([{ posto: 1, dichiarata: true }]);
   });
 });
+
+describe("Scambio e Rotazione", () => {
+  const V = { ...VARIANTI_BASE, scambioRotazione: true };
+  const scambio = (): Carta => ({ id: prossimoId++, tipo: "scambio" });
+  const rotazione = (): Carta => ({ id: prossimoId++, tipo: "rotazione" });
+  const conCarte = (mani: Carta[][], opz: Partial<Partita> = {}) => partita(mani, { varianti: V, ...opz });
+
+  it("il mazzo con la variante ha 112 carte: due Scambio e due Rotazione, id 108-111", () => {
+    const m = mazzoCompleto(V);
+    expect(m).toHaveLength(112);
+    expect(new Set(m.map((c) => c.id)).size).toBe(112);
+    expect(m.filter((c) => c.tipo === "scambio").map((c) => c.id)).toEqual([108, 109]);
+    expect(m.filter((c) => c.tipo === "rotazione").map((c) => c.id)).toEqual([110, 111]);
+    expect(valorePunti(scambio())).toBe(50);
+    expect(valorePunti(rotazione())).toBe(50);
+  });
+  it("non è mai la prima carta scoperta e il round conserva 112 carte", () => {
+    for (let seme = 0; seme < 300; seme++) {
+      const p = nuovoRound(3, creaRng(seme), [], 1, V);
+      expect(["piu4", "scambio", "rotazione"]).not.toContain(p.scarto[0]!.tipo);
+      expect(new Set([...p.mazzo, ...p.scarto, ...p.mani.flat()].map((c) => c.id)).size).toBe(112);
+    }
+  });
+  it("si gioca sempre, vuole il colore e non si gioca sopra un cumulo né una sfida", () => {
+    const s = scambio();
+    expect(puoGiocare(s, "rosso", num("blu", 3))).toBe(true);
+    const base = conCarte([[s, num("blu", 1)], [num("verde", 2)]]);
+    expect(codice(() => gioca(base, 2, 1, s.id, undefined, rng(), false, { scambiaCon: 2 }))).toBe("coloreMancante");
+    const cum = conCarte([[s, num("blu", 1)], [num("verde", 2)]], { varianti: { ...V, sommaPiu2: true }, cumulo: { posto: 1, quante: 2, da: 2 } });
+    expect(codice(() => gioca(cum, 2, 1, s.id, "blu", rng(), false, { scambiaCon: 2 }))).toBe("rispondiCumulo");
+    const sf = conCarte([[s, num("blu", 1)], [num("verde", 2)]], { sfida: { contro: 2, sospetto: false, illegale: false } });
+    expect(codice(() => gioca(sf, 2, 1, s.id, "blu", rng(), false, { scambiaCon: 2 }))).toBe("rispondiSfida");
+  });
+  it("Scambio: le due mani si scambiano esatte, il colore è scelto e il turno passa", () => {
+    const s = scambio();
+    const mia = [s, num("blu", 1), num("blu", 2), num("blu", 3)];
+    const sua = [num("verde", 9)];
+    const terza = [num("giallo", 4), num("giallo", 5)];
+    const p = gioca(conCarte([mia, terza, sua]), 3, 1, s.id, "verde", rng(), false, { scambiaCon: 3 });
+    expect(p.mani[0]!.map((c) => c.id)).toEqual(sua.map((c) => c.id));
+    expect(p.mani[2]!.map((c) => c.id)).toEqual(mia.slice(1).map((c) => c.id));
+    expect(p.mani[1]).toEqual(terza);
+    expect(p.colore).toBe("verde");
+    expect(p.turno).toBe(2);
+    expect(p.eventi.some((e) => e.tipo === "scambio" && e.posto === 1 && e.con === 3)).toBe(true);
+    // Chi ha ricevuto una mano di una carta ha la finestra di «Ultima!».
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: false }]);
+  });
+  it("Scambio con sé stesso, con un posto inesistente o senza bersaglio è rifiutato", () => {
+    const s = scambio();
+    const base = conCarte([[s, num("blu", 1)], [num("verde", 2)]]);
+    for (const con of [1, 0, 3, "2", undefined, 1.5]) {
+      expect(codice(() => gioca(base, 2, 1, s.id, "blu", rng(), false, { scambiaCon: con }))).toBe("scambioNonValido");
+    }
+  });
+  it("come ultima carta Scambio e Rotazione chiudono il round senza effetto", () => {
+    for (const c of [scambio(), rotazione()]) {
+      const altra = [num("verde", 2), num("verde", 3)];
+      const p = gioca(conCarte([[c], altra]), 2, 1, c.id, "blu", rng(), false, { scambiaCon: 2 });
+      expect(p.fine?.vincitore).toBe(1);
+      expect(p.mani[1]).toEqual(altra);
+      expect(p.eventi.some((e) => e.tipo === "scambio" || e.tipo === "rotazione")).toBe(false);
+    }
+  });
+  it("Rotazione: ogni mano va al posto successivo nel verso, senza perdere carte", () => {
+    const r = rotazione();
+    const m1 = [r, num("blu", 1), num("blu", 2)];
+    const m2 = [num("verde", 1)];
+    const m3 = [num("giallo", 1), num("giallo", 2), num("giallo", 3)];
+    const p = gioca(conCarte([m1, m2, m3]), 3, 1, r.id, "giallo", rng());
+    // In verso orario la mano del posto 1 va al 2, quella del 2 al 3, quella del 3 all'1.
+    expect(p.mani[1]!.map((c) => c.id)).toEqual(m1.slice(1).map((c) => c.id));
+    expect(p.mani[2]).toEqual(m2);
+    expect(p.mani[0]).toEqual(m3);
+    expect(p.turno).toBe(2);
+    expect(p.eventi.at(-1)).toEqual({ tipo: "rotazione" });
+    expect(p.ultime).toEqual([{ posto: 3, dichiarata: false }]);
+  });
+  it("Rotazione in verso antiorario: le mani vanno al posto precedente", () => {
+    const r = rotazione();
+    const m1 = [r, num("blu", 1)];
+    const m2 = [num("verde", 1), num("verde", 2)];
+    const m3 = [num("giallo", 1), num("giallo", 2), num("giallo", 3)];
+    const p = gioca(conCarte([m1, m2, m3], { verso: -1 }), 3, 1, r.id, "giallo", rng());
+    expect(p.mani[2]!.map((c) => c.id)).toEqual(m1.slice(1).map((c) => c.id));
+    expect(p.mani[0]).toEqual(m2);
+    expect(p.mani[1]).toEqual(m3);
+    expect(p.turno).toBe(3);
+  });
+  it("dopo una Rotazione più giocatori possono avere la finestra di «Ultima!»", () => {
+    const r = rotazione();
+    const p = gioca(conCarte([[r, num("blu", 1)], [num("verde", 1)], [num("giallo", 1), num("giallo", 2)]]), 3, 1, r.id, "giallo", rng());
+    // 1 → 2 riceve [blu 1]; 2 → 3 riceve [verde 1]; 3 → 1 riceve due carte.
+    expect(p.ultime).toEqual([
+      { posto: 2, dichiarata: false },
+      { posto: 3, dichiarata: false },
+    ]);
+    const detto = ultima(p, 3);
+    const becc = beccato(detto, 1, 2, rng());
+    expect(becc.mani[1]).toHaveLength(3);
+    expect(codice(() => beccato(becc, 1, 3, rng()))).toBe("nonBeccabile");
+    // Il giocatore successivo che agisce chiude tutte le finestre.
+    expect(pesca(p, 2, rng()).ultime).toEqual([]);
+  });
+  it("chi la cala dichiarando subito (il bot) non resta beccabile", () => {
+    const r = rotazione();
+    // Il posto 3 ha una carta: dopo la rotazione l'1 la riceve e, se dichiara subito, è dichiarata.
+    const p = gioca(conCarte([[r, num("blu", 1), num("blu", 2)], [num("verde", 1), num("verde", 2)], [num("giallo", 1)]]), 3, 1, r.id, "giallo", rng(), true);
+    expect(p.ultime).toEqual([{ posto: 1, dichiarata: true }]);
+  });
+});

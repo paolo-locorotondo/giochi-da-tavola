@@ -12,7 +12,7 @@ export type Colore = (typeof COLORI)[number];
 export type Carta =
   | { id: number; tipo: "numero"; colore: Colore; valore: number }
   | { id: number; tipo: "salta" | "inverti" | "piu2"; colore: Colore }
-  | { id: number; tipo: "jolly" | "piu4" };
+  | { id: number; tipo: "jolly" | "piu4" | "scambio" | "rotazione" };
 
 export type CartaColorata = Extract<Carta, { colore: Colore }>;
 
@@ -65,6 +65,8 @@ export type Evento =
   | { tipo: "ultima"; posto: number }
   | { tipo: "beccato"; posto: number; chi: number }
   | { tipo: "bot"; posto: number }
+  | { tipo: "scambio"; posto: number; con: number }
+  | { tipo: "rotazione" }
   | { tipo: "cumulo"; posto: number; quante: number }
   | { tipo: "pescaCumulo"; posto: number; quante: number }
   | { tipo: "mazzoRimescolato" }
@@ -107,7 +109,8 @@ export interface Partita {
   eventi: Evento[];
 }
 
-export const eColorata = (c: Carta): c is CartaColorata => c.tipo !== "jolly" && c.tipo !== "piu4";
+export const eColorata = (c: Carta): c is CartaColorata =>
+  c.tipo !== "jolly" && c.tipo !== "piu4" && c.tipo !== "scambio" && c.tipo !== "rotazione";
 export const eJolly = (c: Carta): boolean => !eColorata(c);
 const isColore = (v: unknown): v is Colore => typeof v === "string" && (COLORI as readonly string[]).includes(v);
 
@@ -118,8 +121,8 @@ export function valorePunti(c: Carta): number {
   return PUNTI_SIMBOLO;
 }
 
-/** Il mazzo da 108 carte, in ordine fisso (id da 0 a 107). */
-export function mazzoCompleto(): Carta[] {
+/** Il mazzo da 108 carte, in ordine fisso (id da 0 a 107); con Scambio e Rotazione 112 (id 108-111). */
+export function mazzoCompleto(varianti: Varianti = VARIANTI_BASE): Carta[] {
   const carte: Carta[] = [];
   let id = 0;
   for (const colore of COLORI) {
@@ -133,6 +136,11 @@ export function mazzoCompleto(): Carta[] {
   }
   for (let k = 0; k < 4; k++) carte.push({ id: id++, tipo: "jolly" });
   for (let k = 0; k < 4; k++) carte.push({ id: id++, tipo: "piu4" });
+  if (varianti.scambioRotazione) {
+    for (const tipo of ["scambio", "rotazione"] as const) {
+      for (let k = 0; k < 2; k++) carte.push({ id: id++, tipo });
+    }
+  }
   return carte;
 }
 
@@ -216,13 +224,14 @@ function turnoSenzaCumulo(p: Partita, chi: number): void {
  */
 export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [], primo = 1, varianti: Varianti = VARIANTI_BASE): Partita {
   if (!Number.isInteger(n) || n < MIN_GIOCATORI || n > MAX_GIOCATORI) throw new ErroreUltima("numeroGiocatori");
-  const mazzo = rng.mescola(mazzoCompleto());
+  const mazzo = rng.mescola(mazzoCompleto(varianti));
   const mani: Carta[][] = Array.from({ length: n }, () => []);
   for (let k = 0; k < CARTE_INIZIALI; k++) {
     for (let posto = 0; posto < n; posto++) mani[posto]!.push(mazzo.pop()!);
   }
   let prima = mazzo.pop()!;
-  while (prima.tipo === "piu4") {
+  // Un +4 (e Scambio e Rotazione, che non hanno ancora un giocatore che le cala) si rimette nel mazzo.
+  while (prima.tipo === "piu4" || prima.tipo === "scambio" || prima.tipo === "rotazione") {
     mazzo.splice(rng.intero(mazzo.length + 1), 0, prima);
     prima = mazzo.pop()!;
   }
@@ -279,7 +288,17 @@ export function nuovoRound(n: number, rng: Rng, eventiPrecedenti: Evento[] = [],
  * Cala una carta. Un Jolly vuole il colore. Chi cala l'ultima carta chiude il round: i punti
  * sono quelli delle carte rimaste agli altri. `dichiaraSubito` per il bot, che non dimentica «Ultima!».
  */
-export function gioca(p0: Partita, n: number, chi: number, id: number, colore: unknown, rng: Rng, dichiaraSubito = false): Partita {
+export function gioca(
+  p0: Partita,
+  n: number,
+  chi: number,
+  id: number,
+  colore: unknown,
+  rng: Rng,
+  dichiaraSubito = false,
+  /** `scambiaCon`: il posto con cui si scambia la mano (solo per la carta Scambio). */
+  opzioni: { scambiaCon?: unknown } = {},
+): Partita {
   const p = clona(p0);
   turnoLibero(p, chi);
   if (p.haPescato && p.pescata !== id) throw new ErroreUltima("soloLaPescata");
@@ -315,7 +334,8 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
     registra(p, { tipo: "fineRound", posto: chi, punti });
     return p;
   }
-  if (mano.length === 1) {
+  const scambia = carta.tipo === "scambio" || carta.tipo === "rotazione";
+  if (mano.length === 1 && !scambia) {
     p.ultime = [{ posto: chi, dichiarata: dichiaraSubito }];
     // Chi dichiara subito (il bot) lascia comunque traccia, come chi preme il pulsante.
     if (dichiaraSubito) registra(p, { tipo: "ultima", posto: chi });
@@ -340,6 +360,20 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
       p.verso = p.verso === 1 ? -1 : 1;
       p.turno = avanza(chi, p.verso, n);
     }
+  } else if (carta.tipo === "scambio") {
+    const con = opzioni.scambiaCon;
+    if (typeof con !== "number" || !Number.isInteger(con) || con < 1 || con > n || con === chi) throw new ErroreUltima("scambioNonValido");
+    [p.mani[chi - 1], p.mani[con - 1]] = [p.mani[con - 1]!, p.mani[chi - 1]!];
+    registra(p, { tipo: "scambio", posto: chi, con });
+    p.turno = avanza(chi, p.verso, n);
+    riaprUltime(p, chi, dichiaraSubito);
+  } else if (carta.tipo === "rotazione") {
+    // Ogni mano passa al posto che segue nel verso del gioco.
+    const vecchie = p.mani;
+    p.mani = vecchie.map((_, i) => vecchie[avanza(i + 1, (p.verso === 1 ? -1 : 1), n) - 1]!);
+    registra(p, { tipo: "rotazione" });
+    p.turno = avanza(chi, p.verso, n);
+    riaprUltime(p, chi, dichiaraSubito);
   } else if (p.varianti.sommaPiu2) {
     // Il +2 non si paga subito: la vittima risponde con un +2 o pesca tutto il cumulo.
     const vittima = avanza(chi, p.verso, n);
@@ -354,6 +388,12 @@ export function gioca(p0: Partita, n: number, chi: number, id: number, colore: u
     p.turno = avanza(vittima, p.verso, n);
   }
   return p;
+}
+
+/** Dopo uno scambio di mani: chiunque abbia una carta sola ha la finestra di «Ultima!» (chi ha giocato può dichiarare subito). */
+function riaprUltime(p: Partita, chi: number, dichiaraSubito: boolean): void {
+  p.ultime = p.mani.flatMap((m, i) => (m.length === 1 ? [{ posto: i + 1, dichiarata: i + 1 === chi && dichiaraSubito }] : []));
+  if (dichiaraSubito && p.ultime.some((u) => u.posto === chi)) registra(p, { tipo: "ultima", posto: chi });
 }
 
 /** Pesca una carta, una volta per turno. Se la si può giocare la si può calare subito; altrimenti si passa. */

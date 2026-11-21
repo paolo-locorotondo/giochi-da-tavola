@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Ban, Droplet, Flame, Leaf, Layers, Sun, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Ban, Droplet, Flame, Handshake, Leaf, Layers, RotateCw, Sun, type LucideIcon } from "lucide-react";
 import type { Traduttore } from "@gdt/i18n";
 import type { Carta as DatiCarta, Colore } from "../logica";
 import type { it } from "../locales/it";
@@ -25,6 +25,24 @@ export function nomeCarta(t: T, c: DatiCarta, colore: Colore | null = null): str
       return colore ? t("carta_jollyColore", { colore: nomeColore(t, colore) }) : t("carta_jolly");
     case "piu4":
       return colore ? t("carta_piu4Colore", { colore: nomeColore(t, colore) }) : t("carta_piu4");
+    case "scambio":
+      return colore ? t("carta_scambioColore", { colore: nomeColore(t, colore) }) : t("carta_scambio");
+    case "rotazione":
+      return colore ? t("carta_rotazioneColore", { colore: nomeColore(t, colore) }) : t("carta_rotazione");
+  }
+}
+
+/** Nome corto scritto sulla carta senza colore. */
+function nomeJolly(t: T, c: DatiCarta): string {
+  switch (c.tipo) {
+    case "piu4":
+      return t("carta_piu4");
+    case "scambio":
+      return t("carta_scambio");
+    case "rotazione":
+      return t("carta_rotazione");
+    default:
+      return t("carta_jolly");
   }
 }
 
@@ -42,6 +60,10 @@ function Simbolo({ carta }: { carta: DatiCarta }) {
       return <Layers size={22} aria-hidden="true" />;
     case "piu4":
       return <>+4</>;
+    case "scambio":
+      return <Handshake size={22} aria-hidden="true" />;
+    case "rotazione":
+      return <RotateCw size={22} aria-hidden="true" />;
   }
 }
 
@@ -69,7 +91,7 @@ export function Carta({ carta, t, colore = null, onClick, spenta = false, grande
       </span>
       {Icona && <Icona className="ul-seme" size={grande ? 34 : 24} aria-hidden="true" />}
       <span className="ul-nome" aria-hidden="true">
-        {col ? nomeColore(t, col) : carta.tipo === "piu4" ? t("carta_piu4") : t("carta_jolly")}
+        {col ? nomeColore(t, col) : nomeJolly(t, carta)}
       </span>
     </>
   );

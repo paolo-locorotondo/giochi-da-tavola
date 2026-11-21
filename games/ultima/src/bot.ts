@@ -28,7 +28,7 @@ import {
  */
 
 export type MossaBot =
-  | { tipo: "gioca"; carta: number; colore?: Colore }
+  | { tipo: "gioca"; carta: number; colore?: Colore; scambiaCon?: number }
   | { tipo: "pesca" }
   | { tipo: "passa" }
   | { tipo: "scegliColore"; colore: Colore }
@@ -62,8 +62,35 @@ function piu4Lecito(mano: readonly Carta[], colore: Colore | null): boolean {
   return !mano.some((c) => eColorata(c) && c.colore === colore);
 }
 
+/**
+ * Scambio: conviene se la mia mano ha almeno 3 carte più di quella di un altro; il bersaglio è chi ne ha meno
+ * (a parità il posto più basso). Usa solo il numero di carte, che è pubblico. Null = non conviene.
+ */
+export function bersaglioScambio(p: Partita, posto: number): number | null {
+  const mie = p.mani[posto - 1]!.length - 1; // senza la carta che si sta calando
+  let migliore: number | null = null;
+  let min = Infinity;
+  p.mani.forEach((m, i) => {
+    if (i + 1 !== posto && m.length < min) {
+      min = m.length;
+      migliore = i + 1;
+    }
+  });
+  return migliore !== null && mie >= min + 3 ? migliore : null;
+}
+
+/** Rotazione: conviene se la mano che mi passa chi mi precede ha almeno 3 carte meno della mia. */
+export function convieneRotazione(p: Partita, n: number, posto: number): boolean {
+  const mie = p.mani[posto - 1]!.length - 1;
+  return p.mani[avanza(posto, p.verso === 1 ? -1 : 1, n) - 1]!.length + 3 <= mie;
+}
+
+/** Il posto vivo a caso tra quelli diversi da `posto` (per il bot facile). */
+const altriPosti = (n: number, posto: number) => Array.from({ length: n }, (_, i) => i + 1).filter((x) => x !== posto);
+
 /** Più alto = da giocare prima. Spiegabile: colpire, poi scaricare i punti, jolly per ultimi. */
-function punteggioMossa(c: Carta, mano: readonly Carta[], prossimoInPericolo: boolean): number {
+function punteggioMossa(c: Carta, mano: readonly Carta[], prossimoInPericolo: boolean, utile = false): number {
+  if (c.tipo === "scambio" || c.tipo === "rotazione") return utile ? 300 : 0;
   if (c.tipo === "jolly") return 0;
   if (c.tipo === "piu4") return 1;
   const stessoColore = mano.filter((x) => eColorata(x) && x.colore === (c as { colore: Colore }).colore).length;
@@ -112,9 +139,16 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
 
   const giocabili = carteGiocabili(p, posto);
   if (giocabili.length > 0) {
+    const utile = (c: Carta) => (c.tipo === "scambio" ? bersaglioScambio(p, posto) !== null : c.tipo === "rotazione" ? convieneRotazione(p, n, posto) : false);
     const migliore = [...giocabili].sort(
-      (a, b) => punteggioMossa(b, mano, prossimoInPericolo) - punteggioMossa(a, mano, prossimoInPericolo) || a.id - b.id,
+      (a, b) => punteggioMossa(b, mano, prossimoInPericolo, utile(b)) - punteggioMossa(a, mano, prossimoInPericolo, utile(a)) || a.id - b.id,
     )[0]!;
+    if (migliore.tipo === "scambio") {
+      // Se non conviene si cala comunque (come un jolly di scorta) scegliendo chi ha meno carte.
+      const altri = altriPosti(n, posto);
+      const con = bersaglioScambio(p, posto) ?? altri.sort((a, b) => p.mani[a - 1]!.length - p.mani[b - 1]!.length || a - b)[0]!;
+      return { tipo: "gioca", carta: migliore.id, colore: coloreMigliore(mano.filter((c) => c.id !== migliore.id)), scambiaCon: con };
+    }
     if (eJolly(migliore)) {
       // Il colore da scegliere si calcola sulla mano senza il jolly che si sta calando.
       return { tipo: "gioca", carta: migliore.id, colore: coloreMigliore(mano.filter((c) => c.id !== migliore.id)) };
@@ -129,7 +163,7 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
 export function eseguiMossa(p: Partita, n: number, posto: number, m: MossaBot, rng: Rng, dichiara = true): Partita {
   switch (m.tipo) {
     case "gioca":
-      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara);
+      return gioca(p, n, posto, m.carta, m.colore, rng, dichiara, { scambiaCon: m.scambiaCon });
     case "pesca":
       return pesca(p, posto, rng);
     case "passa":
@@ -183,6 +217,10 @@ export function mossaBotLivello(p: Partita, n: number, posto: number, livello: L
       if (p.cumulo && rng.next() < 0.5) return { tipo: "pescaCumulo" };
       const lecite = carteGiocabili(p, posto);
       const carta = lecite[rng.intero(lecite.length)]!;
+      if (carta.tipo === "scambio") {
+        const altri = altriPosti(n, posto);
+        return { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]!, scambiaCon: altri[rng.intero(altri.length)]! };
+      }
       return eJolly(carta) ? { tipo: "gioca", carta: carta.id, colore: COLORI[rng.intero(COLORI.length)]! } : { tipo: "gioca", carta: carta.id };
     }
     case "scegliColore":

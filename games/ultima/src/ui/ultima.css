@@ -165,6 +165,43 @@ button.ul-carta:focus-visible {
   border: 2px solid var(--ac);
 }
 
+/* Mano appena cambiata (Scambio, Rotazione): fondo dell'area incassata e bordo d'accento tratteggiato */
+.ul-giocatore.ul-cambiata {
+  background: var(--s2);
+  border-style: dashed;
+  border-color: var(--ac);
+  animation: ul-compare 250ms ease-out;
+}
+
+@keyframes ul-compare {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ul-mani-cambiate {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+
+.ul-bersagli {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ul-bersagli .btn {
+  min-height: 48px;
+  justify-content: flex-start;
+  overflow-wrap: anywhere;
+}
+
 .ul-giocatore-nome {
   font-weight: 700;
   overflow-wrap: anywhere;
@@ -307,6 +344,9 @@ button.ul-carta:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   button.ul-carta {
     transition: none;
+  }
+  .ul-giocatore.ul-cambiata {
+    animation: none;
   }
 }
 

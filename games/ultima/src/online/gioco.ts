@@ -73,7 +73,7 @@ export type AzioneOnline =
   | { tipo: "occupa"; posto: number }
   | { tipo: "libera"; posto: number }
   | { tipo: "avvia"; seme: number }
-  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown }
+  | { tipo: "gioca"; chi: number; carta: number; colore?: unknown; scambiaCon?: unknown }
   | { tipo: "pesca"; chi: number }
   | { tipo: "passa"; chi: number }
   | { tipo: "scegliColore"; chi: number; colore: unknown }
@@ -207,7 +207,7 @@ function mossa(s: StatoOnline, a: Extract<AzioneOnline, { tipo: "gioca" | "pesca
   if (!eUnPosto(s, chi)) throw new ErroreUltima("nonPartecipa");
   switch (a.tipo) {
     case "gioca":
-      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng));
+      return dopoMossa(s, gioca(p, n, chi, a.carta, a.colore, rng, false, { scambiaCon: a.scambiaCon }));
     case "pesca":
       return dopoMossa(s, pesca(p, chi, rng));
     case "passa":
@@ -375,7 +375,7 @@ export const ultimaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
         soloHost();
         return { tipo: "bot", posto: Number(a.posto) };
       case "gioca":
-        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore };
+        return { tipo: "gioca", chi: partecipa(), carta: Number(a.carta), colore: a.colore, scambiaCon: a.scambiaCon === undefined ? undefined : Number(a.scambiaCon) };
       case "scegliColore":
         return { tipo: "scegliColore", chi: partecipa(), colore: a.colore };
       case "beccato":
