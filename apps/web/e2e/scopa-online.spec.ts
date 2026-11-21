@@ -32,9 +32,9 @@ async function giocaRound(pagine: Page[], finale: RegExp) {
   for (let i = 0; i < 600; i++) {
     for (const p of pagine) {
       if (await p.getByText(finale).first().isVisible()) return;
-      if (await p.locator(".sc-presa").isVisible()) await p.locator(".sc-combinazione").first().click().catch(() => {});
+      if (await p.locator(".sc-presa").isVisible()) await p.locator(".sc-combinazione").first().click({ timeout: 1000 }).catch(() => {});
       const carta = p.locator(".sc-mano button:not(:disabled)").first();
-      if (await carta.isVisible()) await carta.click({ timeout: 300 }).catch(() => {});
+      if (await carta.isVisible()) await carta.click({ timeout: 1000 }).catch(() => {});
     }
     await pagine[0]!.waitForTimeout(80);
   }
