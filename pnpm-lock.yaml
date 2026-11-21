@@ -26,6 +26,9 @@ importers:
       '@gdt/impostore':
         specifier: workspace:*
         version: link:../../games/impostore
+      '@gdt/scopa':
+        specifier: workspace:*
+        version: link:../../games/scopa
       '@gdt/tic-tac-toe':
         specifier: workspace:*
         version: link:../../games/tic-tac-toe
