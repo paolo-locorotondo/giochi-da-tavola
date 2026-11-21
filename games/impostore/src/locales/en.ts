@@ -101,6 +101,7 @@ export const en: Dizionario<typeof it> = {
   indiziScritti: "Clues written in the app, one at a time (to play from different homes)",
   creaPartita: "Create the game",
   hoUnCodice: "I have a code: join",
+  oppureCrea: "or create a new game",
 
   // Online: card
   nascondiCarta: "Hide my card",

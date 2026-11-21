@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { fissaCaso, schermata, controllaMobile } from "./aiuti";
+import { fissaCaso, schermata, controllaMobile, betaLetto } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
@@ -8,6 +8,7 @@ const telefono = { viewport: { width: 375, height: 812 }, hasTouch: true, isMobi
 /** Tre telefoni nella stessa stanza «Anna / Bruno / Carla», tutti seduti. L'organizzatore è Anna. */
 async function stanza(browser: Browser, config: { punti?: number } = {}) {
   const contesti = await Promise.all([1, 2, 3].map(() => browser.newContext(telefono)));
+  await Promise.all(contesti.map(betaLetto));
   const [host, bruno, carla] = await Promise.all(contesti.map((c) => c.newPage()));
   await host!.goto("/ultima");
   await host!.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
@@ -109,6 +110,7 @@ test("ultima: partita a punti, prossimo round e chiusura", async ({ browser }) =
 test("ultima online: le varianti scelte alla creazione si vedono in sala e sul tavolo", async ({ browser }) => {
   test.setTimeout(120_000);
   const contesti = await Promise.all([1, 2].map(() => browser.newContext(telefono)));
+  await Promise.all(contesti.map(betaLetto));
   const [host, bruno] = await Promise.all(contesti.map((c) => c.newPage()));
   await fissaCaso(host!);
   await fissaCaso(bruno!);

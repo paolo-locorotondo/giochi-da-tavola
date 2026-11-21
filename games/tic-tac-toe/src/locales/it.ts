@@ -61,6 +61,7 @@ export const it = {
   creaPartita: "Crea la partita",
   partitaVeloce: "Partita veloce",
   hoUnCodice: "Ho un codice: entra",
+  oppureCrea: "oppure crea una nuova partita",
   codiceLabel: "Codice della partita",
   entra: "Entra",
   indietro: "Indietro",

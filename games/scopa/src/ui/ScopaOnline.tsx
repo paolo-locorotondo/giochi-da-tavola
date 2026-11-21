@@ -109,6 +109,10 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
         if (validi) c.invia({ t: "crea", gioco: "scopa", nomi: puliti, config: { posti, soglia } });
       }}
     >
+      <button className="btn" type="button" onClick={onEntra}>
+        {t("hoUnCodice")}
+      </button>
+      <p className="muted">{t("oppureCrea")}</p>
       <Opzioni
         legenda={t("quantiGiocatori")}
         nome="posti"
@@ -137,9 +141,6 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso || !validi}>
         {t("creaPartita")}
-      </button>
-      <button className="btn" type="button" onClick={onEntra}>
-        {t("hoUnCodice")}
       </button>
     </form>
   );

@@ -30,6 +30,8 @@ interface Props<C> {
     anteprima: AnteprimaVeloce | null | undefined;
     fuoriSala: "uscito" | "scaduta" | "chiusa" | null;
     chiediAnteprima: () => void;
+    /** Rientra nella sala salvata, se c'è (true = tentativo partito; se fallisce chiede lui l'anteprima). */
+    riprendiVeloce?: () => boolean;
     entraVeloce: (nome: string, opzioni?: { codice?: string; apri?: AperturaVeloce }) => void;
   };
   /** La dichiarazione `veloce` del gioco (posti, squadre). */
@@ -60,9 +62,12 @@ export function ApriVeloce<C = unknown>({ c, veloce, impostazioni, riepilogo, te
   const idSquadre = useId();
   const pulito = nome.trim();
 
-  // Chiedo com'è la situazione appena sono collegato (e di nuovo se la connessione torna).
+  // Appena collegato provo a riprendere il posto lasciato; se non c'è chiedo com'è la situazione
+  // (e di nuovo se la connessione torna).
   useEffect(() => {
-    if (!semplice && c.connesso) c.chiediAnteprima();
+    if (!c.connesso) return;
+    if (c.riprendiVeloce?.()) return;
+    if (!semplice) c.chiediAnteprima();
   }, [c.connesso, semplice]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sq = veloce.squadre?.(posti) ?? null;

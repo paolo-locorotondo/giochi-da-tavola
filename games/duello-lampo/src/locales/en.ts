@@ -36,7 +36,7 @@ export const en: Dizionario<typeof it> = {
   imp_griglia: "{n}×{n}",
   imp_si: "Yes",
   imp_errori: "Mistakes count −1",
-  imp_errori_aiuto: "Whoever makes a mistake also loses a point (being slower is not a mistake).",
+  imp_errori_aiuto: "Whoever makes a mistake also loses a point (being slower is not a mistake). In Targets the −1 only applies if misses outnumber hits.",
   penalita: "(−1)",
   imp_no: "No",
   mg_via_imp_attesaMax: "Longest wait before go",
@@ -79,6 +79,8 @@ export const en: Dizionario<typeof it> = {
   sequenzaVoce: "{nome} ×{n}",
   sequenzaCaso: "Random order, new at every duel",
   tutti: "All",
+  nessuno: "None",
+  ripristinaImp: "Reset settings",
   aCaso: "Random",
   nessunoScelto: "Pick at least one hand: with everything at 0 you can't play.",
   inizia: "Start the duel",
@@ -106,7 +108,7 @@ export const en: Dizionario<typeof it> = {
   mg_memoria_regola: "Watch the squares light up and repeat the sequence in the same order. Whoever repeats it correctly first wins.",
   mg_bersagli_nome: "Targets",
   mg_bersagli_regola:
-    "Circles appear: tap them before they fade. Most hits wins; on a tie, the faster player wins. Tapping empty space may cost a point.",
+    "Circles appear: tap them before they fade. Speed doesn't matter. With \"Mistakes count −1\" your score is hits minus misses; otherwise most hits wins. On a tie, fewer misses wins.",
   mg_piugrande_nome: "The biggest",
   mg_piugrande_regola: "Numbers appear: tap the biggest one first. Tapping any other number loses the round.",
 

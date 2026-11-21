@@ -125,6 +125,13 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
         if (validi) c.invia({ t: "crea", gioco: "tris", nomi, config: {} });
       }}
     >
+      <button className="btn" type="button" onClick={onVeloce}>
+        {t("partitaVeloce")}
+      </button>
+      <button className="btn" type="button" onClick={onEntra}>
+        {t("hoUnCodice")}
+      </button>
+      <p className="muted">{t("oppureCrea")}</p>
       <label className="campo">
         {t("nomeX")}
         <input value={a} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setA(e.target.value)} />
@@ -137,12 +144,6 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso || !validi}>
         {t("creaPartita")}
-      </button>
-      <button className="btn" type="button" onClick={onEntra}>
-        {t("hoUnCodice")}
-      </button>
-      <button className="btn" type="button" onClick={onVeloce}>
-        {t("partitaVeloce")}
       </button>
     </form>
   );

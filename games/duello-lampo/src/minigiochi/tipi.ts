@@ -73,8 +73,8 @@ export interface MiniGioco<Config, Risultato> {
   errore?(config: Config, risultato: Risultato | Nessuno): boolean;
 }
 
-/** L'impostazione comune «gli errori contano −1», spenta di base. */
-export const IMP_ERRORI: ImpostazioneMiniGioco = { tipo: "interruttore", chiave: "errori", base: false };
+/** L'impostazione comune «gli errori contano −1», accesa di base. */
+export const IMP_ERRORI: ImpostazioneMiniGioco = { tipo: "interruttore", chiave: "errori", base: true };
 
 /** Esito di un confronto tra due numeri: `meglio` dice se è meglio il più piccolo o il più grande. */
 export function confronta(a: number, b: number, meglio: "minore" | "maggiore", soglia = 0): Lato | null {

@@ -90,6 +90,7 @@ export const en: Dizionario<typeof it> = {
   sogliaAiuto: "From {min} to {max}.",
   creaPartita: "Create the game",
   hoUnCodice: "I have a code: join",
+  oppureCrea: "or create a new game",
   codiceLabel: "Game code",
   entra: "Join",
   indietro: "Back",

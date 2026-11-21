@@ -234,6 +234,10 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
         c.invia({ t: "crea", nomi, config: { numImpostori, categoria, lingua, votiVisibili, indiziScritti } });
       }}
     >
+      <button className="btn" type="button" onClick={onEntra}>
+        {t("hoUnCodice")}
+      </button>
+      <p className="muted">{t("oppureCrea")}</p>
       <label className="campo">
         {t("giocatoriLabel")}
         <textarea rows={6} value={testo} onChange={(e) => setTesto(limitaRighe(e.target.value, MAX_CARATTERI_NOME))} placeholder={t("segnapostoNomi")} />
@@ -280,9 +284,6 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso}>
         {t("creaPartita")}
-      </button>
-      <button className="btn" type="button" onClick={onEntra}>
-        {t("hoUnCodice")}
       </button>
     </form>
   );

@@ -26,7 +26,8 @@ export interface Stanza {
 export type DaClient =
   /** `gioco` assente = Impostore (i client di prima non lo mandavano). */
   | { t: "crea"; gioco?: string; nomi: string[]; config: unknown; token?: string }
-  | { t: "entra"; codice: string; token?: string }
+  /** `riprendi`: rientro con il token salvato (partita veloce); senza un token valido è un errore, non un nuovo posto. */
+  | { t: "entra"; codice: string; token?: string; riprendi?: boolean }
   | { t: "azione"; azione: AzioneClient }
   | { t: "sollecita" }
   | { t: "chiudi" }

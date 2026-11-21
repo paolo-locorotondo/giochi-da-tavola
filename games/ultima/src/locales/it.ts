@@ -87,6 +87,7 @@ export const it = {
   sogliaAiuto: "Da {min} a {max}.",
   creaPartita: "Crea la partita",
   hoUnCodice: "Ho un codice: entra",
+  oppureCrea: "oppure crea una nuova partita",
   codiceLabel: "Codice della partita",
   entra: "Entra",
   indietro: "Indietro",

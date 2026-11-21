@@ -11,7 +11,19 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Aggiunto
 
+- Duello Lampo: pulsanti **«Nessuno»** (tutte le mani a 0, il contrario di «Tutti») e **«Ripristina impostazioni»** (tutte le impostazioni di tutti i mini giochi alla base). Il feedback con bordo verde (giusto) o rosso (sbagliato) di Bersagli c'è ora anche in Trova il panda / lo smile, Memoria lampo e Colore giusto.
+- Online: in Tris, Ultima!, Impostore, Scopa e Burraco «Partita veloce» (dove c'è) e «Ho un codice: entra» stanno in cima alla schermata, «Crea la partita» resta in fondo dopo le impostazioni.
 - **Giochi in beta testing**: un gioco con `beta: true` nel manifest ha il bordo rosso nell'elenco, un verme rosso accanto alle icone offline/online, un avviso in rosso sopra «Come giocate?» e, aprendolo, una finestra «Questa versione del gioco è in fase di testing…» da chiudere con «Ho capito» (non ricompare nella stessa sessione del browser). Per ora in beta: Scopa, Burraco e Ultima!. Avviso condiviso in `@gdt/collegamento` (`AvvisoBetaTesto`), testi it/en.
+
+### Corretto
+
+- Partita veloce: uscendo con la freccia «indietro» dalla sala d'attesa il posto si libera subito (prima restavi «assente» per 30 secondi e, rientrando con lo stesso nome, diventavi «Nome (2)»). Chiudere la scheda, ricaricare o perdere la rete non cambia: il posto resta tuo per 30 secondi.
+- Partita veloce: riaprendo «Partita veloce» con la tua sala ancora aperta rientri nel tuo posto con lo stesso nome. Il rientro vale solo per il telefono che aveva il posto, mai per chi scrive lo stesso nome.
+
+### Modificato
+
+- Duello Lampo, **Bersagli**: la velocità non conta più. Con «Gli errori contano −1» il punteggio del round è colpiti − colpi a vuoto (vince il più alto, a parità chi ha meno colpi a vuoto, poi pari); il −1 in partita scatta solo se i colpi a vuoto superano i colpi a segno. Senza il flag vince chi colpisce di più, a parità chi sbaglia meno. «Gli errori contano −1» è **acceso di base** in tutti i mini giochi (chi aveva salvato lo spento lo ritrova acceso una volta).
+- Ultima!: nel README è segnato «da verificare» se «Più carte uguali» debba richiedere carte identiche (stesso colore e numero o simbolo).
 
 ## [0.27.0] - 2026-11-21
 

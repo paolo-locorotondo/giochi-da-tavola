@@ -77,6 +77,7 @@ export const it = {
   nomiAiuto: "Nomi diversi. Ognuno sceglierà il proprio nome dal suo telefono.",
   creaPartita: "Crea la partita",
   hoUnCodice: "Ho un codice: entra",
+  oppureCrea: "oppure crea una nuova partita",
   codiceLabel: "Codice della partita",
   entra: "Entra",
   indietro: "Indietro",

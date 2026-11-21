@@ -9,6 +9,7 @@ import {
   MINIGIOCHI,
   miniGioco,
   sceltePermesse,
+  tuttiBase,
   valoriBase,
   valoriCompleti,
   type ImpostazioneMiniGioco,
@@ -34,6 +35,9 @@ export interface Scelte {
 }
 
 const CHIAVE = "gdt-duello-lampo-scelte-3";
+
+/** Versione dei dati salvati: la 4 ha reso «gli errori contano −1» acceso di base (vedi `scelteIniziali`). */
+const VERSIONE_DATI = 4;
 
 const tutti = (n: number): Record<string, number> => Object.fromEntries(ID_MINIGIOCHI.map((id) => [id, n]));
 
@@ -65,7 +69,11 @@ export function scelteIniziali(): Scelte {
     const nomi: [string, string] = Array.isArray(v.nomi)
       ? [limitaTesto(String(v.nomi[0] ?? ""), MAX_CARATTERI_NOME), limitaTesto(String(v.nomi[1] ?? ""), MAX_CARATTERI_NOME)]
       : ["", ""];
-    const grezze = v.impostazioni && typeof v.impostazioni === "object" ? (v.impostazioni as ImpostazioniSfida) : {};
+    let grezze = v.impostazioni && typeof v.impostazioni === "object" ? (v.impostazioni as ImpostazioniSfida) : {};
+    // Salvataggi di prima della versione 4: «errori» valeva spento di base, quindi quel valore non è una scelta: si riparte dalla base.
+    if ((v as { versione?: number }).versione !== VERSIONE_DATI) {
+      grezze = Object.fromEntries(Object.entries(grezze).map(([id, valori]) => [id, Object.fromEntries(Object.entries(valori ?? {}).filter(([k]) => k !== "errori"))]));
+    }
     return {
       mani: Object.values(mani).some((n) => n > 0) ? mani : predefinite.mani,
       impostazioni: impostazioniComplete(grezze),
@@ -81,7 +89,7 @@ export function scelteIniziali(): Scelte {
 
 function salva(s: Scelte): void {
   try {
-    localStorage.setItem(CHIAVE, JSON.stringify(s));
+    localStorage.setItem(CHIAVE, JSON.stringify({ ...s, versione: VERSIONE_DATI }));
   } catch {
     /* archivio non disponibile: vale per questa visita */
   }
@@ -261,6 +269,9 @@ export function Preparazione({ iniziale, onInizia }: Props) {
     }));
   const riportaBase = (id: string) => setImpostazioni((tutte) => ({ ...tutte, [id]: valoriBase(miniGioco(id).impostazioni) }));
 
+  const riportaBaseTutte = () => setImpostazioni(impostazioniComplete());
+  const tuttoDiBase = MINIGIOCHI.every((m) => tuttiBase(m.impostazioni, impostazioni[m.id] ?? valoriBase(m.impostazioni)));
+
   const inizia = () => {
     if (!valido) return;
     salva({ mani, impostazioni, nomi, ordine, elenco });
@@ -399,8 +410,14 @@ export function Preparazione({ iniziale, onInizia }: Props) {
           <button type="button" className="btn" onClick={() => setMani(tutti(MANI_PREDEFINITE))}>
             {t("tutti")}
           </button>
+          <button type="button" className="btn" onClick={() => setMani(tutti(0))}>
+            {t("nessuno")}
+          </button>
           <button type="button" className="btn" onClick={() => setMani(maniACaso(creaRng(Math.floor(Math.random() * 2 ** 32))))}>
             {t("aCaso")}
+          </button>
+          <button type="button" className="btn" disabled={tuttoDiBase} onClick={riportaBaseTutte}>
+            {t("ripristinaImp")}
           </button>
         </div>
         {valido ? (

@@ -64,6 +64,21 @@ test("duello lampo: preparazione con le mani di ogni mini gioco", async ({ page 
   await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["2", "2", "2", "2", "2", "2", "2", "2", "2", "2"]);
   await page.getByRole("button", { name: "A caso" }).click();
   await expect(page.getByRole("button", { name: "Inizia la sfida" })).toBeEnabled();
+
+  // «Nessuno» mette tutto a 0; «Ripristina impostazioni» riporta alla base le impostazioni di tutti.
+  await page.getByRole("button", { name: "Nessuno" }).click();
+  await expect(page.locator(".dl-mg-voce .dl-mani output")).toHaveText(["0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]);
+  await expect(page.getByRole("alert")).toContainText("Scegli almeno una mano");
+  const ripristina = page.getByRole("button", { name: "Ripristina impostazioni" });
+  await expect(ripristina).toBeDisabled();
+  const memoria = page.locator(".dl-mg-riga", { hasText: "Memoria lampo" }).locator("details.dl-imp");
+  await memoria.locator("summary").click();
+  await memoria.getByRole("switch", { name: "Gli errori contano −1" }).uncheck();
+  await expect(ripristina).toBeEnabled();
+  await schermata(page, "preparazione-azioni");
+  await ripristina.click();
+  await expect(memoria.getByRole("switch", { name: "Gli errori contano −1" })).toBeChecked();
+  await expect(ripristina).toBeDisabled();
 });
 
 test("duello lampo: la scelta si ricorda sul telefono", async ({ page }) => {
@@ -113,9 +128,10 @@ test("duello lampo: Via! tocco anticipato; la metà in alto è ruotata", async (
   await expect(alto(page).getByRole("status")).toHaveText("Punto per te!");
   await expect(basso(page).locator(".dl-testa")).toContainText("Round 1 di 3");
   // Contatore dei punti: ogni metà mostra il punteggio del suo giocatore.
-  await expect(punti(page, "basso")).toHaveText("0");
+  // Gli errori contano −1 di base: chi ha toccato troppo presto scende a −1.
+  await expect(punti(page, "basso")).toHaveText("-1");
   await expect(punti(page, "alto")).toHaveText("1");
-  await expect(basso(page).getByRole("img", { name: "Punti di Giocatore 1: 0" })).toBeVisible();
+  await expect(basso(page).getByRole("img", { name: "Punti di Giocatore 1: -1" })).toBeVisible();
   await expect(alto(page).getByRole("img", { name: "Punti di Giocatore 2: 1" })).toBeVisible();
   // Con «Avanti» ancora spento l'immagine cambierebbe da una prova all'altra.
   await expect(basso(page).getByRole("button", { name: "Avanti" })).toBeEnabled();
@@ -315,9 +331,9 @@ test("duello lampo: con «gli errori contano −1» chi sbaglia perde un punto",
   const pannelloVia = page.locator(".dl-mg-riga", { hasText: "Via!" }).locator("details.dl-imp");
   await pannelloVia.locator("summary").click();
   const errori = pannelloVia.getByRole("switch", { name: "Gli errori contano −1" });
-  await expect(errori).not.toBeChecked();
+  // Di base gli errori contano −1.
+  await expect(errori).toBeChecked();
   await expect(pannelloVia.getByText("Chi sbaglia perde anche un punto")).toBeVisible();
-  await errori.check();
   await page.getByRole("button", { name: "Inizia la sfida" }).click();
 
   // Round 1: chi sta in basso tocca prima del via. Punto all'altro e −1 a lui.
@@ -351,7 +367,9 @@ test("duello lampo: Memoria lampo, si ripete la sequenza", async ({ page }) => {
   await expect(basso(page).locator(".dl-dettagli")).toContainText("Giocatore 2: sbagliato");
 });
 
-const pannello = (page: Page, nome: string) => page.locator(".dl-mg-riga", { hasText: nome }).locator("details.dl-imp");
+// La riga di un mini gioco si prende dal nome esatto: il testo di una riga contiene anche la sua descrizione.
+const pannello = (page: Page, nome: string) =>
+  page.locator(".dl-mg-riga").filter({ has: page.locator(".dl-mg-nome", { hasText: new RegExp(`^${nome}$`) }) }).locator("details.dl-imp");
 
 test("duello lampo: impostazioni di ogni mini gioco, in un pannello a scomparsa", async ({ page }) => {
   await page.goto("/duello-lampo");
@@ -536,7 +554,7 @@ test("duello lampo: impostazioni di Bersagli e di Il più grande", async ({ page
   }
   await expect(gruppo.getByRole("radio", { name: "8 s", exact: true })).toBeChecked();
   await expect(gruppo.getByRole("radio", { name: "3×3" })).toBeChecked();
-  await expect(gruppo.getByRole("switch", { name: "Gli errori contano −1" })).not.toBeChecked();
+  await expect(gruppo.getByRole("switch", { name: "Gli errori contano −1" })).toBeChecked();
   await bers.locator("summary").scrollIntoViewIfNeeded();
   await schermata(page, "impostazioni-bersagli");
   await bers.locator("summary").click();
@@ -559,7 +577,7 @@ test("duello lampo: Bersagli, si colpiscono i cerchi e chi tocca a vuoto perde u
   // Griglia più fitta (4×4, il caso più stretto per il telefono) e round breve.
   await gruppo.getByRole("radio", { name: "4×4" }).check({ force: true });
   await gruppo.getByRole("radio", { name: "5 s", exact: true }).check({ force: true });
-  await gruppo.getByRole("switch", { name: "Gli errori contano −1" }).check();
+  await expect(gruppo.getByRole("switch", { name: "Gli errori contano −1" })).toBeChecked();
   await page.getByRole("button", { name: "Inizia la sfida" }).click();
   await expect(basso(page).getByRole("heading", { name: "Bersagli" })).toBeVisible();
   await pronti(page);

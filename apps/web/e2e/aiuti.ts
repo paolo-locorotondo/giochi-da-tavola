@@ -1,4 +1,9 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type BrowserContext, type Page } from "@playwright/test";
+
+/** Nei telefoni extra (browser.newContext) l'avviso dei giochi in beta non deve coprire la schermata. */
+export async function betaLetto(contesto: BrowserContext) {
+  await contesto.addInitScript(() => sessionStorage.setItem("gdt-beta-letto", JSON.stringify(["scopa", "burraco", "ultima"])));
+}
 
 /** Rende deterministico Math.random: i semi delle partite (e quindi parole, ruoli, ordine) non cambiano tra le esecuzioni. */
 export async function fissaCaso(page: Page, { avvisoBeta = false } = {}) {
@@ -40,3 +45,4 @@ export async function schermata(page: Page, nome: string, opzioni: { maschera?: 
     mask: (opzioni.maschera ?? []).map((s) => page.locator(s)),
   });
 }
+

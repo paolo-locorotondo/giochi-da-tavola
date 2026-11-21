@@ -38,6 +38,8 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
 
     const [passo, setPasso] = useState(0);
     const [esito, setEsito] = useState<RisultatoTrova | null>(null);
+    /** La casella toccata e se era quella giusta: per il bordo verde o rosso. */
+    const [toccata, setToccata] = useState<{ indice: number; giusta: boolean } | null>(null);
     // Passo 0 = griglia iniziale; passo n = dopo n cambi. Il bersaglio arriva al passo `indiceComparsa`,
     // ma i cambi continuano: se la griglia si fermasse, il fermo direbbe che il bersaglio è uscito.
     const comparsaAl = config.indiceComparsa;
@@ -79,6 +81,7 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
         ? { trovato: indice === config.posizione, ms: Math.max(0, Math.round(istante - (tComparso.current ?? istante))) }
         : { trovato: false, ms: 0 };
       setEsito(r);
+      setToccata({ indice, giusta: r.trovato });
       rif.current(r);
     };
 
@@ -121,6 +124,7 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
                     aria-hidden="true"
                     focusable="false"
                   />
+                  {toccata?.indice === i && <span className={`dl-effetto dl-effetto--${toccata.giusta ? "colpito" : "vuoto"}`} aria-hidden="true" />}
                 </button>
               );
             })}

@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { fissaCaso, schermata } from "./aiuti";
+import { fissaCaso, schermata, betaLetto } from "./aiuti";
 
 // Le stanze veloci aperte sono condivise dal server: questi test girano uno alla volta
 // (progetto «coda-*», vedi playwright.config.ts).
@@ -11,6 +11,7 @@ const MASCHERE = ["[role=timer]", ".sv-riepilogo"];
 
 async function telefoni(browser: Browser, n: number) {
   const contesti = await Promise.all(Array.from({ length: n }, () => browser.newContext(telefono)));
+  await Promise.all(contesti.map(betaLetto));
   const pagine = await Promise.all(contesti.map((c) => c.newPage()));
   return { pagine, chiudi: () => Promise.all(contesti.map((c) => c.close())) };
 }
@@ -20,6 +21,13 @@ async function allaPartitaVeloce(p: Page, nome: string) {
   await p.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
   await p.getByRole("button", { name: "Partita veloce" }).click();
   await p.getByLabel("Il tuo nome").fill(nome);
+}
+
+/** Chiude la stanza d'attesa: le stanze aperte sono condivise dal server e non devono restare ai test dopo. */
+async function chiudiSala(p: Page) {
+  await p.getByRole("button", { name: "Chiudi la stanza" }).click();
+  await p.getByRole("button", { name: "Sì, chiudi" }).click();
+  await expect(p.getByRole("heading", { name: "Sala d'attesa" })).toHaveCount(0);
 }
 
 /** Con 10 valori di posti c'è il selettore con più/meno, che parte da 2. */
@@ -83,6 +91,58 @@ test("ultima veloce: la partita parte da sola quando la stanza è piena", async 
       await p.getByRole("button", { name: "Entra nella stanza" }).click();
     }
     for (const p of pagine) await expect(p.getByRole("heading", { name: "La tua mano" })).toBeVisible();
+  } finally {
+    await chiudi();
+  }
+});
+
+test("ultima veloce: uscire con la freccia libera il posto subito, e rientrare non aggiunge «(2)»", async ({ browser }) => {
+  const { pagine, chiudi } = await telefoni(browser, 2);
+  const [anna, pippo] = pagine as [Page, Page];
+  try {
+    await allaPartitaVeloce(anna, "Anna");
+    await scegliPosti(anna, 3);
+    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await expect(anna.getByText("Aspetto altri 2 giocatori")).toBeVisible();
+
+    await allaPartitaVeloce(pippo, "Pippo");
+    await pippo.getByRole("button", { name: "Entra nella stanza" }).click();
+    await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
+
+    // Freccia «indietro» dell'app: Pippo lascia il gioco e il posto si libera subito (niente 30 s di «assente»).
+    await pippo.getByRole("link", { name: "Indietro" }).click();
+    await expect(anna.getByText("Aspetto altri 2 giocatori")).toBeVisible({ timeout: 5000 });
+
+    await allaPartitaVeloce(pippo, "Pippo");
+    await pippo.getByRole("button", { name: "Entra nella stanza" }).click();
+    await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
+    await expect(anna.getByText("Pippo", { exact: true })).toBeVisible();
+    await expect(anna.getByText("Pippo (2)")).toHaveCount(0);
+    await chiudiSala(anna);
+  } finally {
+    await chiudi();
+  }
+});
+
+test("ultima veloce: dopo un refresh il posto si riprende dal salvataggio, senza «(2)»", async ({ browser }) => {
+  const { pagine, chiudi } = await telefoni(browser, 2);
+  const [anna, pippo] = pagine as [Page, Page];
+  try {
+    await allaPartitaVeloce(anna, "Anna");
+    await scegliPosti(anna, 3);
+    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await allaPartitaVeloce(pippo, "Pippo");
+    await pippo.getByRole("button", { name: "Entra nella stanza" }).click();
+    await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
+
+    // Esco dall'indirizzo della sala e riapro «Partita veloce»: il posto di Pippo è ancora suo.
+    await pippo.goto("/ultima");
+    await pippo.getByRole("button", { name: /Ognuno col suo telefono/ }).click();
+    await pippo.getByRole("button", { name: "Partita veloce" }).click();
+    await expect(pippo.getByRole("heading", { name: "Sala d'attesa" })).toBeVisible();
+    await expect(anna.getByText("Pippo (2)")).toHaveCount(0);
+    await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
+    await chiudiSala(anna);
   } finally {
     await chiudi();
   }

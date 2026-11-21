@@ -78,6 +78,7 @@ export const en: Dizionario<typeof it> = {
   nomiAiuto: "Each person picks their own name on their phone.",
   creaPartita: "Create the game",
   hoUnCodice: "I have a code: join",
+  oppureCrea: "or create a new game",
   codiceLabel: "Game code",
   entra: "Join",
   indietro: "Back",

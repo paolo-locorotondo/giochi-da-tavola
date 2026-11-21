@@ -102,6 +102,8 @@ Sono **impostazioni iniziali della stanza**: le sceglie chi crea la partita (onl
 
 Nella configurazione della stanza sono la chiave `varianti` (`{ sommaPiu2, piuUguali, taglio, scambioRotazione }`, booleani): `leggiConfig` in `src/online/gioco.ts` le controlla (assenti = spente, non booleane = `configNonValida`), così valgono uguali per «Crea», per la partita veloce e contro i bot.
 
+**Da verificare**: «Più carte uguali» oggi permette di calare insieme carte con lo stesso numero anche di colori diversi (e più Salta, più +2). Il ricordo di Paolo è che servano carte **identiche**, cioè stesso colore e stesso numero o simbolo. Da confermare con le regole che si usano al tavolo prima di cambiare la regola e la descrizione della variante.
+
 ### Fatte
 
 - **Somma dei +2** (`sommaPiu2`): chi riceve un +2 non pesca subito, ha davanti un **cumulo**. Può rispondere con un +2 di **qualunque colore** (il cumulo cresce di 2 e passa al successivo) oppure **pescare tutto il cumulo** e saltare il turno (pulsante «Pesca N»). Con un cumulo aperto non si pesca una carta sola, non si passa e non si gioca nient'altro (`rispondiCumulo`). Un +2 non risponde a un +4 né un +4 a un +2. Se la prima carta scoperta è un +2, il cumulo di 2 vale per il primo giocatore, con la stessa scelta. Un +2 che svuota la mano chiude il round senza cumulo. I bot rilanciano se hanno un +2, altrimenti pagano (facile e medio a volte pagano anche potendo rilanciare).

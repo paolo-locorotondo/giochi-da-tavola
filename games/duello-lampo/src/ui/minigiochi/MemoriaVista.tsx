@@ -26,6 +26,9 @@ export function MemoriaVista({ config, inizio, onRisultato }: VistaProps<ConfigM
   const [pronto, setPronto] = useState(false);
   const [fatte, setFatte] = useState(0);
   const [esito, setEsito] = useState<RisultatoMemoria | null>(null);
+  /** L'ultima casella toccata (`n` cambia a ogni tocco, così l'animazione riparte): bordo verde o rosso. */
+  const [toccata, setToccata] = useState<{ n: number; casella: number; giusta: boolean } | null>(null);
+  const tocchi = useRef(0);
   const prontoRif = useRef(false);
   const fatteRif = useRef(0);
   /** Il tempo zero di chi ripete: la fine della dimostrazione. */
@@ -52,6 +55,8 @@ export function MemoriaVista({ config, inizio, onRisultato }: VistaProps<ConfigM
     // Durante la dimostrazione e dopo la fine i tocchi non contano.
     if (esito || !prontoRif.current) return;
     const ms = Math.max(0, Math.round(istante - base));
+    tocchi.current += 1;
+    setToccata({ n: tocchi.current, casella, giusta: casella === config.sequenza[fatteRif.current] });
     if (casella !== config.sequenza[fatteRif.current]) {
       const r: RisultatoMemoria = { giusta: false, ms };
       setEsito(r);
@@ -100,6 +105,9 @@ export function MemoriaVista({ config, inizio, onRisultato }: VistaProps<ConfigM
             }}
           >
             {i + 1}
+            {toccata?.casella === i && (
+              <span key={toccata.n} className={`dl-effetto dl-effetto--${toccata.giusta ? "colpito" : "vuoto"}`} aria-hidden="true" />
+            )}
           </button>
         ))}
       </div>

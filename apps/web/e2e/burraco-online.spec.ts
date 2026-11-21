@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { fissaCaso, schermata, controllaMobile } from "./aiuti";
+import { fissaCaso, schermata, controllaMobile, betaLetto } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
@@ -9,6 +9,7 @@ const NOMI = ["Anna", "Bruno", "Carla", "Dario"];
 /** Quattro telefoni nella stessa stanza, tutti seduti. L'organizzatore è Anna; Anna e Carla sono compagne. */
 async function stanza(browser: Browser) {
   const contesti = await Promise.all(NOMI.map(() => browser.newContext(telefono)));
+  await Promise.all(contesti.map(betaLetto));
   const pagine = await Promise.all(contesti.map((c) => c.newPage()));
   const [host] = pagine as [Page, ...Page[]];
   await host.goto("/burraco");

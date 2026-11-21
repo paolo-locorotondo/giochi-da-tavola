@@ -16,6 +16,8 @@ export function ColoreVista({ config, inizio, onRisultato }: VistaProps<ConfigCo
 
   const [mostrata, setMostrata] = useState(false);
   const [esito, setEsito] = useState<RisultatoColore | null>(null);
+  /** Il tasto toccato, per il bordo verde o rosso. */
+  const [toccato, setToccato] = useState<{ colore: Colore; giusto: boolean } | null>(null);
   const èVisibile = useRef(false);
   const tVisibile = useRef<number | null>(null);
 
@@ -45,6 +47,7 @@ export function ColoreVista({ config, inizio, onRisultato }: VistaProps<ConfigCo
       ? { giusto: scelto === config.inchiostro, ms: Math.max(0, Math.round(istante - (tVisibile.current ?? istante))) }
       : { giusto: false, ms: 0 };
     setEsito(r);
+    setToccato({ colore: scelto, giusto: r.giusto });
     rif.current(r);
   };
 
@@ -81,6 +84,7 @@ export function ColoreVista({ config, inizio, onRisultato }: VistaProps<ConfigCo
           >
             <span className={`dl-campione dl-sfondo-${c}`} aria-hidden="true" />
             {t(`c_${c}`)}
+            {toccato?.colore === c && <span className={`dl-effetto dl-effetto--${toccato.giusto ? "colpito" : "vuoto"}`} aria-hidden="true" />}
           </button>
         ))}
       </div>

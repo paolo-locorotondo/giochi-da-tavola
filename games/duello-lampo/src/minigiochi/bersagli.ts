@@ -1,10 +1,14 @@
-import { IMP_ERRORI, confronta, numero, type Lato, type MiniGioco, type Nessuno } from "./tipi";
+import { IMP_ERRORI, numero, sino, type Lato, type MiniGioco, type Nessuno } from "./tipi";
 
 /**
  * «Bersagli»: per tutta la durata del round compaiono cerchi in una griglia, ognuno resta acceso
- * per poco e poi sparisce. Si toccano per colpirli: chi ne colpisce di più vince, a parità vince
- * chi è stato più veloce. Chi tocca a vuoto può perdere un punto (una sola volta per round).
+ * per poco e poi sparisce. Si toccano per colpirli. La velocità non conta, contano solo colpi e vuoti:
+ * - «Gli errori contano −1» acceso: punteggio del round = colpiti − vuoti; vince il più alto, a parità chi ha
+ *   meno colpi a vuoto, se sono pari anche quelli il round è pari. Il −1 alla partita (`errore`) scatta
+ *   solo per chi ha più colpi a vuoto che colpiti.
+ * - spento: vince chi colpisce di più, a parità chi ha meno colpi a vuoto, poi pari; nessun −1.
  * I due giocatori vedono gli stessi bersagli, nelle stesse celle e agli stessi istanti.
+ * Il valore del flag sta nella config (`erroriContano`) perché `vincitore` non riceve le impostazioni.
  */
 export const DURATE_S = [5, 8, 10] as const;
 export const DURATA_BASE_S = 8;
@@ -19,7 +23,6 @@ export const PRIMO_MS = 500;
 export const CODA_MS = 400;
 /** La vista riporta il risultato allo scadere; questo margine copre solo i ritardi del telefono. */
 export const MARGINE_MS = 1500;
-export const SOGLIA_PARI_MS = 1;
 
 export interface Bersaglio {
   /** Istante di comparsa, in ms dall'inizio del round. */
@@ -34,12 +37,14 @@ export interface ConfigBersagli {
   durataMs: number;
   lato: number;
   bersagli: readonly Bersaglio[];
+  /** «Gli errori contano −1» era acceso quando è stato preparato il round. */
+  erroriContano: boolean;
 }
 
 export interface RisultatoBersagli {
   /** Bersagli colpiti. */
   colpiti: number;
-  /** Somma dei tempi di reazione dei colpiti (da quando sono comparsi). */
+  /** Somma dei tempi di reazione dei colpiti (da quando sono comparsi): informativa, non decide il round. */
   sommaMs: number;
   /** Tocchi a vuoto. */
   vuoti: number;
@@ -93,17 +98,18 @@ export const bersagli: MiniGioco<ConfigBersagli, RisultatoBersagli> = {
       lista.push({ comparsaMs: t, scadeMs: t + vitaMs, cella });
       ultima = cella;
     }
-    return { durataMs, lato, bersagli: lista };
+    return { durataMs, lato, bersagli: lista, erroriContano: sino(imp, "errori") };
   },
   durataMassima: (c) => c.durataMs + MARGINE_MS,
   chiudeAlPrimo: false,
-  vincitore(_config, [a, b]): Lato | null {
+  vincitore(config, [a, b]): Lato | null {
     const ra = conti(a);
     const rb = conti(b);
-    if (ra.colpiti !== rb.colpiti) return ra.colpiti > rb.colpiti ? 0 : 1;
-    if (ra.colpiti === 0) return null;
-    return confronta(ra.sommaMs, rb.sommaMs, "minore", SOGLIA_PARI_MS);
+    const punti = (r: RisultatoBersagli) => (config.erroriContano ? r.colpiti - r.vuoti : r.colpiti);
+    if (punti(ra) !== punti(rb)) return punti(ra) > punti(rb) ? 0 : 1;
+    if (ra.vuoti !== rb.vuoti) return ra.vuoti < rb.vuoti ? 0 : 1;
+    return null;
   },
-  /** Errore: almeno un tocco a vuoto nel round (una sola penalità per round). */
-  errore: (_config, r) => "vuoti" in r && r.vuoti > 0,
+  /** Errore (−1 alla partita): più colpi a vuoto che colpiti. */
+  errore: (_config, r) => "vuoti" in r && r.vuoti > r.colpiti,
 };

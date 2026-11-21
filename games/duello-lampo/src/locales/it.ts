@@ -34,7 +34,7 @@ export const it = {
   imp_griglia: "{n}×{n}",
   imp_si: "Sì",
   imp_errori: "Gli errori contano −1",
-  imp_errori_aiuto: "Chi sbaglia perde anche un punto (essere più lenti non è un errore).",
+  imp_errori_aiuto: "Chi sbaglia perde anche un punto (essere più lenti non è un errore). In Bersagli il −1 scatta solo se i colpi a vuoto sono più dei colpiti.",
   penalita: "(−1)",
   imp_no: "No",
   mg_via_imp_attesaMax: "Attesa massima prima del via",
@@ -77,6 +77,8 @@ export const it = {
   sequenzaVoce: "{nome} ×{n}",
   sequenzaCaso: "Ordine casuale, nuovo a ogni sfida",
   tutti: "Tutti",
+  nessuno: "Nessuno",
+  ripristinaImp: "Ripristina impostazioni",
   aCaso: "A caso",
   nessunoScelto: "Scegli almeno una mano: con tutti a 0 non si può giocare.",
   inizia: "Inizia la sfida",
@@ -104,7 +106,7 @@ export const it = {
   mg_memoria_regola: "Guarda le caselle che si accendono e ripeti la sequenza nello stesso ordine. Vince chi la ripete giusta per primo.",
   mg_bersagli_nome: "Bersagli",
   mg_bersagli_regola:
-    "Compaiono dei cerchi: toccali prima che spariscano. Chi ne colpisce di più vince; a parità vince chi è più veloce. Chi tocca a vuoto può perdere un punto.",
+    "Compaiono dei cerchi: toccali prima che spariscano. La velocità non conta. Con «Gli errori contano −1» il punteggio è colpiti meno colpi a vuoto; altrimenti vince chi ne colpisce di più. A parità vince chi ha meno colpi a vuoto.",
   mg_piugrande_nome: "Il più grande",
   mg_piugrande_regola:
     "Compaiono dei numeri: tocca per primo quello più grande. Se tocchi un numero che non è il più grande, perdi il round.",

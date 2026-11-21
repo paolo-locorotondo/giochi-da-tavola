@@ -393,6 +393,7 @@ I passi 2–7 possono andare in un solo ramo; il passo 1 da solo e prima.
 11. **Nomi uguali**: *Consiglio*: come oggi, il secondo diventa «Anna (2)» al momento dell'aggancio (si vede subito in sala).
 12. **Tris**: va bene che in attesa l'indirizzo mostri già il codice e che il refresh non faccia più perdere il posto? *Consiglio*: sì, è un miglioramento; i testi cambiano da «In coda…» a «Sala d'attesa · Aspetto un altro giocatore».
 13. **Impostore in partita veloce?** *Consiglio*: no per ora (gioco in presenza).
+14. **Uscita con la freccia e rientro (2026-11-21)**: uscendo dalla sala d'attesa con la freccia dell'app il client manda `esciDaSala` e il posto si libera subito (niente «assente» per 30 s, niente «Nome (2)» al rientro). Chiusura della scheda, refresh, schermo bloccato o rete caduta restano coperti dalla grazia di 30 s. Riaprendo «Partita veloce» il client prova prima `entra` con il codice e il token salvati (`gdt.<gioco>.ultimaVeloce`, messaggio con `riprendi`): se il posto c'è ancora lo riprende, altrimenti prosegue normalmente. Il rientro è legato al token, mai al nome: chi scrive lo stesso nome di un assente non ne prende il posto.
 
 ## 7. Dimensioni
 

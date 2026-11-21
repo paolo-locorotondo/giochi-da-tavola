@@ -148,6 +148,13 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
         if (validi) c.invia({ t: "crea", gioco: "ultima", nomi: puliti, config: { modo, soglia, varianti } });
       }}
     >
+      <button className="btn" type="button" onClick={onVeloce}>
+        {tv("partitaVeloce")}
+      </button>
+      <button className="btn" type="button" onClick={onEntra}>
+        {t("hoUnCodice")}
+      </button>
+      <p className="muted">{t("oppureCrea")}</p>
       <fieldset className="ul-nomi-crea" style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <legend>{t("nomiGiocatori")}</legend>
         {nomi.map((n, i) => (
@@ -206,12 +213,6 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso || !validi}>
         {t("creaPartita")}
-      </button>
-      <button className="btn" type="button" onClick={onEntra}>
-        {t("hoUnCodice")}
-      </button>
-      <button className="btn" type="button" onClick={onVeloce}>
-        {tv("partitaVeloce")}
       </button>
     </form>
   );

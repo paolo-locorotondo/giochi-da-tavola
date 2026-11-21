@@ -102,6 +102,7 @@ export const it = {
   indiziScritti: "Indizi scritti nell'app, uno alla volta (per giocare da case diverse)",
   creaPartita: "Crea la partita",
   hoUnCodice: "Ho un codice: entra",
+  oppureCrea: "oppure crea una nuova partita",
 
   // Online: carta
   nascondiCarta: "Nascondi la mia carta",

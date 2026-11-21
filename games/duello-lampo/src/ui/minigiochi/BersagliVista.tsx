@@ -137,7 +137,7 @@ export function BersagliVista({ config, inizio, onRisultato }: VistaProps<Config
                     <Target className="dl-bersaglio-icona" strokeWidth={2.25} aria-hidden="true" focusable="false" />
                   </button>
                 )}
-                {lampo?.cella === cella && <span key={lampo.n} className={`dl-bersagli-effetto dl-bersagli-effetto--${lampo.tipo}`} aria-hidden="true" />}
+                {lampo?.cella === cella && <span key={lampo.n} className={`dl-effetto dl-effetto--${lampo.tipo}`} aria-hidden="true" />}
               </div>
             );
           })}

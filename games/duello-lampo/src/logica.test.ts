@@ -176,8 +176,13 @@ describe("erroriRound", () => {
   const conErrori = (id: string, attivo: boolean) =>
     nuovaPartita({ mani: { [id]: 1 }, impostazioni: { [id]: { errori: attivo } } });
 
-  it("di base gli errori non contano", () => {
+  it("di base gli errori contano", () => {
     const p = nuovaPartita({ mani: { via: 1 } });
+    expect(erroriRound(p, "via", {}, [{ anticipo: true }, { ms: 300 }])).toEqual([true, false]);
+  });
+
+  it("con l'impostazione spenta gli errori non contano", () => {
+    const p = conErrori("via", false);
     expect(erroriRound(p, "via", {}, [{ anticipo: true }, { ms: 300 }])).toEqual([false, false]);
   });
 
@@ -201,7 +206,7 @@ describe("erroriRound", () => {
       expect(miniGioco(id).errore).toBeUndefined();
     }
     for (const id of ["via", "colore", "nomi", "panda", "smile", "memoria"]) {
-      expect(miniGioco(id).impostazioni?.find((i) => i.chiave === "errori")).toMatchObject({ tipo: "interruttore", base: false });
+      expect(miniGioco(id).impostazioni?.find((i) => i.chiave === "errori")).toMatchObject({ tipo: "interruttore", base: true });
     }
   });
 });
@@ -579,15 +584,35 @@ describe("Bersagli", () => {
     expect(valutaTocco(c, t, vuota, new Set())).toEqual({ tipo: "vuoto" });
     expect(attivi(c, 0)).toEqual([]);
   });
-  it("vince chi colpisce di più; a parità chi è più veloce; senza colpi è pari", () => {
-    expect(bersagli.vincitore(c, [{ colpiti: 4, sommaMs: 2000, vuoti: 5 }, { colpiti: 3, sommaMs: 100, vuoti: 0 }])).toBe(0);
-    expect(bersagli.vincitore(c, [{ colpiti: 3, sommaMs: 900, vuoti: 0 }, { colpiti: 3, sommaMs: 800, vuoti: 0 }])).toBe(1);
-    expect(bersagli.vincitore(c, [{ colpiti: 3, sommaMs: 800, vuoti: 1 }, { colpiti: 3, sommaMs: 801, vuoti: 0 }])).toBeNull();
-    expect(bersagli.vincitore(c, [{ colpiti: 0, sommaMs: 0, vuoti: 2 }, NESSUNO])).toBeNull();
-    expect(bersagli.vincitore(c, [NESSUNO, { colpiti: 1, sommaMs: 400, vuoti: 0 }])).toBe(1);
+  const r = (colpiti: number, vuoti: number, sommaMs = 500) => ({ colpiti, vuoti, sommaMs });
+  const con = (errori: boolean) => bersagli.prepara(creaRng(3), valoriCompleti(bersagli.impostazioni, { errori }));
+  it("di base «errori» è acceso e la config lo ricorda", () => {
+    expect(c.erroriContano).toBe(true);
+    expect(con(false).erroriContano).toBe(false);
   });
-  it("errore: almeno un tocco a vuoto (una sola penalità per round)", () => {
+  it("errori accesi: colpiti − vuoti; a parità meno vuoti; poi pari; la velocità non conta", () => {
+    expect(bersagli.vincitore(c, [r(4, 3), r(3, 0)])).toBe(1); // 1 contro 3
+    expect(bersagli.vincitore(c, [r(5, 1), r(3, 0)])).toBe(0); // 4 contro 3
+    expect(bersagli.vincitore(c, [r(4, 2, 9000), r(3, 1, 10)])).toBe(1); // 2 e 2 ma meno vuoti a destra
+    expect(bersagli.vincitore(c, [r(3, 1), r(2, 0)])).toBe(1); // 2 e 2: meno vuoti
+    expect(bersagli.vincitore(c, [r(3, 1, 9000), r(3, 1, 10)])).toBeNull();
+    expect(bersagli.vincitore(c, [r(0, 2), NESSUNO])).toBe(1); // −2 contro 0
+    expect(bersagli.vincitore(c, [NESSUNO, NESSUNO])).toBeNull();
+  });
+  it("errori spenti: più colpiti; a parità meno vuoti; poi pari; la velocità non conta", () => {
+    const o = con(false);
+    expect(bersagli.vincitore(o, [r(4, 5), r(3, 0)])).toBe(0);
+    expect(bersagli.vincitore(o, [r(3, 2, 9000), r(3, 1, 10)])).toBe(1);
+    expect(bersagli.vincitore(o, [r(3, 1, 9000), r(3, 1, 10)])).toBeNull();
+    expect(bersagli.vincitore(o, [r(0, 2), NESSUNO])).toBe(1); // stessi colpiti, meno vuoti
+    expect(bersagli.vincitore(o, [r(0, 0), NESSUNO])).toBeNull();
+    expect(bersagli.vincitore(o, [NESSUNO, r(1, 0)])).toBe(1);
+  });
+  it("errore: solo se i colpi a vuoto sono più dei colpiti", () => {
     expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 4 })).toBe(true);
+    expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 3 })).toBe(false);
+    expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 1 })).toBe(false);
+    expect(bersagli.errore!(c, { colpiti: 0, sommaMs: 0, vuoti: 1 })).toBe(true);
     expect(bersagli.errore!(c, { colpiti: 3, sommaMs: 1, vuoti: 0 })).toBe(false);
     expect(bersagli.errore!(c, NESSUNO)).toBe(false);
     expect(bersagli.durataMassima(c)).toBe(c.durataMs + 1500);
@@ -638,30 +663,30 @@ describe("Il più grande", () => {
 
 describe("impostazioni dei mini giochi", () => {
   it("valoriCompleti: base se mancano, scarta valori non ammessi o di tipo sbagliato", () => {
-    expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5, errori: false });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: 8 })).toEqual({ attesaMax: 8, errori: false });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: 7 })).toEqual({ attesaMax: 5, errori: false });
-    expect(valoriCompleti(via.impostazioni, { attesaMax: "8", errori: "sì" })).toEqual({ attesaMax: 5, errori: false });
-    expect(valoriCompleti(via.impostazioni, { sconosciuta: 1 })).toEqual({ attesaMax: 5, errori: false });
+    expect(valoriCompleti(via.impostazioni)).toEqual({ attesaMax: 5, errori: true });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 8 })).toEqual({ attesaMax: 8, errori: true });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: 7 })).toEqual({ attesaMax: 5, errori: true });
+    expect(valoriCompleti(via.impostazioni, { attesaMax: "8", errori: "sì" })).toEqual({ attesaMax: 5, errori: true });
+    expect(valoriCompleti(via.impostazioni, { sconosciuta: 1 })).toEqual({ attesaMax: 5, errori: true });
     expect(valoriCompleti(undefined)).toEqual({});
   });
 
   it("valoriBase e tuttiBase", () => {
-    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
-    expect(tuttiBase(memoria.impostazioni, { caselle: 4, lunghezza: 4, errori: false })).toBe(true);
-    expect(tuttiBase(memoria.impostazioni, { caselle: 6, lunghezza: 4, errori: false })).toBe(false);
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: true });
+    expect(tuttiBase(memoria.impostazioni, { caselle: 4, lunghezza: 4, errori: true })).toBe(true);
+    expect(tuttiBase(memoria.impostazioni, { caselle: 6, lunghezza: 4, errori: true })).toBe(false);
   });
 
   it("i valori di base sono quelli di prima (le partite non cambiano)", () => {
-    expect(valoriBase(via.impostazioni)).toEqual({ attesaMax: 5, errori: false });
+    expect(valoriBase(via.impostazioni)).toEqual({ attesaMax: 5, errori: true });
     expect(valoriBase(raffica.impostazioni)).toEqual({ durata: 5 });
     expect(valoriBase(stop.impostazioni)).toEqual({ velocita: 2 });
-    expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4, errori: false });
-    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, parole: 6, giuste: 1, errori: false });
-    expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false, errori: false });
-    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: false });
-    expect(valoriBase(bersagli.impostazioni)).toEqual({ durata: 8, lato: 3, vita: 1.2, ritmo: 0.9, errori: false });
-    expect(valoriBase(piugrande.impostazioni)).toEqual({ numeri: 6, cifre: 2, distanza: 5, errori: false });
+    expect(valoriBase(colore.impostazioni)).toEqual({ colori: 4, errori: true });
+    expect(valoriBase(nomi.impostazioni)).toEqual({ passo: 1.3, parole: 6, giuste: 1, errori: true });
+    expect(valoriBase(panda.impostazioni)).toEqual({ lato: 4, cambi: 3, passo: 1, ruotano: true, dritte: false, errori: true });
+    expect(valoriBase(memoria.impostazioni)).toEqual({ caselle: 4, lunghezza: 4, errori: true });
+    expect(valoriBase(bersagli.impostazioni)).toEqual({ durata: 8, lato: 3, vita: 1.2, ritmo: 0.9, errori: true });
+    expect(valoriBase(piugrande.impostazioni)).toEqual({ numeri: 6, cifre: 2, distanza: 5, errori: true });
   });
 
   it("ogni valore base è tra i valori ammessi", () => {
@@ -772,9 +797,9 @@ describe("impostazioni dei mini giochi", () => {
 
   it("nuovaPartita completa le impostazioni mancanti e corregge quelle fuori limite", () => {
     const p = nuovaPartita({ mani: { via: 1 }, impostazioni: { via: { attesaMax: 99 }, panda: { lato: 3, cambi: 30, passo: 0.5 }, inesistente: { x: 1 } } });
-    expect(p.impostazioni.via).toEqual({ attesaMax: 5, errori: false });
+    expect(p.impostazioni.via).toEqual({ attesaMax: 5, errori: true });
     expect(p.impostazioni.panda).toMatchObject({ lato: 3, cambi: 9, passo: 0.5 });
-    expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4, errori: false });
+    expect(p.impostazioni.memoria).toEqual({ caselle: 4, lunghezza: 4, errori: true });
     expect(Object.keys(p.impostazioni).sort()).toEqual([...ID_MINIGIOCHI].sort());
     expect(nuovaPartita({ mani: { via: 1 } }).impostazioni.raffica).toEqual({ durata: 5 });
   });

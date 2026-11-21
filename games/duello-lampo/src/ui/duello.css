@@ -808,8 +808,17 @@ div.dl-zona {
   }
 }
 
-/* Colpito (anello verde) o a vuoto (bordo di errore): c'è sempre anche il testo nello stato */
-.dl-bersagli-effetto {
+/*
+ * Feedback del tocco, comune a Bersagli, Trova, Memoria e Colore giusto: bordo verde (giusto) o rosso (sbagliato)
+ * che svanisce sull'elemento toccato. C'è sempre anche un testo di stato: il colore da solo non basta.
+ */
+.dl-trova-casella,
+.dl-memoria-casella,
+.dl-colore-tasto {
+  position: relative;
+}
+
+.dl-effetto {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -817,11 +826,11 @@ div.dl-zona {
   animation: dl-effetto 250ms ease-out forwards;
 }
 
-.dl-bersagli-effetto--colpito {
+.dl-effetto--colpito {
   border: 3px solid var(--ac2);
 }
 
-.dl-bersagli-effetto--vuoto {
+.dl-effetto--vuoto {
   border: 3px solid var(--errore);
 }
 
@@ -836,7 +845,7 @@ div.dl-zona {
   .dl-bersaglio-icona {
     animation: none;
   }
-  .dl-bersagli-effetto {
+  .dl-effetto {
     animation: none;
     display: none;
   }

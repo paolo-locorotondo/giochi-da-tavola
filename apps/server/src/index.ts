@@ -195,6 +195,8 @@ wss.on("connection", (ws) => {
         case "entra": {
           const s = stanze.get(String(m.codice).toUpperCase());
           if (!s) throw new Error("partitaNonTrovata");
+          // Rientro dal posto salvato: vale solo il token, mai il nome (altrimenti si ruberebbe il posto di un assente).
+          if (m.riprendi && !(typeof m.token === "string" && s.telefoni.has(m.token))) throw new Error("partitaNonTrovata");
           // Sala d'attesa veloce: rientra solo chi c'era già (con il suo token).
           if (s.sala && !(typeof m.token === "string" && s.sala.arrivati.some((a) => a.token === m.token))) throw new Error("stanzaVeloce");
           stanza = s;

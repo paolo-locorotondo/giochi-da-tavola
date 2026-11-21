@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { fissaCaso, schermata, controllaMobile } from "./aiuti";
+import { fissaCaso, schermata, controllaMobile, betaLetto } from "./aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
@@ -9,6 +9,7 @@ const telefono = { viewport: { width: 375, height: 812 }, hasTouch: true, isMobi
 async function stanza(browser: Browser, posti: 2 | 4) {
   const nomi = ["Anna", "Bruno", "Carla", "Dino"].slice(0, posti);
   const contesti = await Promise.all(nomi.map(() => browser.newContext(telefono)));
+  await Promise.all(contesti.map(betaLetto));
   const pagine = await Promise.all(contesti.map((c) => c.newPage()));
   const [host] = pagine;
   await host!.goto("/scopa");

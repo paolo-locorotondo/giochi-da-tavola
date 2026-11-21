@@ -10,7 +10,7 @@ export type { AnteprimaVeloce, AperturaVeloce, ComandoSala, VistaSalaVeloce };
 /** Messaggi verso il server (specchio di apps/server/src/stanze.ts). */
 export type Messaggio =
   | { t: "crea"; gioco?: string; nomi: string[]; config: unknown; token?: string }
-  | { t: "entra"; codice: string; token?: string }
+  | { t: "entra"; codice: string; token?: string; riprendi?: boolean }
   | { t: "azione"; azione: Record<string, unknown> }
   | { t: "sollecita" }
   | { t: "chiudi" }
@@ -58,6 +58,26 @@ function salvaToken(gioco: string, codice: string, token: string) {
   }
 }
 
+const chiaveUltimaVeloce = (gioco: string) => `gdt.${gioco}.ultimaVeloce`;
+
+/** L'ultima sala veloce in cui ero (il token sta in `chiaveToken`): serve a riprendere il posto. */
+function leggiUltimaVeloce(gioco: string): string | undefined {
+  try {
+    return localStorage.getItem(chiaveUltimaVeloce(gioco)) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function scriviUltimaVeloce(gioco: string, codice: string | null) {
+  try {
+    if (codice) localStorage.setItem(chiaveUltimaVeloce(gioco), codice);
+    else localStorage.removeItem(chiaveUltimaVeloce(gioco));
+  } catch {
+    /* senza storage non si riprende il posto: resta la grazia di 30 s */
+  }
+}
+
 export interface Collegamento<V> {
   vista: V | null;
   codice: string | null;
@@ -79,6 +99,11 @@ export interface Collegamento<V> {
   /** Entra nella stanza vista (`codice`), ne apre una (`apri`) o, senza opzioni, entra nella prima o ne apre una di base. */
   entraVeloce: (nome: string, opzioni?: { codice?: string; apri?: AperturaVeloce }) => void;
   esciDaSala: () => void;
+  /**
+   * Se c'è una sala veloce salvata prova a rientrarci con il suo token (true = tentativo partito).
+   * Se il server la rifiuta il salvataggio si scarta e si chiede da sé l'anteprima.
+   */
+  riprendiVeloce: () => boolean;
   comandoSala: (c: ComandoSala) => void;
   invia: (m: Messaggio) => void;
   azione: (a: Record<string, unknown>) => void;
@@ -104,6 +129,10 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
   const [sala, setSala] = useState<VistaSalaVeloce | null>(null);
   const [anteprima, setAnteprima] = useState<AnteprimaVeloce | null | undefined>(undefined);
   const [fuoriSala, setFuoriSala] = useState<"uscito" | "scaduta" | "chiusa" | null>(null);
+  /** Il codice della sala d'attesa in cui sono ora (null = non in sala): decide se smontare è un'uscita. */
+  const salaDi = useRef<string | null>(null);
+  /** Un tentativo di riprendere il posto è in corso: un errore va scartato in silenzio. */
+  const riprendendo = useRef(false);
 
   // Se per troppo tempo non c'è connessione, lo si dice invece di restare in attesa all'infinito.
   useEffect(() => {
@@ -144,6 +173,8 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
           salvaToken(gioco, m.codice, m.token);
           window.history.replaceState(window.history.state, "", `/${gioco}/${m.codice}`);
         } else if (m.t === "vista") {
+          riprendendo.current = false;
+          salaDi.current = null;
           setSala(null);
           setVista(m.vista);
           setSollecitato(false);
@@ -151,6 +182,8 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
           // Partita chiusa: il token non serve più e non si deve rientrare da solo.
           const c = codiceRef.current;
           if (c) cancellaToken(gioco, c);
+          scriviUltimaVeloce(gioco, null);
+          salaDi.current = null;
           codiceRef.current = null;
           setChiusa(true);
           setVista(null);
@@ -159,11 +192,16 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
         } else if (m.t === "anteprima") {
           setAnteprima(m.sala);
         } else if (m.t === "salaVeloce") {
+          riprendendo.current = false;
+          salaDi.current = m.sala.codice;
+          scriviUltimaVeloce(gioco, m.sala.codice);
           setSala(m.sala);
         } else if (m.t === "fuoriSala") {
           // Fuori dalla sala (uscito, scaduta, chiusa): il token non serve più.
           const c = codiceRef.current;
           if (c) cancellaToken(gioco, c);
+          scriviUltimaVeloce(gioco, null);
+          salaDi.current = null;
           codiceRef.current = null;
           setSala(null);
           setCodice(null);
@@ -173,6 +211,15 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
           setSollecitato(true);
           navigator.vibrate?.([200, 100, 200]);
           suona("sollecito");
+        } else if (riprendendo.current) {
+          // Il posto salvato non c'è più (sala chiusa, grazia finita): si riparte da zero.
+          riprendendo.current = false;
+          const c = codiceRef.current;
+          if (c) cancellaToken(gioco, c);
+          scriviUltimaVeloce(gioco, null);
+          codiceRef.current = null;
+          setCodice(null);
+          s.send(JSON.stringify({ t: "anteprimaVeloce", gioco }));
         } else {
           setErrore(m.messaggio);
         }
@@ -195,6 +242,16 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
       chiuso = true;
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", alRitorno);
+      // Smontaggio (freccia «indietro», cambio di gioco) con la sala d'attesa aperta: è un'uscita
+      // voluta, il posto si libera subito. Refresh, schermo bloccato, rete o scheda chiusa non
+      // passano di qui (il socket cade da solo) e restano coperti dalla grazia del server.
+      // Con StrictMode il primo cleanup arriva prima di ogni sala, quindi non scatta.
+      const dentro = salaDi.current;
+      if (dentro && ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ t: "esciDaSala" } satisfies Messaggio));
+        cancellaToken(gioco, dentro);
+        scriviUltimaVeloce(gioco, null);
+      }
       ws.current?.close();
     };
   }, [gioco]);
@@ -208,6 +265,19 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
     [gioco, invia],
   );
   const esciDaSala = useCallback(() => invia({ t: "esciDaSala" }), [invia]);
+  const riprendiVeloce = useCallback(() => {
+    const c = leggiUltimaVeloce(gioco);
+    const token = c ? leggiToken(gioco, c) : undefined;
+    if (!c || !token) {
+      if (c) scriviUltimaVeloce(gioco, null);
+      return false;
+    }
+    if (riprendendo.current || codiceRef.current) return true;
+    riprendendo.current = true;
+    codiceRef.current = c;
+    invia({ t: "entra", codice: c, token, riprendi: true });
+    return true;
+  }, [gioco, invia]);
   const comandoSala = useCallback((c: ComandoSala) => invia({ t: "sala", ...c }), [invia]);
 
   return {
@@ -218,6 +288,7 @@ export function useCollegamento<V>(gioco: string, codiceIniziale: string | null)
     chiediAnteprima,
     entraVeloce,
     esciDaSala,
+    riprendiVeloce,
     comandoSala,
     codice,
     connesso,
