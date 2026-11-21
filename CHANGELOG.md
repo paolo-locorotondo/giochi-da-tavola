@@ -9,6 +9,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+- Contratto della partita veloce a stanze aperte in `@gdt/engine` (tipi `PartitaVeloceOnline`, `AperturaVeloce`, `AnteprimaVeloce`, `VistaSalaVeloce`, `intervalloPosti`, costanti d'attesa e di conto) e `ContestoOnline.ora()` per le logiche con finestre di tempo. Solo contratto: nessun cambio di comportamento.
 - Documentazione allineata: prove su telefono vero di Duello Lampo (doppio tocco, 6×6) e della barra fissa verificate dall'utente il 2026-11-20; `decisioni.md` (giochi, struttura, voci FATTO), `test.md` (cosa copre la suite e cosa no) e README (Tris anche online).
 
 ## [0.25.0] - 2026-11-20

@@ -51,7 +51,7 @@ export function nuovaPartitaLocale({ nomi, livello, config }: ConfigLocale, seme
  */
 export function agisci(p: PartitaLocale, richiesta: RichiestaOnline, seme: () => number): PartitaLocale {
   if (richiesta.tipo === "mossaBot") throw new ErroreUltima("azioneNonValida");
-  const azione = ultimaOnline.traduci(p.stato, { posto: IO, host: true, seme }, richiesta);
+  const azione = ultimaOnline.traduci(p.stato, { posto: IO, host: true, seme, ora: () => Date.now() }, richiesta);
   return azione ? { ...p, stato: applica(p.stato, azione) } : p;
 }
 
