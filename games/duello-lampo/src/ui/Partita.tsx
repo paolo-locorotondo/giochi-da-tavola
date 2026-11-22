@@ -6,9 +6,12 @@ import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { assegna, erroriRound, finita, idCorrente, impostazioniDi, nuovaPartita, type Errori, vincitorePartita, type Partita as DatiPartita, type Sfida } from "../logica";
 import { NESSUNO, miniGioco, type Lato } from "../minigiochi";
-import { suonoConto, suonoFine, suonoPari, suonoPunto } from "../suoni";
+import { suonoConto, suonoFine, suonoPari, suonoPunto, RITARDO_ESITO_S } from "../suoni";
 import { VISTE } from "./minigiochi";
 import "./duello.css";
+
+/** Mini giochi in cui ogni tocco fa il suono giusto o sbagliato. */
+const SUONO_TOCCO: ReadonlySet<string> = new Set(["panda", "smile", "memoria", "colore", "bersagli", "piugrande"]);
 
 type Fase = "regola" | "conto" | "gioco" | "esito" | "fine";
 
@@ -139,8 +142,10 @@ export function Partita({ sfida, nomi, onEsci }: Props) {
   // Esito: suono e blocco breve di «Avanti».
   useEffect(() => {
     if (fase !== "esito") return;
-    if (esito?.vincitore == null) suonoPari();
-    else suonoPunto();
+    // I mini giochi con suono al tocco (giusto/sbagliato) lasciano finire quel suono prima dell'esito.
+    const ritardo = esito && SUONO_TOCCO.has(esito.id) ? RITARDO_ESITO_S : 0;
+    if (esito?.vincitore == null) suonoPari(ritardo);
+    else suonoPunto(ritardo);
     setSbloccato(false);
     const id = window.setTimeout(() => setSbloccato(true), BLOCCO_ESITO_MS);
     return () => window.clearTimeout(id);

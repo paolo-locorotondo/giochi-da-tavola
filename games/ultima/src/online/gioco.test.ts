@@ -554,3 +554,18 @@ describe("Taglio online", () => {
     for (let seme = 0; seme < 8; seme++) expect(giocaConBot(avviata(seme, NOMI, cfg)).fase).toBe("fine");
   });
 });
+
+describe("mazzo vuoto online", () => {
+  it("il server rifiuta la pesca e la vista disattiva «Pesca»; si può passare", () => {
+    const s = avviata(3);
+    const p = s.partita!;
+    const turno = p.turno;
+    const vuoto: StatoOnline = { ...s, partita: { ...p, mazzo: [], scarto: [p.scarto[p.scarto.length - 1]!], haPescato: false, pescata: null } };
+    expect(vistaPer(vuoto, turno, false).puoPescare).toBe(false);
+    expect(codice(() => applica(vuoto, { tipo: "pesca", chi: turno }))).toBe("mazzoVuoto");
+    const dopo = applica(vuoto, { tipo: "passa", chi: turno });
+    expect(dopo.partita!.turno).not.toBe(turno);
+    const rimescolabile: StatoOnline = { ...vuoto, partita: { ...vuoto.partita!, scarto: [p.scarto[0]!, p.scarto[p.scarto.length - 1]!] } };
+    expect(vistaPer(rimescolabile, turno, false).puoPescare).toBe(true);
+  });
+});

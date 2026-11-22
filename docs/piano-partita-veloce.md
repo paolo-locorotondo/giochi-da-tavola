@@ -205,6 +205,7 @@ Dal telefono (`DaClient`, `stanze.ts` e specchio in `@gdt/collegamento`):
 | { t: "anteprimaVeloce"; gioco: string }
 | { t: "veloce"; gioco: string; nome: string; codice?: string; apri?: AperturaVeloce }
 | { t: "esciDaSala" }
+| { t: "entra"; codice: string; token: string; riprendi: true }   // rientro dal menu: vale solo con un token già noto alla stanza
 | { t: "sala"; comando: "apriAdesso" | "annullaAvvio" | "aspettaAncora" | "chiudiSala" }
 | { t: "sala"; comando: "squadra"; id: number; squadra: number }   // id = chi spostare (sé stessi, o chiunque se organizzatore)
 // compatibilità con i client di prima (PWA in cache), da togliere dopo una versione:

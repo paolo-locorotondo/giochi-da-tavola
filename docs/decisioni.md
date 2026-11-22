@@ -229,6 +229,7 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Lupus ognuno col suo telefono** (ruoli segreti, notte, voto): Lupus non ha ancora un modulo online; oggi è solo a un telefono. Con il server generico basta scrivere `games/lupus/src/online` e registrarlo; la coda non serve (partita da molti giocatori).
 - TODO **Suoni dei Dadi**: ora c'è solo il click globale dei pulsanti. Quando l'utente avrà scaricato gli mp3 (CC0), aggiungerli in `packages/suoni/audio/` (la cartella oggi non esiste) con la fonte in `CREDITI.md`, aggiungere i formati a `globPatterns` in `apps/web/vite.config.ts` e rimettere i suoni personalizzati dove servono (lancio del dado, moneta, e gli altri giochi).
 - TODO **Vercel**: decidere se toglierlo dalla documentazione (Render basta da solo: stesso indirizzo per sito, gioco online e installazione). `apps/web/vercel.json` c'è ancora e Vercel va scollegato dalla dashboard.
+- TODO **Filone «feedback»**: valutare un'impostazione generale audio sì/no e vibrazione sì/no, applicata ai mini giochi di Duello Lampo e ad altri giochi (`navigator.vibrate` non esiste su iOS Safari, quindi lì resterebbe solo l'audio). Per ora solo audio (suoni giusto/sbagliato al tocco in Duello Lampo).
 - TODO **Tabù**: miglioramenti di grafica e funzioni (carte scartate o usate nella mano, ecc.), da discutere.
 - TODO **Regole e carte di Tabù e Lupus** da verificare dall'utente; originalità delle carte.
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».

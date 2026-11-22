@@ -15,6 +15,7 @@ import {
   nuovoRound,
   passa,
   pesca,
+  puoPescare,
   pescaCumulo,
   scegliColore,
   sfida,
@@ -288,6 +289,8 @@ export interface Vista {
   verso: 1 | -1;
   /** Carte rimaste nel mazzo. */
   mazzo: number;
+  /** Si può pescare: nel mazzo o negli scarti (sotto la cima, da rimescolare) c'è almeno una carta. */
+  puoPescare: boolean;
   /** Il posto di turno (o chi deve rispondere); null fuori dal round. */
   turno: number | null;
   mioTurno: boolean;
@@ -339,6 +342,7 @@ export function vistaPer(s: StatoOnline, posto: number | null, host: boolean): V
     colore: p ? p.colore : null,
     verso: p ? p.verso : 1,
     mazzo: p ? p.mazzo.length : 0,
+    puoPescare: p ? puoPescare(p) : false,
     turno,
     mioTurno,
     haPescato: mioTurno && p ? p.haPescato : false,

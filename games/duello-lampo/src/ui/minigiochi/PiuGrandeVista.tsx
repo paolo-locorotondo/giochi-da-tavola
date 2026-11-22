@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties } from "react";
 import { Check, X } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
+import { suonoGiusto, suonoSbagliato } from "../../suoni";
 import type { ConfigPiuGrande, RisultatoPiuGrande } from "../../minigiochi/piugrande";
 import type { Descrivi, VistaProps } from "./tipi";
 
@@ -22,6 +23,7 @@ export function PiuGrandeVista({ config, inizio, onRisultato }: VistaProps<Confi
     // Un solo tocco per giocatore: il secondo non conta.
     if (finito.current) return;
     finito.current = true;
+    (indice === config.indicePiuGrande ? suonoGiusto : suonoSbagliato)();
     setScelto(indice);
     rif.current({ giusto: indice === config.indicePiuGrande, ms: Math.max(0, Math.round(istante - inizio)) });
   };

@@ -13,6 +13,7 @@ import {
   TAGLIO_MS,
   TAGLIO_TOLLERANZA_MS,
   gruppiPossibili,
+  puoPescare,
   pescaCumulo,
   VARIANTI_BASE,
   mazzoCompleto,
@@ -286,12 +287,31 @@ describe("pesca e passa", () => {
     expect(codice(() => gioca(dopo, 2, 1, dopo.mani[0]![0]!.id, undefined, rng()))).toBe("soloLaPescata");
     expect(gioca(dopo, 2, 1, pescabile.id, undefined, rng()).turno).toBe(2);
   });
-  it("con mazzo e scarto esauriti si pesca a vuoto e si passa", () => {
+  it("con mazzo vuoto e nessuno scarto da rimescolare non si pesca e si passa direttamente", () => {
     const base = partita([[num("blu", 9)], [num("verde", 2)]], { mazzo: [], scarto: [num("rosso", 5)] });
-    const dopo = pesca(base, 1, rng());
+    expect(puoPescare(base)).toBe(false);
+    expect(codice(() => pesca(base, 1, rng()))).toBe("mazzoVuoto");
+    const dopo = passa(base, 2, 1);
+    expect(dopo.turno).toBe(2);
     expect(dopo.mani[0]).toHaveLength(1);
-    expect(dopo.pescata).toBeNull();
-    expect(passa(dopo, 2, 1).turno).toBe(2);
+    expect(dopo.haPescato).toBe(false);
+  });
+  it("con mazzo vuoto ma scarti sotto la cima si può pescare (rimescolo)", () => {
+    const base = partita([[num("blu", 9)], [num("verde", 2)]], { mazzo: [], scarto: [num("blu", 1), num("rosso", 5)] });
+    expect(puoPescare(base)).toBe(true);
+    expect(codice(() => passa(base, 2, 1))).toBe("devePescare");
+    const dopo = pesca(base, 1, rng());
+    expect(dopo.mani[0]).toHaveLength(2);
+    expect(dopo.scarto).toHaveLength(1);
+    expect(dopo.pescata).not.toBeNull();
+  });
+  it("con mazzo vuoto e nessuna carta da giocare la partita non si blocca: si passa", () => {
+    const base = partita([[num("blu", 9)], [num("verde", 2)]], { mazzo: [], scarto: [num("rosso", 5)] });
+    expect(giocabili(base, 1)).toEqual([]);
+    const dopo = passa(base, 2, 1);
+    expect(dopo.turno).toBe(2);
+    expect(codice(() => pesca(dopo, 2, rng()))).toBe("mazzoVuoto");
+    expect(passa(dopo, 2, 2).turno).toBe(1);
   });
   it("pescare cancella la finestra di «Ultima!» di chi ha una carta", () => {
     const p = partita([[num("blu", 9)], [num("verde", 2)]], { turno: 2, ultime: [{ posto: 1, dichiarata: false }] });
@@ -666,24 +686,39 @@ describe("Più carte uguali", () => {
   const gioc = (p: Partita, n: number, chi: number, cima: Carta, insieme: Carta[], colore?: Colore) =>
     gioca(p, n, chi, cima.id, colore, rng(), false, { insieme: insieme.map((c) => c.id) });
 
-  it("numeri uguali di colori diversi: la cima decide il colore, le altre vanno sotto", () => {
-    const r5 = num("rosso", 5);
-    const v5 = num("verde", 5);
-    const b5 = num("blu", 5);
-    const p = gioc(conV([[r5, v5, b5, num("giallo", 1)], [num("verde", 2)]]), 2, 1, v5, [r5, b5]);
+  it("tre carte identiche (stesso colore e numero) si calano insieme", () => {
+    const a = num("rosso", 5);
+    const b = num("rosso", 5);
+    const c = num("rosso", 5);
+    const p = gioc(conV([[a, b, c, num("giallo", 1)], [num("verde", 2)]]), 2, 1, a, [b, c]);
     expect(p.mani[0]).toHaveLength(1);
-    expect(p.scarto.slice(-3).map((c) => c.id)).toEqual([r5.id, b5.id, v5.id]);
-    expect(p.colore).toBe("verde");
-    expect(p.eventi.find((e) => e.tipo === "gioca")).toMatchObject({ quante: 3, carta: { id: v5.id } });
+    expect(p.scarto.slice(-3).map((x) => x.id)).toEqual([b.id, c.id, a.id]);
+    expect(p.colore).toBe("rosso");
+    expect(p.eventi.find((e) => e.tipo === "gioca")).toMatchObject({ quante: 3, carta: { id: a.id } });
     expect(p.ultime).toEqual([{ posto: 1, dichiarata: false }]);
   });
-  it("la cima deve essere giocabile; le altre possono non esserlo", () => {
+  it("due 2 rossi sì; 2 rosso e 2 giallo no (anche se il numero è uguale)", () => {
+    const r1 = num("rosso", 2);
+    const r2 = num("rosso", 2);
+    const g2 = num("giallo", 2);
+    const base = conV([[r1, r2, g2, num("verde", 1)], [num("verde", 2)]], { scarto: [num("rosso", 9)] });
+    expect(gioc(base, 2, 1, r1, [r2]).mani[0]).toHaveLength(2);
+    expect(codice(() => gioc(base, 2, 1, r1, [g2]))).toBe("gruppoNonValido");
+    expect(codice(() => gioc(base, 2, 1, g2, [r1]))).toBe("gruppoNonValido");
+    expect(gruppiPossibili(base, 1).map((g) => g.map((x) => x.id).sort())).toEqual([[r1.id, r2.id].sort()]);
+  });
+  it("lo stesso numero di colori diversi non forma un gruppo: niente pulsante «Più carte»", () => {
+    const base = conV([[num("rosso", 7), num("blu", 7), num("giallo", 7), num("verde", 1)], [num("verde", 2)]], { scarto: [num("rosso", 9)] });
+    expect(gruppiPossibili(base, 1)).toEqual([]);
+    // Due identiche ma non giocabili sulla scoperta: nessun gruppo.
+    const nonGiocabili = conV([[num("blu", 7), num("blu", 7), num("verde", 1)], [num("verde", 2)]], { scarto: [num("rosso", 9)] });
+    expect(gruppiPossibili(nonGiocabili, 1)).toEqual([]);
+  });
+  it("le carte identiche non giocabili sulla scoperta non si calano", () => {
     const b7 = num("blu", 7);
-    const g7 = num("giallo", 7);
-    const base = conV([[b7, g7, num("rosso", 1)], [num("verde", 2)]]);
-    expect(codice(() => gioc(base, 2, 1, b7, [g7]))).toBe("nonGiocabile");
-    const r7 = num("rosso", 7);
-    expect(gioc(conV([[b7, r7, num("rosso", 1)], [num("verde", 2)]]), 2, 1, r7, [b7]).colore).toBe("rosso");
+    const b7bis = num("blu", 7);
+    const base = conV([[b7, b7bis, num("rosso", 1)], [num("verde", 2)]], { scarto: [num("rosso", 9)] });
+    expect(codice(() => gioc(base, 2, 1, b7, [b7bis]))).toBe("nonGiocabile");
   });
   it("gruppi misti, di Inverti o di jolly, doppioni e carte non in mano sono rifiutati", () => {
     const r5 = num("rosso", 5);
@@ -695,6 +730,10 @@ describe("Più carte uguali", () => {
     const base = conV([[r5, r6, i1, i2, j1, j2, num("giallo", 1)], [num("verde", 2)]]);
     expect(codice(() => gioc(base, 2, 1, r5, [r6]))).toBe("gruppoNonValido");
     expect(codice(() => gioc(base, 2, 1, i1, [i2]))).toBe("gruppoNonValido");
+    // Anche due Inverti identici, due Jolly e due +4 non si calano insieme.
+    const i3 = sim("inverti", "rosso");
+    expect(codice(() => gioc(conV([[i1, i3, num("giallo", 1)], [num("verde", 2)]]), 2, 1, i1, [i3]))).toBe("gruppoNonValido");
+    expect(gruppiPossibili(conV([[i1, i3, j1, j2, num("giallo", 1)], [num("verde", 2)]]), 1)).toEqual([]);
     expect(codice(() => gioc(base, 2, 1, j1, [j2], "blu"))).toBe("gruppoNonValido");
     expect(codice(() => gioca(base, 2, 1, r5.id, undefined, rng(), false, { insieme: [r5.id] }))).toBe("gruppoNonValido");
     expect(codice(() => gioca(base, 2, 1, r5.id, undefined, rng(), false, { insieme: [424242] }))).toBe("gruppoNonValido");
@@ -707,47 +746,64 @@ describe("Più carte uguali", () => {
     expect(codice(() => gioc(spenta, 2, 1, r5, [b5]))).toBe("variantaSpenta");
     expect(gioca(spenta, 2, 1, r5.id, undefined, rng(), false, { insieme: [] }).mani[0]).toHaveLength(2);
   });
+  it("due Salta rossi sì; Salta rosso e Salta blu no", () => {
+    const s1 = sim("salta", "rosso");
+    const s2 = sim("salta", "rosso");
+    const sb = sim("salta", "blu");
+    const base = conV([[s1, s2, sb, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)], [num("verde", 4)]]);
+    expect(gioc(base, 4, 1, s1, [s2]).mani[0]).toHaveLength(2);
+    expect(codice(() => gioc(base, 4, 1, s1, [sb]))).toBe("gruppoNonValido");
+    expect(gruppiPossibili(base, 1).map((g) => g.map((x) => x.id).sort())).toEqual([[s1.id, s2.id].sort()]);
+  });
   it("Salta in gruppo salta un giocatore per carta", () => {
     const s1 = sim("salta", "rosso");
-    const s2 = sim("salta", "blu");
+    const s2 = sim("salta", "rosso");
     const p = gioc(conV([[s1, s2, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)], [num("verde", 4)]]), 4, 1, s1, [s2]);
     expect(p.turno).toBe(4);
     expect(p.eventi.filter((e) => e.tipo === "salta").map((e) => (e as { posto: number }).posto)).toEqual([2, 3]);
   });
   it("in due giocatori più Salta tornano comunque a chi li cala", () => {
     const s1 = sim("salta", "rosso");
-    const s2 = sim("salta", "blu");
-    const s3 = sim("salta", "verde");
+    const s2 = sim("salta", "rosso");
+    const s3 = sim("salta", "rosso");
     const p = gioc(conV([[s1, s2, s3, num("giallo", 1)], [num("verde", 2)]]), 2, 1, s1, [s2, s3]);
     expect(p.turno).toBe(1);
   });
   it("+2 in gruppo: senza somma fa pescare 2 per carta; con la somma il cumulo cresce di 2 per carta", () => {
     const a = sim("piu2", "rosso");
-    const b = sim("piu2", "blu");
+    const b = sim("piu2", "rosso");
     const p = gioc(conV([[a, b, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)]]), 3, 1, a, [b]);
     expect(p.mani[1]).toHaveLength(5);
     expect(p.turno).toBe(3);
     const c = sim("piu2", "rosso");
-    const d = sim("piu2", "blu");
+    const d = sim("piu2", "rosso");
     const conSomma = gioca(conV([[c, d, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)]], { varianti: { ...V, sommaPiu2: true } }), 3, 1, c.id, undefined, rng(), false, { insieme: [d.id] });
     expect(conSomma.cumulo).toEqual({ posto: 2, quante: 4, da: 1 });
   });
+  it("due +2 identici sì; +2 rosso e +2 blu no", () => {
+    const a = sim("piu2", "rosso");
+    const b = sim("piu2", "rosso");
+    const c = sim("piu2", "blu");
+    const base = conV([[a, b, c, num("giallo", 1)], [num("verde", 2)], [num("verde", 3)]]);
+    expect(gioc(base, 3, 1, a, [b]).mani[1]).toHaveLength(5);
+    expect(codice(() => gioc(base, 3, 1, a, [c]))).toBe("gruppoNonValido");
+  });
   it("un gruppo che svuota la mano chiude il round", () => {
     const r5 = num("rosso", 5);
-    const b5 = num("blu", 5);
+    const b5 = num("rosso", 5);
     const p = gioc(conV([[r5, b5], [num("verde", 2)]]), 2, 1, r5, [b5]);
     expect(p.fine).toEqual({ vincitore: 1, punti: 2 });
   });
   it("dopo una pesca non si calano gruppi", () => {
     const r5 = num("rosso", 5);
-    const b5 = num("blu", 5);
+    const b5 = num("rosso", 5);
     const p = conV([[r5, b5, num("giallo", 1)], [num("verde", 2)]], { haPescato: true, pescata: r5.id });
     expect(codice(() => gioc(p, 2, 1, r5, [b5]))).toBe("soloLaPescata");
     expect(gruppiPossibili(p, 1)).toEqual([]);
   });
-  it("gruppiPossibili: almeno due carte dello stesso valore, con almeno una giocabile in cima", () => {
+  it("gruppiPossibili: almeno due carte identiche giocabili", () => {
     const r5 = num("rosso", 5);
-    const b5 = num("blu", 5);
+    const b5 = num("rosso", 5);
     const b9 = num("blu", 9);
     const g9 = num("giallo", 9);
     const p = conV([[r5, b5, b9, g9, sim("inverti", "rosso"), sim("inverti", "blu")], [num("verde", 2)]]);

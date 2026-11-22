@@ -321,10 +321,10 @@ describe("partite di bot con Scambio e Rotazione e altre varianti", () => {
 
 describe("bot con Più carte uguali", () => {
   const V = { ...VARIANTI_BASE, piuUguali: true };
-  it("cala tutto il gruppo di numeri uguali, con in cima una carta giocabile", () => {
+  it("cala tutto il gruppo di carte identiche, con in cima una carta giocabile", () => {
     const r5 = num("rosso", 5);
-    const b5 = num("blu", 5);
-    const v5 = num("verde", 5);
+    const b5 = num("rosso", 5);
+    const v5 = num("rosso", 5);
     const p = partita([[r5, b5, v5, num("giallo", 1), num("giallo", 2)], altri(3)], { varianti: V });
     const m = mossaBot(p, 2, 1);
     expect(m.tipo).toBe("gioca");
@@ -337,12 +337,24 @@ describe("bot con Più carte uguali", () => {
   });
   it("preferisce il gruppo che scarica più punti", () => {
     const s1 = sim("salta", "rosso");
-    const s2 = sim("salta", "blu");
+    const s2 = sim("salta", "rosso");
     const n9 = num("rosso", 9);
     const p = partita([[s1, s2, n9, num("verde", 1)], altri(5)], { varianti: V });
     const m = mossaBot(p, 2, 1);
     expect(m).toMatchObject({ tipo: "gioca" });
     expect([m.tipo === "gioca" ? m.carta : -1, ...(m.tipo === "gioca" ? (m.insieme ?? []) : [])].sort()).toEqual([s1.id, s2.id].sort());
+  });
+  it("numeri uguali di colori diversi non sono un gruppo: cala una carta sola", () => {
+    const p = partita([[num("rosso", 5), num("blu", 5), num("verde", 5), num("giallo", 1)], altri(3)], { varianti: V });
+    const m = mossaBot(p, 2, 1);
+    expect(m).toMatchObject({ tipo: "gioca" });
+    expect(m.tipo === "gioca" ? m.insieme : null).toBeUndefined();
+  });
+  it("con mazzo vuoto e nessuno scarto da rimescolare passa senza pescare", () => {
+    const p = partita([[num("blu", 1)], altri(3)], { mazzo: [], scarto: [num("rosso", 5)] });
+    expect(mossaBot(p, 2, 1)).toEqual({ tipo: "passa" });
+    const dopo = eseguiMossa(p, 2, 1, mossaBot(p, 2, 1), creaRng(1));
+    expect(dopo.turno).toBe(2);
   });
   it("senza la variante non cala mai gruppi", () => {
     const r5 = num("rosso", 5);
@@ -354,7 +366,7 @@ describe("bot con Più carte uguali", () => {
   it("a ogni livello le mosse con i gruppi sono lecite", () => {
     for (const livello of LIVELLI) {
       for (let s = 0; s < 40; s++) {
-        const p = partita([[num("rosso", 5), num("blu", 5), num("verde", 5), sim("salta", "rosso"), sim("salta", "blu"), num("giallo", 1)], altri(3)], { varianti: V });
+        const p = partita([[num("rosso", 5), num("rosso", 5), num("rosso", 5), sim("salta", "rosso"), sim("salta", "rosso"), num("giallo", 1)], altri(3)], { varianti: V });
         const m = mossaBotLivello(p, 2, 1, livello, creaRng(s));
         expect(() => eseguiMossa(p, 2, 1, m, creaRng(s))).not.toThrow();
       }

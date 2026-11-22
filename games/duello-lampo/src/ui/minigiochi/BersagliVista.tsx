@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Target } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
-import { suonoColpo } from "../../suoni";
+import { suonoGiusto, suonoSbagliato } from "../../suoni";
 import { valutaTocco, type ConfigBersagli, type RisultatoBersagli } from "../../minigiochi/bersagli";
 import type { Descrivi, VistaProps } from "./tipi";
 
@@ -85,10 +85,11 @@ export function BersagliVista({ config, inizio, onRisultato }: VistaProps<Config
         return n;
       });
       // Ogni metà suona per il proprio colpo: sono tocchi diversi, non si raddoppiano.
-      suonoColpo();
+      suonoGiusto();
       setLampo({ n: contaLampi.current, cella, tipo: "colpito" });
     } else {
       vuoti.current += 1;
+      suonoSbagliato();
       setLampo({ n: contaLampi.current, cella, tipo: "vuoto" });
     }
   };

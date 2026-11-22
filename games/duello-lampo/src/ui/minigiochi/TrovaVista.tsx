@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type Componen
 import { Bird, Cat, Dog, Fish, Frown, Panda, Rabbit, Rat, Smile, Snail, Squirrel, Turtle, type LucideIcon } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
+import { suonoGiusto, suonoSbagliato } from "../../suoni";
 import { comparsa, grigliaAlPasso, type ConfigTrova, type RisultatoTrova } from "../../minigiochi/trova";
 import type { Descrivi, VistaProps } from "./tipi";
 
@@ -80,6 +81,7 @@ export function creaTrovaVista(attesa: "aspettaPanda" | "aspettaSmile"): Compone
       const r: RisultatoTrova = èComparso.current
         ? { trovato: indice === config.posizione, ms: Math.max(0, Math.round(istante - (tComparso.current ?? istante))) }
         : { trovato: false, ms: 0 };
+      (r.trovato ? suonoGiusto : suonoSbagliato)();
       setEsito(r);
       setToccata({ indice, giusta: r.trovato });
       rif.current(r);

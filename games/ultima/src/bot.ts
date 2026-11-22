@@ -13,6 +13,7 @@ import {
   passa,
   pesca,
   pescaCumulo,
+  puoPescare,
   scegliColore,
   sfida,
   ultima,
@@ -160,7 +161,8 @@ export function mossaBot(p: Partita, n: number, posto: number): MossaBot {
     return { tipo: "gioca", carta: migliore.id };
   }
 
-  return p.haPescato ? { tipo: "passa" } : { tipo: "pesca" };
+  // Senza carte da giocare: si pesca; se non c'è niente da pescare (mazzo e scarti vuoti) si passa.
+  return p.haPescato || !puoPescare(p) ? { tipo: "passa" } : { tipo: "pesca" };
 }
 
 /** Il gruppo con cui giocare invece della carta singola `migliore`, o null. Usa solo la mano e i dati pubblici. */

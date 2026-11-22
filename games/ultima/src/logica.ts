@@ -30,7 +30,7 @@ export const MAX_EVENTI = 12;
 export interface Varianti {
   /** Un +2 si può rispondere con un +2: il cumulo passa al successivo. */
   sommaPiu2: boolean;
-  /** Si calano insieme più carte dello stesso numero (o Salta, o +2). */
+  /** Si calano insieme più carte identiche (stesso colore e stesso numero o simbolo; anche Salta o +2). */
   piuUguali: boolean;
   /** Chi ha una carta identica alla appena calata può giocarla fuori turno, entro 3 secondi. */
   taglio: boolean;
@@ -224,16 +224,16 @@ export function carteTagliabili(p: Partita, posto: number): Carta[] {
   return p.mani[posto - 1]!.filter((c) => identica(c, a.carta));
 }
 
-/** Chiave del gruppo di una carta: stesso numero, oppure Salta, oppure +2. Null = non si cala in gruppo. */
+/** Chiave del gruppo di una carta: colore e numero, oppure colore e Salta, oppure colore e +2. Null = non si cala in gruppo (Inverti, jolly). */
 export function valoreGruppo(c: Carta): string | null {
-  if (c.tipo === "numero") return `n${c.valore}`;
-  if (c.tipo === "salta" || c.tipo === "piu2") return c.tipo;
+  if (c.tipo === "numero") return `${c.colore}:n${c.valore}`;
+  if (c.tipo === "salta" || c.tipo === "piu2") return `${c.colore}:${c.tipo}`;
   return null;
 }
 
 /**
- * Gruppi che `posto` può calare adesso con «Più carte uguali»: tutte le carte di uno stesso valore
- * (almeno due) di cui almeno una può stare in cima. Vuoto se la variante è spenta o se ha già pescato.
+ * Gruppi che `posto` può calare adesso con «Più carte uguali»: tutte le carte identiche (stesso colore e
+ * stesso numero o simbolo; almeno due) giocabili adesso: essendo identiche, sono tutte giocabili o nessuna. Vuoto se la variante è spenta o se ha già pescato.
  */
 export function gruppiPossibili(p: Partita, posto: number): Carta[][] {
   if (!p.varianti.piuUguali || p.haPescato) return [];
@@ -503,28 +503,33 @@ function riaprUltime(p: Partita, chi: number, dichiaraSubito: boolean): void {
   if (dichiaraSubito && p.ultime.some((u) => u.posto === chi)) registra(p, { tipo: "ultima", posto: chi });
 }
 
+/** Si può pescare? Serve una carta nel mazzo o negli scarti sotto la cima (che si rimescolano). */
+export function puoPescare(p: Partita): boolean {
+  return p.mazzo.length > 0 || p.scarto.length > 1;
+}
+
 /** Pesca una carta, una volta per turno. Se la si può giocare la si può calare subito; altrimenti si passa. */
 export function pesca(p0: Partita, chi: number, rng: Rng): Partita {
   const p = clona(p0);
   turnoSenzaCumulo(p, chi);
   if (p.haPescato) throw new ErroreUltima("giaPescato");
+  // Mazzo vuoto e niente da rimescolare (tutte le carte in mano): non si pesca, si può solo giocare o passare.
+  if (!puoPescare(p)) throw new ErroreUltima("mazzoVuoto");
   p.ultime = [];
   p.apertaTaglio = null;
   const mano = p.mani[chi - 1]!;
-  const prima = mano.length;
   pescaCarte(p, chi, 1, rng);
-  // Mazzo e scarto esauriti: non c'è niente da pescare, si passa.
   p.haPescato = true;
-  p.pescata = mano.length > prima ? mano[mano.length - 1]!.id : null;
+  p.pescata = mano[mano.length - 1]!.id;
   registra(p, { tipo: "pesca", posto: chi });
   return p;
 }
 
-/** Passa il turno: solo dopo aver pescato (o se non c'era niente da pescare). */
+/** Passa il turno: solo dopo aver pescato, o se non si può pescare (mazzo vuoto e niente da rimescolare). */
 export function passa(p0: Partita, n: number, chi: number): Partita {
   const p = clona(p0);
   turnoSenzaCumulo(p, chi);
-  if (!p.haPescato) throw new ErroreUltima("devePescare");
+  if (!p.haPescato && puoPescare(p)) throw new ErroreUltima("devePescare");
   p.ultime = [];
   p.apertaTaglio = null;
   p.haPescato = false;

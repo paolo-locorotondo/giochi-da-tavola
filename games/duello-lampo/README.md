@@ -104,7 +104,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - «Esci» sta nella barra centrale (non c'è durante conto alla rovescia e mini gioco, per non toccarlo per sbaglio) e chiede conferma.
 - «Avanti» resta spento per un attimo dopo l'esito, così un tocco in ritardo del round non lo salta.
 - Il colore non è mai l'unico segnale: «ORA!», «Troppo presto!» e i risultati sono sempre scritti. Con «riduci movimento» attivo non cambia nulla di essenziale (l'indicatore di Stop al centro è il gioco stesso).
-- Il suono (se l'audio è acceso): conto alla rovescia, via, punto, pari, fine, e un «tic» breve a ogni bersaglio colpito in Bersagli.
+- Il suono (se l'audio è acceso): conto alla rovescia, via, punto, pari, fine. Nei mini giochi con bordo verde o rosso (Bersagli, Trova il panda/lo smile, Memoria lampo, Colore giusto, Il più grande) ogni tocco giusto suona «indovinata» e ogni tocco sbagliato «vietata detta» (come in Tabù), ognuno per la propria metà; con tocchi molto ravvicinati, in Bersagli, al massimo 3 suoni uguali si sovrappongono. Il punto o il pari di fine round parte dopo quel suono. Ultima prova all'orecchio: da fare su un telefono vero.
 
 I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md).
 
@@ -115,7 +115,7 @@ I test automatici (anche grafici) sono descritti in [test.md](../../docs/test.md
 - `src/ui/minigiochi/`: la vista React di ogni mini gioco e il suo registro `VISTE`.
 - `src/ui/Preparazione.tsx` (nomi e mani di ogni mini gioco), `Partita.tsx` (schermo diviso, round, esito, fine), `DuelloLampoApp.tsx`.
 - `src/locales/{it,en}.ts`: tutti i testi e il regolamento; `src/manifest.ts` li espone all'app.
-- `src/suoni/`: suoni sintetizzati (nessun file audio).
+- `src/suoni/`: suoni sintetizzati (nessun file audio); giusto/sbagliato sono copie dei suoni di Tabù.
 
 ## Aggiungere un mini gioco
 

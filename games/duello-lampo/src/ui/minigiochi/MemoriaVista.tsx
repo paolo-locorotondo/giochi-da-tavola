@@ -10,6 +10,7 @@ import {
   type ConfigMemoria,
   type RisultatoMemoria,
 } from "../../minigiochi/memoria";
+import { suonoGiusto, suonoSbagliato } from "../../suoni";
 import type { Descrivi, VistaProps } from "./tipi";
 
 export const descriviMemoria: Descrivi<RisultatoMemoria> = (r, t) => {
@@ -56,8 +57,10 @@ export function MemoriaVista({ config, inizio, onRisultato }: VistaProps<ConfigM
     if (esito || !prontoRif.current) return;
     const ms = Math.max(0, Math.round(istante - base));
     tocchi.current += 1;
-    setToccata({ n: tocchi.current, casella, giusta: casella === config.sequenza[fatteRif.current] });
-    if (casella !== config.sequenza[fatteRif.current]) {
+    const giusta = casella === config.sequenza[fatteRif.current];
+    (giusta ? suonoGiusto : suonoSbagliato)();
+    setToccata({ n: tocchi.current, casella, giusta });
+    if (!giusta) {
       const r: RisultatoMemoria = { giusta: false, ms };
       setEsito(r);
       rif.current(r);

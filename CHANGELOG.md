@@ -17,13 +17,15 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Corretto
 
+- Ultima!, **mazzo vuoto**: se tutte le carte sono in mano e non c'è niente da rimescolare, «Pesca» è disattivato e si passa direttamente (prima si poteva «pescare» a vuoto e compariva «Hai pescato…»). Il server rifiuta la pesca a mazzo vuoto.
 - Partita veloce: uscendo con la freccia «indietro» dalla sala d'attesa il posto si libera subito (prima restavi «assente» per 30 secondi e, rientrando con lo stesso nome, diventavi «Nome (2)»). Chiudere la scheda, ricaricare o perdere la rete non cambia: il posto resta tuo per 30 secondi.
 - Partita veloce: riaprendo «Partita veloce» con la tua sala ancora aperta rientri nel tuo posto con lo stesso nome. Il rientro vale solo per il telefono che aveva il posto, mai per chi scrive lo stesso nome.
 
 ### Modificato
 
+- Ultima!, **«Più carte uguali»**: si calano insieme solo carte **identiche** (stesso colore e stesso numero o simbolo), anche più Salta o più +2 identici. Il pulsante «Più carte» compare solo con almeno due carte identiche giocabili; non c'è più la scelta della carta in cima (sono uguali).
+- Duello Lampo: **suoni al tocco** in Bersagli, Trova il panda / lo smile, Memoria lampo, Colore giusto e Il più grande, con le stesse tracce di Tabù («indovinata» per il giusto, «vietata detta» per lo sbagliato; al posto del «tic» di Bersagli). Il suono di punto o pari a fine round parte dopo quello del tocco e in Bersagli i suoni ravvicinati sono limitati a 3 insieme. Vibrazione e impostazione generale audio/vibrazione: da valutare (`docs/decisioni.md`).
 - Duello Lampo, **Bersagli**: la velocità non conta più. Con «Gli errori contano −1» il punteggio del round è colpiti − colpi a vuoto (vince il più alto, a parità chi ha meno colpi a vuoto, poi pari); il −1 in partita scatta solo se i colpi a vuoto superano i colpi a segno. Senza il flag vince chi colpisce di più, a parità chi sbaglia meno. «Gli errori contano −1» è **acceso di base** in tutti i mini giochi (chi aveva salvato lo spento lo ritrova acceso una volta).
-- Ultima!: nel README è segnato «da verificare» se «Più carte uguali» debba richiedere carte identiche (stesso colore e numero o simbolo).
 
 ## [0.27.0] - 2026-11-21
 

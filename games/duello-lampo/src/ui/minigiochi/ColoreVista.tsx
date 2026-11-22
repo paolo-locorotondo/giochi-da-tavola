@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../../locales";
+import { suonoGiusto, suonoSbagliato } from "../../suoni";
 import type { Colore, ConfigColore, RisultatoColore } from "../../minigiochi/colore";
 import type { Descrivi, VistaProps } from "./tipi";
 
@@ -46,6 +47,7 @@ export function ColoreVista({ config, inizio, onRisultato }: VistaProps<ConfigCo
     const r: RisultatoColore = èVisibile.current
       ? { giusto: scelto === config.inchiostro, ms: Math.max(0, Math.round(istante - (tVisibile.current ?? istante))) }
       : { giusto: false, ms: 0 };
+    (r.giusto ? suonoGiusto : suonoSbagliato)();
     setEsito(r);
     setToccato({ colore: scelto, giusto: r.giusto });
     rif.current(r);

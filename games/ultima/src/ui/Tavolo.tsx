@@ -111,8 +111,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const [jolly, setJolly] = useState<DatiCarta | null>(null);
   /** Uno Scambio con il colore già scelto: aspetta il giocatore con cui scambiare. */
   const [scambio, setScambio] = useState<{ carta: DatiCarta; colore: Colore } | null>(null);
-  /** «Più carte»: null = modalità spenta; altrimenti gli id scelti e quello che resta in cima (null = il primo giocabile). */
-  const [gruppo, setGruppo] = useState<{ ids: number[]; cima: number | null } | null>(null);
+  /** «Più carte»: null = modalità spenta; altrimenti gli id delle carte identiche scelte. */
+  const [gruppo, setGruppo] = useState<{ ids: number[] } | null>(null);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
   const turno = v.turno;
   const giocabili = new Set(v.giocabili);
@@ -132,20 +132,19 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const idsInGruppi = new Set(gruppiMano.flat().map((c) => c.id));
   const scelte = gruppo ? gruppo.ids.map((id) => v.mano.find((c) => c.id === id)).filter((c): c is DatiCarta => c !== undefined) : [];
   const valoreScelto = scelte[0] ? valoreGruppo(scelte[0]) : null;
-  const cimeScelte = scelte.filter((c) => giocabili.has(c.id));
-  const cima = cimeScelte.find((c) => c.id === gruppo?.cima) ?? cimeScelte[0] ?? null;
+  // Le carte del gruppo sono identiche: o sono tutte giocabili o nessuna. La prima va in cima.
+  const cima = scelte.find((c) => giocabili.has(c.id)) ?? null;
   const toccaInGruppo = (carta: DatiCarta) => {
     if (!gruppo) return;
     const dentro = gruppo.ids.includes(carta.id);
     if (!dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))) return;
-    setGruppo({ ids: dentro ? gruppo.ids.filter((x) => x !== carta.id) : [...gruppo.ids, carta.id], cima: gruppo.cima });
+    setGruppo({ ids: dentro ? gruppo.ids.filter((x) => x !== carta.id) : [...gruppo.ids, carta.id] });
   };
   const calaGruppo = () => {
     if (!cima || scelte.length < 2) return;
     c.azione({ tipo: "gioca", carta: cima.id, insieme: scelte.filter((x) => x.id !== cima.id).map((x) => x.id) });
     setGruppo(null);
   };
-  const nomeValore = (carta: DatiCarta) => (carta.tipo === "numero" ? String(carta.valore) : carta.tipo === "salta" ? t("valoreSalta") : t("valorePiu2"));
 
   const tocca = (carta: DatiCarta) => {
     if (gruppo) return toccaInGruppo(carta);
@@ -173,7 +172,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const cumuloIo = inRound && v.mioTurno && v.cumulo !== null && v.cumulo.posto === v.io ? v.cumulo : null;
   const conPiu2 = cumuloIo !== null && v.giocabili.length > 0;
   const posso = inRound && v.io !== null;
-  const mazzoVuoto = v.mazzo === 0;
+  // Mazzo e scarti da rimescolare finiti: non si pesca, si gioca una carta o si passa.
+  const mazzoVuoto = !v.puoPescare;
   const cambiate = inRound ? maniCambiate(v) : null;
   const secondiTaglio = useSecondiTaglio(inRound ? v.taglio : null);
   const tagliabili = secondiTaglio > 0 ? v.mano.filter((x) => v.puoTagliare.includes(x.id)) : [];
@@ -205,8 +205,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
           <button
             type="button"
             className="ul-mazzo"
-            disabled={!(v.mioTurno && !v.haPescato && !sfidaIo && !v.sceltaColore && !cumuloIo)}
-            aria-label={t("pescaAria", { n: v.mazzo })}
+            disabled={!(v.mioTurno && !v.haPescato && !sfidaIo && !v.sceltaColore && !cumuloIo && v.puoPescare)}
+            aria-label={v.puoPescare ? t("pescaAria", { n: v.mazzo }) : t("pescaVuotoAria")}
             onClick={() => c.azione({ tipo: "pesca" })}
           >
             <span>{t("pesca")}</span>
@@ -330,10 +330,11 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       {v.mioTurno && v.haPescato && !sfidaIo && <p className="muted">{t("hoPescato")}</p>}
       {nessunaGiocabile && !v.haPescato && !mazzoVuoto && <p className="muted">{t("nessunaGiocabile")}</p>}
+      {nessunaGiocabile && !v.haPescato && mazzoVuoto && !cumuloIo && <p className="muted">{t("mazzoVuotoPassa")}</p>}
 
       {posso && (
         <div className="ul-azioni">
-          {v.mioTurno && v.haPescato && !sfidaIo && (
+          {v.mioTurno && (v.haPescato || mazzoVuoto) && !sfidaIo && !cumuloIo && !v.sceltaColore && (
             <button className="btn primario" onClick={() => c.azione({ tipo: "passa" })}>
               {t("passa")}
             </button>
@@ -361,7 +362,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
         <>
           <h3 style={{ margin: 0 }}>{t("tuaMano")}</h3>
           {gruppiMano.length > 0 && !gruppo && (
-            <button type="button" className="btn" onClick={() => setGruppo({ ids: [], cima: null })}>
+            <button type="button" className="btn" onClick={() => setGruppo({ ids: [] })}>
               <Copy size={18} aria-hidden="true" /> {t("piuCarteBtn")}
             </button>
           )}
@@ -372,16 +373,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
                   ? t("piuCarteAiuto")
                   : scelte.length < 2
                     ? t("piuCarteNessuna")
-                    : t("piuCarteBarraAria", { n: scelte.length, valore: nomeValore(scelte[0]) })}
+                    : t("piuCarteBarraAria", { n: scelte.length, carta: nomeCarta(t, scelte[0]) })}
               </p>
-              {cimeScelte.length > 1 && (
-                <div className="ul-cime" role="group" aria-label={t("piuCarteCima")}>
-                  <span>{t("piuCarteCima")}</span>
-                  {cimeScelte.map((x) => (
-                    <Carta key={x.id} carta={x} t={t} scelta={cima?.id === x.id} onClick={() => setGruppo({ ...gruppo, cima: x.id })} />
-                  ))}
-                </div>
-              )}
               <div className="ul-azioni">
                 <button type="button" className="btn primario" disabled={!cima || scelte.length < 2} onClick={calaGruppo}>
                   {t("piuCarteCala", { n: scelte.length })}
