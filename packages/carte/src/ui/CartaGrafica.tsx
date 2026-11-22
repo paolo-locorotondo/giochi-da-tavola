@@ -2,6 +2,7 @@ import { usaT } from "@gdt/i18n";
 import { dizionari, type T } from "../locales";
 import { nomeCarta } from "../nomi";
 import { mazzoDi, type Carta } from "../tipi";
+import { Figura, Pips, haPips, tipoFigura } from "./Disegni";
 import { SimboloSeme, Spunta, Stella } from "./Semi";
 import "./carte.css";
 
@@ -71,7 +72,7 @@ export function CartaGrafica({
     .filter(Boolean)
     .join(" ");
 
-  const fig = coperta ? null : figura(t, carta);
+  const fig = coperta ? null : tipoFigura(carta);
   const contenuto = (
     <>
       {coperta ? (
@@ -87,17 +88,19 @@ export function CartaGrafica({
       ) : (
         <>
           <span className="cg-indice" aria-hidden="true">
-            <span className="cg-val">{indice(t, carta)}</span>
+            <span className={indice(t, carta).length > 1 ? "cg-val cg-val-2" : "cg-val"}>{indice(t, carta)}</span>
             <SimboloSeme seme={carta.seme} className="cg-ind-seme" />
           </span>
           <span className="cg-centro" aria-hidden="true">
             {fig !== null ? (
               <>
-                <span className="cg-figura">{fig}</span>
+                <Figura tipo={fig} className="cg-figura" />
                 <SimboloSeme seme={carta.seme} className="cg-seme-fig" />
               </>
+            ) : haPips(carta) ? (
+              <Pips seme={carta.seme} valore={carta.valore} francese={mazzoDi(carta) === "francese"} className="cg-pips" />
             ) : (
-              <SimboloSeme seme={carta.seme} className={carta.valore === 1 ? "cg-seme-asso" : "cg-seme-grande"} />
+              <SimboloSeme seme={carta.seme} className="cg-seme-asso" />
             )}
           </span>
         </>

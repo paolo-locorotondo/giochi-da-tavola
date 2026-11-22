@@ -9,6 +9,14 @@ export function SimboloSeme({ seme, className }: { seme: Seme; className?: strin
   );
 }
 
+/** Il seme come gruppo SVG centrato in (cx, cy) con lato `lato`, per i disegni composti (semi in fila). */
+export function FormaSeme({ seme, cx, cy, lato, ruota = false }: { seme: Seme; cx: number; cy: number; lato: number; ruota?: boolean }) {
+  const k = lato / 24;
+  return (
+    <g transform={`translate(${cx - lato / 2} ${cy - lato / 2}) scale(${k})${ruota ? " rotate(180 12 12)" : ""}`}>{FORME[seme]}</g>
+  );
+}
+
 export function Stella({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">

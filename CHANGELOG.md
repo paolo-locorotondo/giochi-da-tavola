@@ -25,6 +25,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Modificato
 
+- **Carte di Burraco e Scopa**: i semi sono disegnati come sulle carte vere (il 7 di cuori ha 7 cuori, in disposizione classica; napoletane da 1 a 7) e fante, regina, re e cavallo hanno una figura stilizzata nostra (SVG, funziona offline, circa +4 KB). Valore e seme restano nell'angolo in alto a sinistra.
 - Ultima!, **la mano è un ventaglio a righe** senza scroll orizzontale: carte ordinate per colore (blu, giallo, rosso, verde, poi i jolly) e per valore, al massimo 9 per riga, sovrapposte solo quanto serve, con valore e seme nell'angolo in alto a sinistra. Le carte giocabili sono sollevate, le altre più basse con fondo pieno; «Più carte» e Taglio mostrano il segno nell'angolo e la carta appena pescata è evidenziata. In sviluppo `?manoProva=N` aggiunge carte di prova. Da vedere su telefono: soglia di 9 carte e parte visibile minima di 32 px.
 - Ultima!, **Taglio sul cumulo**: con «Taglio» e «Somma dei +2» insieme si può tagliare anche un +2 che apre o aumenta un cumulo, con un +2 dello stesso colore: il cumulo cresce di 2 e cade sul successivo di chi ha tagliato; chi lo aveva davanti non paga nulla. I bot lo sanno fare.
 - Burraco: i testi dicono «scarti» invece di «monte» (es. «Prendi gli scarti», «Scarti bloccati») e «mazzo» invece di «tallone»; il regolamento spiega «pila degli scarti» e «mazzo» la prima volta che compaiono.
