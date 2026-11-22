@@ -9,9 +9,8 @@ import { POSTI_AMMESSI, SOGLIE, SOGLIA_PREDEFINITA, type Posti, type Soglia } fr
  * ognuno la sua vista. La mano è segreta: le carte altrui non passano mai sulla rete; anche le
  * prese restano coperte (solo il numero) fino al riepilogo di fine round.
  *
- * TODO partita veloce (blocco 5, lo fa un altro agente): aggiungere `veloce` a `scopaOnline`
- * con `posti: [2, 4]`, `squadre: (n) => (n === 4 ? [[1, 3], [2, 4]] : null)` e `configVeloce`
- * (completa `posti` e controlla `soglia`). `nuovoStato(nomi, config)` e `applica` non cambiano.
+ * Partita veloce: `veloce` in fondo a `scopaOnline` (2 o 4 posti, coppie 1+3 e 2+4, `configVeloce` che completa
+ * `posti` e controlla `soglia`). `nuovoStato(nomi, config)` e `applica` non cambiano.
  */
 
 export type FaseOnline = "sala" | "partita" | "fineRound" | "fine";
@@ -288,6 +287,15 @@ export const scopaOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
   momento: (s) => (s.fase === "sala" ? "sala" : s.fase === "fine" ? "fine" : "inCorso"),
   inGioco: (s) => (s.fase === "sala" ? [] : POSTI(s)),
   mancanti,
+  /** Partita veloce: 2, o 4 a coppie (1+3 contro 2+4). Niente avvio anticipato: una stanza da 4 non diventa da 2. */
+  veloce: {
+    posti: [...POSTI_AMMESSI],
+    squadre: (n) => (n === 4 ? [[1, 3], [2, 4]] : null),
+    configVeloce: (grezza, giocatori) => {
+      const c = typeof grezza === "object" && grezza !== null ? grezza : {};
+      return leggiConfig({ ...c, posti: giocatori }, giocatori);
+    },
+  },
 
   traduci(_s, ctx, a) {
     const mio = ctx.posto;

@@ -266,6 +266,65 @@ describe("stanze veloci sul server", () => {
     const spett = vistaDi(a.stanza, "nuovo");
     expect(spett.io).toBeNull();
   });
+
+  it("Scopa: 4 a coppie, config completata con i posti, coppie 1+3 e 2+4 nell'ordine d'arrivo", () => {
+    const m = nuove();
+    const a = entra(m, "scopa", "ta", "Anna", { apri: { posti: 4, config: { soglia: 21 }, squadre: "arrivo" } });
+    expect(anteprimaDi(m, "scopa")).toMatchObject({ posti: 4, config: { posti: 4, soglia: 21 }, squadre: "arrivo" });
+    entra(m, "scopa", "tb", "Bruno");
+    entra(m, "scopa", "tc", "Carla");
+    expect(() => eseguiAzione(a.stanza, "ta", { tipo: "occupa", posto: 1 })).toThrow();
+    const ultimo = entra(m, "scopa", "td", "Dario");
+    expect(ultimo.effetto.t).toBe("avvia");
+    avviaSala(a.stanza);
+    expect(a.stanza.stato.config).toEqual({ posti: 4, soglia: 21 });
+    expect(a.stanza.stato.nomi).toEqual(["Anna", "Bruno", "Carla", "Dario"]);
+    expect(a.stanza.stato.squadre).toEqual([0, 1, 0, 1]);
+    expect(vistaDi(a.stanza, "tc").io).toBe(3);
+    expect(vistaDi(a.stanza, "tc").mano).toHaveLength(3);
+  });
+
+  it("Scopa: da 2 niente squadre; le impostazioni non valide sono rifiutate all'apertura", () => {
+    const m = nuove();
+    expect(() => entra(m, "scopa", "ta", "Anna", { apri: { posti: 3 } })).toThrow("postiNonValidi");
+    expect(() => entra(m, "scopa", "ta", "Anna", { apri: { posti: 2, config: { soglia: 15 } } })).toThrow("configNonValida");
+    const a = entra(m, "scopa", "ta", "Anna", { apri: { posti: 2, squadre: "caso" } });
+    expect(a.stanza.sala!.apertura.squadre).toBeUndefined();
+    expect(entra(m, "scopa", "tb", "Bruno").effetto.t).toBe("avvia");
+    avviaSala(a.stanza);
+    expect(a.stanza.stato.config).toEqual({ posti: 2, soglia: 11 });
+  });
+
+  it("Burraco: 4 a coppie con obiettivo e scarti scelti da chi apre; da 2 senza squadre; sala non anticipata", () => {
+    const m = nuove();
+    const a = entra(m, "burraco", "ta", "Anna", { apri: { posti: 4, config: { obiettivo: 1505, pila: "bloccata" }, attesaMs: 300_000 } });
+    entra(m, "burraco", "tb", "Bruno");
+    entra(m, "burraco", "tc", "Carla");
+    // Senza avvio anticipato nessuno può aprire con 3 su 4.
+    expect(() => comando(a.stanza.sala!, GIOCHI_ONLINE.burraco!.veloce!, "ta", { comando: "apriAdesso" }, 0)).toThrow("pochiPerAprire");
+    entra(m, "burraco", "td", "Dario");
+    avviaSala(a.stanza);
+    expect(a.stanza.stato.config).toEqual({ obiettivo: 1505, pila: "bloccata" });
+    expect(a.stanza.stato.nomi).toHaveLength(4);
+    expect(vistaDi(a.stanza, "ta").fase).toBe("partita");
+    expect(() => entra(m, "burraco", "te", "Elia", { apri: { posti: 4, config: { obiettivo: 7 } } })).toThrow("configNonValida");
+    const due = entra(m, "burraco", "tf", "Fulvio", { apri: { posti: 2 } });
+    expect(due.stanza.sala!.apertura.squadre).toBeUndefined();
+    expect(entra(m, "burraco", "tg", "Gina").effetto.t).toBe("avvia");
+  });
+
+  it("Scopa e Burraco con le squadre «scelte in sala»: ogni squadra riempie i suoi posti", () => {
+    for (const gioco of ["scopa", "burraco"]) {
+      const m = nuove();
+      const a = entra(m, gioco, "ta", "Anna", { apri: { posti: 4, squadre: "scelte" } });
+      for (const [t, n] of [["tb", "Bruno"], ["tc", "Carla"], ["td", "Dario"]]) entra(m, gioco, t!, n!);
+      const sala = a.stanza.sala!;
+      // Anna (squadra A) e Bruno (B) per default; Carla va in A, Dario in B: compagni 1+3 e 2+4.
+      expect(sala.arrivati.map((x) => x.squadra)).toEqual([0, 1, 0, 1]);
+      avviaSala(a.stanza);
+      expect(a.stanza.stato.nomi).toEqual(["Anna", "Bruno", "Carla", "Dario"]);
+    }
+  });
 });
 
 describe("moduli dei giochi", () => {

@@ -1,6 +1,6 @@
 # Piano di lavoro — Partita veloce a stanze aperte (più di 2 giocatori)
 
-Stato: **proposta, da approvare** (2026-11-21). Origine: voce TODO «Partita veloce a stanze aperte» in [decisioni.md](decisioni.md). Nessuna riga di codice scritta.
+Stato: **fatto per Tris, Ultima!, Scopa e Burraco** (era: proposta, da approvare) (2026-11-21). Origine: voce TODO «Partita veloce a stanze aperte» in [decisioni.md](decisioni.md). Nessuna riga di codice scritta.
 
 Serve a Ultima! (2–10), ai giochi di carte da 4 che arrivano (Burraco, Scopa, Briscola a coppie) e deve tenere il Tris (2 fissi) senza regressioni.
 

@@ -2,10 +2,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
-import { usaT } from "@gdt/i18n";
+import { ApriVeloce, SalaVeloce, usaTestiVeloce } from "@gdt/collegamento";
+import { usaT, type Traduttore } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
-import type { Vista } from "../online";
+import { burracoOnline, type ConfigOnline, type Vista } from "../online";
+import { impostazioniVeloce } from "./ImpostazioniVeloce";
 import { OBIETTIVI, OBIETTIVO_BASE, PILA_BASE, PILE, type Obiettivo, type Pila } from "../regole";
 import { Opzioni } from "./BurracoLocale";
 import { Tavolo } from "./Tavolo";
@@ -15,6 +17,12 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
+  const [veloce, setVeloce] = useState(false);
+
+  // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
+  useEffect(() => {
+    if (c.fuoriSala) setVeloce(true);
+  }, [c.fuoriSala]);
 
   // Gli errori transitori spariscono dopo qualche secondo.
   useEffect(() => {
@@ -60,7 +68,16 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
   }
 
   if (!c.vista) {
-    if (codiceIniziale) {
+    // Sala d'attesa della partita veloce (anche dopo un refresh: si rientra con il token).
+    if (c.sala) {
+      return (
+        <>
+          {stato}
+          <SalaVeloce c={c} riepilogo={riepilogoConfig(t)} testoErrore={(m) => testoMessaggio(t, m)} />
+        </>
+      );
+    }
+    if (codiceIniziale && !c.fuoriSala) {
       return (
         <section className="schermata">
           {stato}
@@ -69,11 +86,23 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
         </section>
       );
     }
+    if (veloce) {
+      return (
+        <ApriVeloce
+          c={c}
+          veloce={burracoOnline.veloce!}
+          impostazioni={impostazioniVeloce}
+          riepilogo={riepilogoConfig(t)}
+          testoErrore={(m) => testoMessaggio(t, m)}
+          onIndietro={() => setVeloce(false)}
+        />
+      );
+    }
     if (inserisci) return <EntraConCodice c={c} onIndietro={() => setInserisci(false)} />;
     return (
       <>
         {stato}
-        <Crea c={c} onEntra={() => setInserisci(true)} />
+        <Crea c={c} onEntra={() => setInserisci(true)} onVeloce={() => setVeloce(true)} />
       </>
     );
   }
@@ -91,8 +120,15 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
   );
 }
 
-function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
+/** Il riepilogo delle impostazioni, per la sala d'attesa e l'anteprima della partita veloce. */
+const riepilogoConfig = (t: Traduttore<typeof dizionari.it>) => (config: unknown) => {
+  const cfg = config as ConfigOnline;
+  return t("riepilogo", { obiettivo: t(`obiettivo_${cfg.obiettivo}`), pila: t(`pilaBreve_${cfg.pila}`) });
+};
+
+function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; onVeloce: () => void }) {
   const t = usaT(dizionari);
+  const tv = usaTestiVeloce();
   const [giocatori, setGiocatori] = useState<2 | 4>(4);
   const [nomi, setNomi] = useState<string[]>(["", "", "", ""]);
   const [obiettivo, setObiettivo] = useState<Obiettivo>(OBIETTIVO_BASE);
@@ -110,6 +146,9 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
         if (validi) c.invia({ t: "crea", gioco: "burraco", nomi: puliti, config: { obiettivo, pila } });
       }}
     >
+      <button className="btn" type="button" onClick={onVeloce}>
+        {tv("partitaVeloce")}
+      </button>
       <button className="btn" type="button" onClick={onEntra}>
         {t("hoUnCodice")}
       </button>

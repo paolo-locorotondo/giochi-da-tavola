@@ -220,10 +220,11 @@ export const PROB_TAGLIO: Record<Livello, number> = { facile: 0.5, medio: 0.85, 
 
 /**
  * Taglio del bot `posto`: l'id della carta identica con cui taglia, o null (finestra chiusa, nessuna carta,
- * oppure il bot «non se ne accorge», con la probabilità del livello). Mai sopra un cumulo o una sfida.
+ * oppure il bot «non se ne accorge», con la probabilità del livello). Mai sopra una sfida; sopra un cumulo di +2
+ * sì, con un +2 identico (la finestra si apre solo allora, lo decide `carteTagliabili`).
  */
 export function mossaTaglioBot(p: Partita, posto: number, livello: Livello, rng: Rng): number | null {
-  if (p.cumulo || p.sfida) return null;
+  if (p.sfida) return null;
   const carte = carteTagliabili(p, posto);
   if (carte.length === 0) return null;
   return rng.next() < PROB_TAGLIO[livello] ? carte[0]!.id : null;

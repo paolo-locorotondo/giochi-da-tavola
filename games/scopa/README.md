@@ -100,7 +100,12 @@ Le carte e la mescolata vengono da `@gdt/carte`: la logica importa `@gdt/carte/l
 
 ## Partita veloce
 
-**TODO** (blocco 5, lo fa l'agente della partita veloce): aggiungere a `scopaOnline` in `src/online/gioco.ts` il campo `veloce` con `posti: [2, 4]`, `squadre: (n) => (n === 4 ? [[1, 3], [2, 4]] : null)` e `configVeloce(grezza, n)` che restituisce `{ posti: n, soglia }` (soglia controllata come in `leggiConfig`). `nuovoStato` e `applica` non cambiano: le coppie in ordine di arrivo sono già quelle di base.
+In «Gioca online» il pulsante **Partita veloce** sta in cima, prima di «Ho un codice»: si scrive il nome e si entra nella prima stanza aperta di Scopa, oppure se ne apre una scegliendo punti per vincere (11 o 21), **2 o 4 giocatori**, come formare le coppie (ordine di arrivo, a caso, scelte in sala) e il tempo d'attesa (1, 2, 3 o 5 minuti). Chi si aggancia vede le impostazioni e può solo entrare.
+
+- Dichiarazione: `veloce` in fondo a `scopaOnline` (`src/online/gioco.ts`): `posti: [2, 4]`, `squadre: (n) => (n === 4 ? [[1, 3], [2, 4]] : null)`, `configVeloce(grezza, n)` che completa `posti` e controlla `soglia` con `leggiConfig`. Niente avvio anticipato: una stanza da 4 parte solo piena. `nuovoStato` e `applica` non sono cambiati.
+- Le coppie le decide il server prima dell'avvio (posti 1+3 contro 2+4, nell'ordine d'arrivo se si sceglie «in ordine di arrivo»); i posti sono già presi quando parte la partita, quindi non passa dalla sala «Coppie» delle stanze con codice.
+- UI: `src/ui/ImpostazioniVeloce.tsx` (soglia), riepilogo `riepilogoConfig` in `ScopaOnline.tsx`, sala e anteprima condivise da `@gdt/collegamento`.
+- Provarla: due o quattro schede su `/scopa` → «Ognuno col suo telefono» → «Partita veloce». Test: `apps/server/src/veloce.test.ts` e `apps/web/e2e/scopa-veloce.spec.ts` (progetto `coda-*`, le stanze aperte sono globali).
 
 ## Varianti possibili
 

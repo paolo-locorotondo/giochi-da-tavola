@@ -43,7 +43,7 @@ test("ultima contro i bot: la partita si gioca da sola fino alla fine (anche off
     if (await page.getByRole("button", { name: "Ultima!" }).isVisible()) await page.getByRole("button", { name: "Ultima!" }).click({ timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: "Pesca 4" }).isVisible()) await page.getByRole("button", { name: "Pesca 4" }).click({ timeout: 1000 }).catch(() => {});
     else if (await page.locator(".ul-colori").first().isVisible()) await page.locator(".ul-colori button").first().click({ timeout: 1000 }).catch(() => {});
-    else if (await gioca.isVisible()) await gioca.click({ timeout: 1000 }).catch(() => {});
+    else if (await gioca.isVisible()) await gioca.click({ position: { x: 16, y: 24 }, timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: "Passa" }).isVisible()) await page.getByRole("button", { name: "Passa" }).click({ timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: /^Pesca/ }).isEnabled().catch(() => false)) await page.getByRole("button", { name: /^Pesca/ }).click({ timeout: 1000 }).catch(() => {});
     else await page.waitForTimeout(100);
@@ -90,7 +90,7 @@ test("ultima contro i bot: con tutte le varianti la partita finisce e il tavolo 
     else if (await page.getByRole("button", { name: /Bruno|Bot 1|Bot 2/ }).first().isVisible() && (await page.getByText("Con chi scambi la mano?").isVisible())) await page.locator(".ul-bersagli button").first().click({ timeout: 1000 }).catch(() => {});
     else if (await page.locator(".ul-colori").first().isVisible()) await page.locator(".ul-colori button").first().click({ timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: "Pesca 4" }).isVisible()) await page.getByRole("button", { name: "Pesca 4" }).click({ timeout: 1000 }).catch(() => {});
-    else if (await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().isVisible()) await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().click({ timeout: 1000 }).catch(() => {});
+    else if (await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().isVisible()) await page.locator(".ul-mano button.ul-carta:not([aria-disabled=true])").first().click({ position: { x: 16, y: 24 }, timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: "Passa" }).isVisible()) await page.getByRole("button", { name: "Passa" }).click({ timeout: 1000 }).catch(() => {});
     else if (await page.getByRole("button", { name: /^Pesca/ }).isEnabled().catch(() => false)) await page.getByRole("button", { name: /^Pesca/ }).click({ timeout: 1000 }).catch(() => {});
     else await page.waitForTimeout(100);

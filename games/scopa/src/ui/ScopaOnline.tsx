@@ -2,11 +2,13 @@ import { useEffect, useState, type FormEvent } from "react";
 import { ArrowLeftRight, Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
-import { usaT } from "@gdt/i18n";
+import { ApriVeloce, SalaVeloce, usaTestiVeloce } from "@gdt/collegamento";
+import { usaT, type Traduttore } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
 import { SOGLIE, SOGLIA_PREDEFINITA, type Posti, type Soglia } from "../regole";
-import type { Vista } from "../online";
+import { scopaOnline, type ConfigOnline, type Vista } from "../online";
+import { impostazioniVeloce } from "./ImpostazioniVeloce";
 import { Opzioni } from "./ScopaLocale";
 import { nomeSquadra } from "./Riepilogo";
 import { Tavolo } from "./Tavolo";
@@ -16,6 +18,12 @@ export function ScopaOnline({ codiceIniziale, onLocale }: { codiceIniziale: stri
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
+  const [veloce, setVeloce] = useState(false);
+
+  // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
+  useEffect(() => {
+    if (c.fuoriSala) setVeloce(true);
+  }, [c.fuoriSala]);
 
   // Gli errori transitori spariscono dopo qualche secondo.
   useEffect(() => {
@@ -61,7 +69,16 @@ export function ScopaOnline({ codiceIniziale, onLocale }: { codiceIniziale: stri
   }
 
   if (!c.vista) {
-    if (codiceIniziale) {
+    // Sala d'attesa della partita veloce (anche dopo un refresh: si rientra con il token).
+    if (c.sala) {
+      return (
+        <>
+          {stato}
+          <SalaVeloce c={c} riepilogo={riepilogoConfig(t)} testoErrore={(m) => testoMessaggio(t, m)} />
+        </>
+      );
+    }
+    if (codiceIniziale && !c.fuoriSala) {
       return (
         <section className="schermata">
           {stato}
@@ -70,11 +87,23 @@ export function ScopaOnline({ codiceIniziale, onLocale }: { codiceIniziale: stri
         </section>
       );
     }
+    if (veloce) {
+      return (
+        <ApriVeloce
+          c={c}
+          veloce={scopaOnline.veloce!}
+          impostazioni={impostazioniVeloce}
+          riepilogo={riepilogoConfig(t)}
+          testoErrore={(m) => testoMessaggio(t, m)}
+          onIndietro={() => setVeloce(false)}
+        />
+      );
+    }
     if (inserisci) return <EntraConCodice c={c} onIndietro={() => setInserisci(false)} />;
     return (
       <>
         {stato}
-        <Crea c={c} onEntra={() => setInserisci(true)} />
+        <Crea c={c} onEntra={() => setInserisci(true)} onVeloce={() => setVeloce(true)} />
       </>
     );
   }
@@ -92,8 +121,15 @@ export function ScopaOnline({ codiceIniziale, onLocale }: { codiceIniziale: stri
   );
 }
 
-function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
+/** Il riepilogo delle impostazioni, per la sala d'attesa e l'anteprima della partita veloce. */
+const riepilogoConfig = (t: Traduttore<typeof dizionari.it>) => (config: unknown) => {
+  const cfg = config as ConfigOnline;
+  return t("riepilogoConfig", { posti: cfg.posti, soglia: cfg.soglia });
+};
+
+function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; onVeloce: () => void }) {
   const t = usaT(dizionari);
+  const tv = usaTestiVeloce();
   const [posti, setPosti] = useState<Posti>(2);
   const [nomi, setNomi] = useState<string[]>(["", "", "", ""]);
   const [soglia, setSoglia] = useState<Soglia>(SOGLIA_PREDEFINITA);
@@ -109,6 +145,9 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
         if (validi) c.invia({ t: "crea", gioco: "scopa", nomi: puliti, config: { posti, soglia } });
       }}
     >
+      <button className="btn" type="button" onClick={onVeloce}>
+        {tv("partitaVeloce")}
+      </button>
       <button className="btn" type="button" onClick={onEntra}>
         {t("hoUnCodice")}
       </button>

@@ -46,7 +46,7 @@ vecchia versione con F5; il server di sviluppo lo rimuove da solo, oppure: DevTo
 
 ## La partita veloce (stanze aperte)
 
-Senza codici: chi tocca «Partita veloce» entra nella prima stanza aperta del gioco con posti liberi, o ne apre una (e ne è l'organizzatore). Un gioco la abilita con `veloce` nel suo `GiocoOnline` (posti, avvio anticipato, squadre, `configVeloce`; vedi `packages/engine/src/online.ts`).
+Senza codici: chi tocca «Partita veloce» entra nella prima stanza aperta del gioco con posti liberi, o ne apre una (e ne è l'organizzatore). Un gioco la abilita con `veloce` (Tris, Ultima!, Scopa e Burraco lo dichiarano; le ultime due con 2 o 4 posti e coppie 1+3 / 2+4, senza avvio anticipato) nel suo `GiocoOnline` (posti, avvio anticipato, squadre, `configVeloce`; vedi `packages/engine/src/online.ts`).
 
 - **La sala vive nel server, fuori dallo stato del gioco** (`apps/server/src/veloce.ts`, modulo puro con tempo e connessioni iniettati). Finché la partita non parte la stanza ha `sala` e `stato` nullo e non accetta azioni; all'avvio il server chiama `nuovoStato(nomi, configVeloce(config, n))`, siede i telefoni ai posti 1..n, manda `avvia` per l'organizzatore e da lì è una stanza normale. I giochi ricevono tutti i nomi insieme, come sempre.
 - **Stati**: `attesa` (tempo scelto dall'organizzatore: 1, 2, 3 o 5 minuti, base 2) → `conto` (10 secondi, 30 con le squadre «scelte in sala») → avvio; oppure `scaduta` se non c'è il minimo (60 secondi per decidere, poi la stanza si chiude). L'organizzatore può «Apri adesso», «Continua ad aspettare» (nuova attesa piena) o «Aspetta ancora»; una sala non si rinnova oltre i 15 minuti.

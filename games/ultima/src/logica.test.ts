@@ -889,12 +889,134 @@ describe("Taglio", () => {
     const t = taglia(q, 5, 4, s2.id, ORA, rng());
     expect(t.turno).toBe(1);
   });
-  it("non si taglia sopra un cumulo, un +4 o un jolly", () => {
-    const due = sim("piu2", "rosso");
-    const p = gioca(conV([[due, num("blu", 1)], [num("verde", 2)], [sim("piu2", "rosso"), num("verde", 3)]], { varianti: { ...V, sommaPiu2: true } }), 3, 1, due.id, undefined, rng(), false, { ora: ORA });
-    expect(p.apertaTaglio).toBeNull();
+  it("non si taglia un +4 né un jolly", () => {
     const j = jolly();
     expect(gioca(conV([[j, num("blu", 1)], [jolly(), num("verde", 2)], [num("verde", 3)]]), 3, 1, j.id, "blu", rng(), false, { ora: ORA }).apertaTaglio).toBeNull();
+    const q = piu4();
+    expect(gioca(conV([[q, num("blu", 1)], [jolly(), num("verde", 2)], [num("verde", 3)]]), 3, 1, q.id, "blu", rng(), false, { ora: ORA }).apertaTaglio).toBeNull();
+  });
+
+  describe("sopra un cumulo di +2 (Taglio + Somma dei +2)", () => {
+    const VS = { ...V, sommaPiu2: true };
+    const cum = (mani: Carta[][], opz: Partial<Partita> = {}, n = mani.length) => {
+      const due = mani[0]![0]!;
+      return gioca(partita(mani, { varianti: VS, ...opz }), n, 1, due.id, undefined, rng(), false, { ora: ORA });
+    };
+    it("il +2 che apre un cumulo apre la finestra; chi ha un +2 identico taglia e il cumulo cade sul successivo", () => {
+      const mio = sim("piu2", "rosso");
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [num("verde", 2)], [mio, num("verde", 3)]]);
+      expect(p.cumulo).toEqual({ posto: 2, quante: 2, da: 1 });
+      expect(p.apertaTaglio?.posto).toBe(1);
+      expect(carteTagliabili(p, 3)).toEqual([mio]);
+      const t = taglia(p, 3, 3, mio.id, ORA + 100, rng());
+      // come se C avesse giocato il +2: cumulo 4 su A (il successivo di C), B non paga nulla.
+      expect(t.cumulo).toEqual({ posto: 1, quante: 4, da: 3 });
+      expect(t.turno).toBe(1);
+      expect(t.mani[1]).toEqual(p.mani[1]);
+      expect(t.apertaTaglio).toBeNull();
+      expect(t.eventi.some((e) => e.tipo === "taglio" && e.posto === 3)).toBe(true);
+      expect(t.eventi.some((e) => e.tipo === "cumulo" && e.posto === 1 && e.quante === 4)).toBe(true);
+    });
+    it("serve un +2 dello stesso colore: un +2 di un altro colore non taglia", () => {
+      const blu = sim("piu2", "blu");
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [num("verde", 2)], [blu, num("verde", 3)]]);
+      expect(carteTagliabili(p, 3)).toEqual([]);
+      expect(codice(() => taglia(p, 3, 3, blu.id, ORA, rng()))).toBe("nonTagliabile");
+    });
+    it("con il cumulo già alto cresce ancora (4 → 6)", () => {
+      const r2 = sim("piu2", "rosso");
+      const mio = sim("piu2", "rosso");
+      // 4 giocatori: A cala +2 (2 su B), B risponde con un +2 rosso (4 su C).
+      let p = cum([[sim("piu2", "rosso"), r2, num("blu", 1)], [sim("piu2", "rosso"), num("verde", 2)], [num("verde", 3)], [mio, num("verde", 4)]]);
+      p = gioca(p, 4, 2, p.mani[1]![0]!.id, undefined, rng(), false, { ora: ORA + 500 });
+      expect(p.cumulo).toEqual({ posto: 3, quante: 4, da: 2 });
+      // D (posto 4) taglia il +2 di B: 6 su A (successivo di D).
+      expect(carteTagliabili(p, 4)).toEqual([mio]);
+      const t = taglia(p, 4, 4, mio.id, ORA + 600, rng());
+      expect(t.cumulo).toEqual({ posto: 1, quante: 6, da: 4 });
+      expect(t.turno).toBe(1);
+      // A, che aveva calato il primo +2, può a sua volta tagliare: A taglia il +2 di B con r2 (identico), 6 → su B.
+      const t2 = taglia(p, 4, 1, r2.id, ORA + 600, rng());
+      expect(t2.cumulo).toEqual({ posto: 2, quante: 6, da: 1 });
+    });
+    it("chi è la vittima del cumulo è di turno: non taglia, risponde con un +2 normale", () => {
+      const mio = sim("piu2", "rosso");
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [mio, num("verde", 2)], [num("verde", 3)]]);
+      expect(p.turno).toBe(2);
+      expect(carteTagliabili(p, 2)).toEqual([]);
+      expect(codice(() => taglia(p, 3, 2, mio.id, ORA, rng()))).toBe("nonTagliabile");
+      const r = gioca(p, 3, 2, mio.id, undefined, rng(), false, { ora: ORA + 100 });
+      expect(r.cumulo).toEqual({ posto: 3, quante: 4, da: 2 });
+    });
+    it("verso inverso: il cumulo cade sul successivo di chi taglia in quel verso", () => {
+      const mio = sim("piu2", "rosso");
+      // verso -1 con 4 giocatori: A(1) cala, vittima D(4); B(2) taglia → successivo di B in verso -1 è A(1).
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [mio, num("verde", 2)], [num("verde", 3)], [num("verde", 4)]], { verso: -1 });
+      expect(p.cumulo).toEqual({ posto: 4, quante: 2, da: 1 });
+      const t = taglia(p, 4, 2, mio.id, ORA + 100, rng());
+      expect(t.cumulo).toEqual({ posto: 1, quante: 4, da: 2 });
+      expect(t.turno).toBe(1);
+    });
+    it("con 2 giocatori nessuno può tagliare (la vittima è di turno)", () => {
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [sim("piu2", "rosso"), num("verde", 2)]]);
+      expect(p.apertaTaglio?.posto).toBe(1);
+      expect(carteTagliabili(p, 1)).toEqual([]);
+      expect(carteTagliabili(p, 2)).toEqual([]);
+    });
+    it("il taglio sul cumulo non ne apre un'altra e non è un jolly: un +2 tagliato non si ritaglia", () => {
+      const a = sim("piu2", "rosso");
+      const b = sim("piu2", "rosso");
+      const p = cum([[sim("piu2", "rosso"), num("blu", 1)], [num("verde", 2)], [a, num("verde", 3)], [b, num("verde", 4)]]);
+      const t = taglia(p, 4, 3, a.id, ORA + 100, rng());
+      expect(t.apertaTaglio).toBeNull();
+      expect(codice(() => taglia(t, 4, 4, b.id, ORA + 200, rng()))).toBe("tagliTardi");
+    });
+    it("con «Più carte uguali» più +2 calati insieme aprono la finestra; il taglio ne aggiunge uno solo", () => {
+      const mio = sim("piu2", "rosso");
+      const due = sim("piu2", "rosso");
+      const tre = sim("piu2", "rosso");
+      const q = gioca(
+        partita([[due, tre, num("blu", 1)], [num("verde", 2)], [mio, num("verde", 3)]], { varianti: { ...VS, piuUguali: true } }),
+        3, 1, due.id, undefined, rng(), false, { ora: ORA, insieme: [tre.id] },
+      );
+      expect(q.cumulo).toEqual({ posto: 2, quante: 4, da: 1 });
+      expect(q.apertaTaglio?.posto).toBe(1);
+      const t = taglia(q, 3, 3, mio.id, ORA + 100, rng());
+      expect(t.cumulo).toEqual({ posto: 1, quante: 6, da: 3 });
+    });
+    it("una sfida di +4 non apre la finestra", () => {
+      const q = piu4();
+      const p = gioca(partita([[q, num("blu", 1)], [num("verde", 2)], [num("verde", 3)]], { varianti: VS }), 3, 1, q.id, "blu", rng(), false, { ora: ORA });
+      expect(p.apertaTaglio).toBeNull();
+    });
+  });
+
+  describe("senza «Somma dei +2» il +2 si paga subito", () => {
+    it("chi taglia un +2 fa pescare anche il suo successivo; la vittima di prima ha già pescato e le resta", () => {
+      const mio = sim("piu2", "rosso");
+      // 4 giocatori: A cala +2, B pesca 2, il turno va a C; D taglia.
+      const p0 = conV([[sim("piu2", "rosso"), num("blu", 1)], [num("verde", 2)], [num("verde", 3)], [mio, num("verde", 4)]]);
+      const p = gioca(p0, 4, 1, p0.mani[0]![0]!.id, undefined, rng(), false, { ora: ORA });
+      expect(p.mani[1]).toHaveLength(3);
+      expect(p.turno).toBe(3);
+      expect(p.apertaTaglio?.posto).toBe(1);
+      expect(carteTagliabili(p, 4)).toEqual([mio]);
+      const t = taglia(p, 4, 4, mio.id, ORA + 100, rng());
+      expect(t.mani[1]).toHaveLength(3); // B non paga di nuovo e non recupera nulla
+      expect(t.mani[0]).toHaveLength(p.mani[0]!.length + 2); // A, successivo di D, pesca 2
+      expect(t.turno).toBe(2); // salta A (che ha pescato) e va a B
+      expect(t.cumulo).toBeNull();
+    });
+    it("la vittima già servita può tagliare a sua volta con un +2 identico", () => {
+      const mio = sim("piu2", "rosso");
+      const p0 = conV([[sim("piu2", "rosso"), num("blu", 1)], [mio, num("verde", 2)], [num("verde", 3)]]);
+      const p = gioca(p0, 3, 1, p0.mani[0]![0]!.id, undefined, rng(), false, { ora: ORA });
+      // B ha pescato 2, turno a C (3 giocatori): B taglia, C pesca 2, turno ad A.
+      expect(p.turno).toBe(3);
+      const t = taglia(p, 3, 2, mio.id, ORA + 100, rng());
+      expect(t.mani[2]).toHaveLength(p.mani[2]!.length + 2);
+      expect(t.turno).toBe(1);
+    });
   });
   it("un taglio che svuota la mano vince il round", () => {
     const mia = num("rosso", 5);

@@ -448,8 +448,9 @@ export function gioca(
     pescaCarte(p, vittima, 2 * k, rng);
     p.turno = avanza(vittima, p.verso, n);
   }
-  // Finestra di taglio: solo per una carta colorata, e non sopra un cumulo, una sfida o un colore da scegliere.
-  if (p.varianti.taglio && typeof opzioni.ora === "number" && !opzioni.daTaglio && eColorata(carta) && !p.cumulo && !p.sfida) {
+  // Finestra di taglio: solo per una carta colorata, e non sopra una sfida o un colore da scegliere.
+  // Un +2 che apre o aumenta un cumulo si taglia (con un +2 identico: il cumulo cresce e cade sul successivo di chi taglia).
+  if (p.varianti.taglio && typeof opzioni.ora === "number" && !opzioni.daTaglio && eColorata(carta) && !p.sfida) {
     p.apertaTaglio = { posto: chi, carta, fino: opzioni.ora + TAGLIO_MS };
   }
   return p;

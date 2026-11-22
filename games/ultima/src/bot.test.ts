@@ -397,10 +397,22 @@ describe("bot e taglio", () => {
     expect(mossaTaglioBot(p, 2, "difficile", creaRng(1))).toBeNull();
     expect(mossaTaglioBot(p, 1, "difficile", creaRng(1))).toBeNull();
   });
-  it("non taglia sopra un cumulo o una sfida", () => {
+  it("non taglia sopra una sfida", () => {
     const { p } = situazione();
-    expect(mossaTaglioBot({ ...p, cumulo: { posto: 2, quante: 2, da: 1 } }, 3, "difficile", creaRng(1))).toBeNull();
     expect(mossaTaglioBot({ ...p, sfida: { contro: 1, sospetto: false, illegale: false } }, 3, "difficile", creaRng(1))).toBeNull();
+  });
+  it("taglia un +2 sopra un cumulo con un +2 identico, non con altre carte", () => {
+    const due = sim("piu2", "rosso");
+    const mio = sim("piu2", "rosso");
+    const VS = { ...V, sommaPiu2: true };
+    const p = gioca(partita([[due, num("blu", 1)], [num("verde", 2)], [mio, num("verde", 3)]], { varianti: VS }), 3, 1, due.id, undefined, creaRng(1), false, { ora: ORA });
+    expect(p.cumulo?.quante).toBe(2);
+    expect(mossaTaglioBot(p, 3, "difficile", creaRng(1))).toBe(mio.id);
+    expect(mossaTaglioBot(p, 2, "difficile", creaRng(1))).toBeNull(); // la vittima è di turno
+    const due2 = sim("piu2", "rosso");
+    const blu = sim("piu2", "blu");
+    const q = gioca(partita([[due2, num("blu", 1)], [num("verde", 2)], [blu, num("verde", 3)]], { varianti: VS }), 3, 1, due2.id, undefined, creaRng(1), false, { ora: ORA });
+    expect(mossaTaglioBot(q, 3, "difficile", creaRng(1))).toBeNull(); // +2 di un altro colore
   });
   it("a ogni livello i tagli dei bot sono leciti e le partite finiscono", () => {
     partiteConVarianti({ ...VARIANTI_BASE, taglio: true }, 12);

@@ -29,9 +29,8 @@ import { OBIETTIVI, OBIETTIVO_BASE, PILA_BASE, PILE, type Obiettivo, type Pila }
  * (`offline.ts`). La mano è segreta: delle altre si vede solo quante carte hanno; i pozzetti si vedono
  * solo come «da prendere» o «preso»; il monte degli scarti e le combinazioni sono pubblici.
  *
- * Punto di aggancio della partita veloce (blocco E, non fatto qui): oggi la stanza si crea con 2 o 4 nomi
- * (`nuovoStato(nomi, config)`); per `veloce` basterà aggiungere `veloce: { posti: [4], squadre, configVeloce }`
- * all'oggetto `burracoOnline` in fondo a questo file, senza toccare la logica.
+ * Partita veloce: `veloce` in fondo a `burracoOnline` (2 o 4 posti, coppie 1+3 e 2+4, `configVeloce` = `leggiConfig`);
+ * `nuovoStato(nomi, config)` e la logica non cambiano.
  */
 
 export type FaseOnline = "sala" | "partita" | "fineMano" | "fine";
@@ -325,6 +324,12 @@ export const burracoOnline: GiocoOnline<StatoOnline, AzioneOnline, Vista> = {
   momento: (s) => (s.fase === "sala" ? "sala" : s.fase === "fine" ? "fine" : "inCorso"),
   inGioco: (s) => (s.fase === "sala" ? [] : POSTI(s)),
   mancanti,
+  /** Partita veloce: 2, o 4 a coppie (1+3 contro 2+4); obiettivo e scarti li sceglie chi apre. */
+  veloce: {
+    posti: [2, 4],
+    squadre: (n) => (n === 4 ? [[1, 3], [2, 4]] : null),
+    configVeloce: (grezza) => leggiConfig(grezza),
+  },
 
   traduci(_s, ctx, a) {
     const mio = ctx.posto;

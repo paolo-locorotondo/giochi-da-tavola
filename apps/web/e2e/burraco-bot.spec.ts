@@ -9,12 +9,12 @@ async function apri(page: Page) {
   await page.getByLabel("Il tuo nome").fill("Anna");
 }
 
-test("burraco contro i bot: creazione con giocatori, livello, punti e monte", async ({ page }) => {
+test("burraco contro i bot: creazione con giocatori, livello, punti e scarti", async ({ page }) => {
   await apri(page);
   await expect(page.getByRole("radio", { name: /In 2/ })).toBeChecked();
   await expect(page.getByRole("radio", { name: /Medio/ })).toBeChecked();
   await expect(page.getByRole("radio", { name: /2005 punti/ })).toBeChecked();
-  await expect(page.getByRole("radio", { name: /Sempre libero/ })).toBeChecked();
+  await expect(page.getByRole("radio", { name: /Sempre liberi/ })).toBeChecked();
   await schermata(page, "bot-crea");
   await expect(page.getByRole("radio", { name: /In 4, a coppie/ })).toBeVisible();
 });

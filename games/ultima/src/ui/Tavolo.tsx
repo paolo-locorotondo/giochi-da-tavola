@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { Bell, Bot, Copy, Handshake, RotateCw, Scissors } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { COLORI, TAGLIO_MS, gruppiDellaMano, valoreGruppo, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
 import type { Vista } from "../online";
 import { Carta, ICONA_COLORE, nomeCarta, nomeColore } from "./Carta";
+import { impaginaMano } from "./impaginaMano";
+import { conManoDiProva } from "./manoDiProva";
 import { RiepilogoVarianti } from "./Varianti";
 
 type T = ReturnType<typeof usaT<typeof dizionari.it>>;
@@ -104,6 +106,45 @@ function useSecondiTaglio(taglio: Vista["taglio"]): number {
   return restano;
 }
 
+/**
+ * Le carte appena arrivate in mano (pescate, anche più d'una con un +2 o un cumulo), per evidenziarle.
+ * Una mano tutta nuova (nuovo round, Scambio, Rotazione) non evidenzia niente. Se la carta è fuori
+ * schermo la porta in vista.
+ */
+function useCarteNuove(mano: readonly DatiCarta[], radice: RefObject<HTMLElement>): Set<number> {
+  const chiave = mano.map((c) => c.id).join(",");
+  const precedenti = useRef<number[] | null>(null);
+  const [nuove, setNuove] = useState<Set<number>>(() => new Set());
+  useEffect(() => {
+    const ids = mano.map((c) => c.id);
+    const prima = precedenti.current;
+    precedenti.current = ids;
+    if (!prima) return;
+    const viste = new Set(prima);
+    const arrivate = ids.filter((id) => !viste.has(id));
+    if (arrivate.length === 0) {
+      // Ho giocato: restano evidenziate solo quelle ancora in mano.
+      setNuove((n) => (n.size === 0 ? n : new Set(ids.filter((id) => n.has(id)))));
+      return;
+    }
+    if (arrivate.length * 2 > ids.length || prima.length === 0) {
+      setNuove(new Set());
+      return;
+    }
+    setNuove(new Set(arrivate));
+    const el = radice.current?.querySelector<HTMLElement>(`[data-carta="${arrivate[arrivate.length - 1]}"]`);
+    if (el) {
+      const r = el.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) {
+        const ridotto = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        el.scrollIntoView({ block: "nearest", behavior: ridotto ? "auto" : "smooth" });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chiave]);
+  return nuove;
+}
+
 export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const c = comandi;
   const t = usaT(dizionari);
@@ -114,6 +155,9 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   /** «Più carte»: null = modalità spenta; altrimenti gli id delle carte identiche scelte. */
   const [gruppo, setGruppo] = useState<{ ids: number[] } | null>(null);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
+  const manoRef = useRef<HTMLDivElement>(null);
+  const manoVista = conManoDiProva(v.mano);
+  const nuove = useCarteNuove(manoVista, manoRef);
   const turno = v.turno;
   const giocabili = new Set(v.giocabili);
   const inRound = v.fase === "partita" && v.fineRound === null;
@@ -385,24 +429,40 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
               </div>
             </div>
           )}
-          <div className="ul-mano" role="group" aria-label={t("tuaMano")}>
-            {v.mano.map((carta) => {
-              const dentro = gruppo?.ids.includes(carta.id) ?? false;
-              const spenta = gruppo
-                ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
-                : !v.mioTurno || !giocabili.has(carta.id);
-              return (
-                <Carta
-                  key={carta.id}
-                  carta={carta}
-                  t={t}
-                  onClick={() => tocca(carta)}
-                  spenta={spenta && !(!gruppo && tagliabili.includes(carta))}
-                  scelta={gruppo ? dentro : undefined}
-                  tagliabile={!gruppo && tagliabili.includes(carta)}
-                />
-              );
-            })}
+          <div className="ul-mano" role="group" aria-label={t("tuaMano")} ref={manoRef}>
+            {impaginaMano(manoVista).map((riga, r) => (
+              <div
+                key={r}
+                className="ul-riga"
+                style={{ "--k": Math.max(riga.n - 1, 1), "--g": riga.gruppi.length } as CSSProperties}
+              >
+                {riga.gruppi.map((g, i) => (
+                  <div key={`${g.chiave}-${i}`} className="ul-blocco">
+                    {g.carte.map((carta) => {
+                      const dentro = gruppo?.ids.includes(carta.id) ?? false;
+                      const spenta = gruppo
+                        ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
+                        : !v.mioTurno || !giocabili.has(carta.id);
+                      const tagliabile = !gruppo && tagliabili.includes(carta);
+                      return (
+                        <Carta
+                          key={carta.id}
+                          carta={carta}
+                          t={t}
+                          compatta
+                          idCarta={carta.id}
+                          nuova={nuove.has(carta.id)}
+                          onClick={() => tocca(carta)}
+                          spenta={spenta && !tagliabile}
+                          scelta={gruppo ? dentro : undefined}
+                          tagliabile={tagliabile}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </>
       )}
