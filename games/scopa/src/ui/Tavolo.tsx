@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Bot, Sparkles } from "lucide-react";
+import { ArrowDownToLine, Bell, Bot, Sparkles, X } from "lucide-react";
 import { CartaGrafica, dizionariCarte, nomeCarta, type Carta } from "@gdt/carte";
 import { usaT, type Traduttore } from "@gdt/i18n";
 import { dizionari } from "../locales";
@@ -7,6 +7,7 @@ import type { it } from "../locales/it";
 import type { Evento } from "../logica";
 import type { Vista } from "../online";
 import { Riepilogo, nomeSquadra } from "./Riepilogo";
+import { carteDiPresa, toccaTavolo } from "./composizione";
 
 type T = Traduttore<typeof it>;
 type TC = ReturnType<typeof usaT<typeof dizionariCarte.it>>;
@@ -45,41 +46,64 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const c = comandi;
   const t = usaT(dizionari);
   const tc = usaT(dizionariCarte);
-  /** Carta toccata con più prese possibili: aspetta la scelta. */
-  const [scelta, setScelta] = useState<Carta | null>(null);
-  /** La presa in anteprima (indice), evidenziata sul tavolo. */
-  const [anteprima, setAnteprima] = useState(0);
+  /** La carta della mano scelta col primo tocco. */
+  const [sceltaId, setSceltaId] = useState<number | null>(null);
+  /** Le carte a terra toccate finora per comporre la presa. */
+  const [toccate, setToccate] = useState<number[]>([]);
+  /** Messaggio breve dopo un tocco che non vale (carta a terra non prendibile). */
+  const [rifiuto, setRifiuto] = useState(false);
   const nome = (p: number | null) => v.nomi.find((n) => n.posto === p)?.nome ?? "";
   const inRound = v.fase === "partita" && v.riepilogo === null;
+  const scelta = v.mioTurno ? (v.mano.find((x) => x.id === sceltaId) ?? null) : null;
 
-  // Se il turno passa (o la mano cambia), la scelta in sospeso non vale più.
+  const azzera = () => {
+    setSceltaId(null);
+    setToccate([]);
+    setRifiuto(false);
+  };
+
+  // Se il turno passa (o la carta non è più in mano), la scelta in sospeso non vale più.
   useEffect(() => {
-    if (!v.mioTurno) setScelta(null);
-  }, [v.mioTurno]);
+    if (!scelta && sceltaId !== null) azzera();
+  }, [scelta, sceltaId]);
 
   // «Annulla» anche con il tasto Esc.
   useEffect(() => {
     if (!scelta) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setScelta(null);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && azzera();
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [scelta]);
 
+  const combinazioni = scelta ? (v.prese[scelta.id] ?? []) : [];
+  const prendibili = carteDiPresa(combinazioni);
+  const inToccate = new Set(toccate);
+  // Le prese ancora compatibili con le carte toccate: sono le alternative da scegliere coi pulsanti.
+  const candidate = combinazioni.filter((comb) => toccate.every((x) => comb.includes(x)));
+
+  /** Primo tocco: una carta della mano. Toccarla di nuovo annulla; un'altra la sostituisce. */
   const tocca = (carta: Carta) => {
     if (!v.mioTurno) return;
-    const prese = v.prese[carta.id] ?? [];
-    if (prese.length > 1) {
-      setScelta(carta);
-      setAnteprima(0);
-    } else c.azione({ tipo: "gioca", carta: carta.id });
+    setToccate([]);
+    setRifiuto(false);
+    setSceltaId(sceltaId === carta.id ? null : carta.id);
   };
-  const prendi = (presa: number[]) => {
-    if (scelta) c.azione({ tipo: "gioca", carta: scelta.id, presa });
-    setScelta(null);
+  const gioca = (presa?: number[]) => {
+    if (!scelta) return;
+    c.azione(presa ? { tipo: "gioca", carta: scelta.id, presa } : { tipo: "gioca", carta: scelta.id });
+    azzera();
+  };
+  /** Secondo tocco: una carta a terra. */
+  const toccaTerra = (id: number) => {
+    if (!scelta) return;
+    const esito = toccaTavolo(combinazioni, toccate, id);
+    if (esito.tipo === "presa") gioca(esito.presa);
+    else if (esito.tipo === "parziale") {
+      setToccate(esito.toccate);
+      setRifiuto(false);
+    } else setRifiuto(true);
   };
 
-  const combinazioni = scelta ? (v.prese[scelta.id] ?? []) : [];
-  const evidenziate = new Set(combinazioni[anteprima] ?? []);
   const io = v.nomi.find((n) => n.posto === v.io);
   const turnoGiocatore = v.nomi.find((n) => n.posto === v.turno);
 
@@ -116,7 +140,13 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
             <ul className="sc-carte-tavolo">
               {v.tavolo.map((carta) => (
                 <li key={carta.id}>
-                  <CartaGrafica carta={carta} evidenziata={evidenziate.has(carta.id)} />
+                  <CartaGrafica
+                    carta={carta}
+                    selezionata={inToccate.has(carta.id)}
+                    evidenziata={prendibili.has(carta.id) && !inToccate.has(carta.id)}
+                    etichetta={prendibili.has(carta.id) ? t("puoiPrenderla", { carta: nomeCarta(tc, carta) }) : undefined}
+                    onClick={scelta ? () => toccaTerra(carta.id) : undefined}
+                  />
                 </li>
               ))}
             </ul>
@@ -141,34 +171,57 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       {inRound && scelta && (
         <div className="sc-presa" role="group" aria-labelledby="sc-presa-titolo">
           <h3 id="sc-presa-titolo">{t("presaTitolo", { carta: nomeCarta(tc, scelta) })}</h3>
-          <p className="muted">{t("presaAiuto")}</p>
-          <div className="sc-combinazioni">
-            {combinazioni.map((comb, i) => {
-              const carte = comb.map((id) => v.tavolo.find((x) => x.id === id)!).filter(Boolean);
-              return (
-                <button
-                  key={comb.join(",")}
-                  type="button"
-                  className="btn sc-combinazione"
-                  aria-label={t("presaAria", { carte: carte.map((x) => nomeCarta(tc, x)).join(", ") })}
-                  aria-pressed={anteprima === i}
-                  onPointerEnter={() => setAnteprima(i)}
-                  onFocus={() => setAnteprima(i)}
-                  onClick={() => prendi(comb)}
-                >
-                  <span className="sc-comb-carte" aria-hidden="true">
-                    {carte.map((x) => (
-                      <CartaGrafica key={x.id} carta={x} dimensione="mini" />
-                    ))}
-                  </span>
-                  <span aria-hidden="true">{carte.map((x) => x.valore).join(" + ")}</span>
-                </button>
-              );
-            })}
+          <p className={rifiuto ? "sc-rifiuto" : "muted"} role="status" aria-live="polite">
+            {rifiuto
+              ? t("nonPrendibile")
+              : combinazioni.length === 0
+                ? t("presaNessuna")
+                : combinazioni.length === 1
+                  ? t("presaUna")
+                  : t("presaAiuto")}
+          </p>
+          {combinazioni.length > 1 && (
+            <div className="sc-combinazioni">
+              {candidate.map((comb) => {
+                const carte = comb.map((id) => v.tavolo.find((x) => x.id === id)!).filter(Boolean);
+                return (
+                  <button
+                    key={comb.join(",")}
+                    type="button"
+                    className="btn sc-combinazione"
+                    aria-label={t("presaAria", { carte: carte.map((x) => nomeCarta(tc, x)).join(", ") })}
+                    onClick={() => gioca(comb)}
+                  >
+                    <span className="sc-comb-carte" aria-hidden="true">
+                      {carte.map((x) => (
+                        <CartaGrafica key={x.id} carta={x} dimensione="mini" />
+                      ))}
+                    </span>
+                    <span aria-hidden="true">{carte.map((x) => x.valore).join(" + ")}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <div className="sc-azioni">
+            <button
+              type="button"
+              className={combinazioni.length === 0 ? "btn primario sc-posa" : "btn sc-posa"}
+              disabled={combinazioni.length > 0}
+              aria-describedby={combinazioni.length > 0 ? "sc-posa-nota" : undefined}
+              onClick={() => gioca()}
+            >
+              <ArrowDownToLine size={18} aria-hidden="true" /> {t("posaATerra")}
+            </button>
+            <button type="button" className="btn" onClick={azzera}>
+              <X size={18} aria-hidden="true" /> {t("annulla")}
+            </button>
           </div>
-          <button type="button" className="btn" onClick={() => setScelta(null)}>
-            {t("annulla")}
-          </button>
+          {combinazioni.length > 0 && (
+            <p className="muted" id="sc-posa-nota">
+              {t("posaVietata")}
+            </p>
+          )}
         </div>
       )}
 

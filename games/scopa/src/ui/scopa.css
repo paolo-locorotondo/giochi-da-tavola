@@ -203,3 +203,8 @@
 .sc-coppie h3 { margin: 0; }
 .sc-coppie-lista { margin: 0; padding: 0 0 0 1.2rem; display: grid; gap: 0.25rem; font-weight: 700; }
 .sc-coppie .btn[aria-pressed="true"] { border: 2px solid var(--ac); }
+
+/* Posa a terra: spenta quando la presa è obbligatoria; le carte del tavolo toccabili restano da 44 px almeno */
+.sc-posa:disabled { opacity: 0.55; }
+.sc-rifiuto { margin: 0; font-weight: 700; color: var(--ac); }
+.sc-carte-tavolo button.cg-carta { min-width: 44px; min-height: 44px; }

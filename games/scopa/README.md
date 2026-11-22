@@ -56,9 +56,20 @@ L'organizzatore sceglie 2 o 4 giocatori, scrive i nomi e la soglia; gli altri en
 
 Segreti: le carte altrui e quelle del mazzo non passano mai sulla rete. Anche le prese restano coperte: durante il round si vede solo **quante** carte ha preso ognuno; l'elenco si vede nel riepilogo di fine round («Vedi le prese»).
 
-### Scelta della presa
+### Mossa a due tocchi
 
-Se una carta ha più prese possibili, toccandola si apre un pannello sotto il tavolo con un pulsante per ogni presa («2 + 5», con le carte in piccolo); le carte della presa si evidenziano sul tavolo. «Annulla» (o Esc) torna alla mano. Con una sola presa, o nessuna, la carta si gioca subito.
+Ogni mossa si fa con due tocchi, sempre (anche con una sola presa possibile):
+
+1. **Primo tocco**: una carta della tua mano. Resta selezionata e sul tavolo si evidenziano le carte che puoi prendere con quella (tratteggio e «puoi prenderla» nell'aria, non solo colore). Toccare di nuovo la stessa carta la deseleziona; toccarne un'altra la sostituisce.
+2. **Secondo tocco**: una o più carte sul tavolo. Il gioco compone la presa con le carte toccate:
+   - se coincide con una presa lecita, la mossa parte;
+   - se le carte toccate restano compatibili con più prese (es. con un 7 e sul tavolo 1, 2, 3, 4, 6: toccando il 1 restano «1 + 6» e «1 + 2 + 4»), si sceglie coi pulsanti delle combinazioni;
+   - toccare una carta non evidenziata mostra «Non puoi prendere questa carta con quella scelta» e non fa nulla.
+   - Con una sola presa possibile, il secondo tocco la fa partire da sola.
+3. **Posa a terra**: se la carta non ha prese possibili il pulsante «Posa a terra» la lascia sul tavolo. Se la carta ha prese, la presa è obbligatoria: il pulsante è spento con la spiegazione.
+4. **Annulla** (o Esc) lascia la carta in mano.
+
+La composizione della presa è in `src/ui/composizione.ts` (funzione pura, con test). Le prese possibili vengono da `presePossibili` (`logica.ts`), come prima.
 
 ## Provarlo
 
@@ -72,14 +83,15 @@ pnpm dev         # http://localhost:5173/scopa (anche dal telefono, vedi l'indir
 ## Cosa controllare
 
 - Contro i bot, in 2 e in 4: la partita va avanti da sola fino a «Partita finita», anche con la rete spenta.
-- Una carta con più prese apre la scelta; la presa scelta è quella fatta; «Annulla» lascia la carta in mano.
-- Presa singola: con un 5 sul tavolo un 5 prende solo il 5, anche se ci sono 2 e 3.
+- Due tocchi: la carta in mano, poi le carte a terra evidenziate; una carta non evidenziata non fa nulla; «Annulla» (o toccare di nuovo la carta) lascia la carta in mano.
+- Presa singola: con un 5 sul tavolo un 5 prende solo il 5, anche se ci sono 2 e 3, e parte al secondo tocco.
+- Posa a terra: con una carta senza prese il pulsante c'è; con una carta che ha prese è spento.
 - Scopa: svuotando il tavolo compare «fa scopa!» negli eventi e il contatore sale; con l'ultima carta del round no.
 - Riepilogo: carte, denari, settebello, primiera (o «nulla»), scope, punti; i pari scritti «pari: nessuno».
 - Online a 2 e a 4: le carte degli altri non si vedono; a 4 le coppie e lo scambio in sala; «Simula mossa» solo per l'organizzatore; rientro dopo un refresh.
 - A 375 px, tema scuro e chiaro: niente scorrimento orizzontale, carte e pulsanti toccabili.
 
-Test: `pnpm --filter @gdt/scopa test` (logica, prese, punti, bot, offline, online) e `pnpm --filter @gdt/server test` (`scopa.test.ts`). E2E: `apps/web/e2e/scopa-bot.spec.ts` e `scopa-online.spec.ts`.
+Test: `pnpm --filter @gdt/scopa test` (logica, prese, punti, bot, offline, online) e `pnpm --filter @gdt/server test` (`scopa.test.ts`). E2E: `apps/web/e2e/scopa-bot.spec.ts`, `scopa-online.spec.ts` e `scopa-veloce.spec.ts`.
 
 ## Struttura
 
@@ -93,7 +105,7 @@ src/
   offline.ts       contro i bot sul telefono
   online/gioco.ts  GiocoOnline: stato, azioni, permessi, vista per posto
   locales/         testi it/en (stesse chiavi)
-  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, Riepilogo, scopa.css
+  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, composizione (due tocchi), Riepilogo, scopa.css
 ```
 
 Le carte e la mescolata vengono da `@gdt/carte`: la logica importa `@gdt/carte/logica` (senza CSS né React, adatto al server), la UI l'indice.

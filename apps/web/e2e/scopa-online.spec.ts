@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { fissaCaso, schermata, controllaMobile, betaLetto } from "./aiuti";
+import { passoScopa } from "./scopa-aiuti";
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
@@ -33,9 +34,7 @@ async function giocaRound(pagine: Page[], finale: RegExp) {
   for (let i = 0; i < 600; i++) {
     for (const p of pagine) {
       if (await p.getByText(finale).first().isVisible()) return;
-      if (await p.locator(".sc-presa").isVisible()) await p.locator(".sc-combinazione").first().click({ timeout: 1000 }).catch(() => {});
-      const carta = p.locator(".sc-mano button:not(:disabled)").first();
-      if (await carta.isVisible()) await carta.click({ timeout: 1000 }).catch(() => {});
+      await passoScopa(p);
     }
     await pagine[0]!.waitForTimeout(80);
   }
