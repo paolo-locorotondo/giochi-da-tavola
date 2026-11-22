@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Bell, Bot, Copy, Handshake, RotateCw, Scissors } from "lucide-react";
+import { Ventaglio } from "@gdt/carte/ventaglio";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { COLORI, TAGLIO_MS, gruppiDellaMano, valoreGruppo, type Carta as DatiCarta, type Colore, type Evento } from "../logica";
@@ -429,41 +430,34 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
               </div>
             </div>
           )}
-          <div className="ul-mano" role="group" aria-label={t("tuaMano")} ref={manoRef}>
-            {impaginaMano(manoVista).map((riga, r) => (
-              <div
-                key={r}
-                className="ul-riga"
-                style={{ "--k": Math.max(riga.n - 1, 1), "--g": riga.gruppi.length } as CSSProperties}
-              >
-                {riga.gruppi.map((g, i) => (
-                  <div key={`${g.chiave}-${i}`} className="ul-blocco">
-                    {g.carte.map((carta) => {
-                      const dentro = gruppo?.ids.includes(carta.id) ?? false;
-                      const spenta = gruppo
-                        ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
-                        : !v.mioTurno || !giocabili.has(carta.id);
-                      const tagliabile = !gruppo && tagliabili.includes(carta);
-                      return (
-                        <Carta
-                          key={carta.id}
-                          carta={carta}
-                          t={t}
-                          compatta
-                          idCarta={carta.id}
-                          nuova={nuove.has(carta.id)}
-                          onClick={() => tocca(carta)}
-                          spenta={spenta && !tagliabile}
-                          scelta={gruppo ? dentro : undefined}
-                          tagliabile={tagliabile}
-                        />
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+          <Ventaglio
+            className="ul-mano"
+            role="group"
+            aria-label={t("tuaMano")}
+            rif={manoRef}
+            righe={impaginaMano(manoVista)}
+            chiaveCarta={(carta) => carta.id}
+            carta={(carta) => {
+              const dentro = gruppo?.ids.includes(carta.id) ?? false;
+              const spenta = gruppo
+                ? !dentro && (!idsInGruppi.has(carta.id) || (valoreScelto !== null && valoreGruppo(carta) !== valoreScelto))
+                : !v.mioTurno || !giocabili.has(carta.id);
+              const tagliabile = !gruppo && tagliabili.includes(carta);
+              return (
+                <Carta
+                  carta={carta}
+                  t={t}
+                  compatta
+                  idCarta={carta.id}
+                  nuova={nuove.has(carta.id)}
+                  onClick={() => tocca(carta)}
+                  spenta={spenta && !tagliabile}
+                  scelta={gruppo ? dentro : undefined}
+                  tagliabile={tagliabile}
+                />
+              );
+            }}
+          />
         </>
       )}
 

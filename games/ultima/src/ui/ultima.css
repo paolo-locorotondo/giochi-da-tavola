@@ -294,49 +294,17 @@ button.ul-carta:focus-visible {
 }
 
 /*
- * Mano a ventaglio: righe di al più 9 carte (CARTE_PER_RIGA in impaginaMano.ts), sovrapposte in
- * orizzontale e, fra una riga e l'altra, in verticale. Solo CSS: la larghezza utile è 100cqw
- * (container query del contenitore), nessuna misura in JavaScript.
- * Per riga: --k = max(n-1, 1) carte che si sovrappongono, --g = blocchi di colore.
+ * Mano a ventaglio: righe, blocchi e sovrapposizione stanno in @gdt/carte (ventaglio.css, `.cg-ventaglio`);
+ * qui solo le misure di Ultima!: carta 72x104 px, 8 px di stacco, almeno 32 px visibili, passo di riga 56 px.
+ * Carte per riga: CARTE_PER_RIGA (impaginaMano.ts).
  */
 .ul-mano {
-  --u-w: 4.5rem; /* larghezza carta (72 px) */
-  --u-h: 6.5rem; /* altezza carta (104 px) */
-  --u-gap: 0.5rem; /* spazio fra carte che non si sovrappongono, e fra blocchi di colore */
-  --u-min: 2rem; /* parte visibile minima di una carta coperta (32 px) */
-  --u-passo: 3.5rem; /* passo fra una riga e l'altra (56 px) */
-  container-type: inline-size;
-  display: flex;
-  flex-direction: column;
-  padding: 0.75rem 0.25rem 0.5rem;
-}
-
-.ul-riga {
-  display: flex;
-  align-items: flex-start;
-  /* margine sinistro delle carte dopo la prima: il gap se ci stanno, altrimenti la sovrapposizione uniforme, mai sotto la parte minima */
-  --m: clamp(
-    calc(var(--u-min) - var(--u-w)),
-    calc((100cqw - var(--u-w) - (var(--g, 1) - 1) * var(--u-gap)) / var(--k, 1) - var(--u-w)),
-    var(--u-gap)
-  );
-}
-
-.ul-riga + .ul-riga {
-  margin-top: calc(var(--u-passo) - var(--u-h));
-}
-
-.ul-blocco {
-  display: flex;
-}
-
-.ul-blocco > * + * {
-  margin-left: var(--m, -2.5rem);
-}
-
-/* fra due blocchi di colore: un gap in più */
-.ul-blocco + .ul-blocco {
-  margin-left: calc(var(--m, -2.5rem) + var(--u-gap));
+  --cg-v-w: 4.5rem;
+  --cg-v-h: 6.5rem;
+  --cg-v-gap: 0.5rem;
+  --cg-v-min: 2rem;
+  --cg-v-passo: 3.5rem;
+  --cg-v-pad: 0.75rem 0.25rem 0.5rem;
 }
 
 /* Carta compatta della mano: valore e seme in alto a sinistra (la parte che resta visibile) */
@@ -419,8 +387,8 @@ button.ul-carta.ul-compatta:not(.ul-spenta) {
 }
 
 @supports not (width: 1cqw) {
-  .ul-riga {
-    --m: -2.5rem;
+  .ul-mano .cg-riga {
+    --cg-m: -2.5rem;
   }
 }
 

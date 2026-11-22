@@ -357,6 +357,9 @@ importers:
 
   games/ultima:
     dependencies:
+      '@gdt/carte':
+        specifier: workspace:*
+        version: link:../../packages/carte
       '@gdt/collegamento':
         specifier: workspace:*
         version: link:../../packages/collegamento

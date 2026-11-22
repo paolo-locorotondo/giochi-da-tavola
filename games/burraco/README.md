@@ -78,7 +78,7 @@ Dal telefono: apri l'indirizzo "Network" che stampa `pnpm dev`, scegli Burraco, 
 ## Cosa controllare
 
 - Creazione: in 2 o in 4; nomi vuoti o uguali rifiutati; obiettivo e scarti scelti si vedono in sala.
-- Mano: 11 carte in griglia a 7 colonne, mai scroll orizzontale anche con 21 carte; «Per seme» / «Per valore» (la scelta resta sul telefono); le carte appena arrivate sono evidenziate.
+- Mano **a ventaglio** (vedi sotto): 11 carte in 2 righe sovrapposte, mai scroll orizzontale anche con 21 o 40 carte; l'angolo con valore e seme è sempre visibile; «Per seme» (di base) / «Per valore» (la scelta resta sul telefono); le carte appena arrivate sono evidenziate.
 - Turno: prima «Pesca» o «Prendi gli scarti», poi «Cala» (attivo solo se le carte scelte sono una combinazione valida: l'anteprima dice quale e quanti punti), «Attacca qui» sotto le combinazioni della propria squadra a cui le carte si attaccano, «Scarta» con una sola carta scelta.
 - Matte: le carte che fanno da matta hanno il segno «M»; un 2 al suo posto in scala no.
 - Burraco: badge «Burraco pulito +200», «semipulito +150», «sporco +100».
@@ -101,9 +101,19 @@ I test automatici sono descritti in [test.md](../../docs/test.md).
 - `src/online/gioco.ts`: stato della stanza (mani, punti di squadra, obiettivo), azioni, permessi (`traduci`), `vistaPer` (mai carte altrui né pozzetti). Registrato in `apps/server/src/giochi.ts`.
 - `src/offline.ts`: la partita contro i bot sul telefono.
 - `src/locales/{it,en}.ts`, `src/manifest.ts`: testi e regolamento.
-- `src/ui/`: `Burraco.tsx` (scelta della modalità), `BurracoLocale.tsx`, `BurracoOnline.tsx`, `Tavolo.tsx` (comune alle due modalità; usa `CartaGrafica` e `Mano` di `@gdt/carte`), `burraco.css` (solo token; il segno «M» delle matte è qui).
+- `src/ui/`: `Burraco.tsx` (scelta della modalità), `BurracoLocale.tsx`, `BurracoOnline.tsx`, `Tavolo.tsx` (comune alle due modalità; usa `CartaGrafica` e `Mano ventaglio` di `@gdt/carte`), `burraco.css` (solo token; il segno «M» delle matte è qui).
 - Test: `combinazioni.test.ts`, `logica.test.ts`, `bot.test.ts` (200 mani complete solo bot a 2 e 4), `online/gioco.test.ts`, `apps/server/src/burraco.test.ts`; e2e in `apps/web/e2e/burraco-bot.spec.ts` e `burraco-online.spec.ts`.
 - Le carte sono il mazzo francese fisso (le regole stanno nel codice): non c'è una cartella `data/`.
+
+## La mano a ventaglio
+
+La mano usa `<Mano ventaglio …>` di `@gdt/carte` (impaginazione e CSS condivisi con Ultima!, descritti nel [README di `@gdt/carte`](../../packages/carte/README.md)). Carte da 44×64 px, al più 9 per riga, sovrapposte in orizzontale (almeno 32 px visibili) e in verticale (passo 44 px).
+
+- **Ordine di base: per seme, poi per valore** (cuori, quadri, fiori, picche; asso, 2 … re). I **jolly** vanno in fondo, in un gruppo a parte; le **matte** sono carte normali e stanno dove le mette il loro valore (un 2 è fra l'asso e il 3 del suo seme). Fra un seme e l'altro c'è uno stacco di 8 px, e le righe si interrompono di preferenza lì. «Per valore» resta: una sequenza sola, senza stacchi.
+- **Tasti e preferenza**: «Per seme» / «Per valore» e la memoria della scelta (`gdt.burraco.ordine`) non sono cambiati; senza scelta salvata si parte da «Per seme».
+- **Selezione e pulsanti**: toccare una carta la sceglie o la toglie (si può anche con Invio o Spazio); «Cala», «Scarta» e «Togli la scelta» e le combinazioni sul tavolo non sono cambiati. Le carte scelte hanno bordo d'accento e spunta; le appena arrivate il bordo tratteggiato. Ordine DOM = ordine visivo = ordine di tab, frecce e Home/Fine per spostarsi.
+- **Bersagli**: come in Ultima!, la parte visibile di una carta coperta è larga 32-37 px (invece di 44): eccezione dichiarata, perché 11 o più carte non stanno in una riga senza ventaglio. Negli e2e si tocca l'angolo in alto a sinistra (`position: { x: 16, y: 24 }`).
+- Per le carte, i colori e gli stati: [README di `@gdt/carte`](../../packages/carte/README.md).
 
 ## Partita veloce (punto di aggancio)
 

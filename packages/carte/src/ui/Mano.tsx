@@ -1,9 +1,11 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import { ordinaPerSeme, ordinaPerValore } from "../ordine";
+import { CARTE_PER_RIGA, impaginaMano } from "../impagina";
+import { chiaveSeme, confrontaPerSeme, confrontaPerValore, ordinaPerSeme, ordinaPerValore } from "../ordine";
 import type { Carta } from "../tipi";
 import { CartaGrafica } from "./CartaGrafica";
+import { Ventaglio } from "./Ventaglio";
 import "./carte.css";
 
 export type OrdineMano = "seme" | "valore";
@@ -28,10 +30,17 @@ export interface PropsMano {
   nuove?: readonly number[];
   /** Mostra il titolo con il numero di carte (base: sì). */
   titolo?: boolean;
+  /**
+   * Mano a ventaglio (base: no, griglia): righe di carte sovrapposte, con l'angolo valore+seme sempre visibile.
+   * Di base ordina per seme; i semi sono i gruppi (stacco fra un seme e l'altro, righe interrotte di preferenza lì).
+   */
+  ventaglio?: boolean;
+  /** Carte per riga del ventaglio (base: `CARTE_PER_RIGA`, 9). */
+  cartePerRiga?: number;
 }
 
 /**
- * La mano del giocatore: carte in griglia (a righe, mai scroll orizzontale), selezione singola o multipla,
+ * La mano del giocatore: carte in griglia o a ventaglio (a righe, mai scroll orizzontale), selezione singola o multipla,
  * riordino per seme o per valore. Tastiera: Tab entra nella mano, frecce e Home/Fine si spostano tra le carte,
  * Invio o Spazio selezionano.
  */
@@ -46,16 +55,31 @@ export function Mano({
   disabilitata,
   nuove = [],
   titolo = true,
+  ventaglio = false,
+  cartePerRiga = CARTE_PER_RIGA,
 }: PropsMano) {
   const t = usaT(dizionari);
-  const [ordine, setOrdine] = useState<OrdineMano | null>(ordineIniziale ?? null);
-  const lista = useRef<HTMLUListElement>(null);
+  const [ordine, setOrdine] = useState<OrdineMano | null>(ordineIniziale ?? (ventaglio ? "seme" : null));
 
   const mostrate = useMemo(() => {
     if (ordine === "seme") return ordinaPerSeme(carte);
     if (ordine === "valore") return ordinaPerValore(carte);
     return [...carte];
   }, [carte, ordine]);
+
+  // Ventaglio: per seme i semi sono gruppi (con stacco); per valore un gruppo solo, così le righe si tagliano dove serve
+  // e 9 carte restano leggibili (lo stacco costerebbe 8 px per gruppo).
+  const righe = useMemo(
+    () =>
+      ventaglio
+        ? impaginaMano(carte, {
+            capacita: cartePerRiga,
+            chiave: ordine === "valore" ? () => "valore" : chiaveSeme,
+            ordine: ordine === "valore" ? confrontaPerValore : confrontaPerSeme,
+          })
+        : [],
+    [ventaglio, carte, ordine, cartePerRiga],
+  );
 
   const scegli = (o: OrdineMano) => {
     setOrdine(o);
@@ -67,8 +91,8 @@ export function Mano({
     else onSeleziona(multipla ? [...selezione, carta.id] : [carta.id]);
   };
 
-  const tasti = (e: KeyboardEvent<HTMLUListElement>) => {
-    const bottoni = Array.from(lista.current?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)") ?? []);
+  const tasti = (e: KeyboardEvent<HTMLElement>) => {
+    const bottoni = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
     const i = bottoni.indexOf(document.activeElement as HTMLButtonElement);
     if (i < 0) return;
     let j = i;
@@ -80,6 +104,17 @@ export function Mano({
     e.preventDefault();
     bottoni[j]?.focus();
   };
+
+  const carta = (c: Carta) => (
+    <CartaGrafica
+      carta={c}
+      dimensione="piccola"
+      selezionata={selezione.includes(c.id)}
+      evidenziata={nuove.includes(c.id)}
+      disabilitata={disabilitata?.(c) ?? false}
+      onClick={() => tocca(c)}
+    />
+  );
 
   return (
     <section className="cg-mano" aria-label={t("manoTitolo", { n: carte.length })}>
@@ -101,19 +136,17 @@ export function Mano({
       </div>
       {mostrate.length === 0 ? (
         <p className="cg-mano-vuota">{t("manoVuota")}</p>
+      ) : ventaglio ? (
+        <Ventaglio
+          righe={righe}
+          chiaveCarta={(c) => c.id}
+          carta={(c) => carta(c)}
+          onKeyDown={tasti}
+        />
       ) : (
-        <ul className="cg-griglia" ref={lista} onKeyDown={tasti}>
+        <ul className="cg-griglia" onKeyDown={tasti}>
           {mostrate.map((c) => (
-            <li key={c.id}>
-              <CartaGrafica
-                carta={c}
-                dimensione="piccola"
-                selezionata={selezione.includes(c.id)}
-                evidenziata={nuove.includes(c.id)}
-                disabilitata={disabilitata?.(c) ?? false}
-                onClick={() => tocca(c)}
-              />
-            </li>
+            <li key={c.id}>{carta(c)}</li>
           ))}
         </ul>
       )}

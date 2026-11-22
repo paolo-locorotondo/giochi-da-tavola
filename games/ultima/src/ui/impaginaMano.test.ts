@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { mazzoCompleto, type Carta, type Colore } from "../logica";
-import { CARTE_PER_RIGA, impaginaMano, ordinaMano } from "./impaginaMano";
+import { impaginaMano as generica } from "@gdt/carte/ventaglio";
+import { CARTE_PER_RIGA, chiaveGruppo, confrontaMano, impaginaMano, ordinaMano } from "./impaginaMano";
+import fixture from "./regressione.fixture.json";
 
 const num = (id: number, colore: Colore, valore: number): Carta => ({ id, tipo: "numero", colore, valore });
 const mazzo = mazzoCompleto({ sommaPiu2: false, piuUguali: false, taglio: false, scambioRotazione: true });
@@ -117,5 +119,19 @@ describe("impaginaMano", () => {
   it("la capacità si può cambiare", () => {
     expect(impaginaMano(prime(12), 6).map((x) => x.n)).toEqual([6, 6]);
     expect(impaginaMano(prime(12), 12)).toHaveLength(1);
+  });
+});
+
+describe("regressione: stessa impaginazione di prima della versione condivisa", () => {
+  const conIds = (n: number) => Array.from({ length: n }, (_, i) => ({ ...mazzo[(i * 37) % mazzo.length]!, id: i }));
+  const forma = (r: ReturnType<typeof impaginaMano>) => r.map((x) => x.gruppi.map((g) => [g.chiave, g.carte.map((c) => c.id)]));
+
+  it.each([0, 1, 7, 9, 10, 20, 40, 110])("%i carte: uguale alle righe registrate con l'algoritmo originale", (n) => {
+    expect(forma(impaginaMano(conIds(n)))).toEqual((fixture as Record<string, unknown>)[String(n)]);
+  });
+
+  it.each([0, 1, 7, 9, 10, 20, 40, 110])("%i carte: uguale alla funzione generica di @gdt/carte", (n) => {
+    const m = conIds(n);
+    expect(impaginaMano(m)).toEqual(generica(m, { chiave: chiaveGruppo, ordine: confrontaMano }));
   });
 });

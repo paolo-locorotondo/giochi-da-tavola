@@ -51,8 +51,8 @@ test("burraco contro i bot: una mano a 4 si gioca fino in fondo, anche offline",
       continue;
     }
     if (await page.getByText(/Tocca a te: cala, attacca o scarta/).isVisible().catch(() => false)) {
-      const prima = page.locator(".cg-griglia button").first();
-      if ((await prima.getAttribute("aria-pressed").catch(() => null)) === "false") await prima.click({ timeout: 1000 }).catch(() => {});
+      const prima = page.locator(".cg-ventaglio button").first();
+      if ((await prima.getAttribute("aria-pressed").catch(() => null)) === "false") await prima.click({ position: { x: 16, y: 24 }, timeout: 1000 }).catch(() => {});
       const scarta = page.getByRole("button", { name: /^Scarta |^Chiudi la mano/ });
       if (await scarta.isEnabled().catch(() => false)) await scarta.click({ timeout: 1000 }).catch(() => {});
       const si = page.getByRole("button", { name: "Sì, chiudi" });

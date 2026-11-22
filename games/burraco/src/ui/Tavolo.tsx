@@ -283,7 +283,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       )}
 
       {v.io !== null && (
-        <Mano carte={v.carte} selezione={scelte} onSeleziona={setScelte} ordineIniziale={leggiOrdine()} onOrdine={scriviOrdine} nuove={nuove} />
+        <Mano ventaglio carte={v.carte} selezione={scelte} onSeleziona={setScelte} ordineIniziale={leggiOrdine()} onOrdine={scriviOrdine} nuove={nuove} />
       )}
 
       {v.io !== null && inMano && (

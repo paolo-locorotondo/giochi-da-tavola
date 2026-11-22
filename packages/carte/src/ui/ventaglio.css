@@ -1,0 +1,85 @@
+/*
+ * Mano a ventaglio (componente Ventaglio): righe di al più CARTE_PER_RIGA carte (impagina.ts), sovrapposte in
+ * orizzontale e, fra una riga e l'altra, in verticale. Solo CSS: la larghezza utile è 100cqw (container query
+ * del .cg-ventaglio), nessuna misura in JavaScript.
+ *
+ * Parametri (custom property da mettere su .cg-ventaglio o su un antenato; qui solo valori di ripiego, così una
+ * regola di un gioco con la stessa specificità non dipende dall'ordine dei CSS):
+ *   --cg-v-w     larghezza della carta          (base 2.75rem = 44 px, CartaGrafica «piccola»)
+ *   --cg-v-h     altezza della carta            (base 4rem = 64 px)
+ *   --cg-v-gap   stacco fra carte che non si sovrappongono e fra due gruppi (base 0.5rem = 8 px)
+ *   --cg-v-min   parte visibile minima di una carta coperta (base 2rem = 32 px)
+ *   --cg-v-passo passo fra una riga e l'altra   (base 2.75rem = 44 px: la parte visibile resta alta 44 px)
+ *   --cg-v-pad   spazio interno del ventaglio   (base 0.8rem 0.4rem 0.4rem: in alto posto per la carta scelta, sollevata; ai lati per il bordo tratteggiato)
+ * Per riga il componente mette --cg-k = max(n-1, 1) (carte che si sovrappongono) e --cg-g (gruppi).
+ */
+.cg-ventaglio {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  padding: var(--cg-v-pad, 0.8rem 0.4rem 0.4rem);
+}
+
+.cg-riga {
+  display: flex;
+  align-items: flex-start;
+  /* margine sinistro delle carte dopo la prima: lo stacco se ci stanno, altrimenti la sovrapposizione uniforme, mai sotto la parte minima */
+  --cg-m: clamp(
+    calc(var(--cg-v-min, 2rem) - var(--cg-v-w, 2.75rem)),
+    calc((100cqw - var(--cg-v-w, 2.75rem) - (var(--cg-g, 1) - 1) * var(--cg-v-gap, 0.5rem)) / var(--cg-k, 1) - var(--cg-v-w, 2.75rem)),
+    var(--cg-v-gap, 0.5rem)
+  );
+}
+
+.cg-riga + .cg-riga {
+  margin-top: calc(var(--cg-v-passo, 2.75rem) - var(--cg-v-h, 4rem));
+}
+
+.cg-blocco {
+  display: flex;
+}
+
+/* due classi: batte `.cg-carta { margin: 0 }`, qualunque sia l'ordine dei CSS */
+.cg-ventaglio .cg-blocco > * + * {
+  margin-left: var(--cg-m);
+}
+
+/* fra due gruppi (colori, semi): uno stacco in più */
+.cg-ventaglio .cg-blocco + .cg-blocco {
+  margin-left: calc(var(--cg-m) + var(--cg-v-gap, 0.5rem));
+}
+
+@supports not (width: 1cqw) {
+  .cg-riga {
+    --cg-m: calc(var(--cg-v-min, 2rem) - var(--cg-v-w, 2.75rem));
+  }
+}
+
+/* ---------- Carte grafiche nel ventaglio (Mano con `ventaglio`) ---------- */
+
+/* anello del colore dello sfondo: separa le carte sovrapposte */
+.cg-ventaglio .cg-carta {
+  box-shadow: 0 0 0 2px var(--bg);
+}
+
+/* non toccabile: niente trasparenza (si vedrebbe la carta sotto), fondo pieno più scuro */
+.cg-ventaglio .cg-spenta {
+  opacity: 1;
+  background: color-mix(in srgb, var(--carta-fondo) 55%, var(--bg));
+}
+
+/* scelta: la spunta va in alto, a destra del valore ma dentro la parte visibile (32 px = 2,9 em di una carta «piccola») */
+.cg-ventaglio .cg-spunta {
+  top: -0.7em;
+  right: auto;
+  left: 1.35em;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0.25em;
+}
+
+/* in primo piano mentre si tocca o si arriva con la tastiera */
+.cg-ventaglio .cg-carta:focus-visible,
+.cg-ventaglio .cg-carta:active:not(:disabled) {
+  z-index: 10;
+}
