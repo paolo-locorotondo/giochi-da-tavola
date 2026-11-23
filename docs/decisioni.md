@@ -186,7 +186,7 @@ Un gioco nuovo e poco provato dichiara `beta: true` nel `manifest`. Effetti: bor
 
 ## Mano a ventaglio comune
 
-La mano a ventaglio (righe bilanciate, gruppi interi) è di `@gdt/carte` (`impaginaMano`, componente `Ventaglio`) e la usano Ultima! e Burraco (vedi la voce «Mano a ventaglio condivisa» nei punti aperti). Un'interfaccia comune a tutti i giochi di carte (mano, pile, azioni, tavolo) è un **punto aperto**: da progettare con l'utente prima di toccarla.
+La mano a ventaglio (righe bilanciate, gruppi interi) è di `@gdt/carte` (`impaginaMano`, componente `Ventaglio`) e la usano Ultima! e Burraco (vedi la voce «Mano a ventaglio condivisa» nei punti aperti). Un'interfaccia comune a tutti i giochi di carte (mano, pile, azioni, tavolo) è un **punto aperto**: da progettare con l'utente prima di toccarla. Analisi, segnalazioni dai test e decisioni da prendere: [piano-tavolo-carte.md](piano-tavolo-carte.md).
 
 ## Refresh e ripresa delle partite
 
