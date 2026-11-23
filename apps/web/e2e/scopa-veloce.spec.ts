@@ -83,7 +83,7 @@ test("scopa veloce a 4: Anna apre a 21 punti, altri tre entrano, coppie 1+3 e 2+
     await allaPartitaVeloce(dino, "Dino");
     await dino.getByRole("button", { name: "Entra nella stanza" }).click();
     for (const p of pagine) await expect(p.getByRole("heading", { name: "La tua mano" })).toBeVisible();
-    await expect(anna.locator(".sc-mano button")).toHaveCount(3);
+    await expect(anna.locator(".cg-mano button.cg-carta")).toHaveCount(3);
   } finally {
     await chiudi();
   }

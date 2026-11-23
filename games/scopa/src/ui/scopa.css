@@ -32,110 +32,8 @@
 .sc-mia { color: var(--ac); }
 .sc-soglia { color: var(--mu); font-weight: 400; }
 
-/* Avversari e compagno */
-.sc-giocatori {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-  gap: 0.5rem;
-}
-
-.sc-giocatore {
-  min-width: 0;
-  display: grid;
-  gap: 0.25rem;
-  padding: 0.6rem 0.7rem;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r);
-}
-
-.sc-giocatore.sc-turno { border: 2px solid var(--ac); }
-.sc-giocatore-nome { font-weight: 700; overflow-wrap: anywhere; }
-.sc-giocatore-dati { font-size: 0.85rem; color: var(--mu); }
-
-.sc-ruolo {
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--fg);
-  background: var(--s2);
-  border: var(--bw) solid var(--bd-ctrl);
-  border-radius: 999px;
-}
-
-/* Aree: tavolo e mano */
-.sc-area {
-  display: grid;
-  gap: 0.6rem;
-  padding: 0.8rem;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r);
-  min-width: 0;
-}
-
-.sc-titoletto { margin: 0; font-family: var(--font-titoli); font-size: 1rem; }
-.sc-vuoto, .sc-aiuto { margin: 0; }
-
-.sc-carte-tavolo,
-.sc-mano {
-  list-style: none;
-  margin: 0;
-  padding: 0.4rem 0.2rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.sc-mano { gap: 0.6rem; padding-top: 0.8rem; }
-
-/* Carte più grandi di quelle della mano di @gdt/carte: il tavolo ne mostra fino a una dozzina */
-.sc-area .cg-normale { --cg-fs: 0.9375rem; }
-
-.sc-contatori { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; align-items: center; color: var(--mu); font-size: 0.9rem; }
-.sc-contatore { display: inline-flex; align-items: center; gap: 0.5rem; }
-
-/* Scelta della presa: pannello sotto il tavolo, non una modale */
-.sc-presa {
-  display: grid;
-  gap: 0.7rem;
-  padding: 0.9rem;
-  background: var(--s1);
-  border: 2px solid var(--ac);
-  border-radius: var(--r);
-}
-
-.sc-presa h3, .sc-presa p { margin: 0; }
-
-.sc-combinazioni {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: 0.7rem;
-}
-
-.sc-combinazione {
-  display: grid;
-  justify-items: center;
-  gap: 0.3rem;
-  min-height: 3.5rem;
-  padding: 0.5rem;
-}
-
-.sc-combinazione[aria-pressed="true"] { border: 2px solid var(--ac); }
-.sc-comb-carte { display: flex; flex-wrap: wrap; gap: 0.3rem; justify-content: center; }
-
-.sc-azioni {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-  gap: 0.7rem;
-}
-
-.sc-eventi { margin: 0; padding: 0 0 0 1.2rem; display: grid; gap: 0.3rem; }
+/* Il tavolo, i posti, la mano e le azioni sono di @gdt/carte/tavolo. Qui restano solo l'aiuto e il rifiuto. */
+.sc-aiuto { margin: 0; }
 
 /* Riepilogo */
 .sc-riepilogo {
@@ -204,7 +102,4 @@
 .sc-coppie-lista { margin: 0; padding: 0 0 0 1.2rem; display: grid; gap: 0.25rem; font-weight: 700; }
 .sc-coppie .btn[aria-pressed="true"] { border: 2px solid var(--ac); }
 
-/* Posa a terra: spenta quando la presa è obbligatoria; le carte del tavolo toccabili restano da 44 px almeno */
-.sc-posa:disabled { opacity: 0.55; }
 .sc-rifiuto { margin: 0; font-weight: 700; color: var(--ac); }
-.sc-carte-tavolo button.cg-carta { min-width: 44px; min-height: 44px; }

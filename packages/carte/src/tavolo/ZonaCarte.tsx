@@ -24,6 +24,15 @@ export interface PropsZonaCarte {
   /** Id delle carte selezionate. Con `onSeleziona` la zona è selezionabile (stesso modello di `Mano`). */
   selezione?: readonly number[];
   onSeleziona?: (selezione: number[]) => void;
+  /**
+   * Alternativa a `onSeleziona`: la zona riceve il tocco su una carta e non calcola la selezione, che decide il gioco
+   * (es. Scopa, dove il tocco compone una presa). `selezione` resta solo per disegnare le carte scelte.
+   */
+  onTocca?: (carta: Carta) => void;
+  /** Carte evidenziate senza essere scelte (es. quelle che si possono prendere). */
+  evidenziate?: readonly number[];
+  /** Nome parlato di una carta, al posto di quello normale (es. «Sette di coppe, puoi prenderla»). */
+  etichetta?: (carta: Carta) => string | undefined;
   /** Più carte insieme (base: sì). Senza, toccare un'altra carta sostituisce la scelta. */
   multipla?: boolean;
   /** Testo quando la zona è vuota («Nessuna combinazione»). */
@@ -53,17 +62,21 @@ export function ZonaCarte({
   gruppi = [],
   selezione = [],
   onSeleziona,
+  onTocca,
+  evidenziate = [],
+  etichetta,
   multipla = true,
   vuota,
   dimensione,
 }: PropsZonaCarte) {
   const t = usaT(dizionari);
   const misura: Dimensione = dimensione ?? (disposizione === "colonne" ? "mini" : "piccola");
-  const selezionabile = onSeleziona !== undefined;
+  const selezionabile = onSeleziona !== undefined || onTocca !== undefined;
   const vuotaDavvero = disposizione === "colonne" ? gruppi.every((g) => g.length === 0) : carte.length === 0 && !coperte;
 
   const tocca = (c: Carta) => {
-    onSeleziona?.(alternaSelezione(selezione, c.id, multipla));
+    if (onTocca) onTocca(c);
+    else onSeleziona?.(alternaSelezione(selezione, c.id, multipla));
   };
 
   const carta = (c: Carta) =>
@@ -72,10 +85,12 @@ export function ZonaCarte({
         carta={c}
         dimensione={misura}
         selezionata={selezione.includes(c.id)}
+        evidenziata={evidenziate.includes(c.id) && !selezione.includes(c.id)}
+        etichetta={etichetta?.(c)}
         onClick={() => tocca(c)}
       />
     ) : (
-      <CartaGrafica carta={c} dimensione={misura} />
+      <CartaGrafica carta={c} dimensione={misura} evidenziata={evidenziate.includes(c.id)} etichetta={etichetta?.(c)} />
     );
 
   let corpo;

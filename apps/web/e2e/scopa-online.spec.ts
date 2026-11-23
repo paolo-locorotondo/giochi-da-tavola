@@ -52,7 +52,7 @@ test("scopa online a 2: creazione, sala e mano segreta", async ({ browser }) => 
     await expect(bruno.getByRole("heading", { name: "La tua mano" })).toBeVisible();
     await controllaMobile(host);
     // La carta di Bruno non è nel DOM di Anna: le mani sono due liste disgiunte.
-    const mano = await host.locator(".sc-mano button").count();
+    const mano = await host.locator(".cg-mano button.cg-carta").count();
     expect(mano).toBe(3);
   } finally {
     await Promise.all(contesti.map((c) => c.close()));

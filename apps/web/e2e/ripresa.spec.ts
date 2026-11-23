@@ -16,7 +16,7 @@ test("scopa contro i bot: dopo il refresh la partita è la stessa e si continua"
   await page.getByRole("radio", { name: /Veloce/ }).check();
   await page.getByRole("radio", { name: /Facile/ }).check();
   await page.getByRole("button", { name: "Inizia la partita" }).click();
-  const miaMano = page.locator(".sc-mano button:not(:disabled)");
+  const miaMano = page.locator(".cg-mano button.cg-carta:not(:disabled)");
   await expect(miaMano.first()).toBeVisible({ timeout: 15_000 });
   // Qualche mossa mia (con i bot in mezzo).
   for (let i = 0; i < 6; i++) {
@@ -25,15 +25,15 @@ test("scopa contro i bot: dopo il refresh la partita è la stessa e si continua"
     await page.waitForTimeout(300);
   }
   await expect(miaMano.first()).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".sc-presa")).toHaveCount(0);
-  const mano = await impronta(page, ".sc-mano button");
-  const tavolo = await impronta(page, ".sc-carte-tavolo button");
+  await expect(page.locator(".cg-mano button[aria-pressed=true]")).toHaveCount(0);
+  const mano = await impronta(page, ".cg-mano button.cg-carta");
+  const tavolo = await impronta(page, ".cg-zona button.cg-carta");
   expect(mano.length).toBeGreaterThan(0);
 
   await page.reload();
   await expect(miaMano.first()).toBeVisible();
-  expect(await impronta(page, ".sc-mano button")).toEqual(mano);
-  expect(await impronta(page, ".sc-carte-tavolo button")).toEqual(tavolo);
+  expect(await impronta(page, ".cg-mano button.cg-carta")).toEqual(mano);
+  expect(await impronta(page, ".cg-zona button.cg-carta")).toEqual(tavolo);
   await expect(page.getByText("Anna").first()).toBeVisible();
   await expect(page.getByText("Bot 1").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Inizia la partita" })).toHaveCount(0);

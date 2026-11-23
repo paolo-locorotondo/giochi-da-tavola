@@ -9,8 +9,11 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.29.0] - 2026-11-23
+
 ### Modificato
 
+- **Scopa, interfaccia della mossa**: ora si gioca sul tavolo comune dei giochi di carte. Gli avversari stanno intorno al tavolo, le carte a terra al centro e la tua mano sotto con il bordo oro quando tocca a te (e il titolo «La tua mano (tocca a te)»). Tocchi una carta della mano, poi le carte da prendere **una a una**, poi «Conferma» (attivo solo con una presa completa; prima partiva da sola). Se la carta non prende niente compare sul tavolo il riquadro tratteggiato «Posa qui», al posto del pannello «Posa a terra». Sparisce il pannello con le combinazioni da scegliere: basta toccare le carte. Mazzo, prese e scope stanno sotto la mano. Cambiano le classi dei test e2e e i loro screenshot.
 - Interno: eliminati i piani di progetto dei lavori finiti (recuperabili con il tag v0.28.0); le scelte di regola sono nei README dei giochi.
 - Interno: tavolo comune in `@gdt/carte/tavolo` (`TavoloCarte` (rettangolo, avversari intorno al tavolo fino a 10 giocatori), `PostoGiocatore`, `ZonaCarte`, `SegnapostoPosa`, `BarraAzioni`, `RegistroEventi`, `PannelloInfo`, con test) e token `--tavolo-fondo` nei due temi. `Mano` accetta `diTurno` e `riepilogo`. Non ancora usati dai giochi; pagina di prova `apps/web/prova-tavolo.html`, solo in `pnpm dev`.
 

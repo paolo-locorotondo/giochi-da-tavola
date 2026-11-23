@@ -11,6 +11,10 @@ export interface AzioneTavolo {
   variante?: VarianteAzione;
   onTocca: () => void;
   disabilitata?: boolean;
+  /** Di base il primario occupa tutta la riga; con `false` sta accanto agli altri (es. «Annulla» e «Conferma»). */
+  larga?: boolean;
+  /** Id di un testo che spiega l'azione (`aria-describedby`). */
+  descrittaDa?: string;
 }
 
 export interface PropsBarraAzioni {
@@ -32,8 +36,9 @@ export function BarraAzioni({ azioni, etichetta }: PropsBarraAzioni) {
         <button
           key={a.id}
           type="button"
-          className={`cg-azione cg-azione-${a.variante ?? "secondaria"}`}
+          className={`cg-azione cg-azione-${a.variante ?? "secondaria"}${a.larga === false ? " cg-azione-affiancata" : ""}`}
           disabled={a.disabilitata}
+          aria-describedby={a.descrittaDa}
           onClick={a.onTocca}
         >
           {a.icona && (

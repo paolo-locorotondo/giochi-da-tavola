@@ -67,20 +67,19 @@ L'organizzatore sceglie 2 o 4 giocatori, scrive i nomi e la soglia; gli altri en
 
 Segreti: le carte altrui e quelle del mazzo non passano mai sulla rete. Anche le prese restano coperte: durante il round si vede solo **quante** carte ha preso ognuno; l'elenco si vede nel riepilogo di fine round («Vedi le prese»). Fa eccezione il registro «Cosa è successo»: ogni mossa dice **quali** carte ha preso («Bot 1 gioca Sette di spade e prende Quattro di coppe e Tre di denari»), perché quelle carte erano a faccia in su sul tavolo; lo stesso per le carte rimaste al tavolo a fine round. Un evento senza elenco (partita salvata o server più vecchio) mostra il testo col solo numero. Il testo è in `src/ui/testoEvento.ts`.
 
-### Mossa a due tocchi
+### Come si fa una mossa
 
-Ogni mossa si fa con due tocchi, sempre (anche con una sola presa possibile):
+Il tavolo è quello comune dei giochi di carte (`@gdt/carte/tavolo`): gli avversari intorno, le carte a terra al centro, la tua mano sotto con il bordo oro quando tocca a te.
 
-1. **Primo tocco**: una carta della tua mano. Resta selezionata e sul tavolo si evidenziano le carte che puoi prendere con quella (tratteggio e «puoi prenderla» nell'aria, non solo colore). Toccare di nuovo la stessa carta la deseleziona; toccarne un'altra la sostituisce.
-2. **Secondo tocco**: una o più carte sul tavolo. Il gioco compone la presa con le carte toccate:
-   - se coincide con una presa lecita, la mossa parte;
-   - se le carte toccate restano compatibili con più prese (es. con un 7 e sul tavolo 1, 2, 3, 4, 6: toccando il 1 restano «1 + 6» e «1 + 2 + 4»), si sceglie coi pulsanti delle combinazioni;
-   - toccare una carta non evidenziata mostra «Non puoi prendere questa carta con quella scelta» e non fa nulla.
-   - Con una sola presa possibile, il secondo tocco la fa partire da sola.
-3. **Posa a terra**: se la carta non ha prese possibili il pulsante «Posa a terra» la lascia sul tavolo. Se la carta ha prese, la presa è obbligatoria: il pulsante è spento con la spiegazione.
-4. **Annulla** (o Esc) lascia la carta in mano.
+1. **Prima carta**: una carta della tua mano. Resta selezionata e sul tavolo si evidenziano le carte che puoi prendere con quella (tratteggio e «puoi prenderla» nell'aria, non solo colore). Toccarla di nuovo la deseleziona; toccarne un'altra la sostituisce.
+2. **Carte a terra**: le tocchi **una a una**. Toccare di nuovo una carta la toglie; una carta non evidenziata mostra «Non puoi prendere questa carta con quella scelta» e non fa nulla.
+3. **«Conferma»**: la mossa parte solo da qui, ed è attivo solo quando le carte toccate sono **esattamente** una presa lecita (anche se la presa è di una carta sola). Niente parte da sola.
+4. **«Posa qui»**: se la carta non ha prese, sul tavolo compare un riquadro tratteggiato «Posa qui» da toccare. Se la carta ha prese, la presa è obbligatoria e il riquadro non c'è.
+5. **«Annulla»** (o Esc) lascia la carta in mano.
 
-La composizione della presa è in `src/ui/composizione.ts` (funzione pura, con test). Le prese possibili vengono da `presePossibili` (`logica.ts`), come prima.
+Mazzo, prese e scope di chi gioca stanno sotto la mano; i punti di ogni avversario sul suo posto. La composizione della presa è in `src/ui/composizione.ts` (funzioni pure, con test: `toccaTavolo`, `presaPronta`). Le prese possibili vengono da `presePossibili` (`logica.ts`), come prima.
+
+**Scelta di progetto:** la presa si conferma sempre con «Conferma»; non c'è una presa automatica. *Nice to have, non richiesto:* un'impostazione «presa automatica» per chi vuole più velocità, che farebbe partire la mossa appena le carte toccate formano una presa lecita (come faceva la versione 0.28.0).
 
 ## Provarlo
 
@@ -94,9 +93,11 @@ pnpm dev         # http://localhost:5173/scopa (anche dal telefono, vedi l'indir
 ## Cosa controllare
 
 - Contro i bot, in 2 e in 4: la partita va avanti da sola fino a «Partita finita», anche con la rete spenta.
-- Due tocchi: la carta in mano, poi le carte a terra evidenziate; una carta non evidenziata non fa nulla; «Annulla» (o toccare di nuovo la carta) lascia la carta in mano.
-- Presa singola: con un 5 sul tavolo un 5 prende solo il 5, anche se ci sono 2 e 3, e parte al secondo tocco.
-- Posa a terra: con una carta senza prese il pulsante c'è; con una carta che ha prese è spento.
+- La mossa: la carta in mano, poi le carte a terra evidenziate una a una, poi «Conferma» (attivo solo con una presa completa); una carta non evidenziata non fa nulla; «Annulla» (o toccare di nuovo la carta) lascia la carta in mano.
+- Presa singola: con un 5 sul tavolo un 5 prende solo il 5, anche se ci sono 2 e 3: tocchi il 5 e premi «Conferma».
+- «Posa qui»: con una carta senza prese il riquadro tratteggiato compare sul tavolo; con una carta che ha prese non c'è.
+- «Tocca a te»: la sezione «La tua mano» ha il bordo oro e il titolo «(tocca a te)».
+- Tavolo a 4: la compagna e gli avversari sono ai lati e sopra, con «compagno» o «avversario» sul posto.
 - Scopa: svuotando il tavolo compare «fa scopa!» negli eventi e il contatore sale; con l'ultima carta del round no.
 - Riepilogo: carte, denari, settebello, primiera (o «nulla»), scope, punti; i pari scritti «pari: nessuno».
 - Refresh a metà partita contro i bot: si torna alla stessa partita (mani, tavolo, turno, velocità) senza domande; se tocca a un bot, riparte da solo. Dopo «Esci dalla partita» o a partita finita il refresh porta alla creazione.
@@ -117,7 +118,7 @@ src/
   offline.ts       contro i bot sul telefono
   online/gioco.ts  GiocoOnline: stato, azioni, permessi, vista per posto
   locales/         testi it/en (stesse chiavi)
-  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, testoEvento (registro), composizione (due tocchi), Riepilogo, scopa.css
+  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo (sul tavolo comune di @gdt/carte), testoEvento (registro), composizione (la presa), Riepilogo, scopa.css
 ```
 
 Le carte e la mescolata vengono da `@gdt/carte`: la logica importa `@gdt/carte/logica` (senza CSS né React, adatto al server), la UI l'indice.

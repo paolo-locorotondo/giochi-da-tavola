@@ -154,7 +154,9 @@ proposto `#1f5a3f` scuro, contrasto 7,05 col testo, e `#2a6b4f` chiaro, 6,23):
 - Da verificare nel codice vero: bersaglio di tocco di 44 px nelle carte sovrapposte (34 px di larghezza visibile),
   contrasti di tutti i testi sul feltro, testo ingrandito, movimento ridotto, safe area.
 
-**Fatto (2026-11-23, non committato):** token `--tavolo-fondo` / `--tavolo-testo` in `apps/web/src/tema.css` (nei due
+**Scopa migrata (2026-11-23):** `games/scopa/src/ui/Tavolo.tsx` usa `TavoloCarte`, `ZonaCarte`, `SegnapostoPosa`, `Mano` (con `diTurno` e `riepilogo`), `BarraAzioni` e `RegistroEventi`; «Conferma» e «Annulla» come da decisione 2; `ZonaCarte` ha ora `onTocca`, `evidenziate` ed `etichetta`, `BarraAzioni` ha `larga` e `descrittaDa`. Test e2e di Scopa riscritti su ruoli e classi `cg-*` (`scopa-aiuti.ts`), screenshot rigenerati. Resta da fare: provarlo sul telefono, poi Burraco e Ultima!.
+
+**Fatto prima (2026-11-23):** token `--tavolo-fondo` / `--tavolo-testo` in `apps/web/src/tema.css` (nei due
 temi); in `packages/carte/src/tavolo/` tutti i componenti del sistema (`TavoloCarte`, `PostoGiocatore`, `ZonaCarte`,
 `SegnapostoPosa`, `BarraAzioni`, `RegistroEventi`, `PannelloInfo`) con `tavolo.css`, locali it/en e test (64 in
 `@gdt/carte`); `Mano` con `diTurno` e `riepilogo`; dipendenza `lucide-react` in `@gdt/carte`; `@gdt/carte` in

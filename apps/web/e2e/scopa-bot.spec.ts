@@ -1,6 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fissaCaso, schermata, controllaMobile } from "./aiuti";
-import { passoScopa } from "./scopa-aiuti";
+import { manoScopa, passoScopa, prendibiliScopa, terraScopa } from "./scopa-aiuti";
+
+/** Lo screenshot a pagina intera dipende da dove è scorsa la pagina (la barra in alto è sticky): si parte sempre dall'alto. */
+async function schermataDallAlto(page: Page, nome: string) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await schermata(page, nome);
+}
 
 test.beforeEach(({ page }) => fissaCaso(page));
 
@@ -47,89 +53,92 @@ test("scopa contro i bot: la partita si gioca da sola fino alla fine (anche offl
 
 /**
  * Gioca fino a un tuo turno in cui una carta della mano ha lo stato cercato:
- * «somma» = più prese possibili, «posa» = nessuna presa, «una» = una presa sola.
- * Lascia la carta scelta (primo tocco fatto) e torna il suo indice.
+ * «somma» = più carte a terra si possono prendere, «posa» = nessuna presa («Posa qui»), «una» = una sola carta.
+ * Lascia la carta scelta (primo tocco fatto).
  */
 async function finoACarta(page: Page, tipo: "somma" | "posa" | "una"): Promise<void> {
   for (let i = 0; i < 1500; i++) {
     const prossimo = page.getByRole("button", { name: "Prossimo round" });
     if (await prossimo.isVisible()) await prossimo.click({ timeout: 1000 }).catch(() => {});
-    const carte = page.locator(".sc-mano button:not(:disabled)");
+    const carte = manoScopa(page);
     const n = await carte.count();
     for (let k = 0; k < n; k++) {
       await carte.nth(k).click({ timeout: 1000 }).catch(() => {});
-      const multi = (await page.locator(".sc-combinazione").count()) > 0;
-      const posa = await page.locator(".sc-posa:not(:disabled)").isVisible();
-      const evid = await page.locator(".sc-carte-tavolo button.cg-evid").count();
-      if ((tipo === "somma" && multi) || (tipo === "posa" && posa) || (tipo === "una" && !multi && !posa && evid > 0)) return;
+      const posa = await page.locator(".cg-segnaposto").isVisible();
+      const evid = await prendibiliScopa(page).count();
+      if ((tipo === "somma" && evid > 1) || (tipo === "posa" && posa) || (tipo === "una" && !posa && evid === 1)) return;
       // Non è quella cercata: la si deseleziona.
       await carte.nth(k).click({ timeout: 1000 }).catch(() => {});
     }
     // Nessuna carta adatta: si gioca la prima per far avanzare la partita.
     if (n > 0) {
-      for (let j = 0; j < 4 && (await passoScopa(page)); j++) await page.waitForTimeout(30);
+      for (let j = 0; j < 6 && (await passoScopa(page)); j++) await page.waitForTimeout(30);
     }
     await page.waitForTimeout(60);
   }
   throw new Error(`nessuna carta di tipo ${tipo}`);
 }
 
-test("scopa: più prese possibili, le carte si evidenziano e il secondo tocco fa la presa", async ({ page }) => {
+test("scopa: più carte prendibili, si evidenziano e «Conferma» parte solo con una presa completa", async ({ page }) => {
   test.setTimeout(240_000);
   await iniziaContro(page, 2);
   await page.getByRole("button", { name: "Inizia la partita" }).click();
   await finoACarta(page, "somma");
-  await expect(page.locator(".sc-presa")).toBeVisible();
-  await expect(page.locator(".sc-mano button[aria-pressed=true]")).toHaveCount(1);
-  await expect(page.getByRole("button", { name: /Prendi/ }).first()).toBeVisible();
-  await expect(page.locator(".sc-posa")).toBeDisabled();
-  expect(await page.locator(".sc-carte-tavolo button.cg-evid").count()).toBeGreaterThan(1);
-  await schermata(page, "bot-scelta-presa");
-  // Annullare: toccare di nuovo la carta, oppure «Annulla».
+  await expect(page.locator(".cg-mano button[aria-pressed=true]")).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Conferma" })).toBeDisabled();
+  await expect(page.locator(".cg-segnaposto")).toHaveCount(0);
+  expect(await prendibiliScopa(page).count()).toBeGreaterThan(1);
+  await schermataDallAlto(page, "bot-scelta-presa");
+  // Annullare: «Annulla» lascia la carta in mano.
   await page.getByRole("button", { name: "Annulla" }).click();
-  await expect(page.locator(".sc-presa")).toHaveCount(0);
-  await expect(page.locator(".sc-carte-tavolo button.cg-evid")).toHaveCount(0);
+  await expect(page.locator(".cg-mano button[aria-pressed=true]")).toHaveCount(0);
+  await expect(prendibiliScopa(page)).toHaveCount(0);
   // Una carta sul tavolo non evidenziata non fa niente.
   await finoACarta(page, "somma");
-  const prima = await page.locator(".sc-carte-tavolo li").count();
-  const fuori = page.locator(".sc-carte-tavolo button.cg-carta:not(.cg-evid)").first();
+  const prima = await terraScopa(page).count();
+  const fuori = page.locator(".cg-zona button.cg-carta:not(.cg-evid)").first();
   if (await fuori.count()) {
     await fuori.click();
     await expect(page.getByText("Non puoi prendere questa carta con quella scelta.")).toBeVisible();
-    await expect(page.locator(".sc-carte-tavolo li")).toHaveCount(prima);
+    await expect(terraScopa(page)).toHaveCount(prima);
   }
-  // Secondo tocco su una carta evidenziata: si compone la presa e la mossa parte (o resta la scelta tra più prese).
-  const manoPrima = await page.locator(".sc-mano button").count();
-  await page.locator(".sc-carte-tavolo button.cg-evid").first().click();
-  const scelte = page.locator(".sc-combinazione");
-  if ((await scelte.count()) > 0) await scelte.first().click();
-  await expect(page.locator(".sc-presa")).toHaveCount(0);
-  await expect.poll(() => page.locator(".sc-mano button").count()).not.toBe(manoPrima + 1);
+  // Si toccano le carte una a una: la mossa parte solo con «Conferma».
+  const manoPrima = await page.locator(".cg-mano button.cg-carta").count();
+  const conferma = page.getByRole("button", { name: "Conferma" });
+  for (let j = 0; j < 8 && !(await conferma.isEnabled()); j++) await prendibiliScopa(page).first().click();
+  await expect(conferma).toBeEnabled();
+  await expect(page.locator(".cg-mano button.cg-carta")).toHaveCount(manoPrima);
+  await conferma.click();
+  await expect(page.locator(".cg-mano button[aria-pressed=true]")).toHaveCount(0);
+  await expect.poll(() => page.locator(".cg-mano button.cg-carta").count()).not.toBe(manoPrima + 1);
 });
 
-test("scopa: nessuna presa, «Posa a terra» conferma la mossa", async ({ page }) => {
+test("scopa: nessuna presa, «Posa qui» sul tavolo conferma la mossa", async ({ page }) => {
   test.setTimeout(240_000);
   await iniziaContro(page, 2);
   await page.getByRole("button", { name: "Inizia la partita" }).click();
   await finoACarta(page, "posa");
-  await expect(page.locator(".sc-carte-tavolo button.cg-evid")).toHaveCount(0);
-  await expect(page.getByText("Con questa carta non prendi niente: posala a terra.")).toBeVisible();
-  await schermata(page, "bot-posa-a-terra");
-  const tavolo = await page.locator(".sc-carte-tavolo li").count();
-  await page.getByRole("button", { name: "Posa a terra" }).click();
-  await expect(page.locator(".sc-presa")).toHaveCount(0);
-  await expect.poll(() => page.locator(".sc-carte-tavolo li").count()).toBeGreaterThanOrEqual(tavolo);
+  await expect(prendibiliScopa(page)).toHaveCount(0);
+  await expect(page.getByText("Con questa carta non prendi niente: tocca «Posa qui» sul tavolo.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Conferma" })).toHaveCount(0);
+  await schermataDallAlto(page, "bot-posa-a-terra");
+  const tavolo = await terraScopa(page).count();
+  await page.getByRole("button", { name: "Posa qui" }).click();
+  await expect(page.locator(".cg-segnaposto")).toHaveCount(0);
+  await expect.poll(() => terraScopa(page).count()).toBeGreaterThanOrEqual(tavolo);
 });
 
-test("scopa: una presa sola, un tocco sulla carta a terra e parte da sola", async ({ page }) => {
+test("scopa: una sola carta prendibile, la tocchi e poi «Conferma»", async ({ page }) => {
   test.setTimeout(240_000);
   await iniziaContro(page, 2);
   await page.getByRole("button", { name: "Inizia la partita" }).click();
   await finoACarta(page, "una");
-  await expect(page.getByRole("button", { name: "Posa a terra" })).toBeDisabled();
-  await schermata(page, "bot-una-presa");
-  await page.locator(".sc-carte-tavolo button.cg-evid").first().click();
-  await expect(page.locator(".sc-presa")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Conferma" })).toBeDisabled();
+  await schermataDallAlto(page, "bot-una-presa");
+  await prendibiliScopa(page).first().click();
+  await expect(page.getByRole("button", { name: "Conferma" })).toBeEnabled();
+  await page.getByRole("button", { name: "Conferma" }).click();
+  await expect(page.locator(".cg-mano button[aria-pressed=true]")).toHaveCount(0);
 });
 
 test("scopa: «Come giocate?» ha le due modalità", async ({ page }) => {
