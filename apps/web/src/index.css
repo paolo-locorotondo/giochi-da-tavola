@@ -13,6 +13,13 @@ label {
   touch-action: manipulation;
 }
 
+/* Niente «trascina giù per ricaricare» (e niente effetto elastico che ricarica): su telefono è il refresh
+   accidentale più comune. Lo scorrimento della pagina e il «torna su» restano intatti. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 body {
   margin: 0;
   background: var(--bg);

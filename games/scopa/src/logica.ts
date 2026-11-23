@@ -23,15 +23,17 @@ export class ErroreScopa extends Error {
 }
 
 /**
- * Cosa è successo, visibile a tutti. Le carte prese restano coperte: l'evento dice solo quante
- * (D8: l'elenco si vede nel riepilogo di fine round).
+ * Cosa è successo, visibile a tutti. Le carte prese in una mossa sono pubbliche (stanno a faccia in su
+ * sul tavolo): l'evento le elenca in `carte`. Il numero (`prese`, `carte` dell'ultima presa) resta
+ * per gli eventi senza elenco (partite salvate o server di versione precedente); il mazzetto di ognuno
+ * resta coperto fino al riepilogo di fine round.
  */
 export type Evento =
   | { tipo: "nuovoRound" }
-  | { tipo: "gioca"; posto: number; carta: Carta; prese: number }
+  | { tipo: "gioca"; posto: number; carta: Carta; prese: number; carte?: Carta[] }
   | { tipo: "scopa"; posto: number }
   | { tipo: "distribuzione"; mano: number }
-  | { tipo: "ultimaPresa"; posto: number; carte: number }
+  | { tipo: "ultimaPresa"; posto: number; carte: number; elenco?: Carta[] }
   | { tipo: "fineRound" }
   | { tipo: "bot"; posto: number };
 
@@ -153,7 +155,7 @@ export function gioca(p: Partita, chi: number, idCarta: number, presa?: readonly
   const prese = p.prese.map((m) => [...m]);
   const scope = [...p.scope];
   let ultimaPresa = p.ultimaPresa;
-  const eventi: Evento[] = [{ tipo: "gioca", posto: chi, carta, prese: scelta.length }];
+  const eventi: Evento[] = [{ tipo: "gioca", posto: chi, carta, prese: scelta.length, carte: scelta }];
   if (scelta.length > 0) {
     prese[chi - 1]!.push(carta, ...scelta);
     ultimaPresa = chi;
@@ -202,7 +204,7 @@ function chiudiRound(p: Partita, ultimoACalare: number): Partita {
     prese,
     ultimaPresa: ultimo,
     fine: { ultimaPresa: ultimo, punti: puntiRound(prese, p.scope, p.squadre) },
-    eventi: aggiungi(p.eventi, { tipo: "ultimaPresa", posto: ultimo, carte: resto }, { tipo: "fineRound" }),
+    eventi: aggiungi(p.eventi, { tipo: "ultimaPresa", posto: ultimo, carte: resto, elenco: [...p.tavolo] }, { tipo: "fineRound" }),
   };
 }
 

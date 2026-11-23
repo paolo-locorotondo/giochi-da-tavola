@@ -54,7 +54,7 @@ Su «Come giocate?» si sceglie **Contro i bot**: in 2 (tu contro un bot) o in 4
 
 L'organizzatore sceglie 2 o 4 giocatori, scrive i nomi e la soglia; gli altri entrano con il codice o il QR e toccano il proprio nome. A 4, in sala, l'organizzatore vede le coppie e può scambiare due giocatori di coppie diverse (tocca il primo, poi il secondo). Se qualcuno non risponde: «Sollecita» e «Simula mossa col bot» (una mossa sola, difficile, annunciata negli eventi).
 
-Segreti: le carte altrui e quelle del mazzo non passano mai sulla rete. Anche le prese restano coperte: durante il round si vede solo **quante** carte ha preso ognuno; l'elenco si vede nel riepilogo di fine round («Vedi le prese»).
+Segreti: le carte altrui e quelle del mazzo non passano mai sulla rete. Anche le prese restano coperte: durante il round si vede solo **quante** carte ha preso ognuno; l'elenco si vede nel riepilogo di fine round («Vedi le prese»). Fa eccezione il registro «Cosa è successo»: ogni mossa dice **quali** carte ha preso («Bot 1 gioca Sette di spade e prende Quattro di coppe e Tre di denari»), perché quelle carte erano a faccia in su sul tavolo; lo stesso per le carte rimaste al tavolo a fine round. Un evento senza elenco (partita salvata o server più vecchio) mostra il testo col solo numero. Il testo è in `src/ui/testoEvento.ts`.
 
 ### Mossa a due tocchi
 
@@ -88,6 +88,7 @@ pnpm dev         # http://localhost:5173/scopa (anche dal telefono, vedi l'indir
 - Posa a terra: con una carta senza prese il pulsante c'è; con una carta che ha prese è spento.
 - Scopa: svuotando il tavolo compare «fa scopa!» negli eventi e il contatore sale; con l'ultima carta del round no.
 - Riepilogo: carte, denari, settebello, primiera (o «nulla»), scope, punti; i pari scritti «pari: nessuno».
+- Refresh a metà partita contro i bot: si torna alla stessa partita (mani, tavolo, turno, velocità) senza domande; se tocca a un bot, riparte da solo. Dopo «Esci dalla partita» o a partita finita il refresh porta alla creazione.
 - Online a 2 e a 4: le carte degli altri non si vedono; a 4 le coppie e lo scambio in sala; «Simula mossa» solo per l'organizzatore; rientro dopo un refresh.
 - A 375 px, tema scuro e chiaro: niente scorrimento orizzontale, carte e pulsanti toccabili.
 
@@ -105,7 +106,7 @@ src/
   offline.ts       contro i bot sul telefono
   online/gioco.ts  GiocoOnline: stato, azioni, permessi, vista per posto
   locales/         testi it/en (stesse chiavi)
-  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, composizione (due tocchi), Riepilogo, scopa.css
+  ui/              Scopa (scelta modalità), ScopaLocale, ScopaOnline, Tavolo, testoEvento (registro), composizione (due tocchi), Riepilogo, scopa.css
 ```
 
 Le carte e la mescolata vengono da `@gdt/carte`: la logica importa `@gdt/carte/logica` (senza CSS né React, adatto al server), la UI l'indice.

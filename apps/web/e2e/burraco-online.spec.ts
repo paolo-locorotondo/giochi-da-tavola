@@ -51,7 +51,8 @@ test("burraco online: quattro telefoni, mano segreta, bot e mano finita", async 
     await expect(pagine[1]!.getByRole("list", { name: "Giocatori" }).getByText("Anna", { exact: true })).toBeVisible();
     await expect(pagine[1]!.getByRole("button", { name: /Sollecita/ })).toHaveCount(0);
     await controllaMobile(pagine[1]!);
-    await schermata(host, "partita");
+    // Con quattro telefoni le carte distribuite cambiano da un giro all altro: si mascherano mano, scarti e codice della stanza.
+    await schermata(host, "partita", { maschera: [".cg-ventaglio", ".bu-pila", "summary"] });
 
     // L'organizzatore fa giocare il bot un passo alla volta fino a fine mano (una sola mano).
     const bot = host.getByRole("button", { name: /^Simula mossa col bot/ });

@@ -119,6 +119,14 @@ describe("vista", () => {
     const vf = vistaPer(giocaRound(s), 2, false);
     expect(vf.riepilogo?.prese.flat()).toHaveLength(40);
   });
+  it("gli eventi elencano le carte prese (pubbliche) e sono uguali per tutti i posti", () => {
+    const fine = giocaRound(avviata());
+    const ev = vistaPer(fine, 1, true).eventi;
+    expect(vistaPer(fine, 2, false).eventi).toEqual(ev);
+    expect(vistaPer(fine, null, false).eventi).toEqual(ev);
+    for (const e of ev) if (e.tipo === "gioca") expect(e.carte?.length).toBe(e.prese);
+    expect(ev.some((e) => e.tipo === "ultimaPresa" && e.elenco?.length === e.carte)).toBe(true);
+  });
   it("le prese possibili si vedono solo nel mio turno", () => {
     const s = avviata();
     const turno = s.partita!.turno;

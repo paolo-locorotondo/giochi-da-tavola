@@ -38,6 +38,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 
 - Con l'audio acceso (ingranaggio → Audio, spento di default): suoni diversi per Indovinata, Vietata detta e Passa, e un segnale a fine turno.
 - Il timer scade e compare il riepilogo; il punteggio va alla squadra giusta.
+- Refresh a metà turno: il turno continua con il tempo rimasto (non riparte da capo) e le parole già fatte; se nel frattempo il tempo è finito compare subito il riepilogo. Il gesto «trascina giù per ricaricare» non c'è.
 - Le squadre si alternano e la partita finisce dopo i turni scelti.
 - Il testo è leggibile sul telefono e le carte non si ripetono finché c'è mazzo.
 

@@ -17,6 +17,7 @@
     "@gdt/carte": "workspace:*",
     "@gdt/collegamento": "workspace:*",
     "@gdt/i18n": "workspace:*",
+    "@gdt/preferenze": "workspace:*",
     "@gdt/engine": "workspace:*",
     "lucide-react": "^1.69.0",
     "qrcode": "1.5.4"

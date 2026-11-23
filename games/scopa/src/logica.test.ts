@@ -91,7 +91,12 @@ describe("presa", () => {
     expect(codice(() => gioca(p, 1, k("denari", 7).id, [k("coppe", 1).id, k("coppe", 2).id]))).toBe("presaNonValida");
     const d = gioca(p, 1, k("denari", 7).id, [k("coppe", 4).id, k("coppe", 3).id]);
     expect(d.tavolo.map((c) => c.valore).sort()).toEqual([1, 2, 5]);
-    expect(d.eventi.at(-1)).toEqual({ tipo: "gioca", posto: 1, carta: k("denari", 7), prese: 2 });
+    expect(d.eventi.at(-1)).toEqual({ tipo: "gioca", posto: 1, carta: k("denari", 7), prese: 2, carte: [k("coppe", 3), k("coppe", 4)] });
+  });
+
+  it("presa singola: l'evento elenca quella carta", () => {
+    const p = costruito([k("coppe", 5), k("spade", 2), k("bastoni", 3)], [[k("denari", 5), k("denari", 9)], [k("coppe", 9)]]);
+    expect(gioca(p, 1, k("denari", 5).id).eventi.at(-1)).toMatchObject({ tipo: "gioca", prese: 1, carte: [k("coppe", 5)] });
   });
 
   it("una sola presa: si applica da sé (e una presa sbagliata è rifiutata)", () => {
@@ -99,6 +104,7 @@ describe("presa", () => {
     expect(codice(() => gioca(p, 1, k("denari", 6).id, [k("spade", 9).id]))).toBe("presaNonValida");
     const d = gioca(p, 1, k("denari", 6).id);
     expect(d.tavolo).toEqual([k("spade", 9)]);
+    expect(d.eventi.at(-1)).toMatchObject({ tipo: "gioca", prese: 2, carte: [k("coppe", 2), k("coppe", 4)] });
   });
 
   it("nessuna presa: la carta resta sul tavolo (e una presa indicata è rifiutata)", () => {
@@ -108,6 +114,7 @@ describe("presa", () => {
     expect(d.tavolo.map((c) => c.id)).toEqual([k("coppe", 8).id, k("denari", 3).id]);
     expect(d.prese[0]).toEqual([]);
     expect(d.ultimaPresa).toBeNull();
+    expect(d.eventi.at(-1)).toMatchObject({ tipo: "gioca", prese: 0, carte: [] });
   });
 
   it("turno e mano: fuori turno → nonTocca; carta non in mano → cartaNonInMano", () => {
@@ -152,7 +159,7 @@ describe("scopa", () => {
     expect(d.fine!.ultimaPresa).toBe(1);
     expect(d.prese[0]!.map((c) => c.id).sort((a, b) => a - b)).toEqual([k("denari", 3), k("coppe", 3), k("spade", 8), k("bastoni", 1)].map((c) => c.id).sort((a, b) => a - b));
     expect(d.scope).toEqual([0, 0]);
-    expect(d.eventi.slice(-2)).toEqual([{ tipo: "ultimaPresa", posto: 1, carte: 2 }, { tipo: "fineRound" }]);
+    expect(d.eventi.slice(-2)).toEqual([{ tipo: "ultimaPresa", posto: 1, carte: 2, elenco: [k("spade", 8), k("bastoni", 1)] }, { tipo: "fineRound" }]);
   });
 });
 

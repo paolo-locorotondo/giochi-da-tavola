@@ -80,12 +80,12 @@ Gli e2e usano le porte 5199 e 8081: **un solo agente alla volta** li lancia.
 2. Un agente interrotto si rilancia con lo stesso prompt del filone più «Riprendi dal punto in cui è arrivato: guarda `git log` e `git status` del tuo worktree».
 3. Aggiorna la tabella qui sotto.
 
-## Prossimo rilascio (da fare)
+## Prossimo rilascio (0.28.0, da fare)
 
-Passi: (1) l'agente di Scopa finisce gli e2e e si unisce il suo branch; (2) il coordinatore lancia la suite e2e completa (`pnpm test:e2e`, ~13 min, in background) e per Burraco scrive/esegue gli e2e `burraco-bot` e `burraco-online` (mai eseguiti) rigenerando e guardando gli screenshot; (3) se tutto è verde: CHANGELOG da «Non rilasciato» a `## [0.27.0] - data`, `version` in apps/web/package.json, tag annotato `v0.27.0`.
+Passi: (1) si lancia la suite e2e completa (`pnpm test:e2e`, ~13 min, in background), rigenerando e guardando gli screenshot cambiati; (2) se tutto è verde: CHANGELOG da «Non rilasciato» a `## [0.28.0] - data`, `version` in apps/web/package.json, tag annotato `v0.28.0`.
 
 
-Partita veloce, Scopa, Burraco e varianti di Ultima! sono su `main` ma non ancora in una versione: si rilascia (MINOR, 0.27.0) quando la suite e2e completa è verde.
+Partita veloce, Scopa, Burraco e varianti di Ultima! sono usciti con la 0.27.0. La 0.28.0 (2026-11-23) aggiunge giochi in beta testing, Duello Lampo rivisto, ripresa delle partite dopo il refresh, uscita e rientro nella partita veloce, partita veloce in Scopa e Burraco, mano a ventaglio comune, Scopa a due tocchi. Prossimo passo: progettare con l'utente l'interfaccia comune per i giochi di carte.
 
 ## Stato
 
@@ -99,5 +99,5 @@ Aggiorna questa tabella a ogni passo (da fare / in corso / pronto da unire / uni
 | 4 Duello Lampo (Bersagli, Il più grande) | main | unito e rilasciato 0.26.0 (2026-11-21) |
 | 1 Partita veloce (server + UI) | main | unito (2026-11-21); resta: «Apri adesso» a sala piena con squadre «scelte in sala»; entry-point di @gdt/carte senza CSS |
 | 5 Ultima! varianti | main | unito (2026-11-21); e2e di Ultima! verdi due volte di fila in scuro, chiaro, coda-scuro, coda-chiaro |
-| 3 Scopa | main | uniti blocchi 1-4 (2026-11-21); e2e verdi due volte di fila (14/14); partita veloce fatta (2 o 4, coppie, soglia scelta da chi apre; non ancora in una versione) |
+| 3 Scopa | main | uniti blocchi 1-4 (2026-11-21); e2e verdi due volte di fila (14/14); partita veloce fatta (2 o 4, coppie, soglia scelta da chi apre; rilasciata nella 0.27.0) |
 | 2 Burraco | main + lavoro/burraco | blocchi A-D uniti (2026-11-21); l'agente esegue e corregge gli e2e (ha le porte 5199/8081); partita veloce fatta (2 o 4, coppie, obiettivo e scarti scelti da chi apre; scadenza più lunga = attesa fino a 5 min) |

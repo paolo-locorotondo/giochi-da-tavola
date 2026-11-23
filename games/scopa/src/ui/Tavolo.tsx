@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { ArrowDownToLine, Bell, Bot, Sparkles, X } from "lucide-react";
 import { CartaGrafica, dizionariCarte, nomeCarta, type Carta } from "@gdt/carte";
-import { usaT, type Traduttore } from "@gdt/i18n";
+import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
-import type { it } from "../locales/it";
-import type { Evento } from "../logica";
 import type { Vista } from "../online";
 import { Riepilogo, nomeSquadra } from "./Riepilogo";
 import { carteDiPresa, toccaTavolo } from "./composizione";
+import { testoEvento } from "./testoEvento";
 
-type T = Traduttore<typeof it>;
-type TC = ReturnType<typeof usaT<typeof dizionariCarte.it>>;
 
 /** Cosa può fare il tavolo: online passa dal server, offline dalla partita sul telefono. */
 export interface Comandi {
@@ -19,27 +16,6 @@ export interface Comandi {
   sollecita?: () => void;
   /** Solo online: l'organizzatore vede «Simula mossa col bot». */
   conBot?: boolean;
-}
-
-function testoEvento(t: T, tc: TC, e: Evento, nome: (p: number) => string): string {
-  switch (e.tipo) {
-    case "nuovoRound":
-      return t("ev_nuovoRound");
-    case "gioca":
-      return e.prese > 0
-        ? t("ev_prende", { nome: nome(e.posto), carta: nomeCarta(tc, e.carta), n: e.prese })
-        : t("ev_cala", { nome: nome(e.posto), carta: nomeCarta(tc, e.carta) });
-    case "scopa":
-      return t("ev_scopa", { nome: nome(e.posto) });
-    case "distribuzione":
-      return t("ev_distribuzione", { n: e.mano });
-    case "ultimaPresa":
-      return t("ev_ultimaPresa", { nome: nome(e.posto), n: e.carte });
-    case "fineRound":
-      return t("ev_fineRound");
-    case "bot":
-      return t("ev_bot", { nome: nome(e.posto) });
-  }
 }
 
 export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {

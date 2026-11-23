@@ -16,10 +16,12 @@ segrete (una parola, un ruolo), guida le fasi del gioco e raccoglie le scelte qu
 | **Tabù**: due squadre, timer, parole vietate | Un telefono | [Leggi la guida](games/tabu/README.md) |
 | **Dadi**: moneta, D4…D20 e dado con i valori che vuoi | Un telefono | [Leggi la guida](games/dadi/README.md) |
 | **Tris**: tre in fila, contro il telefono o in due | Un telefono e ognuno col suo telefono (anche partita veloce) | [Leggi la guida](games/tic-tac-toe/README.md) |
-| **Ultima!**: gioco di carte a colori e numeri, da 2 a 10, con bot su richiesta | Un telefono contro i bot (anche offline) e ognuno col suo telefono | [Leggi la guida](games/ultima/README.md) |
-| **Scopa**: il classico gioco di carte italiano, in 2 o in 4 a coppie | Un telefono contro i bot (anche offline) e ognuno col suo telefono | [Leggi la guida](games/scopa/README.md) |
-| **Burraco**: carte a coppie con pozzetti e matte, in 2 o in 4 | Un telefono contro i bot (anche offline) e ognuno col suo telefono | [Leggi la guida](games/burraco/README.md) |
+| **Ultima!**: gioco di carte a colori e numeri, da 2 a 10, con bot su richiesta | **In beta testing.** Un telefono contro i bot (anche offline) e ognuno col suo telefono (anche partita veloce) | [Leggi la guida](games/ultima/README.md) |
+| **Scopa**: il classico gioco di carte italiano, in 2 o in 4 a coppie | **In beta testing.** Un telefono contro i bot (anche offline) e ognuno col suo telefono (anche partita veloce) | [Leggi la guida](games/scopa/README.md) |
+| **Burraco**: carte a coppie con pozzetti e matte, in 2 o in 4 | **In beta testing.** Un telefono contro i bot (anche offline) e ognuno col suo telefono (anche partita veloce) | [Leggi la guida](games/burraco/README.md) |
 | **Duello Lampo**: mini giochi di riflessi per due, telefono al centro del tavolo | Un telefono | [Leggi la guida](games/duello-lampo/README.md) |
+
+I giochi **in beta testing** (Ultima!, Scopa, Burraco) hanno il bordo rosso nella lista e un avviso all'apertura: funzionano, ma possono avere difetti. Dopo un refresh la partita contro i bot riprende da dov'era.
 
 Due modi di giocare: **un solo telefono** (il telefono passa di mano, nessuna rete) oppure
 **ognuno col suo telefono**, che richiede il server di gioco.
@@ -42,11 +44,13 @@ Requisiti: Node.js 20+, pnpm 9; Docker per `docker compose`. Passi dettagliati: 
 |---|---|
 | Comandi di sviluppo, struttura del repo | [docs/sviluppo.md](docs/sviluppo.md) |
 | Test unitari e grafici, come aggiornarli | [docs/test.md](docs/test.md) |
+| Provare l'app in locale, passo per passo | [docs/provare-in-locale.md](docs/provare-in-locale.md) |
 | Giocare dagli amici con il PC come server (WiFi/hotspot) | [docs/guida-giocare-con-il-pc.md](docs/guida-giocare-con-il-pc.md) |
 | Pubblicare il server o il sito online | [docs/guida-deploy-online.md](docs/guida-deploy-online.md) |
 | Capire stanze, dati sul browser, sicurezza | [docs/architettura-tecnica.md](docs/architettura-tecnica.md) |
 | Sapere cosa significa "Aggiungi a schermata Home" | [docs/app-installabile.md](docs/app-installabile.md) |
 | Scelte di progetto e punti aperti | [docs/decisioni.md](docs/decisioni.md) |
+| Piani dei giochi e della partita veloce, coordinamento dei filoni | [partita veloce](docs/piano-partita-veloce.md), [Scopa](docs/piano-scopa.md), [Burraco](docs/piano-burraco.md), [Ultima!](docs/piano-ultima.md), [varianti di Ultima!](docs/piano-ultima-varianti.md), [Duello Lampo](docs/piano-duello-lampo-minigiochi.md), [coordinamento](docs/coordinamento.md) |
 | Cosa è cambiato in ogni versione | [CHANGELOG.md](CHANGELOG.md) |
 
 ## Licenza

@@ -119,3 +119,37 @@ export function vistaLocale(p: PartitaLocale): Vista {
   const v = vistaPer(p.stato, IO, true);
   return { ...v, nomi: v.nomi.map((n) => ({ ...n, collegato: true, organizzatore: n.posto === IO })) };
 }
+
+/** Versione dello schema della partita salvata (alzarla scarta i salvataggi vecchi). */
+export const VERSIONE_SALVATAGGIO = 1;
+
+/** Ciò che si salva per riprendere la partita dopo un refresh: lo stato (JSON puro) e la velocità dei bot. */
+export interface Salvataggio {
+  partita: PartitaLocale;
+  velocita: Velocita;
+}
+
+/** Controllo del salvataggio letto dallo storage (una partita finita non si salva, quindi manca la fase «fine»): forma, livello, velocità e, in ultimo, che la vista si costruisca. */
+export function eSalvataggio(d: unknown): d is Salvataggio {
+  try {
+    const s = d as Salvataggio;
+    const st = s.partita.stato;
+    if (!(s.velocita in VELOCITA) || !LIVELLI.includes(s.partita.livello)) return false;
+    if (!["partita", "fineRound"].includes(st.fase) || !Array.isArray(st.nomi) || !st.nomi.every((n) => typeof n === "string")) return false;
+    if (st.fase === "partita" && (!st.partita || !Number.isInteger(st.partita.turno))) return false;
+    vistaLocale(s.partita);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Dopo un refresh la finestra di taglio (3 s, ora assoluta) è già scaduta o quasi: si chiude, senza bloccare
+ * la partita. Il «Ultima!» dimenticato resta com'è: i bot lo beccano dopo la loro pausa, come prima.
+ */
+export function riprendi(p: PartitaLocale): PartitaLocale {
+  const partita = p.stato.partita;
+  if (!partita?.apertaTaglio) return p;
+  return { ...p, stato: { ...p.stato, partita: { ...partita, apertaTaglio: null } } };
+}

@@ -11,8 +11,10 @@ import {
   cartaCorrente,
   chiudiTurno,
   eFinita,
+  fineTurnoDa,
   nuovaPartita,
   punteggioTurno,
+  secondiRimasti,
   squadraDiTurno,
   vincitrice,
   type Fase,
@@ -29,6 +31,8 @@ interface Salvata {
   partita: Partita | null;
   fase: Fase;
   turno: Turno;
+  /** Istante assoluto (Date.now() + durata) in cui finisce il turno in corso; null fuori dalla fase "gioco". */
+  fineTurno: number | null;
 }
 
 function carica(): Salvata {
@@ -37,14 +41,17 @@ function carica(): Salvata {
     if (raw) {
       const s = JSON.parse(raw) as Salvata;
       if (s.partita && Array.isArray(s.partita.mazzo) && s.turno) {
-        // Un turno a metà riparte dall'inizio: il timer non si può riprendere.
-        return { ...s, fase: s.fase === "gioco" ? "pronti" : s.fase, turno: s.fase === "gioco" ? TURNO_VUOTO : s.turno };
+        // Un turno a metà continua con il tempo rimasto: il refresh non ridà tempo. Se l'istante di fine è già
+        // passato, `Gioco` chiude subito il turno come se il timer fosse arrivato a zero. Un salvataggio vecchio
+        // senza istante di fine non si può riprendere con il tempo giusto: il turno riparte da «pronti».
+        if (s.fase === "gioco" && typeof s.fineTurno !== "number") return { ...s, fase: "pronti", turno: TURNO_VUOTO, fineTurno: null };
+        return { ...s, fineTurno: s.fase === "gioco" ? s.fineTurno : null };
       }
     }
   } catch {
     /* storage non disponibile: si riparte da zero */
   }
-  return { partita: null, fase: "pronti", turno: TURNO_VUOTO };
+  return { partita: null, fase: "pronti", turno: TURNO_VUOTO, fineTurno: null };
 }
 
 type T = Traduttore<typeof dizionarioIt>;
@@ -56,16 +63,17 @@ export function TabuApp() {
   const [partita, setPartita] = useState<Partita | null>(iniziale.partita);
   const [fase, setFase] = useState<Fase>(iniziale.fase);
   const [turno, setTurno] = useState<Turno>(iniziale.turno);
+  const [fineTurno, setFineTurno] = useState<number | null>(iniziale.fineTurno);
 
   // La partita sopravvive al refresh della pagina.
   useEffect(() => {
     try {
-      if (partita) localStorage.setItem(CHIAVE, JSON.stringify({ partita, fase, turno }));
+      if (partita) localStorage.setItem(CHIAVE, JSON.stringify({ partita, fase, turno, fineTurno } satisfies Salvata));
       else localStorage.removeItem(CHIAVE);
     } catch {
       /* ignora */
     }
-  }, [partita, fase, turno]);
+  }, [partita, fase, turno, fineTurno]);
 
   if (!partita) {
     return (
@@ -117,6 +125,7 @@ export function TabuApp() {
           className="btn primario"
           onClick={() => {
             setTurno(TURNO_VUOTO);
+            setFineTurno(fineTurnoDa(Date.now(), partita.secondiTurno));
             setFase("gioco");
           }}
         >
@@ -132,6 +141,7 @@ export function TabuApp() {
       <Gioco
         partita={partita}
         turno={turno}
+        fineTurno={fineTurno ?? fineTurnoDa(Date.now(), partita.secondiTurno)}
         onCambia={(t) => {
           setTurno(t);
           setPartita(avanzaCarta(partita));
@@ -216,24 +226,26 @@ function RiepilogoCarte({ turno, mazzo }: { turno: Turno; mazzo: readonly Carta[
 function Gioco({
   partita,
   turno,
+  fineTurno,
   onCambia,
   onTempoFinito,
 }: {
   partita: Partita;
   turno: Turno;
+  fineTurno: number;
   onCambia: (t: Turno) => void;
   onTempoFinito: () => void;
 }) {
   const t = usaT(dizionari);
-  const [rimasti, setRimasti] = useState(partita.secondiTurno);
+  const [rimasti, setRimasti] = useState(() => secondiRimasti(fineTurno, Date.now()));
   const fine = useRef(onTempoFinito);
   fine.current = onTempoFinito;
 
-  // Scadenza calcolata sull'orologio: resta giusta anche se il telefono rallenta il timer.
+  // La scadenza è un istante assoluto (salvato con la partita): resta giusta anche se il telefono rallenta il
+  // timer e dopo un refresh. Se all'apertura è già passata, il turno finisce subito.
   useEffect(() => {
-    const scadenza = Date.now() + partita.secondiTurno * 1000;
-    const id = setInterval(() => {
-      const s = Math.max(0, Math.ceil((scadenza - Date.now()) / 1000));
+    const controlla = () => {
+      const s = secondiRimasti(fineTurno, Date.now());
       setRimasti(s);
       if (s === 0) {
         clearInterval(id);
@@ -241,9 +253,11 @@ function Gioco({
         suona("fineTurno");
         fine.current();
       }
-    }, 250);
+    };
+    const id = setInterval(controlla, 250);
+    controlla();
     return () => clearInterval(id);
-  }, [partita.secondiTurno]);
+  }, [fineTurno]);
 
   const c = cartaCorrente(partita);
   return (

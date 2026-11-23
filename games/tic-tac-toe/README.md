@@ -46,6 +46,7 @@ Passi dettagliati, firewall e problemi comuni: [provare-in-locale.md](../../docs
 - Contro il telefono a «Difficile» non si riesce a vincere; a «Facile» sì, spesso.
 - Scegliendo O, il telefono (X) muove per primo da solo.
 - Cambiare modalità, livello o segno azzera partita e punteggio.
+- Refresh a metà partita (contro il telefono o in due): si torna alla stessa griglia, allo stesso turno, a modalità, livello e punteggio; se tocca al telefono, muove da solo. A partita finita il refresh riparte da una griglia vuota (e il punteggio si azzera).
 - Le caselle sono leggibili dal lettore di schermo («Casella 2, colonna 2: X») e l'esito si annuncia.
 - Cambiando lingua dall'ingranaggio cambiano testi ed etichette.
 - Partita veloce: due telefoni premono «Cerca un avversario» e finiscono nella stessa partita già avviata; «Esci dalla sala» libera il posto; il refresh in attesa riporta nella stessa sala; stesso nome sui due telefoni → il secondo diventa «… (2)».

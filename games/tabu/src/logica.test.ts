@@ -6,8 +6,10 @@ import {
   carteDellaPartita,
   chiudiTurno,
   eFinita,
+  fineTurnoDa,
   nuovaPartita,
   punteggioTurno,
+  secondiRimasti,
   squadraDiTurno,
   vincitrice,
   type Turno,
@@ -175,5 +177,24 @@ describe("fine e vincitrice", () => {
 
   it("carteDellaPartita è vuota prima di ogni turno", () => {
     expect(carteDellaPartita(nuovaPartita(["A", "B"], 1, 60, mazzo, 1))).toEqual({ corrette: [], saltate: [], errori: [] });
+  });
+});
+
+describe("tempo del turno dopo un refresh", () => {
+  it("l'istante di fine è l'ora d'inizio più la durata", () => {
+    expect(fineTurnoDa(1_000, 60)).toBe(61_000);
+  });
+
+  it("i secondi rimasti scendono con l'orologio, arrotondati per eccesso", () => {
+    const fine = fineTurnoDa(0, 60);
+    expect(secondiRimasti(fine, 0)).toBe(60);
+    expect(secondiRimasti(fine, 20_000)).toBe(40);
+    expect(secondiRimasti(fine, 59_100)).toBe(1);
+  });
+
+  it("scaduto o oltre la scadenza: zero, mai negativo", () => {
+    const fine = fineTurnoDa(0, 60);
+    expect(secondiRimasti(fine, 60_000)).toBe(0);
+    expect(secondiRimasti(fine, 3_600_000)).toBe(0);
   });
 });

@@ -9,8 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.28.0] - 2026-11-23
+
 ### Aggiunto
 
+- **Ripresa dopo il refresh**: Scopa, Burraco e Ultima! contro i bot e Tris (contro il telefono e in due) riprendono la partita da dove era, con mani, turno e velocità; il salvataggio si cancella con «Esci dalla partita» o a partita finita. Nuova utilità `@gdt/preferenze` (`leggiPartita`, `scriviPartita`, `cancellaPartita`), con versione dello schema.
+- Scopa: **ogni mossa si fa con due tocchi** (prima la carta in mano, poi le carte da prendere sul tavolo, evidenziate). Con una sola presa possibile parte al secondo tocco. Nuovo «Posa a terra» (spento quando la presa è obbligatoria), indicazioni anche senza distinguere i colori e messaggio se si tocca una carta non prendibile. Vale per i bot e per l'online.
 - **Partita veloce in Scopa e Burraco**, a 2 o a 4 giocatori a coppie: dal pulsante «Partita veloce», in cima alla schermata online, si entra nella prima stanza aperta o se ne apre una scegliendo i punti per vincere (Scopa) oppure obiettivo e scarti (Burraco), il numero di giocatori, come formare le coppie e il tempo d'attesa. A 4 la partita parte solo a stanza piena. Da fare: un tempo d'attesa di base più lungo per Burraco (serve un campo nel contratto in `@gdt/engine`).
 - Ultima!: il regolamento elenca la composizione del mazzo (108 carte, 112 con Scambio e Rotazione).
 - Duello Lampo: pulsanti **«Nessuno»** (tutte le mani a 0, il contrario di «Tutti») e **«Ripristina impostazioni»** (tutte le impostazioni di tutti i mini giochi alla base). Il feedback con bordo verde (giusto) o rosso (sbagliato) di Bersagli c'è ora anche in Trova il panda / lo smile, Memoria lampo e Colore giusto.
@@ -19,12 +23,16 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ### Corretto
 
+- Tabù: il refresh a metà turno non ridà più tempo; il turno continua con il tempo rimasto, o va al riepilogo se è già scaduto.
 - Ultima!, **mazzo vuoto**: se tutte le carte sono in mano e non c'è niente da rimescolare, «Pesca» è disattivato e si passa direttamente (prima si poteva «pescare» a vuoto e compariva «Hai pescato…»). Il server rifiuta la pesca a mazzo vuoto.
 - Partita veloce: uscendo con la freccia «indietro» dalla sala d'attesa il posto si libera subito (prima restavi «assente» per 30 secondi e, rientrando con lo stesso nome, diventavi «Nome (2)»). Chiudere la scheda, ricaricare o perdere la rete non cambia: il posto resta tuo per 30 secondi.
 - Partita veloce: riaprendo «Partita veloce» con la tua sala ancora aperta rientri nel tuo posto con lo stesso nome. Il rientro vale solo per il telefono che aveva il posto, mai per chi scrive lo stesso nome.
 
 ### Modificato
 
+- Scopa: il registro «Cosa è successo» dice quali carte vengono prese («Bot 1 gioca Sette di spade e prende Quattro di coppe e Tre di denari»), anche per le carte rimaste sul tavolo a fine round. Gli eventi già salvati o ricevuti da un server precedente mostrano ancora il numero.
+- **Tutta l'app**: disattivato il «trascina giù per ricaricare» (`overscroll-behavior-y: contain`), anche nella home; scelta confermata il 2026-11-23.
+- Burraco: la mano è a ventaglio (righe di carte sovrapposte con l'angolo valore+seme sempre visibile), ordinata per seme e poi per valore (jolly in fondo); «Per valore» resta. Interno: l'impaginazione e il CSS del ventaglio sono in `@gdt/carte` (`impaginaMano`, `Ventaglio`, `Mano ventaglio`) e li usa anche Ultima!, che non cambia aspetto.
 - **Carte di Burraco e Scopa**: i semi sono disegnati come sulle carte vere (il 7 di cuori ha 7 cuori, in disposizione classica; napoletane da 1 a 7) e fante, regina, re e cavallo hanno una figura stilizzata nostra (SVG, funziona offline, circa +4 KB). Valore e seme restano nell'angolo in alto a sinistra.
 - Ultima!, **la mano è un ventaglio a righe** senza scroll orizzontale: carte ordinate per colore (blu, giallo, rosso, verde, poi i jolly) e per valore, al massimo 9 per riga, sovrapposte solo quanto serve, con valore e seme nell'angolo in alto a sinistra. Le carte giocabili sono sollevate, le altre più basse con fondo pieno; «Più carte» e Taglio mostrano il segno nell'angolo e la carta appena pescata è evidenziata. In sviluppo `?manoProva=N` aggiunge carte di prova. Da vedere su telefono: soglia di 9 carte e parte visibile minima di 32 px.
 - Ultima!, **Taglio sul cumulo**: con «Taglio» e «Somma dei +2» insieme si può tagliare anche un +2 che apre o aumenta un cumulo, con un +2 dello stesso colore: il cumulo cresce di 2 e cade sul successivo di chi ha tagliato; chi lo aveva davanti non paga nulla. I bot lo sanno fare.

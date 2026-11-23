@@ -22,6 +22,7 @@ Giochi, in ordine:
 5. **Dadi** — moneta, dadi D4…D20 e dado personalizzato (con due valori diventa una moneta).
    Un telefono, senza partita. Lancio casuale con `crypto.getRandomValues`.
 6. **Duello Lampo** — sfida di riflessi per due sullo stesso telefono, appoggiato al centro del tavolo: mini giochi di velocità (Via!, Raffica, Stop al centro, Colore giusto, Colori e nomi, Trova il panda, Trova lo smile, Memoria lampo, Bersagli, Il più grande), 1 punto a ogni mini gioco. Si scelgono le mani di ogni mini gioco, le sue impostazioni e l'ordine (a caso o scelto). Solo un telefono; la versione online è rimandata (cosa comporta: README del gioco).
+6b. **Scopa** e **Burraco** — giochi di carte (Scopa in 2 o 4 a coppie, Burraco in 2 o 4), contro i bot e online; piani [piano-scopa.md](piano-scopa.md) e [piano-burraco.md](piano-burraco.md). Con Ultima! sono **in beta testing**.
 7. **Ultima!** — gioco di carte a colori e numeri (regole ufficiali), contro i bot su un telefono (anche offline) oppure online da 2 a 10 (la mano è segreta). Round singolo o partita a punti; «Simula mossa col bot» per chi non risponde. Piano e decisioni: [piano-ultima.md](piano-ultima.md).
 8. Altri giochi in futuro (si ipotizzano decine): l'architettura deve renderli economici
    da aggiungere.
@@ -175,6 +176,27 @@ giochi-da-tavola/
 Git: branch `main` + un branch per gioco/funzione, commit con prefisso
 (`feat(impostore): ...`, `fix(...)`). Il push lo fa sempre l'utente.
 
+## Giochi in beta testing
+
+Un gioco nuovo e poco provato dichiara `beta: true` nel `manifest`. Effetti: bordo rosso e piccolo verme (icona `bug`) nella lista della home, e all'apertura un avviso («Ho capito» o Esc) che per quella sessione del browser non torna (`gdt-beta-letto`); la schermata iniziale del gioco ha anche un avviso in rosso (`AvvisoBetaTesto` in `@gdt/collegamento`). Oggi sono in beta **Scopa, Burraco e Ultima!**. Per toglierlo basta cancellare `beta: true` dal manifest quando l'utente lo ritiene pronto.
+
+## Mano a ventaglio comune
+
+La mano a ventaglio (righe bilanciate, gruppi interi) è di `@gdt/carte` (`impaginaMano`, componente `Ventaglio`) e la usano Ultima! e Burraco (vedi la voce «Mano a ventaglio condivisa» nei punti aperti). Un'interfaccia comune a tutti i giochi di carte (mano, pile, azioni, tavolo) è un **punto aperto**: da progettare con l'utente prima di toccarla.
+
+## Refresh e ripresa delle partite
+
+Deciso il 2026-11-23. Un refresh (voluto o per sbaglio) non deve far perdere la partita né cambiarla.
+
+- **Giochi su un telefono contro i bot** (Scopa, Burraco, Ultima!, Tris anche in due): la partita in corso si salva in `localStorage` con `leggiPartita` / `scriviPartita` / `cancellaPartita` di `@gdt/preferenze` (`packages/preferenze/src/partita.ts`), chiave `gdt.<gioco>.partitaInCorso`. Il salvataggio ha una versione dello schema: se cambia, se il JSON è rotto o se il controllo del gioco (`eSalvataggio`) non lo accetta, si scarta in silenzio e si riparte dalla creazione. Dopo il refresh si torna alla partita senza domande: stato, turno, mani dei bot, velocità.
+- **Solo mentre la partita è in corso**: «Esci dalla partita» o la partita finita cancellano il salvataggio, così non resta una partita fantasma.
+- **Caso coerente**: lo stato salvato è JSON puro e contiene già il seme del round e il numero di mosse, da cui viene il caso dei bot (Scopa, Burraco, Ultima!); il caso della mossa del telefono nel Tris dipende da un seme salvato e dalla griglia. Dopo il refresh nessuna carta viene ridistribuita e il bot rifà la stessa mossa che avrebbe fatto.
+- **Bot**: se dopo il refresh tocca a un bot, riparte da solo dopo la pausa della velocità scelta.
+- **Finestre a tempo** (Ultima!): la finestra di taglio (3 s, ora assoluta) **si chiude** alla ripresa; la partita continua dal turno di chi doveva giocare. Un «Ultima!» non detto resta da dire: i bot lo beccano dopo la loro pausa, come senza refresh.
+- **Tabù, timer**: si salva l'istante assoluto in cui finisce il turno (`Date.now()` + durata) e le parole già fatte. Dopo il refresh il turno continua con il tempo rimasto; se l'istante è già passato si va al riepilogo come se il timer fosse arrivato a zero. Il refresh non ridà mai tempo.
+- **Niente «trascina giù per ricaricare»**: `overscroll-behavior-y: contain` su `html` e `body` (`apps/web/src/index.css`) toglie il pull-to-refresh in tutta l'app, **home compresa**; lo scorrimento normale resta. Voluto e confermato dall'utente provandolo su telefono il 2026-11-23: va bene così, non si ripristina. Niente `beforeunload` per bloccare l'uscita.
+- **Duello Lampo** non salva la sfida in corso: dopo un refresh si torna alla preparazione con le scelte salvate (mini giochi, nomi, impostazioni). Lasciato così di proposito: una sfida dura pochi minuti.
+
 ## Deploy
 
 - **Server di gioco (modalità B):** immagine Docker. In locale `docker compose up`; online su
@@ -197,7 +219,7 @@ all'hosting che va in sleep (Render free dopo ~15 minuti: avvio lento).
 
 ## Punti aperti
 
-Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-20 (v0.23.1).
+Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo controllo con il codice: 2026-11-23 (verso la 0.28.0).
 
 ### Fatti
 
@@ -235,12 +257,14 @@ Legenda: **FATTO** = chiuso; **TODO** = ancora da fare o da decidere. Ultimo con
 - TODO **Licenza del repository**: non c'è un file `LICENSE`, il README dice «Da definire».
 - TODO **Turborepo sì/no**: non c'è `turbo.json`; si può decidere più avanti.
 - TODO **Pulizia branch locali**: resta `archivio/storia-completa` (29 commit non in `main`): cancellarlo quando non serve più (`git branch -D`).
-- FATTO **Burraco** (non ancora rilasciato): contro i bot e online, 2 o 4 a coppie, regole verificate sul Codice di gara FIBUR 2026 (nessun minimo di apertura, monte libero, chiusura mai con una matta), utente: niente 3 giocatori né burraco di tris (`games/burraco`). Piano: [piano-burraco.md](piano-burraco.md). Partita veloce fatta: 2 o 4 a coppie (README del gioco).
+- FATTO **Burraco** (0.27.0): contro i bot e online, 2 o 4 a coppie, regole verificate sul Codice di gara FIBUR 2026 (nessun minimo di apertura, monte libero, chiusura mai con una matta), utente: niente 3 giocatori né burraco di tris (`games/burraco`). Piano: [piano-burraco.md](piano-burraco.md). Partita veloce fatta: 2 o 4 a coppie (README del gioco).
 - FATTO **Ultima!** (0.24.0, poi 0.25.0): regole ufficiali, round singolo o a punti, bot su richiesta dell'organizzatore online; dalla 0.25.0 anche contro i bot su un telefono, offline, con tre livelli e velocità (`games/ultima`). Piano: [piano-ultima.md](piano-ultima.md). Restano le varianti (README del gioco) e la prova su telefoni veri; la partita veloce è fatta (vedi la voce «Partita veloce a stanze aperte»).
 - FATTO **Partita veloce a stanze aperte (più di 2 giocatori)** (2026-11-21, piano: [piano-partita-veloce.md](piano-partita-veloce.md)): chi tocca «Partita veloce» si aggancia alla prima stanza aperta del gioco o ne apre una; sala d'attesa nel server (`apps/server/src/veloce.ts`), contratto `veloce` in `@gdt/engine` (posti, avvio anticipato, squadre, `configVeloce`), UI condivisa in `@gdt/collegamento`. Adottata da Tris (2 fissi) e Ultima! (2–10, anticipata). Scelte: tempo d'attesa 1/2/3/5 minuti scelto dall'organizzatore; conto di 10 secondi (30 per le squadre scelte in sala); niente bot; organizzatore che esce → passa al prossimo; posto tenuto 30 secondi; le varianti sono impostazioni scelte da chi apre. Il vecchio `coda` resta come alias di messaggio per una versione. Scopa e Burraco (2 o 4, coppie 1+3 / 2+4, niente avvio anticipato) la usano dal 2026-11-22.
 - TODO **Impostore, partita veloce**: per ora no (deciso il 2026-11-21); si potrà aggiungere dichiarando `veloce` nel modulo online quando la partita veloce a stanze aperte sarà pronta.
 - FATTO **Scopa, blocchi 1-4** (2026-11-21, piano: [piano-scopa.md](piano-scopa.md)): gioco di carte italiano in 2 o in 4 a coppie (`games/scopa`), contro i bot su un telefono anche offline (facile, medio, difficile con memoria delle carte uscite) e online con codice (coppie 1+3 contro 2+4, scambiabili in sala). Regole verificate su Wikipedia e raccolte in `src/regole.ts`: presa singola obbligatoria, scopa non valida all'ultima giocata, primiera nulla senza un seme, pari = nessun punto; partita a 11 di base o 21. Prese coperte fino a fine round. Carte da `@gdt/carte` (la logica usa l'ingresso senza CSS `@gdt/carte/logica`). Punti «da verificare» nel README del gioco (soglia a 4, primiera nulla per entrambi, niente ridistribuzione con tre re).
 - FATTO **Scopa e Burraco, partita veloce** (2026-11-22): `veloce` dichiarato in `games/scopa` e `games/burraco` (posti [2, 4], coppie 1+3 / 2+4, nessun avvio anticipato), impostazioni (soglia; obiettivo e scarti) scelte da chi apre. La «scadenza più lunga» del Burraco è per ora solo la scelta fino a 5 minuti.
+- TODO **Burraco, tempo d'attesa di base più lungo** nella partita veloce (oggi uguale agli altri giochi; si sceglie fino a 5 minuti).
+- TODO **Interfaccia comune per i giochi di carte**: punto aperto, da progettare con l'utente (mano, pile, azioni, tavolo).
 - TODO **Scopa, varianti e altro**: scopa d'assi, fante, re bello, napola, asso piglia tutto, scopone scientifico; 3 giocatori; due giocatori sullo stesso telefono (vedi piano-scopa.md, blocchi 6-8).
 - FATTO **Duello Lampo: Bersagli e Il più grande** (nuova funzione, 10 mini giochi, 20 round di base). Scelte: la penalità «errori −1» di Bersagli è una per round (chi tocca a vuoto almeno una volta), non una per tocco, perché il contratto `errore` è per round; in Il più grande un numero sbagliato fa perdere il round; suono nuovo solo per il colpo di Bersagli; nessuna attesa casuale prima dei numeri.
 - TODO **Duello Lampo**: griglie più grandi di 6×6 sui tablet e, più avanti, la versione online (vedi README del gioco).

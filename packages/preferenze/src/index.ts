@@ -77,3 +77,4 @@ export function usaPreferenza(gioco: string, imp: ImpostazioneGioco): ValorePref
 }
 export { applicaOrdine, decodificaOrdine, leggiOrdine, scriviOrdine, spostaVoce } from "./ordine";
 export { EVENTO_SCHERMO_INTERO, segnalaSchermoIntero, seguiSchermoIntero } from "./schermo";
+export { cancellaPartita, leggiPartita, scriviPartita } from "./partita";

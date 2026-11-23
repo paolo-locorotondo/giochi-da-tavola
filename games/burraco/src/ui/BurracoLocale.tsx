@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
+import { cancellaPartita, leggiPartita, scriviPartita } from "@gdt/preferenze";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
 import { LIVELLI, type Livello } from "../bot";
@@ -8,11 +9,14 @@ import { OBIETTIVI, OBIETTIVO_BASE, PILA_BASE, PILE, type Obiettivo, type Pila }
 import {
   VELOCITA,
   VELOCITA_PREDEFINITA,
+  VERSIONE_SALVATAGGIO,
   agisci,
   botDiTurno,
   muoviBot,
+  eSalvataggio,
   nuovaPartitaLocale,
   pausaBot,
+  riprendi,
   vistaLocale,
   type PartitaLocale,
   type Velocita,
@@ -22,6 +26,7 @@ import { Tavolo } from "./Tavolo";
 /** Un numero casuale a 32 bit per il seme di ogni mano. */
 const caso = () => Math.floor(Math.random() * 2 ** 32);
 
+const GIOCO = "burraco";
 const CHIAVE = "gdt.burraco.offline";
 
 interface Salvate {
@@ -59,8 +64,17 @@ function salva(dati: Required<Salvate>) {
 
 /** Burraco su un solo telefono, contro i bot. */
 export function BurracoLocale() {
-  const [partita, setPartita] = useState<PartitaLocale | null>(null);
-  const [velocita, setVelocita] = useState<Velocita>(() => leggiSalvate().velocita ?? VELOCITA_PREDEFINITA);
+  // Dopo un refresh si torna alla partita in corso (stato, turno, mani dei bot, velocità), senza domande.
+  const [ripresa] = useState(() => leggiPartita(GIOCO, VERSIONE_SALVATAGGIO, eSalvataggio));
+  const [partita, setPartita] = useState<PartitaLocale | null>(() => (ripresa ? riprendi(ripresa.partita) : null));
+  const [velocita, setVelocita] = useState<Velocita>(() => ripresa?.velocita ?? leggiSalvate().velocita ?? VELOCITA_PREDEFINITA);
+
+  // Si salva solo mentre la partita è in corso: a partita finita o con «Esci dalla partita» il salvataggio si cancella.
+  useEffect(() => {
+    if (partita && partita.stato.fase !== "fine") scriviPartita(GIOCO, VERSIONE_SALVATAGGIO, { partita, velocita });
+    else cancellaPartita(GIOCO);
+  }, [partita, velocita]);
+
   if (!partita) return <Crea velocita={velocita} onVelocita={setVelocita} onAvvia={setPartita} />;
   return <Partita partita={partita} onPartita={setPartita} velocita={velocita} onVelocita={setVelocita} onEsci={() => setPartita(null)} />;
 }

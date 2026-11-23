@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Minus, Plus } from "lucide-react";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
+import { cancellaPartita, leggiPartita, scriviPartita } from "@gdt/preferenze";
 import { dizionari } from "../locales";
 import { testoMessaggio } from "../errori-ui";
 import { LIVELLI, type Livello } from "../bot";
@@ -10,14 +11,17 @@ import { SOGLIA_MAX, SOGLIA_MIN, SOGLIA_PREDEFINITA, type ModoPunteggio } from "
 import {
   VELOCITA,
   VELOCITA_PREDEFINITA,
+  VERSIONE_SALVATAGGIO,
   agisci,
   botDelTaglio,
   botDiTurno,
   muoviBot,
   ritardoTaglioBot,
   tagliaBot,
+  eSalvataggio,
   nuovaPartitaLocale,
   pausaBot,
+  riprendi,
   vistaLocale,
   type PartitaLocale,
   type Velocita,
@@ -28,6 +32,7 @@ import { Varianti } from "./Varianti";
 /** Un numero casuale a 32 bit per il seme di ogni mano. */
 const caso = () => Math.floor(Math.random() * 2 ** 32);
 
+const GIOCO = "ultima";
 const CHIAVE = "gdt.ultima.offline";
 
 /** Le ultime scelte sul telefono (nomi, livello, velocità): solo comodità, mai necessarie. */
@@ -61,8 +66,17 @@ function salva(dati: { nomi: string[]; livello: Livello; velocita: Velocita; var
 
 /** Ultima! su un solo telefono, contro i bot. */
 export function UltimaLocale() {
-  const [partita, setPartita] = useState<PartitaLocale | null>(null);
-  const [velocita, setVelocita] = useState<Velocita>(() => leggiSalvate().velocita ?? VELOCITA_PREDEFINITA);
+  // Dopo un refresh si torna alla partita in corso (stato, turno, mani dei bot, velocità), senza domande.
+  const [ripresa] = useState(() => leggiPartita(GIOCO, VERSIONE_SALVATAGGIO, eSalvataggio));
+  const [partita, setPartita] = useState<PartitaLocale | null>(() => (ripresa ? riprendi(ripresa.partita) : null));
+  const [velocita, setVelocita] = useState<Velocita>(() => ripresa?.velocita ?? leggiSalvate().velocita ?? VELOCITA_PREDEFINITA);
+
+  // Si salva solo mentre la partita è in corso: a partita finita o con «Esci dalla partita» il salvataggio si cancella.
+  useEffect(() => {
+    if (partita && partita.stato.fase !== "fine") scriviPartita(GIOCO, VERSIONE_SALVATAGGIO, { partita, velocita });
+    else cancellaPartita(GIOCO);
+  }, [partita, velocita]);
+
   if (!partita) return <Crea velocita={velocita} onVelocita={setVelocita} onAvvia={setPartita} />;
   return <Partita partita={partita} onPartita={setPartita} velocita={velocita} onVelocita={setVelocita} onEsci={() => setPartita(null)} />;
 }

@@ -18,6 +18,7 @@
     "@gdt/collegamento": "workspace:*",
     "@gdt/engine": "workspace:*",
     "@gdt/i18n": "workspace:*",
+    "@gdt/preferenze": "workspace:*",
     "lucide-react": "^1.69.0",
     "qrcode": "1.5.4"
   },

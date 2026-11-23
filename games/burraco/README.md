@@ -86,6 +86,7 @@ Dal telefono: apri l'indirizzo "Network" che stampa `pnpm dev`, scegli Burraco, 
 - Chiusura: «Scarta» diventa «Chiudi la mano» e chiede conferma; senza burraco o con una matta come ultima carta l'errore spiega perché.
 - Scarti bloccati (opzione): avviso testuale e «Prendi gli scarti» attivo solo con due carte uguali alla cima scelte.
 - Fine mano: tabella per squadra (carte calate, burraco, chiusura, carte in mano, pozzetto, totale, punti della partita); «Prossima mano» / «Ricomincia» solo all'organizzatore.
+- Refresh a metà partita contro i bot: si torna alla stessa mano (carte, scarti, combinazioni, turno, velocità) senza domande; se tocca a un bot, riparte da solo. Dopo «Esci dalla partita» o a partita finita il refresh porta alla creazione.
 - Online: ognuno vede solo la propria mano; «Sollecita» e «Simula mossa col bot» solo all'organizzatore; refresh o schermo bloccato: si rientra nel proprio posto.
 - Tema chiaro e scuro, inglese, 375 px.
 

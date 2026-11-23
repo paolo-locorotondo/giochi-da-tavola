@@ -49,6 +49,16 @@ export function nuovaPartita(
   };
 }
 
+/** L'istante assoluto (ms) in cui finisce un turno iniziato adesso: si salva, così il refresh non ridà tempo. */
+export function fineTurnoDa(oraInizio: number, secondiTurno: number): number {
+  return oraInizio + secondiTurno * 1000;
+}
+
+/** Secondi che restano (arrotondati per eccesso, mai sotto zero) a un turno che finisce all'istante `fine`. 0 = scaduto. */
+export function secondiRimasti(fine: number, ora: number): number {
+  return Math.max(0, Math.ceil((fine - ora) / 1000));
+}
+
 export function squadraDiTurno(p: Partita): 0 | 1 {
   return (p.turno % 2) as 0 | 1;
 }
