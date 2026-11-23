@@ -156,6 +156,25 @@ proposto `#1f5a3f` scuro, contrasto 7,05 col testo, e `#2a6b4f` chiaro, 6,23):
 
 **Scopa migrata (2026-11-23):** `games/scopa/src/ui/Tavolo.tsx` usa `TavoloCarte`, `ZonaCarte`, `SegnapostoPosa`, `Mano` (con `diTurno` e `riepilogo`), `BarraAzioni` e `RegistroEventi`; «Conferma» e «Annulla» come da decisione 2; `ZonaCarte` ha ora `onTocca`, `evidenziate` ed `etichetta`, `BarraAzioni` ha `larga` e `descrittaDa`. Test e2e di Scopa riscritti su ruoli e classi `cg-*` (`scopa-aiuti.ts`), screenshot rigenerati. Resta da fare: provarlo sul telefono, poi Burraco e Ultima!.
 
+**Per ripartire (nota del 2026-11-23, dopo la versione 0.29.0 con Scopa).** Prossimi passi, in quest'ordine:
+1. **Ultima!** (`games/ultima/src/ui/Tavolo.tsx`, 591 righe): avversari «intorno» (approvato a 6 e a 10), mano a ventaglio con
+   `diTurno`, azioni «Ultima!» e «Passa» in `BarraAzioni`. Ha la logica più semplice e nessuno screenshot in partita.
+2. **Burraco** (`games/burraco/src/ui/Tavolo.tsx`, 478 righe): `disposizione="sopra"`, combinazioni in `ZonaCarte`
+   a colonne (valore in alto a sinistra, J/Q/K e stella), mazzo e scarti in `pila` con `PannelloInfo` («i») sugli scarti,
+   ordine dei semi alternando rossi e neri (`ORDINE_SEMI` in `packages/carte/src/ordine.ts`, non `SEMI_FRANCESI`),
+   «Sollecita» e «Simula mossa col bot» in basso. Poi, a parte: scarti visibili sì/no come impostazione (il server
+   manda solo la cima se nascosti) e la sostituzione della matta (decisione 8).
+3. Per ogni gioco: leggere `ui-giochi-da-tavola` e `ui-mobile-checklist`, riscrivere gli e2e che usano le classi
+   `bu-` / `ul-` (`burraco-online`, `ultima-bot`, `ultima-online`, `ultima-veloce`, `ripresa`, `lingua`) su ruoli e
+   classi `cg-*`, rigenerare gli screenshot **con un server di sviluppo avviato da zero** (gli ultimi di Scopa mostrano
+   ancora «v0.28.0»), controllare a 375 px in scuro e chiaro, committare con versione (0.30.0 se cambia l'aspetto).
+4. Alla fine: eliminare `apps/web/prova-tavolo.html` e `src/prova-tavolo.tsx`, spostare le scelte nei README e in
+   `decisioni.md`, eliminare questo piano.
+
+Lezioni dalla migrazione di Scopa: le classi `cg-*` dei componenti comuni sono quelle da usare negli e2e; la barra in alto
+è sticky, quindi gli screenshot a pagina intera vanno presi dopo `window.scrollTo(0, 0)`; l'helper che gioca da solo deve
+ruotare la carta toccata o può oscillare; le carte a terra sono pulsanti solo con una carta della mano scelta.
+
 **Fatto prima (2026-11-23):** token `--tavolo-fondo` / `--tavolo-testo` in `apps/web/src/tema.css` (nei due
 temi); in `packages/carte/src/tavolo/` tutti i componenti del sistema (`TavoloCarte`, `PostoGiocatore`, `ZonaCarte`,
 `SegnapostoPosa`, `BarraAzioni`, `RegistroEventi`, `PannelloInfo`) con `tavolo.css`, locali it/en e test (64 in
