@@ -9,6 +9,12 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.30.0] - 2026-11-23
+
+### Modificato
+
+- **Ultima!, interfaccia**: ora si gioca sul tavolo comune dei giochi di carte. Gli avversari stanno intorno al tavolo con omino, nome, carte e punti (chi è di turno è evidenziato e lo dice a parole); scarto, mazzo e colore al centro; la tua mano sotto, con il bordo oro quando tocca a te. «Passa», «Ultima!», «Beccato» e, per l'organizzatore, «Sollecita» e «Simula mossa col bot» stanno nella barra azioni in fondo; il registro «Cosa è successo» è il componente comune. Spariscono i riquadri dei giocatori in elenco. Cambiano gli screenshot e un controllo degli e2e (`ripresa`).
+
 ## [0.29.0] - 2026-11-23
 
 ### Modificato

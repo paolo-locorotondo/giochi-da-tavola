@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Bell, Bot, Copy, Handshake, RotateCw, Scissors } from "lucide-react";
+import { dizionariCarte } from "@gdt/carte";
+import { BarraAzioni, RegistroEventi, TavoloCarte, type AzioneTavolo, type PropsPostoGiocatore } from "@gdt/carte/tavolo";
 import { Ventaglio } from "@gdt/carte/ventaglio";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
@@ -222,6 +224,44 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const cambiate = inRound ? maniCambiate(v) : null;
   const secondiTaglio = useSecondiTaglio(inRound ? v.taglio : null);
   const tagliabili = secondiTaglio > 0 ? v.mano.filter((x) => v.puoTagliare.includes(x.id)) : [];
+  const tc = usaT(dizionariCarte);
+  const n = v.nomi.length;
+  const rif = v.io ?? -1;
+  // Gli altri in senso orario, a partire da chi siede dopo di me (chi guarda senza giocare li vede tutti).
+  const posti: PropsPostoGiocatore[] = [...v.nomi]
+    .filter((x) => x.posto !== v.io)
+    .sort((a, b) => ((a.posto - rif + n) % n || n) - ((b.posto - rif + n) % n || n))
+    .map((x) => ({
+      nome: x.nome,
+      carte: x.carte,
+      diTurno: inRound && turno === x.posto,
+      collegato: x.collegato,
+      punti: v.config.modo === "punti" ? t("puntiTot", { n: x.punti }) : undefined,
+    }));
+  const azioni: AzioneTavolo[] = [];
+  if (posso) {
+    if (v.mioTurno && (v.haPescato || mazzoVuoto) && !sfidaIo && !cumuloIo && !v.sceltaColore)
+      azioni.push({ id: "passa", etichetta: t("passa"), variante: "primaria", onTocca: () => c.azione({ tipo: "passa" }) });
+    if (possoDirUltima) azioni.push({ id: "ultima", etichetta: t("ultima"), variante: "primaria", onTocca: () => c.azione({ tipo: "ultima" }) });
+    for (const u of aperte)
+      azioni.push({
+        id: `beccato-${u.posto}`,
+        etichetta: t("beccato", { nome: nome(u.posto) }),
+        variante: "pericolo",
+        descrittaDa: "ul-beccato-aiuto",
+        onTocca: () => c.azione({ tipo: "beccato", posto: u.posto }),
+      });
+  }
+  if (inRound && v.host && c.conBot && turnoGiocatore) {
+    if (c.sollecita) azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, onTocca: c.sollecita });
+    azioni.push({
+      id: "bot",
+      etichetta: t("botMossa", { nome: turnoGiocatore.nome }),
+      icona: <Bot size={18} />,
+      descrittaDa: "ul-bot-aiuto",
+      onTocca: () => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto }),
+    });
+  }
   const nessunaGiocabile = v.mioTurno && !sfidaIo && !v.sceltaColore && giocabili.size === 0;
 
   return (
@@ -236,7 +276,6 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       {v.fase !== "partita" || v.fineRound ? <FineRound c={c} v={v} nome={nome} /> : null}
 
-      <Giocatori v={v} evidenza={cambiate} />
       {cambiate && (
         <p className="muted ul-mani-cambiate" role="status">
           {cambiate.tipo === "rotazione" ? <RotateCw size={18} aria-hidden="true" /> : <Handshake size={18} aria-hidden="true" />}{" "}
@@ -245,6 +284,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       )}
 
       {inRound && (
+        <TavoloCarte posti={posti}>
         <div className="ul-centro">
           {v.scoperta && <Carta carta={v.scoperta} t={t} colore={v.colore} grande />}
           <button
@@ -262,7 +302,9 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
             <span className="muted">{t("verso", { verso: v.verso === 1 ? t("versoOrario") : t("versoAntiorario") })}</span>
           </div>
         </div>
+        </TavoloCarte>
       )}
+      {!inRound && posti.length > 0 && <TavoloCarte posti={posti} />}
 
       {inRound && v.taglio && secondiTaglio > 0 && (
         <div className="ul-taglio">
@@ -377,25 +419,6 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       {nessunaGiocabile && !v.haPescato && !mazzoVuoto && <p className="muted">{t("nessunaGiocabile")}</p>}
       {nessunaGiocabile && !v.haPescato && mazzoVuoto && !cumuloIo && <p className="muted">{t("mazzoVuotoPassa")}</p>}
 
-      {posso && (
-        <div className="ul-azioni">
-          {v.mioTurno && (v.haPescato || mazzoVuoto) && !sfidaIo && !cumuloIo && !v.sceltaColore && (
-            <button className="btn primario" onClick={() => c.azione({ tipo: "passa" })}>
-              {t("passa")}
-            </button>
-          )}
-          {possoDirUltima && (
-            <button className="btn primario" onClick={() => c.azione({ tipo: "ultima" })}>
-              {t("ultima")}
-            </button>
-          )}
-          {aperte.map((u) => (
-            <button key={u.posto} className="btn pericolo" onClick={() => c.azione({ tipo: "beccato", posto: u.posto })} aria-describedby="ul-beccato-aiuto">
-              {t("beccato", { nome: nome(u.posto) })}
-            </button>
-          ))}
-        </div>
-      )}
       {posso && ultimaAperta && (
         <p className="muted" id="ul-beccato-aiuto">
           {t("beccatoAiuto", { nome: nome(ultimaAperta.posto) })}
@@ -404,8 +427,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       {mia?.dichiarata && inRound && <p className="muted">{t("ultimaDetto")}</p>}
 
       {v.io !== null && (
-        <>
-          <h3 style={{ margin: 0 }}>{t("tuaMano")}</h3>
+        <section className={`cg-mano${v.mioTurno && inRound ? " cg-mano-turno" : ""}`} aria-label={t("tuaMano")}>
+          <h3 className="cg-mano-titolo">{tc(v.mioTurno && inRound ? "manoTitoloTurno" : "manoTitolo", { n: manoVista.length })}</h3>
           {gruppiMano.length > 0 && !gruppo && (
             <button type="button" className="btn" onClick={() => setGruppo({ ids: [] })}>
               <Copy size={18} aria-hidden="true" /> {t("piuCarteBtn")}
@@ -458,42 +481,21 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
               );
             }}
           />
-        </>
+        </section>
       )}
 
-      {inRound && v.host && c.conBot && turnoGiocatore && (
-        <div className="ul-azioni">
-          {c.sollecita && <button className="btn" onClick={c.sollecita}>
-            <Bell size={18} aria-hidden="true" /> {t("sollecita", { nome: turnoGiocatore.nome })}
-          </button>}
-          <button className="btn" onClick={() => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto })} aria-describedby="ul-bot-aiuto">
-            <Bot size={18} aria-hidden="true" /> {t("botMossa", { nome: turnoGiocatore.nome })}
-          </button>
-          <span className="muted" id="ul-bot-aiuto" style={{ gridColumn: "1 / -1" }}>
-            {t("botAiuto")}
-          </span>
-        </div>
+      <BarraAzioni azioni={azioni} />
+      {azioni.some((x) => x.id === "bot") && (
+        <p className="muted" id="ul-bot-aiuto">
+          {t("botAiuto")}
+        </p>
       )}
+
       {inRound && v.io !== null && turnoGiocatore && !turnoGiocatore.collegato && v.io !== turno && (
         <p className="avviso">{t("inAttesaDi", { nome: turnoGiocatore.nome })}</p>
       )}
 
-      <details className="accordion">
-        <summary>
-          <span>{t("eventiTitolo")}</span>
-        </summary>
-        <div className="accordion-corpo">
-          {v.eventi.length === 0 ? (
-            <p className="muted">{t("eventiNessuno")}</p>
-          ) : (
-            <ul className="ul-eventi">
-              {[...v.eventi].reverse().map((e, i) => (
-                <li key={i}>{testoEvento(t, e, nome)}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </details>
+      <RegistroEventi titolo={t("eventiTitolo")} voci={v.eventi.map((e) => testoEvento(t, e, nome))} massimo={v.eventi.length} />
     </section>
   );
 }
@@ -521,34 +523,6 @@ function SceltaColore({ t, onScegli }: { t: T; onScegli: (c: Colore) => void }) 
         );
       })}
     </div>
-  );
-}
-
-function Giocatori({ v, evidenza }: { v: Vista; evidenza: { posti: number[] } | null }) {
-  const t = usaT(dizionari);
-  return (
-    <ul className="ul-giocatori" aria-label={t("giocatori")}>
-      {v.nomi.map((n) => {
-        const inTurno = v.turno === n.posto;
-        return (
-          <li
-            key={n.posto}
-            className={`ul-giocatore${inTurno ? " ul-turno" : ""}${evidenza?.posti.includes(n.posto) ? " ul-cambiata" : ""}`}
-            aria-current={inTurno ? "true" : undefined}
-          >
-            <span className="ul-giocatore-nome">
-              <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" /> {n.nome}
-              {n.posto === v.io ? " ★" : ""}
-            </span>
-            <span className="ul-giocatore-dati">
-              {n.carte === 1 ? t("unaCarta") : t("carteDi", { n: n.carte })}
-              {v.config.modo === "punti" ? ` · ${t("puntiTot", { n: n.punti })}` : ""}
-              {inTurno ? ` · ${t("diTurno")}` : ""}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

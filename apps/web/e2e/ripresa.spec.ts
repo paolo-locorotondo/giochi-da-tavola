@@ -34,7 +34,7 @@ test("scopa contro i bot: dopo il refresh la partita è la stessa e si continua"
   await expect(miaMano.first()).toBeVisible();
   expect(await impronta(page, ".cg-mano button.cg-carta")).toEqual(mano);
   expect(await impronta(page, ".cg-zona button.cg-carta")).toEqual(tavolo);
-  await expect(page.getByText("Anna").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Tavolo con/ })).toBeVisible();
   await expect(page.getByText("Bot 1").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Inizia la partita" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Veloce" })).toHaveAttribute("aria-pressed", "true");
@@ -76,7 +76,7 @@ test("burraco contro i bot: dopo il refresh la mano è la stessa e si continua",
   await expect(page.getByText(/La tua mano: \d+ carte/)).toHaveText(testoMano);
   await expect(pesca).toBeEnabled();
   expect(await impronta(page, ".cg-ventaglio button")).toEqual(mano);
-  await expect(page.getByText("Anna").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Tavolo con/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inizia la partita" })).toHaveCount(0);
 
   await giocaUnTurno();
@@ -102,7 +102,7 @@ test("ultima contro i bot: dopo il refresh la mano è la stessa e si continua", 
   await expect(page.getByRole("group", { name: "La tua mano" })).toBeVisible();
   await expect(pesca).toBeEnabled();
   expect(await impronta(page, ".ul-mano button.ul-carta")).toEqual(mano);
-  await expect(page.getByText("Anna").first()).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Tavolo con/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Inizia la partita" })).toHaveCount(0);
 
   // Si continua: pesco, la mano cresce di una carta.

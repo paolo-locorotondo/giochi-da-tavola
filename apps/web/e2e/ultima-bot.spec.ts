@@ -98,3 +98,13 @@ test("ultima contro i bot: con tutte le varianti la partita finisce e il tavolo 
   await expect(page.getByText("Partita finita")).toBeVisible();
   await controllaMobile(page);
 });
+
+test("ultima contro i bot: il tavolo con gli avversari intorno", async ({ page }) => {
+  await iniziaContro(page, 5);
+  await page.getByRole("radio", { name: /Facile/ }).check();
+  await page.getByRole("button", { name: "Inizia la partita" }).click();
+  await expect(page.getByRole("region", { name: /^Tavolo con 5/ })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await schermata(page, "bot-tavolo");
+  await controllaMobile(page);
+});
