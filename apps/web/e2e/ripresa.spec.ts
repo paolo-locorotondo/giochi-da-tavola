@@ -68,12 +68,12 @@ test("burraco contro i bot: dopo il refresh la mano è la stessa e si continua",
   };
   await giocaUnTurno();
   await expect(pesca).toBeEnabled({ timeout: 20_000 });
-  const testoMano = await page.getByText(/La tua mano: \d+ carte/).innerText();
+  const testoMano = await page.getByText(/La tua mano.*: \d+ carte/).innerText();
   const mano = await impronta(page, ".cg-ventaglio button");
   expect(mano.length).toBeGreaterThan(0);
 
   await page.reload();
-  await expect(page.getByText(/La tua mano: \d+ carte/)).toHaveText(testoMano);
+  await expect(page.getByText(/La tua mano.*: \d+ carte/)).toHaveText(testoMano);
   await expect(pesca).toBeEnabled();
   expect(await impronta(page, ".cg-ventaglio button")).toEqual(mano);
   await expect(page.getByRole("region", { name: /^Tavolo con/ })).toBeVisible();

@@ -69,7 +69,7 @@ describe("ordinamenti", () => {
   it("per seme: semi raggruppati, valori crescenti, jolly in fondo", () => {
     const o = ordinaPerSeme(mano);
     expect(o).toHaveLength(14);
-    const semi = ["cuori", "quadri", "fiori", "picche"];
+    const semi = ["cuori", "fiori", "picche", "quadri"]; // rossi e neri alternati
     const chiave = (c: { seme: string | null; valore: number }) => (c.seme === null ? 99 : semi.indexOf(c.seme) * 100 + c.valore);
     const k = o.map(chiave);
     expect(k).toEqual([...k].sort((x, y) => x - y));

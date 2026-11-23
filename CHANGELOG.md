@@ -9,6 +9,13 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.31.0] - 2026-11-23
+
+### Modificato
+
+- **Burraco, interfaccia**: ora si gioca sul tavolo comune dei giochi di carte. Gli altri giocatori stanno in una riga sopra, con omino, squadra (compagno o avversario), carte e turno; sotto, le combinazioni «Loro» e «Noi» come colonne di carte sovrapposte (per attaccare si tocca una carta della combinazione evidenziata, al posto di «Attacca qui»); in mezzo mazzo e scarti, con il pulsante «i» che apre tutta la pila al posto di «Vedi tutti gli scarti». La mano ha il bordo oro e il titolo «(tocca a te)»; «Pesca», «Prendi gli scarti», «Cala», «Scarta» e, per l'organizzatore, «Sollecita» e «Simula mossa col bot» stanno nella barra azioni in basso. Cambiano gli screenshot e alcuni controlli degli e2e.
+- **Mano ordinata per seme**: i semi alternano rossi e neri: cuori, fiori, picche, quadri (prima cuori, quadri, fiori, picche). Vale per tutti i giochi con la mano per seme.
+
 ## [0.30.0] - 2026-11-23
 
 ### Modificato

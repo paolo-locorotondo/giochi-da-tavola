@@ -91,7 +91,8 @@ Dal telefono: apri l'indirizzo "Network" che stampa `pnpm dev`, scegli Burraco, 
 
 - Creazione: in 2 o in 4; nomi vuoti o uguali rifiutati; obiettivo e scarti scelti si vedono in sala.
 - Mano **a ventaglio** (vedi sotto): 11 carte in 2 righe sovrapposte, mai scroll orizzontale anche con 21 o 40 carte; l'angolo con valore e seme è sempre visibile; «Per seme» (di base) / «Per valore» (la scelta resta sul telefono); le carte appena arrivate sono evidenziate.
-- Turno: prima «Pesca» o «Prendi gli scarti», poi «Cala» (attivo solo se le carte scelte sono una combinazione valida: l'anteprima dice quale e quanti punti), «Attacca qui» sotto le combinazioni della propria squadra a cui le carte si attaccano, «Scarta» con una sola carta scelta.
+- Tavolo: sul tavolo comune di `@gdt/carte/tavolo`, con gli altri giocatori in una riga sopra (omino, squadra, carte), le combinazioni «Loro» e «Noi» a colonne sovrapposte (valore in alto a sinistra), mazzo e scarti in mezzo con il pulsante «i» che apre tutta la pila degli scarti. La mano ha il bordo oro e il titolo «(tocca a te)» quando tocca a te; le azioni, con «Sollecita» e «Simula mossa col bot», stanno in basso. Nella mano i semi alternano rossi e neri: cuori, fiori, picche, quadri (`ORDINE_SEMI` in `packages/carte/src/ordine.ts`; `SEMI_FRANCESI` non si tocca perché genera gli id delle carte).
+- Turno: prima «Pesca» o «Prendi gli scarti», poi «Cala» (attivo solo se le carte scelte sono una combinazione valida: l'anteprima dice quale e quanti punti), per attaccare si tocca una carta della combinazione della propria squadra a cui le carte scelte si attaccano (sono evidenziate), «Scarta» con una sola carta scelta.
 - Matte: le carte che fanno da matta hanno il segno «M»; un 2 al suo posto in scala no.
 - Burraco: badge «Burraco pulito +200», «semipulito +150», «sporco +100».
 - Pozzetto: «Pozzetto: da prendere / preso» per squadra; quando arriva in mano compare «Hai preso il pozzetto: 11 carte».

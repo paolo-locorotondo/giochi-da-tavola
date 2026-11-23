@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Bot, Layers, Plus } from "lucide-react";
+import { Bell, Bot, Layers } from "lucide-react";
 import { CartaGrafica, Mano, dizionariCarte, nomeCarta, type OrdineMano } from "@gdt/carte";
+import { BarraAzioni, PannelloInfo, RegistroEventi, TavoloCarte, ZonaCarte, type AzioneTavolo, type PropsPostoGiocatore } from "@gdt/carte/tavolo";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { valorePunti, type Carta } from "../carte";
 import { attacca, burraco, leggi, type Combinazione, type Interpretazione } from "../combinazioni";
-import type { Evento } from "../logica";
+import { avanza, type Evento } from "../logica";
 import type { Vista } from "../online";
 
 type T = ReturnType<typeof usaT<typeof dizionari.it>>;
@@ -129,7 +130,6 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
   const carteScelte = scelte.map((id) => v.carte.find((x) => x.id === id)).filter((x): x is Carta => x !== undefined);
   const lettura = carteScelte.length >= 3 ? leggi(carteScelte) : null;
-  const cima = v.scarti[v.scarti.length - 1] ?? null;
   const ultimaCarta = v.carte.length === 1;
   const sqPresa = mia !== null && v.squadre[mia - 1]!.pozzettoPreso;
   const unaScelta = carteScelte.length === 1 ? carteScelte[0]! : null;
@@ -165,6 +165,76 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const prendi = () => c.azione(v.pilaBloccata ? { tipo: "prendiPila", gruppo: scelte } : { tipo: "prendiPila" });
 
   const turnoGiocatore = v.nomi.find((n) => n.posto === v.turno);
+  const attaccabili = gioca && carteScelte.length > 0 ? mie.filter((x) => attacca(x, carteScelte) !== null) : [];
+  const combDiCarta = (id: number) => v.combinazioni.find((x) => x.posate.some((p) => p.carta.id === id));
+  const colonne = (lista: readonly Combinazione[]) => lista.map((x) => x.posate.map((p) => p.carta));
+  const etichettaCarta = (carta: Carta) => {
+    const x = combDiCarta(carta.id);
+    if (!x) return undefined;
+    const posata = x.posate.find((p) => p.carta.id === carta.id);
+    const base = posata?.matta ? t("cartaMatta", { carta: nomeCarta(tc, carta) }) : nomeCarta(tc, carta);
+    const b = burraco(x);
+    const dove = `${titoloComb(t, tc, x)}${b ? ` (${t(`burraco_${b}`)})` : ""}`;
+    return attaccabili.includes(x) ? `${base}, ${dove}. ${t("attaccaQuiAria", { nome: dove })}` : `${base}, ${dove}`;
+  };
+  const attaccaDaCarta = (carta: Carta) => {
+    const x = combDiCarta(carta.id);
+    if (x && attaccabili.includes(x)) attaccaA(x);
+  };
+
+  // Gli altri in senso orario, a partire da chi gioca dopo di me (chi guarda senza giocare li vede tutti).
+  const nGiocatori = v.nomi.length;
+  const altri: PropsPostoGiocatore[] = [];
+  for (let p = avanza(v.io ?? nGiocatori, nGiocatori), k = 0; k < (v.io === null ? nGiocatori : nGiocatori - 1); p = avanza(p, nGiocatori), k++) {
+    const g = v.nomi.find((x) => x.posto === p);
+    if (g)
+      altri.push({
+        nome: g.nome,
+        carte: g.carte,
+        diTurno: inMano && v.turno === g.posto,
+        collegato: g.collegato,
+        squadra: v.miaSquadra === null ? undefined : g.squadra === v.miaSquadra ? t("compagno") : t("avversario"),
+      });
+  }
+
+  const azioni: AzioneTavolo[] = [];
+  if (v.io !== null && inMano) {
+    if (confermaChiusura && unaScelta) {
+      azioni.push({ id: "si-chiudi", etichetta: t("siChiudiMano"), variante: "primaria", larga: false, onTocca: scarta });
+      azioni.push({ id: "annulla", etichetta: t("annulla"), onTocca: () => setConfermaChiusura(false) });
+    } else {
+      azioni.push({ id: "pesca", etichetta: t("pesca"), variante: pesca ? "primaria" : "secondaria", larga: false, disabilitata: !pesca, onTocca: () => c.azione({ tipo: "pesca" }) });
+      azioni.push({
+        id: "prendi",
+        etichetta: t("prendiMonte"),
+        icona: <Layers size={18} />,
+        disabilitata: !pesca || !v.possoPrendere || (v.pilaBloccata && scelte.length !== 2),
+        onTocca: prendi,
+      });
+      azioni.push({ id: "cala", etichetta: t("cala"), variante: gioca && lettura ? "primaria" : "secondaria", larga: false, disabilitata: !gioca || !lettura, onTocca: cala });
+      azioni.push({
+        id: "scarta",
+        etichetta: chiudeScartando ? t("chiudiMano") : t("scarta"),
+        nomeAria: !chiudeScartando && unaScelta ? t("scartaAria", { carta: nomeCarta(tc, unaScelta) }) : undefined,
+        variante: gioca && unaScelta ? "primaria" : "secondaria",
+        larga: false,
+        disabilitata: !gioca || !unaScelta,
+        onTocca: scarta,
+      });
+      azioni.push({ id: "deseleziona", etichetta: t("deseleziona"), disabilitata: scelte.length === 0, onTocca: () => setScelte([]) });
+    }
+  }
+  if (inMano && v.host && c.conBot && turnoGiocatore) {
+    if (c.sollecita)
+      azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, onTocca: c.sollecita });
+    azioni.push({
+      id: "bot",
+      etichetta: t("botMossa", { nome: turnoGiocatore.nome }),
+      icona: <Bot size={18} />,
+      descrittaDa: "bu-bot-aiuto",
+      onTocca: () => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto }),
+    });
+  }
 
   return (
     <section className="schermata allineata bu-tavolo">
@@ -189,91 +259,48 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       {(v.fase === "fineMano" || v.fase === "fine") && <FineMano c={c} v={v} nome={nome} nomeSquadra={nomeSquadra} />}
 
-      <Giocatori v={v} />
-
-      {inMano && v.host && c.conBot && turnoGiocatore && (
-        <div className="bu-azioni">
-          {c.sollecita && (
-            <button className="btn" onClick={c.sollecita}>
-              <Bell size={18} aria-hidden="true" /> {t("sollecita", { nome: turnoGiocatore.nome })}
-            </button>
-          )}
-          <button className="btn" onClick={() => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto })} aria-describedby="bu-bot-aiuto">
-            <Bot size={18} aria-hidden="true" /> {t("botMossa", { nome: turnoGiocatore.nome })}
-          </button>
-          <span className="muted bu-tutta-riga" id="bu-bot-aiuto">
-            {t("botAiuto")}
-          </span>
-        </div>
-      )}
-      {inMano && v.io !== null && turnoGiocatore && !turnoGiocatore.collegato && v.io !== v.turno && (
-        <p className="avviso">{t("inAttesaDi", { nome: turnoGiocatore.nome })}</p>
-      )}
-
-      <details className="accordion">
-        <summary>
-          <span>
-            {t("combinazioniLoro", { n: loro.length })}
-            {t("combinazioniLoroBurraco", { n: loro.filter((x) => burraco(x) !== null).length })}
-          </span>
-        </summary>
-        <div className="accordion-corpo">
-          <Combinazioni t={t} tc={tc} combinazioni={loro} />
-        </div>
-      </details>
-
-      <div className="bu-nostre">
-        <h3 className="bu-titoletto">{t("combinazioniNostre", { n: mie.length })}</h3>
-        {gioca && carteScelte.length > 0 && mie.length > 0 && <p className="muted bu-nota">{t("attaccaAiuto")}</p>}
-        <Combinazioni
-          t={t}
-          tc={tc}
-          combinazioni={mie}
-          attacca={gioca && carteScelte.length > 0 ? attaccaA : undefined}
-          scelte={carteScelte}
-        />
-      </div>
-
       {inMano && (
-        <div className="bu-centro">
-          <div className="bu-pila">
-            <span className="bu-etichetta">{t("tallone")}</span>
-            <CartaGrafica dorso dimensione="normale" etichetta={`${t("tallone")}: ${t("talloneCarte", { n: v.mazzo })}`} />
-            <span className="muted bu-conta">{t("talloneCarte", { n: v.mazzo })}</span>
-            <button className={`btn${pesca ? " primario" : ""}`} disabled={!pesca} onClick={() => c.azione({ tipo: "pesca" })}>
-              {t("pesca")}
-            </button>
+        <TavoloCarte posti={altri} disposizione="sopra">
+          <ZonaCarte
+            titolo={`${t("combinazioniLoro", { n: loro.length })}${t("combinazioniLoroBurraco", { n: loro.filter((x) => burraco(x) !== null).length })}`}
+            disposizione="colonne"
+            gruppi={colonne(loro)}
+            vuota={t("nessunaCombinazione")}
+            etichetta={etichettaCarta}
+          />
+          <ZonaCarte
+            titolo={t("combinazioniNostre", { n: mie.length })}
+            disposizione="colonne"
+            gruppi={colonne(mie)}
+            vuota={t("nessunaCombinazione")}
+            evidenziate={attaccabili.flatMap((x) => x.posate.map((p) => p.carta.id))}
+            etichetta={etichettaCarta}
+            onTocca={attaccabili.length > 0 ? attaccaDaCarta : undefined}
+          />
+          <div className="bu-centro">
+            <ZonaCarte titolo={t("tallone")} disposizione="pila" coperte={v.mazzo} dimensione="piccola" />
+            <ZonaCarte titolo={t("monte")} disposizione="pila" carte={v.scarti} dimensione="piccola" vuota={t("monteVuoto")} />
+            {v.scarti.length > 1 && (
+              <PannelloInfo titolo={t("monte")}>
+                <p className="muted bu-nota">{t("monteCarte", { n: v.scarti.length })}</p>
+                <ul className="bu-monte">
+                  {[...v.scarti].reverse().map((x) => (
+                    <li key={x.id}>
+                      <CartaGrafica carta={x} dimensione="mini" />
+                    </li>
+                  ))}
+                </ul>
+              </PannelloInfo>
+            )}
           </div>
-          <div className="bu-pila">
-            <span className="bu-etichetta">{t("monte")}</span>
-            {cima ? <CartaGrafica carta={cima} dimensione="normale" etichetta={t("cimaMonte", { carta: nomeCarta(tc, cima) })} /> : <span className="bu-vuoto">{t("monteVuoto")}</span>}
-            <span className="muted bu-conta">{t("monteCarte", { n: v.scarti.length })}</span>
-            <button className="btn" disabled={!pesca || !v.possoPrendere || (v.pilaBloccata && scelte.length !== 2)} onClick={prendi}>
-              <Layers size={18} aria-hidden="true" /> {t("prendiMonte")}
-            </button>
-          </div>
-        </div>
+        </TavoloCarte>
       )}
+
+      {inMano && attaccabili.length > 0 && <p className="muted bu-nota">{t("attaccaAiuto")}</p>}
       {inMano && v.pilaBloccata && (
         <p className="avviso">
           {t("monteBloccato")} {pesca && v.possoPrendere ? t("monteBloccatoScegli") : ""}
         </p>
-      )}
-      {inMano && v.scarti.length > 1 && (
-        <details className="accordion">
-          <summary>
-            <span>{t("vediMonte", { n: v.scarti.length })}</span>
-          </summary>
-          <div className="accordion-corpo">
-            <ul className="bu-monte">
-              {[...v.scarti].reverse().map((x) => (
-                <li key={x.id}>
-                  <CartaGrafica carta={x} dimensione="mini" />
-                </li>
-              ))}
-            </ul>
-          </div>
-        </details>
       )}
 
       {avvisoPozzetto !== null && (
@@ -283,7 +310,16 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       )}
 
       {v.io !== null && (
-        <Mano ventaglio carte={v.carte} selezione={scelte} onSeleziona={setScelte} ordineIniziale={leggiOrdine()} onOrdine={scriviOrdine} nuove={nuove} />
+        <Mano
+          ventaglio
+          carte={v.carte}
+          selezione={scelte}
+          onSeleziona={setScelte}
+          ordineIniziale={leggiOrdine()}
+          onOrdine={scriviOrdine}
+          nuove={nuove}
+          diTurno={inMano && v.mioTurno}
+        />
       )}
 
       {v.io !== null && inMano && (
@@ -296,126 +332,23 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
                 }`}
           </p>
           {v.vietata !== null && <p className="muted bu-nota">{t("nonRiscartare")}</p>}
-                    {confermaChiusura && unaScelta ? (
-            <div className="bu-azioni">
-              <p className="bu-tutta-riga bu-conferma">{t("chiudiConferma", { carta: nomeCarta(tc, unaScelta) })}</p>
-              <button className="btn primario" onClick={scarta}>
-                {t("siChiudiMano")}
-              </button>
-              <button className="btn" onClick={() => setConfermaChiusura(false)}>
-                {t("annulla")}
-              </button>
-            </div>
-          ) : (
-            <div className="bu-azioni bu-azioni-mano">
-              <button className={`btn${gioca && lettura ? " primario" : ""}`} disabled={!gioca || !lettura} onClick={cala}>
-                {t("cala")}
-              </button>
-              <button
-                className={`btn${gioca && unaScelta ? " primario" : ""}`}
-                disabled={!gioca || !unaScelta}
-                onClick={scarta}
-                aria-label={unaScelta ? t("scartaAria", { carta: nomeCarta(tc, unaScelta) }) : undefined}
-              >
-                {chiudeScartando ? t("chiudiMano") : t("scarta")}
-              </button>
-              <button className="btn" disabled={scelte.length === 0} onClick={() => setScelte([])}>
-                {t("deseleziona")}
-              </button>
-            </div>
-          )}
+          {confermaChiusura && unaScelta && <p className="bu-conferma">{t("chiudiConferma", { carta: nomeCarta(tc, unaScelta) })}</p>}
         </div>
       )}
 
-      <details className="accordion">
-        <summary>
-          <span>{t("eventiTitolo")}</span>
-        </summary>
-        <div className="accordion-corpo">
-          {v.eventi.length === 0 ? (
-            <p className="muted">{t("eventiNessuno")}</p>
-          ) : (
-            <ul className="bu-eventi">
-              {[...v.eventi].reverse().map((e, i) => (
-                <li key={i}>{testoEvento(t, tc, e, nome)}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </details>
+      <BarraAzioni azioni={azioni} />
+      {azioni.some((a) => a.id === "bot") && (
+        <p className="muted bu-nota" id="bu-bot-aiuto">
+          {t("botAiuto")}
+        </p>
+      )}
+
+      {inMano && v.io !== null && turnoGiocatore && !turnoGiocatore.collegato && v.io !== v.turno && (
+        <p className="avviso">{t("inAttesaDi", { nome: turnoGiocatore.nome })}</p>
+      )}
+
+      <RegistroEventi titolo={t("eventiTitolo")} voci={v.eventi.map((e) => testoEvento(t, tc, e, nome))} massimo={v.eventi.length} />
     </section>
-  );
-}
-
-function Combinazioni({
-  t,
-  tc,
-  combinazioni,
-  attacca: suAttacca,
-  scelte = [],
-}: {
-  t: T;
-  tc: TC;
-  combinazioni: readonly Combinazione[];
-  attacca?: (c: Combinazione) => void;
-  scelte?: readonly Carta[];
-}) {
-  if (combinazioni.length === 0) return <p className="muted bu-nota">{t("nessunaCombinazione")}</p>;
-  return (
-    <ul className="bu-combinazioni">
-      {combinazioni.map((comb) => {
-        const b = burraco(comb);
-        const titolo = titoloComb(t, tc, comb);
-        const possibile = suAttacca && scelte.length > 0 ? attacca(comb, scelte) !== null : false;
-        return (
-          <li key={comb.id} className={`bu-comb${b ? " bu-comb-burraco" : ""}`}>
-            <div className="bu-comb-testa">
-              <span className="bu-comb-titolo">{titolo}</span>
-              {b && <span className="bu-badge">{t(`burraco_${b}`)}</span>}
-            </div>
-            <ul className="bu-fila" aria-label={titolo}>
-              {comb.posate.map((p) => (
-                <li key={p.carta.id} className="bu-posata">
-                  <CartaGrafica carta={p.carta} dimensione="mini" etichetta={p.matta ? t("cartaMatta", { carta: nomeCarta(tc, p.carta) }) : undefined} />
-                  {p.matta && (
-                    <span className="bu-matta" aria-hidden="true">
-                      M
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {suAttacca && possibile && (
-              <button className="btn bu-attacca" onClick={() => suAttacca(comb)} aria-label={t("attaccaQuiAria", { nome: titolo })}>
-                <Plus size={18} aria-hidden="true" /> {t("attaccaQui")}
-              </button>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function Giocatori({ v }: { v: Vista }) {
-  const t = usaT(dizionari);
-  return (
-    <ul className="bu-giocatori" aria-label={t("giocatori")}>
-      {v.nomi.map((n) => {
-        const inTurno = v.turno === n.posto;
-        const ruolo = n.posto === v.io ? t("tu") : v.miaSquadra === null ? "" : n.squadra === v.miaSquadra ? t("compagno") : t("avversario");
-        return (
-          <li key={n.posto} className={`bu-giocatore${inTurno ? " bu-turno" : ""}`} aria-current={inTurno ? "true" : undefined}>
-            <span className="bu-giocatore-nome">
-              <span className={`pallino${n.collegato ? " on" : ""}`} aria-hidden="true" /> {n.nome}
-            </span>
-            <span className="bu-giocatore-dati">
-              {[ruolo, t("carteDi", { n: n.carte }), inTurno ? t("diTurno") : ""].filter(Boolean).join(" · ")}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

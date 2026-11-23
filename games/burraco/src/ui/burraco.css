@@ -41,131 +41,16 @@
 .bu-squadra-punti { font-family: var(--font-titoli); font-size: 1.15rem; font-weight: 800; }
 .bu-squadra-pozzetto { font-size: 0.85rem; color: var(--mu); }
 
-/* Giocatori */
-.bu-giocatori {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: 0.5rem;
-}
-
-.bu-giocatore {
-  min-width: 0;
-  display: grid;
-  gap: 0.2rem;
-  padding: 0.5rem 0.7rem;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r);
-}
-
-.bu-giocatore.bu-turno { border: 2px solid var(--ac); }
-.bu-giocatore-nome { font-weight: 700; overflow-wrap: anywhere; }
-.bu-giocatore-dati { font-size: 0.85rem; color: var(--mu); }
-
-/* Combinazioni sul tavolo */
-.bu-titoletto { margin: 0 0 0.4rem; font-family: var(--font-titoli); font-size: 1rem; }
 .bu-nota { margin: 0; font-size: 0.85rem; }
 
-.bu-combinazioni {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.6rem;
-}
-
-.bu-comb {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.55rem 0.6rem;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r);
-  min-width: 0;
-}
-
-.bu-comb-burraco { border: 2px solid var(--ac); }
-
-.bu-comb-testa {
+/* Centro: mazzo, scarti e il pulsante «i» */
+.bu-centro {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.3rem 0.6rem;
-}
-
-.bu-comb-titolo { font-weight: 700; overflow-wrap: anywhere; }
-
-.bu-badge {
-  padding: 0.15rem 0.6rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--on-ac);
-  background: var(--ac);
-  border-radius: 999px;
-}
-
-/* Carte sovrapposte: ogni carta mini (26 px) si sposta di 18 px, così 14 carte stanno in 270 px */
-.bu-fila {
-  list-style: none;
-  margin: 0;
-  padding: 0 0.1rem 0 0;
-  display: flex;
-  min-width: 0;
-}
-
-.bu-posata { position: relative; flex: none; width: 1.125rem; height: 2.375rem; }
-.bu-posata:last-child { width: 1.625rem; }
-.bu-posata .cg-carta { position: absolute; left: 0; top: 0; }
-
-/* Segno «M» sulle matte: cerchietto con lettera, oltre al colore */
-.bu-matta {
-  position: absolute;
-  right: 0;
-  bottom: -0.2rem;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  width: 0.95rem;
-  height: 0.95rem;
-  font-family: var(--font-testo);
-  font-size: 0.6rem;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--on-ac);
-  background: var(--ac);
-  border: 1px solid var(--carta-fondo);
-  border-radius: 999px;
-}
-
-.bu-attacca { justify-self: start; }
-
-/* Centro: tallone e monte */
-.bu-centro {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: flex-start;
+  justify-content: center;
   gap: 0.7rem;
 }
-
-.bu-pila {
-  display: grid;
-  justify-items: center;
-  gap: 0.4rem;
-  padding: 0.6rem;
-  background: var(--s1);
-  border: var(--bw) solid var(--bd);
-  border-radius: var(--r);
-  min-width: 0;
-}
-
-.bu-pila .btn { width: 100%; }
-.bu-etichetta { font-weight: 700; font-size: 0.9rem; }
-.bu-conta { font-size: 0.85rem; }
-.bu-vuoto { display: grid; place-items: center; min-height: 5.8rem; color: var(--mu); font-size: 0.85rem; text-align: center; }
 
 .bu-monte {
   list-style: none;
@@ -180,25 +65,10 @@
 .bu-barra {
   display: grid;
   gap: 0.35rem;
-  padding: 0.5rem 0.75rem;
-  background: var(--s1);
-  border: 2px solid var(--ac);
-  border-radius: var(--r);
 }
 
 .bu-anteprima { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .bu-conferma { margin: 0; font-weight: 700; }
-
-.bu-azioni {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-  gap: 0.6rem;
-}
-
-.bu-azioni .primario { grid-column: auto; }
-.bu-azioni-mano { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; }
-.bu-azioni-mano .btn { padding-inline: 0.4rem; line-height: 1.15; }
-.bu-tutta-riga { grid-column: 1 / -1; }
 
 .bu-avviso {
   display: grid;

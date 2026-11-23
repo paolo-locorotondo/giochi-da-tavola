@@ -28,7 +28,7 @@ il più possibile, così aggiungere un gioco di carte (es. Briscola) è facile: 
 **Burraco**
 - Stesso «tocca a te»: bordo oro e titolo «La tua mano (tocca a te): n carte».
 - «Sollecita» e «Simula mossa col bot» in basso, come negli altri giochi.
-- Ordine per seme alternando rossi e neri: **cuori, fiori, quadri, picche** (oggi cuori, quadri, fiori, picche).
+- Ordine per seme alternando rossi e neri: **cuori, fiori, picche, quadri** (fatto in 0.31.0, poi cambiato su richiesta).
   Attenzione: non cambiare `SEMI_FRANCESI` in `packages/carte/src/tipi.ts` (genera gli id delle carte); cambiare solo
   l'ordine usato per ordinare la mano (`ORDINE_SEMI` in `packages/carte/src/ordine.ts`).
 - «Vedi tutti gli scarti» ruba spazio: aprirlo con un pulsante «i» sul riquadro degli scarti. Nuova impostazione alla

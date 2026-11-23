@@ -29,7 +29,7 @@ test("burraco contro i bot: una mano a 4 si gioca fino in fondo, anche offline",
   // Dopo il caricamento non serve più la rete: i bot giocano sul telefono.
   await context.setOffline(true);
   await page.getByRole("button", { name: "Inizia la partita" }).click();
-  await expect(page.getByText(/La tua mano: 11 carte/)).toBeVisible();
+  await expect(page.getByText(/La tua mano.*: 11 carte/)).toBeVisible();
   await expect(page.getByRole("button", { name: /Simula mossa col bot/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Sollecita/ })).toHaveCount(0);
   await controllaMobile(page);
@@ -72,5 +72,16 @@ test("burraco: «Come giocate?» ha le due modalità", async ({ page }) => {
   await page.goto("/burraco");
   await expect(page.getByRole("button", { name: /Contro i bot/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Ognuno col suo telefono/ })).toBeVisible();
+  await controllaMobile(page);
+});
+
+test("burraco contro i bot: il tavolo a 4 con mazzo, scarti e combinazioni", async ({ page }) => {
+  await apri(page);
+  await page.getByRole("radio", { name: /In 4, a coppie/ }).check();
+  await page.getByRole("radio", { name: /Facile/ }).check();
+  await page.getByRole("button", { name: "Inizia la partita" }).click();
+  await expect(page.getByRole("region", { name: /^Tavolo con 3/ })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await schermata(page, "bot-tavolo");
   await controllaMobile(page);
 });

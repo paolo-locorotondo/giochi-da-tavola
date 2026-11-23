@@ -83,8 +83,8 @@ test("burraco veloce a 4: Anna apre a 1505 punti con scarti bloccati, altri tre 
 
     await allaPartitaVeloce(dino, "Dino");
     await dino.getByRole("button", { name: "Entra nella stanza" }).click();
-    for (const p of pagine) await expect(p.getByText(/La tua mano: 11 carte/)).toBeVisible();
-    await expect(anna.getByText(/La tua mano: 11 carte/)).toBeVisible();
+    for (const p of pagine) await expect(p.getByText(/La tua mano.*: 11 carte/)).toBeVisible();
+    await expect(anna.getByText(/La tua mano.*: 11 carte/)).toBeVisible();
   } finally {
     await chiudi();
   }
@@ -101,7 +101,7 @@ test("burraco veloce a 2: senza squadre, parte da sola al secondo arrivo", async
     await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
     await allaPartitaVeloce(bruno, "Bruno");
     await bruno.getByRole("button", { name: "Entra nella stanza" }).click();
-    for (const p of pagine) await expect(p.getByText(/La tua mano: 11 carte/)).toBeVisible();
+    for (const p of pagine) await expect(p.getByText(/La tua mano.*: 11 carte/)).toBeVisible();
   } finally {
     await chiudi();
   }

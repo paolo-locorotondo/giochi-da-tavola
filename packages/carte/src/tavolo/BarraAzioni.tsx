@@ -13,6 +13,8 @@ export interface AzioneTavolo {
   disabilitata?: boolean;
   /** Di base il primario occupa tutta la riga; con `false` sta accanto agli altri (es. «Annulla» e «Conferma»). */
   larga?: boolean;
+  /** Nome parlato, se diverso dal testo visibile (es. «Scarta sette di cuori» per «Scarta»). */
+  nomeAria?: string;
   /** Id di un testo che spiega l'azione (`aria-describedby`). */
   descrittaDa?: string;
 }
@@ -38,6 +40,7 @@ export function BarraAzioni({ azioni, etichetta }: PropsBarraAzioni) {
           type="button"
           className={`cg-azione cg-azione-${a.variante ?? "secondaria"}${a.larga === false ? " cg-azione-affiancata" : ""}`}
           disabled={a.disabilitata}
+          aria-label={a.nomeAria}
           aria-describedby={a.descrittaDa}
           onClick={a.onTocca}
         >

@@ -46,13 +46,13 @@ test("burraco online: quattro telefoni, mano segreta, bot e mano finita", async 
     await expect(host.getByRole("button", { name: "Inizia la partita" })).toBeEnabled();
     await expect(pagine[1]!.getByText("L'organizzatore avvierà la partita.")).toBeVisible();
     await host.getByRole("button", { name: "Inizia la partita" }).click();
-    for (const p of pagine) await expect(p.getByText(/La tua mano: 11 carte/)).toBeVisible();
+    for (const p of pagine) await expect(p.getByText(/La tua mano.*: 11 carte/)).toBeVisible();
     // Ognuno vede solo le proprie carte e i nomi di tutti.
-    await expect(pagine[1]!.getByRole("list", { name: "Giocatori" }).getByText("Anna", { exact: true })).toBeVisible();
+    await expect(pagine[1]!.getByRole("group", { name: /^Anna, compagno/ }).or(pagine[1]!.getByRole("group", { name: /^Anna, avversario/ }))).toBeVisible();
     await expect(pagine[1]!.getByRole("button", { name: /Sollecita/ })).toHaveCount(0);
     await controllaMobile(pagine[1]!);
     // Con quattro telefoni le carte distribuite cambiano da un giro all altro: si mascherano mano, scarti e codice della stanza.
-    await schermata(host, "partita", { maschera: [".cg-ventaglio", ".bu-pila", "summary"] });
+    await schermata(host, "partita", { maschera: [".cg-ventaglio", ".bu-centro", ".cg-zona-colonne", "summary"] });
 
     // L'organizzatore fa giocare il bot un passo alla volta fino a fine mano (una sola mano).
     const bot = host.getByRole("button", { name: /^Simula mossa col bot/ });
