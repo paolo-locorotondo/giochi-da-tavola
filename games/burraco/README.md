@@ -15,7 +15,7 @@ Valori: jolly 30, 2 20, asso 15, dal K all'8 10, dal 7 al 3 5. Si gioca fino a 2
 
 ## Regole verificate e fonti
 
-Il piano ([piano-burraco.md](../../docs/piano-burraco.md)) era scritto a memoria, con dei punti «[verificare]». Sono stati confrontati con:
+Il piano originale (nella storia del repo, tag v0.28.0) era scritto a memoria, con dei punti «[verificare]». Sono stati confrontati con:
 
 - **FIBUR**, *Codice di gara*, edizione 2026 (PDF su [fibur.it](https://www.fibur.it/codice_di_gara.php)), articoli citati sotto;
 - [it.wikipedia.org/wiki/Burraco](https://it.wikipedia.org/wiki/Burraco);
@@ -50,6 +50,18 @@ Tutte le regole sono costanti in `src/regole.ts` e `src/carte.ts`: correggerle c
 | Due tris dello stesso valore nella stessa squadra | no | Pagat (la FIBUR non lo dice) | **da verificare** |
 | Obiettivo 2005, con 1505 / 3005 / mano singola; a pari punti si gioca un'altra mano | scelta dell'utente | Wikipedia cita 505, 1005, 2005 | scelta del progetto |
 | 3 giocatori | non supportato | Wikipedia e Pagat descrivono varianti diverse | scelta dell'utente |
+
+### Scelte di regola (oltre alla tabella)
+
+- **La matta calata non si sposta** e la **sostituzione della matta** è rimandata: dà un'azione in più, una UI di scelta in più e molti casi di bordo (pozzetto, chiusura); si legge una combinazione sempre nell'interpretazione con meno matte, così il burraco risulta pulito quando può esserlo.
+- **La prima calata si fa in una sola azione** (più gruppi insieme): non esistono combinazioni «provvisorie» da annullare.
+- **Scarti sempre liberi di base**, con l'opzione «bloccati» per chi gioca alla casalinga: la regola FIBUR non blocca; la pila degli scarti è pubblica per intero (chi gioca bene la conta).
+- **Compagno bot** in 4 contro i bot: gioca sulle combinazioni della squadra ma non sa cosa hai in mano; il livello è lo stesso per tutti i bot.
+- **Il bot chiude appena può**, a ogni livello: ritardare la chiusura per fare più punti è una strategia possibile, ma si è scelta la prevedibilità. «Simula mossa» online è un **passo** del turno (pesca, cala o scarta), non l'intero turno, come per i telefoni umani.
+- **Mano a ventaglio e non griglia a 7 colonne**, riordino solo con i pulsanti «Per seme» / «Per valore»: il trascinamento richiederebbe comunque un pulsante equivalente ed è rimandato.
+- **Pozzetti**: si vede solo «da prendere / preso», mai il contenuto.
+- **Niente 3 giocatori** (varianti da tavolo diverse tra loro) e **niente un telefono passato di mano** (mano lunga e segreta).
+- **Partita veloce**: 4 persone da radunare, quindi conviene un'attesa lunga e l'avvio solo a stanza piena.
 
 ## Contro i bot (un telefono, anche offline)
 

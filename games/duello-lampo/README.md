@@ -56,6 +56,8 @@ Regole tra impostazioni: se rimpicciolisci la griglia, le caselle che cambiano s
 
 **Gli errori contano −1** (acceso di base, in ogni mini gioco; il pulsante «Ripristina impostazioni» nella preparazione riporta tutto alla base): chi sbaglia perde anche un punto, e il punteggio può scendere sotto zero. È un errore solo una risposta sbagliata, non essere più lenti: in Via! toccare prima del via; in Colore giusto toccare un colore sbagliato; in Colori e nomi toccare quando nome e colore non combaciano; nei «trova» toccare un animale che non è il panda o una faccina triste; in Memoria lampo toccare una casella fuori sequenza; in Bersagli avere più colpi a vuoto che colpiti (la penalità è una per round, non una per tocco); in Il più grande toccare un numero che non è il più grande. Raffica e Stop al centro non hanno errori. Nell'esito del round l'errore è segnato con «(−1)».
 
+Scelte su Bersagli e Il più grande: la penalità «errori −1» è una per round (il contratto `errore` è un booleano per round); in Il più grande un numero sbagliato fa perdere il round come negli altri mini giochi; i numeri compaiono subito dopo il conto, senza attesa casuale; due mani per mini gioco di base (20 round con i 10 mini giochi).
+
 Idee per altri mini giochi: nessuna in programma (le precedenti, Bersagli e Il più grande, sono fatte). Sui tablet si potranno valutare griglie più grandi di 6×6.
 
 ## Modalità di gioco

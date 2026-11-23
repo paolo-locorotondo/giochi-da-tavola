@@ -9,6 +9,10 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+### Modificato
+
+- Interno: eliminati i piani di progetto dei lavori finiti (recuperabili con il tag v0.28.0); le scelte di regola sono nei README dei giochi.
+
 ## [0.28.0] - 2026-11-23
 
 ### Aggiunto

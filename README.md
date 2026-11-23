@@ -50,7 +50,6 @@ Requisiti: Node.js 20+, pnpm 9; Docker per `docker compose`. Passi dettagliati: 
 | Capire stanze, dati sul browser, sicurezza | [docs/architettura-tecnica.md](docs/architettura-tecnica.md) |
 | Sapere cosa significa "Aggiungi a schermata Home" | [docs/app-installabile.md](docs/app-installabile.md) |
 | Scelte di progetto e punti aperti | [docs/decisioni.md](docs/decisioni.md) |
-| Piani dei giochi e della partita veloce, coordinamento dei filoni | [partita veloce](docs/piano-partita-veloce.md), [Scopa](docs/piano-scopa.md), [Burraco](docs/piano-burraco.md), [Ultima!](docs/piano-ultima.md), [varianti di Ultima!](docs/piano-ultima-varianti.md), [Duello Lampo](docs/piano-duello-lampo-minigiochi.md), [coordinamento](docs/coordinamento.md) |
 | Cosa è cambiato in ogni versione | [CHANGELOG.md](CHANGELOG.md) |
 
 ## Licenza

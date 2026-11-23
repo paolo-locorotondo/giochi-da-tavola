@@ -23,7 +23,7 @@ export const REGOLE = {
   giriStallo: 2,
   /**
    * Il burraco di tris (7 o più carte uguali): la FIBUR (art. 13) lo prevede, ma l'utente ha deciso di non
-   * farlo nella prima versione (docs/coordinamento.md). Basta mettere `true` per attivarlo.
+   * farlo nella prima versione (vedi «Varianti possibili» nel README del gioco). Basta mettere `true` per attivarlo.
    */
   burracoDiTris: false,
   /** Una squadra non può avere due tris dello stesso valore (regola di Pagat; la FIBUR non la dice: da verificare). */

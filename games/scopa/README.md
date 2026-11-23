@@ -42,6 +42,17 @@ Verificato su [Wikipedia, «Scopa (gioco)»](https://it.wikipedia.org/wiki/Scopa
 
 Web search non era disponibile durante il lavoro: la verifica è stata fatta solo sulla pagina sopra.
 
+### Scelte di regola
+
+- **Presa singola obbligatoria** (anche se esisterebbe una somma) e **presa obbligatoria**: è il regolamento classico; evita ambiguità e rende il bot e i test deterministici.
+- **Prese coperte fino a fine round**: come al tavolo; durante il round si vede solo il numero di carte prese, l'elenco compare nel riepilogo. Il registro dice invece quali carte sono state prese, perché erano già scoperte sul tavolo.
+- **Scopa non valida all'ultima giocata** e **nessuna ridistribuzione con tre re**: scelte della prima versione, da confermare al tavolo (vedi «Da verificare»).
+- **Pari a fine partita**: si gioca un altro round finché una squadra è davanti.
+- **Mazzo solo contatore**: in Scopa non si pesca, quindi il mazzo non è un pulsante.
+- **Carte e semi disegnati in proprio** (nessuna immagine di terzi, repo pubblico): le fonti scartate erano le foto di mazzi su Wikimedia Commons (licenze diverse per file) e i mazzi commerciali.
+- **Niente due giocatori sullo stesso telefono**: la mano è segreta; si gioca online con due telefoni oppure contro un bot. Si può aggiungere dopo (schermo «passa il telefono») senza rifare la logica.
+- **Il bot «Simula mossa»** online è sempre difficile, una mossa sola, annunciata negli eventi.
+
 ## Contro i bot (un telefono, anche offline)
 
 Su «Come giocate?» si sceglie **Contro i bot**: in 2 (tu contro un bot) o in 4 a coppie (tu e un bot compagno al posto 3 contro due bot), il tuo nome e quello dei bot, il livello, la velocità e i punti per vincere. Le ultime scelte restano salvate sul telefono.
@@ -122,7 +133,7 @@ In «Gioca online» il pulsante **Partita veloce** sta in cima, prima di «Ho un
 
 ## Varianti possibili
 
-Ognuna come opzione spenta in `config` (e una costante in `src/regole.ts`), con test e una voce qui: scopa d'assi, fante che vale scopa, re bello (il re di denari vale un punto), napola (asso, 2, 3 di denari), asso piglia tutto, e lo scopone scientifico (gioco quasi a parte). Il 3 giocatori è rinviato: `POSTI_AMMESSI` in `regole.ts` e la distribuzione in `logica.ts`. Per aggiungerne una: costante in `regole.ts`, campo in `ConfigOnline` letto da `leggiConfig`, uso in `logica.ts` o `punti.ts`, testi in `locales`, test.
+Ognuna come opzione spenta in `config` (e una costante in `src/regole.ts`), con test e una voce qui: scopa d'assi, fante che vale scopa, re bello (il re di denari vale un punto), napola (asso, 2, 3 di denari), asso piglia tutto, e lo scopone scientifico (gioco quasi a parte). Due giocatori sullo stesso telefono («passa il telefono» tra i turni) è un'altra opzione rimandata. Il 3 giocatori è rinviato (le 40 carte non si dividono per 3, serve decidere la distribuzione): `POSTI_AMMESSI` in `regole.ts` e la distribuzione in `logica.ts`. Per aggiungerne una: costante in `regole.ts`, campo in `ConfigOnline` letto da `leggiConfig`, uso in `logica.ts` o `punti.ts`, testi in `locales`, test.
 
 ## Lingue
 
