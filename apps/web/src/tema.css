@@ -52,6 +52,9 @@ html[data-stile="tavolo"][data-tema="dark"] {
   --carta-verde: #17663a;
   --carta-dorso: #1d3328;
   --carta-dorso-segno: #e3b341;
+  /* Feltro del tavolo (@gdt/carte/tavolo): testo su feltro ≥ 4,5:1 (7,05 con #1f5a3f) */
+  --tavolo-fondo: #1f5a3f;
+  --tavolo-testo: #f3efe3;
 }
 
 /* Tavolo · chiaro */
@@ -90,4 +93,7 @@ html[data-stile="tavolo"][data-tema="light"] {
   --carta-verde: #17733a;
   --carta-dorso: #1a6b40;
   --carta-dorso-segno: #e3b341;
+  /* Feltro del tavolo (@gdt/carte/tavolo): testo su feltro ≥ 4,5:1 (6,23 con #2a6b4f) */
+  --tavolo-fondo: #2a6b4f;
+  --tavolo-testo: #fffdf6;
 }

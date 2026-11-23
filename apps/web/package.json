@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@gdt/burraco": "workspace:*",
+    "@gdt/carte": "workspace:*",
     "@gdt/dadi": "workspace:*",
     "@gdt/duello-lampo": "workspace:*",
     "@gdt/i18n": "workspace:*",

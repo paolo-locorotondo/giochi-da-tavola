@@ -204,6 +204,14 @@ button.cg-sel:active:not(:disabled) { transform: translateY(-0.35em); }
 .cg-griglia > li { display: block; width: 2.75rem; }
 
 .cg-mano-stato { margin: 0; font-size: 0.85rem; color: var(--mu); }
+.cg-mano-riepilogo { margin: 0; font-size: 0.85rem; color: var(--mu); }
+
+/* È il turno: bordo oro attorno alla sezione, così «tocca a te» si vede anche scrollando. Il testo del titolo lo dice a parole. */
+.cg-mano-turno {
+  padding: 0.6rem;
+  border: 2px solid var(--ac);
+  border-radius: var(--r);
+}
 .cg-mano-vuota { margin: 0; padding: 1rem 0; color: var(--mu); }
 
 @media (prefers-reduced-motion: reduce) {

@@ -50,9 +50,24 @@ export const it = {
   jollyScritta: "JOLLY",
   // Mano
   manoTitolo: { one: "La tua mano: {n} carta", other: "La tua mano: {n} carte" },
+  manoTitoloTurno: { one: "La tua mano (tocca a te): {n} carta", other: "La tua mano (tocca a te): {n} carte" },
   manoVuota: "Nessuna carta in mano.",
   manoOrdina: "Ordina",
   manoPerSeme: "Per seme",
   manoPerValore: "Per valore",
   manoSelezionate: { zero: "Nessuna carta selezionata", one: "1 carta selezionata", other: "{n} carte selezionate" },
+  // Posto al tavolo
+  postoCarte: { zero: "nessuna carta", one: "1 carta", other: "{n} carte" },
+  postoDiTurno: "Di turno",
+  postoNonCollegato: "Non collegato",
+  // Tavolo
+  tavoloTitolo: { one: "Tavolo con {n} giocatore", other: "Tavolo con {n} giocatori" },
+  // Zona di carte
+  zonaVuota: "Nessuna carta",
+  zonaCoperte: { zero: "vuoto", one: "1 carta", other: "{n} carte" },
+  // Segnaposto, registro, info
+  segnapostoPosa: "Posa qui",
+  registroTitolo: "Cosa è successo",
+  registroVuoto: "Ancora niente.",
+  infoApri: "Dettagli: {titolo}",
 } as const;

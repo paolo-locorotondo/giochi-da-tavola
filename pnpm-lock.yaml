@@ -60,6 +60,9 @@ importers:
       '@gdt/burraco':
         specifier: workspace:*
         version: link:../../games/burraco
+      '@gdt/carte':
+        specifier: workspace:*
+        version: link:../../packages/carte
       '@gdt/dadi':
         specifier: workspace:*
         version: link:../../games/dadi
@@ -412,6 +415,9 @@ importers:
       '@gdt/i18n':
         specifier: workspace:*
         version: link:../i18n
+      lucide-react:
+        specifier: ^1.69.0
+        version: 1.69.0(@types/react@18.3.31)(react@18.3.1)
     devDependencies:
       '@types/react':
         specifier: ^18.3.12

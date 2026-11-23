@@ -12,6 +12,7 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 ### Modificato
 
 - Interno: eliminati i piani di progetto dei lavori finiti (recuperabili con il tag v0.28.0); le scelte di regola sono nei README dei giochi.
+- Interno: tavolo comune in `@gdt/carte/tavolo` (`TavoloCarte` (rettangolo, avversari intorno al tavolo fino a 10 giocatori), `PostoGiocatore`, `ZonaCarte`, `SegnapostoPosa`, `BarraAzioni`, `RegistroEventi`, `PannelloInfo`, con test) e token `--tavolo-fondo` nei due temi. `Mano` accetta `diTurno` e `riepilogo`. Non ancora usati dai giochi; pagina di prova `apps/web/prova-tavolo.html`, solo in `pnpm dev`.
 
 ## [0.28.0] - 2026-11-23
 

@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./logica": "./src/logica.ts",
-    "./ventaglio": "./src/ventaglio.ts"
+    "./ventaglio": "./src/ventaglio.ts",
+    "./tavolo": "./src/tavolo/index.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -16,7 +17,8 @@
   },
   "dependencies": {
     "@gdt/engine": "workspace:*",
-    "@gdt/i18n": "workspace:*"
+    "@gdt/i18n": "workspace:*",
+    "lucide-react": "^1.69.0"
   },
   "peerDependencies": {
     "react": "^18.3.1"

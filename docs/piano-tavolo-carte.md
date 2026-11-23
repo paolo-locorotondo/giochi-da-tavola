@@ -106,6 +106,63 @@ Ultima! a 6
 +-------------------------------+
 ```
 
+## Progetto dei componenti (bozza, da approvare prima del codice)
+
+Regole comuni: solo token CSS (niente colori né misure fisse nei componenti; il feltro è un nuovo token
+`--tavolo-fondo`, da calcolare con il contrasto WCAG nei due temi). Bersagli ≥ 44 px. Turno, squadra e stato sempre
+con testo oltre al colore. Icone `lucide-react` con `aria-hidden` quando accanto a testo.
+
+**`TavoloCarte`**: `posti: PostoGiocatore[]` (il primo è chi gioca, gli altri in senso orario), `children` per le zone
+del centro. Forma: rettangolo arrotondato fino a 4 posti, ovale da 5 a 10 (decisione 3). Layout a griglia con aree
+nominate: posti sul bordo, zone al centro, nessuna posizione assoluta, così il tavolo scala con il numero di posti.
+
+**`PostoGiocatore`**: `nome`, `carte: number`, `diTurno: boolean`, `squadra?: string` (testo, es. «Squadra 1»),
+`collegato?: boolean`, `punti?: string`. Omino `user` di `lucide-react` (decisione 4); iniziali solo se due nomi
+coincidono, lo decide il componente. Accessibile: un solo testo leggibile («Carla, 11 carte, tocca a lei»).
+
+**`ZonaCarte`**: `titolo: string`, `carte: Carta[] | number` (numero per il mazzo coperto), `disposizione: "fila" |
+"pila" | "colonne"`, `selezione?` e `onSeleziona?` (stesso modello di `Mano`), `vuota?: string` (testo se è vuota).
+Le colonne (Burraco) sono sovrapposte in verticale: il componente non sa cosa sono, sa solo come disporle.
+
+**`SegnapostoPosa`**: riquadro tratteggiato, bordo `--bd-ctrl`, testo «Posa qui», `onTocca`, `disabilitato?`.
+Visibile solo quando la posa è possibile (il gioco decide).
+
+**`Mano` (esistente, da estendere)**: `diTurno?: boolean` (bordo `--ac` 2 px e titolo «La tua mano (tocca a te): n»),
+`riepilogo?: ReactNode` (una riga sotto la mano: mazzo, prese, scope). Nessun'altra modifica.
+
+**`BarraAzioni`**: `azioni: { id, etichetta, icona?, variante: "primaria" | "secondaria" | "pericolo" | "online",
+onTocca, disabilitata? }[]`. Griglia `repeat(auto-fit, minmax(9.5rem, 1fr))` come da skill. «Sollecita» e «Simula
+mossa col bot» sono azioni come le altre, passate dal gioco.
+
+**`RegistroEventi`**: `voci: string[]`, accordion `<details>` in basso (decisione 5). Se appesantisce, un tasto «Cosa è
+successo» tra le azioni.
+
+**`PannelloInfo`**: pulsante «i» (`aria-label`, ≥ 44 px) che apre un riquadro con `titolo` e `children`. Serve per
+gli scarti in Burraco (decisione 7) e per il testo d'aiuto della matta.
+
+**Schermate da verificare a 375 px** (scuro e chiaro, checklist `ui-mobile-checklist`): partita a 2 in Scopa, a 4 in
+Burraco, a 6 in Ultima!, con mano piena (10+ carte) e con lo scorrimento già assente nei casi normali.
+
+**Esito dell'anteprima statica a 375 px** (2026-11-23, file fuori dal repo; scuro e chiaro; feltro `--tavolo-fondo`
+proposto `#1f5a3f` scuro, contrasto 7,05 col testo, e `#2a6b4f` chiaro, 6,23):
+- Scopa a 2 e Ultima! a 6 stanno in una schermata, con «Posa qui», bordo oro sulla mano e «Di turno» leggibili.
+- Burraco a 4: i tre posti sulla stessa riga risparmiano circa 90 px; le combinazioni a colonne vanno affiancate (non
+  una a destra e una a sinistra); nelle colonne sovrapposte il valore e il seme stanno **in alto a sinistra** (al
+  centro restano coperti), con J, Q, K e la stella per il jolly; la mano da 11 carte sta su una riga (carte da 34 px
+  nel ventaglio). Mano, azioni e registro entrano quasi tutti nei ~740 px utili; resta da stringere un poco.
+- «i» degli scarti a 44 px.
+- Da verificare nel codice vero: bersaglio di tocco di 44 px nelle carte sovrapposte (34 px di larghezza visibile),
+  contrasti di tutti i testi sul feltro, testo ingrandito, movimento ridotto, safe area.
+
+**Fatto (2026-11-23, non committato):** token `--tavolo-fondo` / `--tavolo-testo` in `apps/web/src/tema.css` (nei due
+temi); in `packages/carte/src/tavolo/` tutti i componenti del sistema (`TavoloCarte`, `PostoGiocatore`, `ZonaCarte`,
+`SegnapostoPosa`, `BarraAzioni`, `RegistroEventi`, `PannelloInfo`) con `tavolo.css`, locali it/en e test (64 in
+`@gdt/carte`); `Mano` con `diTurno` e `riepilogo`; dipendenza `lucide-react` in `@gdt/carte`; `@gdt/carte` in
+`apps/web`. Pagina di prova `apps/web/prova-tavolo.html` (+ `src/prova-tavolo.tsx`): solo `pnpm dev`, da eliminare
+prima del rilascio. Screenshot a 375 px fatti con Edge e Playwright; Burraco a 4 è alto circa 1350 px (con la barra di
+prova in cima), quindi non sta ancora in una schermata. Da fare: `PostoGiocatore` fuori dal feltro usa il colore
+del feltro (illeggibile sul fondo chiaro), da sistemare; guardare sul telefono.
+
 ## Passi proposti
 
 | Passo | Cosa vede l'utente | Rischio |
@@ -126,17 +183,35 @@ l'online e i bot non cambiano.
 
 ## Decisioni da prendere con l'utente
 
-Con la raccomandazione dell'analisi:
+Decisioni prese con l'utente (2026-11-23):
 
-1. **Partire dai passi 0 e 1**, o disegnare prima l'interfaccia intera? *Raccomandazione*: 0 e 1 subito.
-2. **Scopa, presa unica**: sempre «Conferma»? *Raccomandazione*: sì (è la richiesta), con un'impostazione «presa automatica» per chi vuole velocità.
-3. **Forma del tavolo**: rettangolo arrotondato fino a 4, ovale da 5 a 10? *Raccomandazione*: sì.
-4. **Omino o iniziali?** *Raccomandazione*: omino (icona di `lucide-react`), iniziali solo se due nomi coincidono.
-5. **Registro**: accordion in basso come oggi, o una riga «ultima mossa» sul tavolo? *Raccomandazione*: accordion in basso.
-6. **Punteggi**: accanto ai posti, come nello spunto di Burraco? *Raccomandazione*: sì, con «Mano 3 di 6 · a 11» come sottotitolo.
-7. **Burraco, scarti visibili**: valore di base? *Raccomandazione*: visibili; nascosti mostra comunque la cima.
-8. **Burraco, matta**: resta com'è? *Raccomandazione*: sì, finché non si rilegge l'articolo; eventualmente opzione della stanza.
-9. **Dopo Briscola**: Tressette, Scala 40? Non cambia il progetto (servirebbe solo un'altra zona).
+1. **Partenza: disegnare prima l'interfaccia intera**, poi migrare. (L'analisi raccomandava 0 e 1 subito: scelta non seguita.)
+2. **Scopa, presa unica: sempre «Conferma»**. Un'impostazione «presa automatica» per chi vuole velocità resta da valutare.
+3. **Forma del tavolo: sempre rettangolo arrotondato** (cambiata il 2026-11-23 dopo la prova a 10 giocatori; prima: ovale da 5
+   a 10, che a 375 px costringeva a file di posti). Gli avversari stanno **intorno** al tavolo, chi gioca è in basso con la
+   mano: 1-2 avversari tutti sopra; 3-5 uno per lato e il resto sopra; 6-9 due per lato e il resto sopra (10 giocatori:
+   2, 5, 2). I lati sono colonne strette accanto alle zone, quindi non aggiungono altezza. Ordine nel DOM: sinistra,
+   sopra, destra (senso orario). **Eccezione Burraco:** `disposizione="sopra"`, tutti gli avversari in una riga sopra,
+   così le zone delle combinazioni hanno tutta la larghezza (321 px a 375 invece di circa 185). Ultima! e Scopa usano la
+   disposizione «intorno» (approvata a 6 e a 10 giocatori).
+4. **Segnaposto: omino** (icona di `lucide-react`), iniziali solo se due nomi coincidono.
+
+5. **Registro: accordion in basso** come oggi. Se appesantisce troppo, si valuta un tasto tra le azioni in basso.
+6. **Punteggi accanto ai posti**, con «Mano 3 di 6 · a 11» come sottotitolo.
+7. **Burraco, scarti: visibili di base**; con scarti nascosti si mostra comunque la cima (il server manda solo la cima).
+8. **Burraco, matta: sostituzione.** In una scala 5, 6, matta, 8 il 7 pescato prende il posto della matta, che va in fondo
+   alla scala (verso fisso, nessuna impostazione). Il Codice di gara 2026, art. 10, la prevede: la matta «può essere
+   sostituita solo dalla carta della quale fa le veci». L'art. 10 non dice dove va la matta dopo, quindi il verso
+   in basso è una convenzione nostra. Regole decise: la matta va in fondo; se il fondo è occupato dall'asso va in cima
+   (art. 10, vale anche per la matta già in cima: nessun caso a parte). Scala completa (14 carte): sostituzione non
+   consentita, con testo d'aiuto. Solo scale, mai tris. Dopo ogni sostituzione si rilegge la combinazione con `scegli`
+   (meno matte): un 2 dello stesso seme che torna in posizione 2 diventa naturale e il burraco passa a pulito (es.
+   5, 6, 2♥, 8 → arrivano 7, 4, 3 → 2…8 pulito, 200). Con un jolly resta matta. Da coprire con un test. Restano:
+   effetto sui bot (mossa nuova, di base conveniente), testo d'aiuto e correzione del README, che oggi dice che la
+   sostituzione è rimandata.
+9. **Dopo Briscola: Sette e mezzo.** Gioco con banco, mazzo italiano da 40: cambia il modello del turno (giocatori contro
+   banco, carte coperte, puntate) e può chiedere una zona o un posto «banco» nel sistema; da tenere presente
+   disegnando `TavoloCarte` e `PostoGiocatore`.
 
 Punti di contatto nel codice: `packages/carte/src/ui/Mano.tsx`, `packages/carte/src/ordine.ts`,
 `games/scopa/src/ui/Tavolo.tsx` e `composizione.ts`, `games/burraco/src/ui/Tavolo.tsx`, `games/ultima/src/ui/Tavolo.tsx`,

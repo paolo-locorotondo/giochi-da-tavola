@@ -1,0 +1,14 @@
+export { PostoGiocatore } from "./PostoGiocatore";
+export type { PropsPostoGiocatore } from "./PostoGiocatore";
+export { TavoloCarte, disponiPosti } from "./TavoloCarte";
+export type { DisposizionePosti, PropsTavoloCarte } from "./TavoloCarte";
+export { ZonaCarte, alternaSelezione } from "./ZonaCarte";
+export type { DisposizioneZona, PropsZonaCarte } from "./ZonaCarte";
+export { SegnapostoPosa } from "./SegnapostoPosa";
+export type { PropsSegnapostoPosa } from "./SegnapostoPosa";
+export { BarraAzioni } from "./BarraAzioni";
+export type { AzioneTavolo, PropsBarraAzioni, VarianteAzione } from "./BarraAzioni";
+export { RegistroEventi } from "./RegistroEventi";
+export type { PropsRegistroEventi } from "./RegistroEventi";
+export { PannelloInfo } from "./PannelloInfo";
+export type { PropsPannelloInfo } from "./PannelloInfo";

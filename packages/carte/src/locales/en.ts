@@ -2,6 +2,17 @@ import type { Dizionario } from "@gdt/i18n";
 import type { it } from "./it";
 
 export const en: Dizionario<typeof it> = {
+  manoTitoloTurno: { one: "Your hand (your turn): {n} card", other: "Your hand (your turn): {n} cards" },
+  postoCarte: { zero: "no cards", one: "1 card", other: "{n} cards" },
+  postoDiTurno: "Turn",
+  postoNonCollegato: "Offline",
+  tavoloTitolo: { one: "Table with {n} player", other: "Table with {n} players" },
+  zonaVuota: "No cards",
+  zonaCoperte: { zero: "empty", one: "1 card", other: "{n} cards" },
+  segnapostoPosa: "Drop here",
+  registroTitolo: "What happened",
+  registroVuoto: "Nothing yet.",
+  infoApri: "Details: {titolo}",
   seme_cuori: "hearts",
   seme_quadri: "diamonds",
   seme_fiori: "clubs",

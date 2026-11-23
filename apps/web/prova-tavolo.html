@@ -1,0 +1,21 @@
+<!doctype html>
+<!-- Pagina di PROVA del tavolo comune (@gdt/carte/tavolo): si apre solo con `pnpm dev` (/prova-tavolo.html).
+     Non fa parte della build (vedi vite.config.ts). Da eliminare quando il tavolo è usato dai giochi. -->
+<html lang="it" data-stile="tavolo" data-tema="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Prova tavolo</title>
+    <script>
+      // Solo per la prova: ?tema=light o ?tema=dark sceglie il tema (di base il tema è quello del telefono).
+      (function () {
+        var t = new URLSearchParams(location.search).get("tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-tema", t);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/prova-tavolo.tsx"></script>
+  </body>
+</html>

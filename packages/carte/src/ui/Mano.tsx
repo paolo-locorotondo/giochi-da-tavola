@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { CARTE_PER_RIGA, impaginaMano } from "../impagina";
@@ -37,6 +37,10 @@ export interface PropsMano {
   ventaglio?: boolean;
   /** Carte per riga del ventaglio (base: `CARTE_PER_RIGA`, 9). */
   cartePerRiga?: number;
+  /** È il turno di chi tiene la mano: bordo `--ac` e titolo «La tua mano (tocca a te): n». Si legge anche a parole. */
+  diTurno?: boolean;
+  /** Una riga sotto la mano (es. mazzo, prese, scope). Testo già scritto dal gioco. */
+  riepilogo?: ReactNode;
 }
 
 /**
@@ -57,8 +61,11 @@ export function Mano({
   titolo = true,
   ventaglio = false,
   cartePerRiga = CARTE_PER_RIGA,
+  diTurno = false,
+  riepilogo,
 }: PropsMano) {
   const t = usaT(dizionari);
+  const titoloMano = t(diTurno ? "manoTitoloTurno" : "manoTitolo", { n: carte.length });
   const [ordine, setOrdine] = useState<OrdineMano | null>(ordineIniziale ?? (ventaglio ? "seme" : null));
 
   const mostrate = useMemo(() => {
@@ -117,9 +124,9 @@ export function Mano({
   );
 
   return (
-    <section className="cg-mano" aria-label={t("manoTitolo", { n: carte.length })}>
+    <section className={diTurno ? "cg-mano cg-mano-turno" : "cg-mano"} aria-label={titoloMano}>
       <div className="cg-mano-testa">
-        {titolo && <h3 className="cg-mano-titolo">{t("manoTitolo", { n: carte.length })}</h3>}
+        {titolo && <h3 className="cg-mano-titolo">{titoloMano}</h3>}
         {riordino && carte.length > 1 && (
           <div className="cg-ordina" role="group" aria-label={t("manoOrdina")}>
             <span className="cg-ordina-etichetta" aria-hidden="true">
@@ -153,6 +160,7 @@ export function Mano({
       <p className="cg-mano-stato" role="status" aria-live="polite">
         {t("manoSelezionate", { n: selezione.length })}
       </p>
+      {riepilogo && <p className="cg-mano-riepilogo">{riepilogo}</p>}
     </section>
   );
 }
