@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Minus, Plus } from "lucide-react";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
+import { CampoTesto } from "@gdt/collegamento";
 import { usaT } from "@gdt/i18n";
 import { cancellaPartita, leggiPartita, scriviPartita } from "@gdt/preferenze";
 import { dizionari } from "../locales";
@@ -120,10 +121,7 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
         <legend>{t("nomiGiocatoriBot")}</legend>
         {nomi.map((n, i) => (
           <div key={i} className="ul-riga-nome">
-            <label className="campo">
-              {i === 0 ? t("tuoNome") : t("nomeBotCampo", { n: i })}
-              <input value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => cambia(i, e.target.value)} />
-            </label>
+            <CampoTesto label={i === 0 ? t("tuoNome") : t("nomeBotCampo", { n: i })} value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(v) => cambia(i, v)} />
             {i > 0 && nomi.length > MIN_GIOCATORI && (
               <button type="button" className="btn" aria-label={t("togliBot", { n: i })} onClick={() => setNomi(nomi.filter((_, k) => k !== i))}>
                 <Minus size={18} aria-hidden="true" />
@@ -302,7 +300,7 @@ function Partita({
         </p>
       )}
       <Tavolo v={v} comandi={{ azione }} />
-      <fieldset className="ul-nomi-crea ul-senza-bordo">
+      <fieldset className="ul-nomi-crea ul-senza-bordo velocita-bot">
         <legend>{t("velocitaBot")}</legend>
         <div className="ul-segmento">
           {(Object.keys(VELOCITA) as Velocita[]).map((x) => (

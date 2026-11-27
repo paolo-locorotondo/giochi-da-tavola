@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
+import { MAX_CARATTERI_NOME, contaRighe, limitaRighe, superaRighe } from "@gdt/engine";
+import { CampoTesto, ContoRighe } from "@gdt/collegamento";
+import { MAX_GIOCATORI } from "../../logic/validazione";
 import { suonoFine } from "../../suoni";
 import QRCode from "qrcode";
 import { Copy, Eye, EyeOff } from "lucide-react";
@@ -225,6 +227,7 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
   const consigliati = impostoriConsigliati(Math.max(nomi.length, 3));
   const massimi = impostoriMassimi(Math.max(nomi.length, 3));
   const numImpostori = scelta !== null && scelta <= massimi ? scelta : consigliati;
+  const pieno = contaRighe(testo) >= MAX_GIOCATORI;
 
   return (
     <form
@@ -239,10 +242,19 @@ function Crea({ c, onEntra }: { c: Collegamento; onEntra: () => void }) {
       </button>
       <p className="muted">{t("oppureCrea")}</p>
       <label className="campo">
-        {t("giocatoriLabel")}
-        <textarea rows={6} value={testo} onChange={(e) => setTesto(limitaRighe(e.target.value, MAX_CARATTERI_NOME))} placeholder={t("segnapostoNomi")} />
+        {t("giocatoriLabel", { max: MAX_GIOCATORI })}
+        <textarea
+          rows={6}
+          value={testo}
+          onChange={(e) => setTesto((prima) => (superaRighe(e.target.value, MAX_GIOCATORI) ? prima : limitaRighe(e.target.value, MAX_CARATTERI_NOME)))}
+          placeholder={t("segnapostoNomi")}
+          aria-invalid={pieno || undefined}
+          aria-describedby="im-online-nomi-conto"
+          className={pieno ? "campo-pieno" : undefined}
+        />
         <span className="suggerimento">{t("ognunoSceglieNome")}</span>
       </label>
+      <ContoRighe id="im-online-nomi-conto" n={nomi.length} massimo={MAX_GIOCATORI} pieno={pieno} testo={t("massimoGiocatori", { max: MAX_GIOCATORI })} />
       <label className="campo">
         {t("numImpostori")}
         <select value={numImpostori} onChange={(e) => setScelta(Number(e.target.value))}>
@@ -599,7 +611,7 @@ function IndiziScritti({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: nu
           }}
         >
           <p>{t("toccaATeScrivi")}</p>
-          <input autoFocus autoComplete="off" maxLength={60} value={testo} onChange={(e) => setTesto(e.target.value)} />
+          <CampoTesto aria-label={t("toccaATeScrivi")} autoFocus autoComplete="off" maxLength={60} value={testo} onChange={setTesto} />
           <button className="btn primario" type="submit" disabled={!testo.trim()}>
             {t("invia")}
           </button>
@@ -700,7 +712,7 @@ function Tentativo({ c, v, nome }: { c: Collegamento; v: Vista; nome: (p: number
     >
       <h2>{t("seiStatoScoperto")}</h2>
       <p>{t("indovinaParola")}</p>
-      <input autoFocus autoComplete="off" maxLength={MAX_CARATTERI_PAROLA} autoCapitalize="none" value={testo} onChange={(e) => setTesto(e.target.value)} />
+      <CampoTesto aria-label={t("indovinaParola")} autoFocus autoComplete="off" maxLength={MAX_CARATTERI_PAROLA} autoCapitalize="none" value={testo} onChange={setTesto} />
       <button className="btn primario" type="submit">
         {t("conferma")}
       </button>

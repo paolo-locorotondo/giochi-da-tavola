@@ -7,10 +7,28 @@ export function limitaTesto(testo: string, max: number): string {
   return simboli.length <= max ? testo : simboli.slice(0, max).join("");
 }
 
-/** Accorcia ogni riga a `max` caratteri, lasciando intatte le altre: serve ai campi «uno per riga». */
-export function limitaRighe(testo: string, max: number): string {
-  return testo
-    .split("\n")
-    .map((r) => limitaTesto(r, max))
-    .join("\n");
+/**
+ * Accorcia ogni riga a `max` caratteri, lasciando intatte le altre: serve ai campi «uno per riga».
+ * Con `maxNomi` tiene al più quel numero di righe con un nome: le righe vuote non contano e restano libere
+ * (si può andare a capo quanto si vuole), i nomi oltre il massimo si scartano.
+ */
+export function limitaRighe(testo: string, max: number, maxNomi?: number): string {
+  let nomi = 0;
+  const righe = testo.split("\n").map((r) => {
+    const corta = limitaTesto(r, max);
+    if (corta.trim().length === 0) return corta;
+    nomi++;
+    return maxNomi !== undefined && nomi > maxNomi ? "" : corta;
+  });
+  return righe.join("\n");
+}
+
+/** Vero se il testo ha più nomi di `maxNomi` (cioè se `limitaRighe` ne scarterebbe qualcuno). */
+export function superaRighe(testo: string, maxNomi: number): boolean {
+  return contaRighe(testo) > maxNomi;
+}
+
+/** Righe non vuote di un campo «uno per riga» (i nomi già scritti). */
+export function contaRighe(testo: string): number {
+  return testo.split("\n").filter((r) => r.trim().length > 0).length;
 }

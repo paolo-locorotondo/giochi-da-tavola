@@ -43,6 +43,21 @@
 
 .bu-nota { margin: 0; font-size: 0.85rem; }
 
+/* Carte delle combinazioni sul tavolo: 34 px sul telefono (erano 26), 40 px dai 480 px */
+.bu-tavolo .cg-zona-colonna {
+  --cg-fs-colonna: 0.53125rem;
+  --cg-passo-colonna: 1.3rem;
+}
+@media (min-width: 30rem) {
+  .bu-tavolo .cg-zona-colonna {
+    --cg-fs-colonna: 0.625rem;
+    --cg-passo-colonna: 1.5rem;
+  }
+}
+
+/* Riquadro di una combinazione: carte «grandi» come la mano, a ventaglio (si sovrappongono quanto serve) */
+.bu-dettaglio-totale { margin: 0; font-family: var(--font-titoli); font-size: 1.05rem; font-weight: 800; }
+
 /* Centro: mazzo, scarti e il pulsante «i» */
 .bu-centro {
   display: flex;

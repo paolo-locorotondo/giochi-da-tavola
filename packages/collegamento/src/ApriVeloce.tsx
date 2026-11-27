@@ -11,6 +11,7 @@ import {
   type PartitaVeloceOnline,
 } from "@gdt/engine";
 import { dizionari } from "./locales";
+import { CampoTesto } from "./CampoTesto";
 import { testoErroreVeloce } from "./SalaVeloce";
 import "./sala-veloce.css";
 
@@ -99,10 +100,7 @@ export function ApriVeloce<C = unknown>({ c, veloce, impostazioni, riepilogo, te
           {t(c.fuoriSala === "scaduta" ? "fuoriScaduta" : "fuoriChiusa")}
         </p>
       )}
-      <label className="campo">
-        {t("tuoNome")}
-        <input autoFocus value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setNome(e.target.value)} />
-      </label>
+      <CampoTesto label={t("tuoNome")} autoFocus value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={setNome} />
 
       {!semplice && anteprima === undefined && <p className="muted">{t("cercoStanze")}</p>}
 
@@ -110,6 +108,8 @@ export function ApriVeloce<C = unknown>({ c, veloce, impostazioni, riepilogo, te
         <div className="sv-scheda">
           <h3>{t("stanzaDi", { nome: anteprima.organizzatore })}</h3>
           <p>
+            {t("codiceSala", { codice: anteprima.codice })}
+            {" · "}
             {t("postiOccupati", { n: anteprima.occupati, tot: anteprima.posti })}
             {" · "}
             {t("minuti", { n: anteprima.attesaMs / 60_000 })}

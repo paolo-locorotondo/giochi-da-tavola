@@ -57,6 +57,24 @@
 
 /* ---------- Carte grafiche nel ventaglio (Mano con `ventaglio`) ---------- */
 
+/* Carta «grande» (72 px, 80 px dai 480 px): misure di Ultima!, almeno 32 px visibili per carta */
+.cg-ventaglio-grande {
+  --cg-v-w: 4.5rem;
+  --cg-v-h: 6.525rem;
+  --cg-v-gap: 0.5rem;
+  --cg-v-min: 2rem;
+  --cg-v-passo: 3.5rem;
+  --cg-v-pad: 0.75rem 0.25rem 0.5rem;
+}
+@media (min-width: 30rem) {
+  .cg-ventaglio-grande {
+    --cg-v-w: 5rem;
+    --cg-v-h: 7.25rem;
+    --cg-v-min: 2.5rem;
+    --cg-v-passo: 4rem;
+  }
+}
+
 /* anello del colore dello sfondo: separa le carte sovrapposte */
 .cg-ventaglio .cg-carta {
   box-shadow: 0 0 0 2px var(--bg);

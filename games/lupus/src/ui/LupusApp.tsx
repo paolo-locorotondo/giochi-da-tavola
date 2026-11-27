@@ -29,7 +29,8 @@ import {
   type Ruolo,
   type Stato,
 } from "../logica";
-import { MAX_CARATTERI_NOME, limitaRighe } from "@gdt/engine";
+import { ContoRighe } from "@gdt/collegamento";
+import { MAX_CARATTERI_NOME, contaRighe, limitaRighe, superaRighe } from "@gdt/engine";
 import { traduttore, usaLingua, usaT, type Lingua, type Traduttore } from "@gdt/i18n";
 import { validaConfigurazione, type ErroreConfigurazione } from "../validazione";
 import { dizionari } from "../locales";
@@ -379,6 +380,8 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
   }
   const contadini = contadiniRestanti(n, speciali);
 
+  const pieno = contaRighe(testo) >= MAX_GIOCATORI;
+
   function invia(e: FormEvent) {
     e.preventDefault();
     const problema = validaConfigurazione(nomi);
@@ -397,10 +400,14 @@ function Configurazione({ onAvvia }: { onAvvia: (o: OpzioniPartita) => void }) {
         <textarea
           rows={8}
           value={testo}
-          onChange={(e) => setTesto(limitaRighe(e.target.value, MAX_CARATTERI_NOME))}
+          onChange={(e) => setTesto((prima) => (superaRighe(e.target.value, MAX_GIOCATORI) ? prima : limitaRighe(e.target.value, MAX_CARATTERI_NOME)))}
           placeholder={t("placeholderNomi")}
+          aria-invalid={pieno || undefined}
+          aria-describedby="lu-nomi-conto"
+          className={pieno ? "campo-pieno" : undefined}
         />
       </label>
+      <ContoRighe id="lu-nomi-conto" n={n} massimo={MAX_GIOCATORI} pieno={pieno} testo={t("massimoGiocatori", { max: MAX_GIOCATORI })} />
       <p className="suggerimento">{t("ordineOrario")}</p>
       {n >= MIN_GIOCATORI ? (
         <fieldset className="composizione">

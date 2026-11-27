@@ -15,7 +15,7 @@ export const it = {
   valoriInsufficienti: "Servono almeno due valori diversi.",
   infoDado: "Cosa significano le facce",
   infoPersonalizzata: "Cosa significano le facce (facoltativo)",
-  infoAiuto: "Se lo scrivi, accanto al dado compare il tasto «i». {n}/{max} caratteri.",
+  infoAiuto: "Se lo scrivi, accanto al dado compare il tasto «i».",
   lancia: "Lancia",
   inLancio: "Lancio in corso…",
   risultato: "Risultato: {faccia}",

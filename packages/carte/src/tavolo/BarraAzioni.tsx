@@ -13,6 +13,8 @@ export interface AzioneTavolo {
   disabilitata?: boolean;
   /** Di base il primario occupa tutta la riga; con `false` sta accanto agli altri (es. «Annulla» e «Conferma»). */
   larga?: boolean;
+  /** L'azione occupa tutta la riga (es. «Sollecita», «Simula mossa col bot»): stessa larghezza in ogni gioco. */
+  piena?: boolean;
   /** Nome parlato, se diverso dal testo visibile (es. «Scarta sette di cuori» per «Scarta»). */
   nomeAria?: string;
   /** Id di un testo che spiega l'azione (`aria-describedby`). */
@@ -38,7 +40,7 @@ export function BarraAzioni({ azioni, etichetta }: PropsBarraAzioni) {
         <button
           key={a.id}
           type="button"
-          className={`cg-azione cg-azione-${a.variante ?? "secondaria"}${a.larga === false ? " cg-azione-affiancata" : ""}`}
+          className={`cg-azione cg-azione-${a.variante ?? "secondaria"}${a.larga === false ? " cg-azione-affiancata" : ""}${a.piena ? " cg-azione-piena" : ""}`}
           disabled={a.disabilitata}
           aria-label={a.nomeAria}
           aria-describedby={a.descrittaDa}

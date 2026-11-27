@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0e1a16" />
+    <!-- I colori li decide l'app (tema scuro e chiaro a token): niente inversione automatica dei colori da parte del browser
+         (Samsung Internet «Modalità scura per i siti», Chrome «Forza modalità scura»). -->
+    <meta name="color-scheme" content="dark light" />
+    <meta name="supported-color-schemes" content="dark light" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <title>Giochi da tavola</title>
     <!-- Applica stile e tema prima del primo disegno, per evitare il lampo del tema sbagliato. -->
@@ -21,6 +25,7 @@
         }
         d.setAttribute("data-stile", stile);
         d.setAttribute("data-tema", scelta);
+        d.style.colorScheme = scelta;
         var m = document.querySelector('meta[name="theme-color"]');
         if (m) m.setAttribute("content", scelta === "light" ? "#f3efe3" : "#0e1a16");
       })();

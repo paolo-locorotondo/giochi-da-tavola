@@ -80,6 +80,7 @@ export const it = {
   errNomeDuplicato: "Nome duplicato: {nome}",
   errPochi: "Servono almeno {minimo} giocatori",
   errTanti: "Al massimo {massimo} giocatori",
+  massimoGiocatori: "Al massimo {max} giocatori: non si possono aggiungere altri nomi",
 
   // Distribuzione delle carte
   cartaDi: "Carta {n} di {tot}",

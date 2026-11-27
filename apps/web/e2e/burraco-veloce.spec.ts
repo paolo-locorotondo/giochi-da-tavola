@@ -48,14 +48,14 @@ test("burraco veloce a 4: Anna apre a 1505 punti con scarti bloccati, altri tre 
   try {
     await allaPartitaVeloce(anna, "Anna");
     // Nessuna stanza aperta: impostazioni per aprirne una.
-    await expect(anna.getByRole("button", { name: "Apri una stanza veloce" })).toBeVisible();
+    await expect(anna.getByRole("button", { name: "Apri una partita veloce" })).toBeVisible();
     await anna.getByRole("radio", { name: "4", exact: true }).check();
     await anna.getByRole("radio", { name: /1505 punti/ }).check();
     await anna.getByRole("radio", { name: /Bloccati dalle matte/ }).check();
     await anna.getByRole("radio", { name: "In ordine di arrivo" }).check();
     await anna.getByRole("radio", { name: "5 min" }).check();
     await schermata(anna, "veloce-apertura");
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByRole("heading", { name: "Sala d'attesa" })).toBeVisible();
     await expect(anna.getByText("Aspetto altri 3 giocatori")).toBeVisible();
     // Una stanza da 4 non parte con meno giocatori: niente «Apri adesso».
@@ -97,7 +97,7 @@ test("burraco veloce a 2: senza squadre, parte da sola al secondo arrivo", async
     await allaPartitaVeloce(anna, "Anna");
     await anna.getByRole("radio", { name: "2", exact: true }).check();
     await expect(anna.getByText("Squadre", { exact: true })).toHaveCount(0);
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
     await allaPartitaVeloce(bruno, "Bruno");
     await bruno.getByRole("button", { name: "Entra nella stanza" }).click();
@@ -113,7 +113,7 @@ test("burraco veloce: la sala sopravvive a un refresh e la chiude l'organizzator
   try {
     await allaPartitaVeloce(anna, "Anna");
     await anna.getByRole("radio", { name: "4", exact: true }).check();
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByRole("heading", { name: "Sala d'attesa" })).toBeVisible();
     await allaPartitaVeloce(pippo, "Pippo");
     await pippo.getByRole("button", { name: "Entra nella stanza" }).click();

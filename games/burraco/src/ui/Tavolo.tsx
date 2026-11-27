@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Bot, Layers } from "lucide-react";
-import { CartaGrafica, Mano, dizionariCarte, nomeCarta, type OrdineMano } from "@gdt/carte";
-import { BarraAzioni, PannelloInfo, RegistroEventi, TavoloCarte, ZonaCarte, type AzioneTavolo, type PropsPostoGiocatore } from "@gdt/carte/tavolo";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bell, Bot, Plus } from "lucide-react";
+import { CARTE_PER_RIGA, CartaGrafica, Mano, Ventaglio, dizionariCarte, impaginaMano, nomeCarta, type OrdineMano } from "@gdt/carte";
+import { BarraAzioni, BottoneInfo, RegistroEventi, RiquadroDettaglio, TavoloCarte, ZonaCarte, type AzioneTavolo, type PropsPostoGiocatore } from "@gdt/carte/tavolo";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { valorePunti, type Carta } from "../carte";
-import { attacca, burraco, leggi, type Combinazione, type Interpretazione } from "../combinazioni";
+import { attacca, bonusBurraco, burraco, leggi, puntiCarte, type Combinazione, type Interpretazione } from "../combinazioni";
 import { avanza, type Evento } from "../logica";
 import type { Vista } from "../online";
 
@@ -19,6 +19,8 @@ export interface Comandi {
   sollecita?: () => void;
   /** Solo online: l'organizzatore vede «Simula mossa col bot». */
   conBot?: boolean;
+  /** L'ultimo errore di una mossa, già tradotto: si mostra vicino alle azioni, dove si guarda. */
+  errore?: string | null;
 }
 
 const CHIAVE_ORDINE = "gdt.burraco.ordine";
@@ -118,6 +120,14 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const precedenti = useRef<Set<number> | null>(null);
   const [nuove, setNuove] = useState<number[]>([]);
   const [avvisoPozzetto, setAvvisoPozzetto] = useState<number | null>(null);
+  /** La combinazione aperta nel riquadro di dettaglio (toccando la sua colonna sul tavolo). */
+  const [aperta, setAperta] = useState<number | null>(null);
+  const chiudiDettaglio = useCallback(() => setAperta(null), []);
+  /** Conferma aperta sul tavolo dopo aver toccato il mazzo o gli scarti. */
+  const [conferma, setConferma] = useState<"mazzo" | "scarti" | null>(null);
+  /** Il riquadro con tutta la pila degli scarti (pulsante «i»). */
+  const [vediScarti, setVediScarti] = useState(false);
+  const chiudiScarti = useCallback(() => setVediScarti(false), []);
   useEffect(() => {
     const prima = precedenti.current;
     precedenti.current = idsMano;
@@ -134,6 +144,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const sqPresa = mia !== null && v.squadre[mia - 1]!.pozzettoPreso;
   const unaScelta = carteScelte.length === 1 ? carteScelte[0]! : null;
   const chiudeScartando = gioca && unaScelta !== null && ultimaCarta && sqPresa;
+  /** Dopo il pozzetto, attaccando resterebbe una sola carta in mano e la squadra non ha ancora un burraco: non si può chiudere. */
+  const restaUnaSenzaBurraco = gioca && sqPresa && carteScelte.length > 0 && v.carte.length - carteScelte.length === 1 && !v.combinazioni.some((x) => x.squadra === mia && burraco(x) !== null);
 
   const mie = v.combinazioni.filter((x) => x.squadra === mia);
   const loro = v.combinazioni.filter((x) => x.squadra !== mia);
@@ -165,22 +177,29 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   const prendi = () => c.azione(v.pilaBloccata ? { tipo: "prendiPila", gruppo: scelte } : { tipo: "prendiPila" });
 
   const turnoGiocatore = v.nomi.find((n) => n.posto === v.turno);
+  const possoPescare = pesca;
+  const possoPrendere = pesca && v.possoPrendere && (!v.pilaBloccata || scelte.length === 2);
+  // La conferma sparisce se non è più il momento (turno passato, scelta cambiata).
+  useEffect(() => {
+    if ((conferma === "mazzo" && !possoPescare) || (conferma === "scarti" && !possoPrendere)) setConferma(null);
+  }, [conferma, possoPescare, possoPrendere]);
   const attaccabili = gioca && carteScelte.length > 0 ? mie.filter((x) => attacca(x, carteScelte) !== null) : [];
-  const combDiCarta = (id: number) => v.combinazioni.find((x) => x.posate.some((p) => p.carta.id === id));
   const colonne = (lista: readonly Combinazione[]) => lista.map((x) => x.posate.map((p) => p.carta));
-  const etichettaCarta = (carta: Carta) => {
-    const x = combDiCarta(carta.id);
-    if (!x) return undefined;
-    const posata = x.posate.find((p) => p.carta.id === carta.id);
-    const base = posata?.matta ? t("cartaMatta", { carta: nomeCarta(tc, carta) }) : nomeCarta(tc, carta);
+  const nomeComb = (x: Combinazione) => {
     const b = burraco(x);
-    const dove = `${titoloComb(t, tc, x)}${b ? ` (${t(`burraco_${b}`)})` : ""}`;
-    return attaccabili.includes(x) ? `${base}, ${dove}. ${t("attaccaQuiAria", { nome: dove })}` : `${base}, ${dove}`;
+    return `${titoloComb(t, tc, x)}${b ? ` · ${t(`burraco_${b}`)}` : ""}`;
   };
-  const attaccaDaCarta = (carta: Carta) => {
-    const x = combDiCarta(carta.id);
-    if (x && attaccabili.includes(x)) attaccaA(x);
+  const etichettaGruppo = (lista: readonly Combinazione[]) => (i: number) => {
+    const x = lista[i]!;
+    const base = t("combAria", { nome: nomeComb(x), n: x.posate.length });
+    return attaccabili.includes(x) ? `${base}; ${t("combAttaccabile")}` : base;
   };
+  const indiciAttaccabili = mie.flatMap((x, i) => (attaccabili.includes(x) ? [i] : []));
+  const combAperta = v.combinazioni.find((x) => x.id === aperta) ?? null;
+  // Se la combinazione non c'è più (fine mano), il riquadro si chiude.
+  useEffect(() => {
+    if (aperta !== null && !combAperta) setAperta(null);
+  }, [aperta, combAperta]);
 
   // Gli altri in senso orario, a partire da chi gioca dopo di me (chi guarda senza giocare li vede tutti).
   const nGiocatori = v.nomi.length;
@@ -203,14 +222,6 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       azioni.push({ id: "si-chiudi", etichetta: t("siChiudiMano"), variante: "primaria", larga: false, onTocca: scarta });
       azioni.push({ id: "annulla", etichetta: t("annulla"), onTocca: () => setConfermaChiusura(false) });
     } else {
-      azioni.push({ id: "pesca", etichetta: t("pesca"), variante: pesca ? "primaria" : "secondaria", larga: false, disabilitata: !pesca, onTocca: () => c.azione({ tipo: "pesca" }) });
-      azioni.push({
-        id: "prendi",
-        etichetta: t("prendiMonte"),
-        icona: <Layers size={18} />,
-        disabilitata: !pesca || !v.possoPrendere || (v.pilaBloccata && scelte.length !== 2),
-        onTocca: prendi,
-      });
       azioni.push({ id: "cala", etichetta: t("cala"), variante: gioca && lettura ? "primaria" : "secondaria", larga: false, disabilitata: !gioca || !lettura, onTocca: cala });
       azioni.push({
         id: "scarta",
@@ -226,11 +237,12 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   }
   if (inMano && v.host && c.conBot && turnoGiocatore) {
     if (c.sollecita)
-      azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, onTocca: c.sollecita });
+      azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, piena: true, onTocca: c.sollecita });
     azioni.push({
       id: "bot",
       etichetta: t("botMossa", { nome: turnoGiocatore.nome }),
       icona: <Bot size={18} />,
+      piena: true,
       descrittaDa: "bu-bot-aiuto",
       onTocca: () => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto }),
     });
@@ -266,33 +278,96 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
             disposizione="colonne"
             gruppi={colonne(loro)}
             vuota={t("nessunaCombinazione")}
-            etichetta={etichettaCarta}
+            onToccaGruppo={(i) => { setAperta(loro[i]!.id); setConferma(null); setVediScarti(false); }}
+            etichettaGruppo={etichettaGruppo(loro)}
           />
           <ZonaCarte
             titolo={t("combinazioniNostre", { n: mie.length })}
             disposizione="colonne"
             gruppi={colonne(mie)}
             vuota={t("nessunaCombinazione")}
-            evidenziate={attaccabili.flatMap((x) => x.posate.map((p) => p.carta.id))}
-            etichetta={etichettaCarta}
-            onTocca={attaccabili.length > 0 ? attaccaDaCarta : undefined}
+            onToccaGruppo={(i) => { setAperta(mie[i]!.id); setConferma(null); setVediScarti(false); }}
+            etichettaGruppo={etichettaGruppo(mie)}
+            gruppiEvidenziati={indiciAttaccabili}
           />
           <div className="bu-centro">
-            <ZonaCarte titolo={t("tallone")} disposizione="pila" coperte={v.mazzo} dimensione="piccola" />
-            <ZonaCarte titolo={t("monte")} disposizione="pila" carte={v.scarti} dimensione="piccola" vuota={t("monteVuoto")} />
+            <ZonaCarte
+              titolo={t("tallone")}
+              disposizione="pila"
+              coperte={v.mazzo}
+              dimensione="grande"
+              onToccaPila={possoPescare && v.mazzo > 0 ? () => { setConferma("mazzo"); setAperta(null); setVediScarti(false); } : undefined}
+              etichettaPila={t("pilaMazzoAria", { n: v.mazzo })}
+            />
+            <ZonaCarte
+              titolo={t("monte")}
+              disposizione="pila"
+              carte={v.scarti}
+              dimensione="grande"
+              vuota={t("monteVuoto")}
+              onToccaPila={possoPrendere ? () => { setConferma("scarti"); setAperta(null); setVediScarti(false); } : undefined}
+              etichettaPila={t("pilaScartiAria", { n: v.scarti.length })}
+            />
             {v.scarti.length > 1 && (
-              <PannelloInfo titolo={t("monte")}>
-                <p className="muted bu-nota">{t("monteCarte", { n: v.scarti.length })}</p>
-                <ul className="bu-monte">
-                  {[...v.scarti].reverse().map((x) => (
-                    <li key={x.id}>
-                      <CartaGrafica carta={x} dimensione="mini" />
-                    </li>
-                  ))}
-                </ul>
-              </PannelloInfo>
+              <BottoneInfo
+                titolo={t("monte")}
+                aperto={vediScarti}
+                onTocca={() => {
+                  setVediScarti((a) => !a);
+                  setAperta(null);
+                  setConferma(null);
+                }}
+              />
             )}
           </div>
+          {vediScarti && !combAperta && !conferma && v.scarti.length > 1 && (
+            <RiquadroDettaglio titolo={t("monte")} onChiudi={chiudiScarti}>
+              <p className="muted bu-nota">{t("monteCarte", { n: v.scarti.length })}</p>
+              <Ventaglio
+                className="cg-ventaglio-grande"
+                righe={impaginaMano([...v.scarti].reverse(), { capacita: CARTE_PER_RIGA, chiave: () => 0 })}
+                chiaveCarta={(x) => x.id}
+                carta={(x) => <CartaGrafica carta={x} dimensione="grande" />}
+              />
+            </RiquadroDettaglio>
+          )}
+          {conferma && !combAperta && (
+            <RiquadroDettaglio titolo={t(conferma === "mazzo" ? "confermaPescaTitolo" : "confermaPrendiTitolo")} onChiudi={() => setConferma(null)}>
+              <BarraAzioni
+                azioni={[
+                  {
+                    id: "conferma-pila",
+                    etichetta: t(conferma === "mazzo" ? "pescaDalMazzo" : "prendiMonte"),
+                    variante: "primaria",
+                    larga: false,
+                    onTocca: () => {
+                      setConferma(null);
+                      if (conferma === "mazzo") c.azione({ tipo: "pesca" });
+                      else prendi();
+                    },
+                  },
+                  { id: "annulla-pila", etichetta: t("annulla"), onTocca: () => setConferma(null) },
+                ]}
+              />
+            </RiquadroDettaglio>
+          )}
+          {combAperta && (
+            <RiquadroDettaglio titolo={nomeComb(combAperta)} onChiudi={chiudiDettaglio}>
+              <DettaglioComb
+                t={t}
+                tc={tc}
+                comb={combAperta}
+                attaccabile={attaccabili.includes(combAperta)}
+                nostra={combAperta.squadra === mia}
+                conScelte={gioca && carteScelte.length > 0}
+                bloccoChiusura={restaUnaSenzaBurraco}
+                onAttacca={() => {
+                  attaccaA(combAperta);
+                  setAperta(null);
+                }}
+              />
+            </RiquadroDettaglio>
+          )}
         </TavoloCarte>
       )}
 
@@ -312,6 +387,7 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
       {v.io !== null && (
         <Mano
           ventaglio
+          dimensione="grande"
           carte={v.carte}
           selezione={scelte}
           onSeleziona={setScelte}
@@ -336,6 +412,11 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
         </div>
       )}
 
+      {c.errore && (
+        <p className="errore" role="alert">
+          {c.errore}
+        </p>
+      )}
       <BarraAzioni azioni={azioni} />
       {azioni.some((a) => a.id === "bot") && (
         <p className="muted bu-nota" id="bu-bot-aiuto">
@@ -349,6 +430,82 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       <RegistroEventi titolo={t("eventiTitolo")} voci={v.eventi.map((e) => testoEvento(t, tc, e, nome))} massimo={v.eventi.length} />
     </section>
+  );
+}
+
+/** Il contenuto del riquadro di una combinazione: carte a ventaglio, matte, punti, e «Attacca qui» se si può. */
+function DettaglioComb({
+  t,
+  tc,
+  comb,
+  attaccabile,
+  nostra,
+  conScelte,
+  bloccoChiusura,
+  onAttacca,
+}: {
+  t: T;
+  tc: TC;
+  comb: Combinazione;
+  attaccabile: boolean;
+  nostra: boolean;
+  conScelte: boolean;
+  /** Attaccando resterebbe una sola carta senza burraco: l'attacco sarebbe rifiutato. */
+  bloccoChiusura: boolean;
+  onAttacca: () => void;
+}) {
+  const carte = puntiCarte(comb.posate);
+  const bonus = bonusBurraco(comb);
+  const matte = comb.posate.filter((p) => p.matta);
+  /** Si può premere solo se le carte scelte si attaccano e l'attacco non lascerebbe una sola carta senza burraco. */
+  const possoAttaccare = attaccabile && !bloccoChiusura;
+  return (
+    <>
+      <Ventaglio
+        className="cg-ventaglio-grande"
+        righe={impaginaMano(
+          comb.posate.map((p) => p.carta),
+          { capacita: CARTE_PER_RIGA, chiave: () => 0 },
+        )}
+        chiaveCarta={(c) => c.id}
+        carta={(c) => <CartaGrafica carta={c} dimensione="grande" />}
+      />
+      {matte.map((p) => (
+        <p key={p.carta.id} className="muted bu-nota">
+          {t("dettaglioMatta", { carta: nomeCarta(tc, p.carta) })}
+        </p>
+      ))}
+      <p className="bu-nota">
+        {t("dettaglioCarte", { n: carte })}
+        {bonus > 0 ? ` · ${t(`burraco_${burraco(comb)!}`)}` : ""}
+      </p>
+      <p className="bu-dettaglio-totale">{t("dettaglioTotale", { n: carte + bonus })}</p>
+      {nostra && conScelte && (
+        <BarraAzioni
+          azioni={[
+            {
+              id: "attacca-qui",
+              etichetta: t("attaccaQui"),
+              icona: <Plus size={18} />,
+              variante: "primaria",
+              disabilitata: !possoAttaccare,
+              descrittaDa: !possoAttaccare ? "bu-attacca-perche" : undefined,
+              onTocca: onAttacca,
+            },
+          ]}
+        />
+      )}
+      {nostra && conScelte && !attaccabile && (
+        <p className="errore bu-nota" id="bu-attacca-perche" role="status">
+          {t("dettaglioNonAttacca")}
+        </p>
+      )}
+      {nostra && conScelte && attaccabile && bloccoChiusura && (
+        <p className="errore bu-nota" id="bu-attacca-perche" role="status">
+          {t("errore_serveBurracoAttacca")}
+        </p>
+      )}
+    </>
   );
 }
 

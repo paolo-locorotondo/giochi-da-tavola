@@ -26,6 +26,10 @@
 
 .cg-mini { --cg-fs: 0.40625rem; }
 .cg-piccola { --cg-fs: 0.6875rem; }
+.cg-grande { --cg-fs: 1.125rem; }
+@media (min-width: 30rem) {
+  .cg-grande { --cg-fs: 1.25rem; }
+}
 .cg-normale { --cg-fs: 0.9375rem; }
 
 button.cg-carta {
@@ -162,10 +166,10 @@ button.cg-sel:active:not(:disabled) { transform: translateY(-0.35em); }
   overflow-wrap: anywhere;
 }
 
-.cg-ordina { display: flex; align-items: center; gap: 0.5rem; }
-.cg-ordina-etichetta { font-size: 0.85rem; color: var(--mu); }
-
 .cg-ordina-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   min-width: var(--tocco);
   min-height: var(--tocco);
   padding: 0 0.85rem;
@@ -184,11 +188,6 @@ button.cg-sel:active:not(:disabled) { transform: translateY(-0.35em); }
 .cg-ordina-btn:active { transform: translateY(2px); }
 .cg-ordina-btn:focus-visible { outline: 3px solid var(--ac); outline-offset: 2px; }
 
-.cg-ordina-btn[aria-pressed="true"] {
-  color: var(--on-ac);
-  background: var(--ac);
-  border-color: var(--ac);
-}
 
 /* 7 carte da 44 px per riga a 375 px (7 × 44 + 6 × 4 = 332 px), poi a capo: mai scroll orizzontale. */
 .cg-griglia {

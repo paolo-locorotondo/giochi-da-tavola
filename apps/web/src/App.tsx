@@ -76,8 +76,8 @@ const ICONE_GIOCHI: Record<string, NomeIcona> = {
   dadi: "dadi",
   tris: "griglia",
   ultima: "carte",
-  scopa: "ventaglio",
-  burraco: "asso-e-sette",
+  scopa: "carte-s",
+  burraco: "carte-b",
   "duello-lampo": "fulmine",
 };
 

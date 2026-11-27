@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { CampoTesto } from "@gdt/collegamento";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
 import { cancellaPartita, leggiPartita, scriviPartita } from "@gdt/preferenze";
@@ -116,15 +117,9 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
 
       <fieldset className="sc-gruppo sc-senza-bordo">
         <legend>{t("nomiGiocatoriBot")}</legend>
-        <label className="campo">
-          {t("tuoNome")}
-          <input value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setNome(e.target.value)} />
-        </label>
+        <CampoTesto label={t("tuoNome")} value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={setNome} />
         {bot.slice(0, posti - 1).map((n, i) => (
-          <label key={i} className="campo">
-            {posti === 4 && i === 1 ? t("nomeBotCompagno") : t("nomeBotCampo", { n: i + 1 })}
-            <input value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => cambiaBot(i, e.target.value)} />
-          </label>
+          <CampoTesto key={i} label={posti === 4 && i === 1 ? t("nomeBotCompagno") : t("nomeBotCampo", { n: i + 1 })} value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(v) => cambiaBot(i, v)} />
         ))}
         <span className="suggerimento">{t("botAiutoCrea")}</span>
       </fieldset>
@@ -262,7 +257,7 @@ function Partita({
         </p>
       )}
       <Tavolo v={v} comandi={{ azione }} />
-      <fieldset className="sc-gruppo sc-senza-bordo">
+      <fieldset className="sc-gruppo sc-senza-bordo velocita-bot">
         <legend>{t("velocitaBot")}</legend>
         <div className="sc-segmento">
           {(Object.keys(VELOCITA) as Velocita[]).map((x) => (

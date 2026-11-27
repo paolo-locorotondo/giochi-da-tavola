@@ -164,6 +164,9 @@ importers:
 
   games/dadi:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -189,6 +192,9 @@ importers:
 
   games/duello-lampo:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -251,6 +257,9 @@ importers:
 
   games/lupus:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -313,6 +322,9 @@ importers:
 
   games/tabu:
     dependencies:
+      '@gdt/collegamento':
+        specifier: workspace:*
+        version: link:../../packages/collegamento
       '@gdt/engine':
         specifier: workspace:*
         version: link:../../packages/engine

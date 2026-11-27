@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { veloceDaIndirizzo } from "@gdt/collegamento";
 import { Wifi, WifiOff } from "lucide-react";
 import { AvvisoBetaTesto } from "@gdt/collegamento";
 import { usaT } from "@gdt/i18n";
@@ -24,10 +25,10 @@ function modoDaCronologia(): Modo | null {
 export function ScopaApp() {
   const t = usaT(dizionari);
   const [codice] = useState(codiceDaIndirizzo);
-  const [modo, setModo] = useState<Modo>(() => modoDaCronologia() ?? (codice ? "online" : "scelta"));
+  const [modo, setModo] = useState<Modo>(() => modoDaCronologia() ?? (codice || veloceDaIndirizzo() ? "online" : "scelta"));
 
   useEffect(() => {
-    const aggiorna = () => setModo(modoDaCronologia() ?? (codiceDaIndirizzo() ? "online" : "scelta"));
+    const aggiorna = () => setModo(modoDaCronologia() ?? (codiceDaIndirizzo() || veloceDaIndirizzo() ? "online" : "scelta"));
     window.addEventListener("popstate", aggiorna);
     return () => window.removeEventListener("popstate", aggiorna);
   }, []);

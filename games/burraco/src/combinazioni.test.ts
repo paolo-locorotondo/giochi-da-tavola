@@ -88,10 +88,36 @@ describe("attacca", () => {
     const fondo = leggi([c(4, "fiori"), c(5, "fiori"), c(6, "fiori"), j()])!;
     expect(fondo.posate.find((p) => p.matta)!.come).toBe(3);
     expect(attacca(fondo, [c(7, "fiori")])!.posate.find((p) => p.matta)!.come).toBe(3);
-    // Una matta calata in alto non si sposta: il 3 non si può attaccare sotto (la sostituzione è rimandata).
+    // La matta calata scorre: con 3-4-5-6-matta-8 arriva il 7 e la matta va in fondo (come 2).
     const alto = leggi([c(3, "fiori"), c(4, "fiori"), c(5, "fiori"), c(6, "fiori"), j(), c(8, "fiori")])!;
     expect(alto.posate.find((p) => p.matta)!.come).toBe(7);
-    expect(attacca(alto, [c(7, "fiori")])).toBeNull();
+    const con7 = attacca(alto, [c(7, "fiori")])!;
+    expect(con7.posate.map((p) => p.come)).toEqual([2, 3, 4, 5, 6, 7, 8]);
+    expect(con7.posate[0]!.matta).toBe(true);
+  });
+  it("la matta scorre in basso o in alto e torna naturale quando arriva la sua carta", () => {
+    // 2♥ 3♥ + un altro 2♥ (matta come 4): arriva il 4♥ → la matta scorre in alto e fa il 5 (l'asso in basso è l'ultima scelta).
+    const base = leggi([c(2, "cuori"), c(3, "cuori"), c(2, "cuori")])!;
+    const con4 = attacca(base, [c(4, "cuori")])!;
+    expect(con4.posate.map((p) => p.come)).toEqual([2, 3, 4, 5]);
+    expect(con4.posate[3]!.matta).toBe(true);
+    // Se arriva il 5♥ la matta resta come 4: 2 3 matta 5.
+    const con5 = attacca(base, [c(5, "cuori")])!;
+    expect(con5.posate.map((p) => p.come)).toEqual([2, 3, 4, 5]);
+    expect(con5.posate[2]!.matta).toBe(true);
+    // 3, 2, 5, 6 di quadri: arriva il 4♦, il 2♦ torna al suo posto e la scala è pulita.
+    const q = leggi([c(3, "quadri"), c(2, "quadri"), c(5, "quadri"), c(6, "quadri")])!;
+    const conQ = attacca(q, [c(4, "quadri")])!;
+    expect(conQ.posate.map((p) => p.come)).toEqual([2, 3, 4, 5, 6]);
+    expect(matteIn(conQ.posate)).toBe(0);
+    // Scala di quadri 8,9,2♣,J,Q + 10♦: la matta (il 2♣) scorre in fondo e la scala è 7-Q.
+    const m = leggi([c(8, "quadri"), c(9, "quadri"), c(2, "fiori"), c(11, "quadri"), c(12, "quadri")])!;
+    expect(attacca(m, [c(10, "quadri")])).not.toBeNull();
+  });
+  it("una scala completa non accetta altre carte", () => {
+    const tutta = leggi([...scala("fiori", 1, 13), j()])!;
+    expect(tutta.posate).toHaveLength(14);
+    expect(attacca(tutta, [c(7, "fiori")])).toBeNull();
   });
   it("non attacca carte di altro seme o altro valore", () => {
     expect(attacca(leggi(scala("fiori", 4, 6))!, [c(7, "cuori")])).toBeNull();

@@ -9,6 +9,25 @@ Tutte le modifiche importanti a questo progetto. Le versioni seguono
 
 ## [Non rilasciato]
 
+## [0.32.0] - 2026-11-27
+
+### Aggiunto
+
+- **Campi di testo con contatore**: ogni campo con un limite di caratteri mostra «n/max» e, al massimo, il bordo rosso e «Massimo N caratteri» (nuovo `CampoTesto` in `@gdt/collegamento`, usato in tutti i giochi). Nelle liste «uno per riga» di Lupus (24) e Impostore (60, locale e online) il limite vale per i nomi scritti, non per le righe vuote, con contatore e messaggio «Al massimo N giocatori: non si possono aggiungere altri nomi» (`ContoRighe`, `contaRighe`, `superaRighe`).
+- **Partita veloce**: «Copia il link» e «Condividi il link» nella sala d'attesa di Burraco, Scopa, Ultima! e Tris (il link `/<gioco>?veloce=1` apre la «Partita veloce»); senza https resta il link scritto da selezionare. Il codice della stanza compare anche nella scheda della stanza aperta.
+- **Burraco**: tocca il mazzo o gli scarti per pescare o prendere la pila, con conferma sul tavolo (spariscono i pulsanti «Pesca» e «Prendi gli scarti»); toccando una combinazione si apre un riquadro con le carte a ventaglio (a capo se sono tante), cos'è e quanto vale, e «Attacca qui» (giallo se si può, spento con il motivo in rosso se non si può).
+- **Pagina di prova** `prova-carte.html` (solo `pnpm dev`, fuori dal rilascio): ricrea una situazione di Burraco (mani, combinazioni, scarti, turno, pozzetti) e si gioca con le regole vere; vedi `docs/pagina-prova.md`. Test che ne garantisce l'esclusione dalla build.
+
+### Modificato
+
+- **Burraco, matta che scorre**: la matta calata cambia posizione (in alto o in basso) per far posto alla carta che arriva, e torna carta normale se arriva quella che rappresentava (prima non si spostava e certe carte non si attaccavano). Scala completa: nessun attacco. Messaggio chiaro quando l'attacco lascerebbe una sola carta senza burraco.
+- **Burraco e Scopa, carte più grandi**: la mano a ventaglio usa la dimensione «grande» (72 px sul telefono, 80 px dai 480 px); mazzo e scarti di Burraco come la mano; colonne delle combinazioni più grandi. Burraco ordina la mano per seme alternando rossi e neri: cuori, fiori, picche, quadri; un solo pulsante d'ordine accanto al titolo della mano.
+- **«Sollecita» e «Simula mossa col bot»** a tutta riga in Burraco, Scopa e Ultima!; «Velocità dei bot» ha lo stesso distacco dal registro in tutti e tre.
+- **«Apri una partita veloce»** al posto di «Apri una stanza veloce» in tutti i giochi con la partita veloce.
+- **Icone** di Scopa («S») e Burraco («B») sullo stesso disegno a ventaglio.
+- **Tema**: `color-scheme` dichiarato esplicitamente (aiuta i browser che ricolorano le pagine; su Samsung Internet va spenta anche «Siti chiari»/modalità scura dei siti).
+- Interno: `limitaRighe` accetta un massimo di nomi; `BarraAzioni` accetta `piena` e `nomeAria`; `ZonaCarte` ha pile e colonne toccabili; nuovi `RiquadroDettaglio` e `BottoneInfo`; piani in `docs/` (schermo largo, lobby della partita veloce, pagina di prova).
+
 ## [0.31.0] - 2026-11-23
 
 ### Modificato

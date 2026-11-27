@@ -9,6 +9,7 @@ export function temaAttuale(): Tema {
 /** Applica il tema alla pagina e lo ricorda su questo telefono (se il browser lo permette). */
 export function impostaTema(tema: Tema): void {
   document.documentElement.setAttribute("data-tema", tema);
+  document.documentElement.style.colorScheme = tema;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", COLORE_BARRA[tema]);
   try {
     localStorage.setItem("gdt-tema", tema);

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { CampoTesto, veloceDaIndirizzo } from "@gdt/collegamento";
 import { ArrowLeftRight, Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
@@ -18,7 +19,7 @@ export function ScopaOnline({ codiceIniziale, onLocale }: { codiceIniziale: stri
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
-  const [veloce, setVeloce] = useState(false);
+  const [veloce, setVeloce] = useState(() => !codiceIniziale && veloceDaIndirizzo());
 
   // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
   useEffect(() => {
@@ -162,10 +163,7 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
       <fieldset className="sc-gruppo sc-senza-bordo">
         <legend>{t("nomiGiocatori")}</legend>
         {nomi.slice(0, posti).map((n, i) => (
-          <label key={i} className="campo">
-            {t("nomeGiocatore", { n: i + 1 })}
-            <input value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => cambia(i, e.target.value)} />
-          </label>
+          <CampoTesto key={i} label={t("nomeGiocatore", { n: i + 1 })} value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(v) => cambia(i, v)} />
         ))}
         <span className="suggerimento">{t("nomiAiuto")}</span>
       </fieldset>

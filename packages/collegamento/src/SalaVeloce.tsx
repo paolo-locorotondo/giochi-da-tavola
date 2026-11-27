@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { DoorOpen, Play, Timer, Users } from "lucide-react";
+import { Copy, DoorOpen, Play, Share2, Timer, Users } from "lucide-react";
 import { usaT, type Traduttore } from "@gdt/i18n";
 import type { ComandoSala, VistaSalaVeloce } from "@gdt/engine";
 import { chiaveErroreSala, dizionari } from "./locales";
@@ -47,6 +47,70 @@ interface Props {
   riepilogo: (config: unknown) => string;
   /** Traduce gli errori che non sono della sala (es. le impostazioni non valide). */
   testoErrore?: (messaggio: string) => string;
+}
+
+/** L'indirizzo che porta alla «Partita veloce» del gioco (la stanza aperta si vede lì, con «Entra»). */
+export const linkVeloce = (gioco: string): string => `${window.location.origin}/${gioco}?veloce=1`;
+
+/** Vero se l'indirizzo chiede di aprire subito la «Partita veloce» (link di invito). */
+export const veloceDaIndirizzo = (): boolean => new URLSearchParams(window.location.search).has("veloce");
+
+/** Copia e condividi il link d'invito: la condivisione c'è solo dove il telefono la offre. */
+function InvitaVeloce({ gioco }: { gioco: string }) {
+  const t = usaT(dizionari);
+  const [copiato, setCopiato] = useState(false);
+  const link = linkVeloce(gioco);
+  const puoiCopiare = typeof navigator !== "undefined" && !!navigator.clipboard;
+  const puoiCondividere = typeof navigator !== "undefined" && typeof navigator.share === "function";
+  // Senza https (es. in sviluppo dal telefono con l'indirizzo IP) il browser nasconde appunti e condivisione:
+  // resta il link scritto, da selezionare e copiare a mano.
+  if (!puoiCopiare && !puoiCondividere) {
+    return (
+      <div className="sv-invita">
+        <label className="campo">
+          {t("linkVeloceScritto")}
+          <input type="text" readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
+        </label>
+        <p className="muted">{t("linkVeloceAiuto")}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="sv-invita">
+      <div className="azioni">
+        {puoiCopiare && (
+          <button
+            type="button"
+            className="btn"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(link);
+                setCopiato(true);
+              } catch {
+                /* permesso negato: resta il pulsante di condivisione, se c'è */
+              }
+            }}
+          >
+            <Copy size={18} aria-hidden="true" /> {copiato ? t("linkCopiato") : t("copiaLinkVeloce")}
+          </button>
+        )}
+        {puoiCondividere && (
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              navigator.share({ url: link }).catch(() => {
+                /* annullato dall'utente: niente da fare */
+              });
+            }}
+          >
+            <Share2 size={18} aria-hidden="true" /> {t("condividiLinkVeloce")}
+          </button>
+        )}
+      </div>
+      <p className="muted">{t("linkVeloceAiuto")}</p>
+    </div>
+  );
 }
 
 /** Sala d'attesa della partita veloce, uguale per tutti i giochi. */
@@ -137,6 +201,8 @@ function SalaDentro({ sala, c, riepilogo, testoErrore }: Props & { sala: VistaSa
             {t("scadutaAltri")}
           </p>
         ))}
+
+      {sala.momento === "attesa" && mancano > 0 && <InvitaVeloce gioco={sala.gioco} />}
 
       <p className="sv-timer" role="timer">
         <Timer size={20} aria-hidden="true" /> {t("restano", { tempo: formatoTempo(resta) })}

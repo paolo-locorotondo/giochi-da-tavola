@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@gdt/engine": "workspace:*",
+    "@gdt/collegamento": "workspace:*",
     "@gdt/i18n": "workspace:*",
     "@gdt/preferenze": "workspace:*",
     "@gdt/suoni": "workspace:*",

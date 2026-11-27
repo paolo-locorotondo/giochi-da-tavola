@@ -20,6 +20,7 @@ import {
   X,
   Zap,
   createLucideIcon,
+  type IconNode,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,19 +31,24 @@ const Carte = createLucideIcon("carte-con-uno", [
   ["path", { d: "M7 11l2-1.5V17", key: "uno" }],
 ]);
 
-/* Scopa: due carte a ventaglio con un rametto di scopa davanti. Stesso tratto delle icone lucide (24×24, 2 px). */
-const Ventaglio = createLucideIcon("carte-a-ventaglio", [
-  ["rect", { x: 3, y: 4, width: 10, height: 14, rx: 2, transform: "rotate(-12 8 11)", key: "sinistra" }],
-  ["path", { d: "M14 4.5 18.5 5.6a2 2 0 0 1 1.4 2.4L18 15", key: "destra" }],
-  ["path", { d: "M10 21 20 11", key: "manico" }],
-  ["path", { d: "M10 21l-1-4M10 21l4 1M10 21l-3-1", key: "rametti" }],
-]);
-
-/* Burraco: due carte aperte a ventaglio, una con l'asso (A) e il seme a punta: diverse dal mazzo con il «1» di Ultima!. */
-const AssoESette = createLucideIcon("asso-e-sette", [
+/*
+ * Burraco e Scopa: due carte a ventaglio, con una lettera sulla prima (la «B» di Burraco, la «S» di Scopa).
+ * Stessa carta, stessa seconda carta e stesso tratto delle icone lucide (24×24, 2 px): cambia solo la lettera,
+ * così si riconoscono come due giochi della stessa famiglia.
+ */
+const CARTE_A_VENTAGLIO: IconNode = [
   ["rect", { x: 3, y: 5, width: 11, height: 15, rx: 2, key: "carta" }],
   ["path", { d: "M17.5 7.5l2.4.9a2 2 0 0 1 1.2 2.6L18.6 18", key: "ventaglio" }],
-  ["path", { d: "M6.2 15l2.3-6 2.3 6M7 13h3", key: "a" }],
+];
+
+const LetteraB = createLucideIcon("carte-b", [
+  ...CARTE_A_VENTAGLIO,
+  ["path", { d: "M7.5 9.5v7M7.5 9.5h1.8a1.6 1.6 0 0 1 0 3.2H7.5M7.5 12.7h2.2a1.7 1.7 0 0 1 0 3.4 1.7 1.7 0 0 1 0 0H7.5", key: "b", strokeWidth: 1.5 }],
+]);
+
+const LetteraS = createLucideIcon("carte-s", [
+  ...CARTE_A_VENTAGLIO,
+  ["path", { d: "M10.4 10.3c-.5-.6-1.3-.9-2.1-.8-1.1.1-1.7.9-1.5 1.7.2.9 1 1.1 1.9 1.4.9.3 1.8.6 2 1.5.1.9-.6 1.7-1.8 1.8-1 .1-1.9-.3-2.4-1", key: "s", strokeWidth: 1.5 }],
 ]);
 
 /* Solo le icone usate: l'import per nome tiene fuori dal bundle tutte le altre. */
@@ -54,8 +60,8 @@ const ICONE = {
   dadi: Dices,
   griglia: Grid3x3,
   carte: Carte,
-  ventaglio: Ventaglio,
-  "asso-e-sette": AssoESette,
+  "carte-s": LetteraS,
+  "carte-b": LetteraB,
   fulmine: Zap,
   bug: Bug,
   indietro: ArrowLeft,

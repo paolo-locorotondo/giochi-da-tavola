@@ -18,7 +18,7 @@ export const en: Dizionario<typeof it> = {
   valoriInsufficienti: "At least two different values are needed.",
   infoDado: "What the faces mean",
   infoPersonalizzata: "What the faces mean (optional)",
-  infoAiuto: "If you write it, an “i” button appears next to the die. {n}/{max} characters.",
+  infoAiuto: "If you write it, an “i” button appears next to the die.",
   lancia: "Roll",
   inLancio: "Rolling…",
   risultato: "Result: {faccia}",

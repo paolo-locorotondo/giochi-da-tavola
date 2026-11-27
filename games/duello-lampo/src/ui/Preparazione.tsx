@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CampoTesto } from "@gdt/collegamento";
 import { ChevronDown, ChevronUp, Minus, Plus } from "lucide-react";
 import { creaRng, limitaTesto, MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
@@ -280,30 +281,24 @@ export function Preparazione({ iniziale, onInizia }: Props) {
 
   return (
     <section className="schermata allineata dl-prep">
-      <label className="campo">
-        {t("giocatoreBasso")}
-        <input
-          type="text"
-          value={nomi[0]}
-          placeholder={t("nomeBasso")}
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={MAX_CARATTERI_NOME}
-          onChange={(e) => setNomi([limitaTesto(e.target.value, MAX_CARATTERI_NOME), nomi[1]])}
-        />
-      </label>
-      <label className="campo">
-        {t("giocatoreAlto")}
-        <input
-          type="text"
-          value={nomi[1]}
-          placeholder={t("nomeAlto")}
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={MAX_CARATTERI_NOME}
-          onChange={(e) => setNomi([nomi[0], limitaTesto(e.target.value, MAX_CARATTERI_NOME)])}
-        />
-      </label>
+      <CampoTesto
+        label={t("giocatoreBasso")}
+        value={nomi[0]}
+        placeholder={t("nomeBasso")}
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={MAX_CARATTERI_NOME}
+        onChange={(v) => setNomi([limitaTesto(v, MAX_CARATTERI_NOME), nomi[1]])}
+      />
+      <CampoTesto
+        label={t("giocatoreAlto")}
+        value={nomi[1]}
+        placeholder={t("nomeAlto")}
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={MAX_CARATTERI_NOME}
+        onChange={(v) => setNomi([nomi[0], limitaTesto(v, MAX_CARATTERI_NOME)])}
+      />
 
       <fieldset className="scelta dl-minigiochi" aria-describedby="dl-mg-aiuto">
         <legend className="scelta-titolo">{t("minigiochiTitolo")}</legend>

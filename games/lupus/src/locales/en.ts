@@ -80,6 +80,7 @@ export const en: Dizionario<typeof it> = {
   errNomeDuplicato: "Duplicate name: {nome}",
   errPochi: "At least {minimo} players are needed",
   errTanti: "At most {massimo} players",
+  massimoGiocatori: "At most {max} players: no more names can be added",
 
   cartaDi: "Card {n} of {tot}",
   passaA: "Pass the phone to",

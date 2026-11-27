@@ -53,6 +53,9 @@ export const it = {
   manoTitoloTurno: { one: "La tua mano (tocca a te): {n} carta", other: "La tua mano (tocca a te): {n} carte" },
   manoVuota: "Nessuna carta in mano.",
   manoOrdina: "Ordina",
+  manoOrdineAria: "Ordine: {ordine}. Tocca per ordinare {altro}",
+  manoOrdineSeme: "per seme",
+  manoOrdineValore: "per valore",
   manoPerSeme: "Per seme",
   manoPerValore: "Per valore",
   manoSelezionate: { zero: "Nessuna carta selezionata", one: "1 carta selezionata", other: "{n} carte selezionate" },
@@ -70,4 +73,5 @@ export const it = {
   registroTitolo: "Cosa è successo",
   registroVuoto: "Ancora niente.",
   infoApri: "Dettagli: {titolo}",
+  dettaglioChiudi: "Chiudi",
 } as const;

@@ -152,19 +152,14 @@ export function scegli(interpretazioni: readonly Interpretazione[]): Interpretaz
 export const leggi = (carte: readonly Carta[]): Interpretazione | null => scegli(interpreta(carte));
 
 /**
- * Attaccare carte a una combinazione: si rilegge l'unione di carte vecchie e nuove, ma ogni matta già
- * calata deve restare con la stessa carta e nella stessa posizione (FIBUR art. 10: la matta non si sposta,
- * si sostituisce solo con la carta che rappresenta). Null se nessuna lettura lo permette.
+ * Attaccare carte a una combinazione: si rilegge l'unione di carte vecchie e nuove. La matta calata **scorre**:
+ * cambia posizione (in alto o in basso) per far posto alla carta che arriva, e se arriva la carta che
+ * rappresentava diventa una carta normale (regola della casa, vedi README). Si tiene la lettura con meno matte.
+ * Null se nessuna lettura lo permette (per esempio la scala è già completa).
  */
 export function attacca(comb: Interpretazione, nuove: readonly Carta[]): Interpretazione | null {
   const tutte = [...comb.posate.map((p) => p.carta), ...nuove];
-  const vecchieMatte = comb.posate.filter((p) => p.matta);
-  const letture = interpreta(tutte).filter(
-    (i) =>
-      i.tipo === comb.tipo &&
-      (comb.tipo === "tris" || i.seme === comb.seme) &&
-      vecchieMatte.every((m) => i.posate.some((p) => p.matta && p.carta.id === m.carta.id && p.come === m.come)),
-  );
+  const letture = interpreta(tutte).filter((i) => i.tipo === comb.tipo && (comb.tipo === "tris" || i.seme === comb.seme));
   return scegli(letture);
 }
 

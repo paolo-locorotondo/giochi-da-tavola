@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { CampoTesto } from "@gdt/collegamento";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { usaT } from "@gdt/i18n";
 import { cancellaPartita, leggiPartita, scriviPartita } from "@gdt/preferenze";
@@ -107,10 +108,7 @@ function Crea({ velocita, onVelocita, onAvvia }: { velocita: Velocita; onVelocit
         }
       }}
     >
-      <label className="campo">
-        {t("tuoNome")}
-        <input value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setNome(e.target.value)} />
-      </label>
+      <CampoTesto label={t("tuoNome")} value={nome} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={setNome} />
 
       <Opzioni
         legenda={t("quantiGiocatori")}
@@ -251,18 +249,13 @@ function Partita({
   const turnoBot = botDiTurno(partita);
   return (
     <>
-      {errore && (
-        <p className="errore" role="alert">
-          {testoMessaggio(t, errore)}
-        </p>
-      )}
       {turnoBot !== null && (
         <p className="avviso" role="status">
           {t("botPensa", { nome: v.nomi.find((n) => n.posto === turnoBot)?.nome ?? "" })}
         </p>
       )}
-      <Tavolo v={v} comandi={{ azione }} />
-      <fieldset className="bu-gruppo bu-senza-bordo">
+      <Tavolo v={v} comandi={{ azione, errore: errore ? testoMessaggio(t, errore) : null }} />
+      <fieldset className="bu-gruppo bu-senza-bordo velocita-bot">
         <legend>{t("velocitaBot")}</legend>
         <div className="bu-segmento">
           {(Object.keys(VELOCITA) as Velocita[]).map((x) => (

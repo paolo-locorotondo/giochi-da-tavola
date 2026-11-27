@@ -6,14 +6,14 @@ import { Figura, Pips, haPips, tipoFigura } from "./Disegni";
 import { SimboloSeme, Spunta, Stella } from "./Semi";
 import "./carte.css";
 
-export type Dimensione = "mini" | "piccola" | "normale";
+export type Dimensione = "mini" | "piccola" | "grande" | "normale";
 
 export interface PropsCartaGrafica {
   /** La carta da mostrare. Ignorata se `dorso` è vero. */
   carta?: Carta;
   /** Mostra il dorso (carta coperta). */
   dorso?: boolean;
-  /** `mini` 26×38 px (tavolo, combinazioni), `piccola` 44×64 px (mano), `normale` 60×87 px (scarti, tavolo). */
+  /** `mini` 26×38 px (tavolo, combinazioni), `piccola` 44×64 px (mano), `grande` 72×104 px (mano a ventaglio sul telefono), `normale` 60×87 px (scarti, tavolo). */
   dimensione?: Dimensione;
   selezionata?: boolean;
   /** Evidenziata senza essere scelta (es. carta appena pescata). */

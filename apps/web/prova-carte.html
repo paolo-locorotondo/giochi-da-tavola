@@ -1,0 +1,25 @@
+<!doctype html>
+<!-- Pagina di PROVA dei giochi di carte: si apre solo con `pnpm dev` (/prova-carte.html). Serve a vedere i casi estremi
+     (tanti tris, scale lunghe) senza giocare. NON fa parte della build: vite.config.ts la esclude, quindi in produzione
+     (pnpm build) non esiste. Vedi apps/web/src/prova-carte.tsx. -->
+<html lang="it" data-stile="tavolo" data-tema="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>Prova carte</title>
+    <script>
+      // ?tema=light o ?tema=dark sceglie il tema; senza, segue il telefono.
+      (function () {
+        var t = new URLSearchParams(location.search).get("tema");
+        if (t !== "light" && t !== "dark") t = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.setAttribute("data-tema", t);
+        document.documentElement.style.colorScheme = t;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/prova-carte.tsx"></script>
+  </body>
+</html>

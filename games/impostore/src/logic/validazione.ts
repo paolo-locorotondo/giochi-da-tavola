@@ -1,6 +1,9 @@
 import type { ProblemaGioco } from "../errori";
 import { impostoriMassimi } from "./partita";
 
+/** Massimo di giocatori (stesso limite del server: `MAX_NOMI` in apps/server). */
+export const MAX_GIOCATORI = 60;
+
 /** Un nome per riga: toglie spazi e righe vuote. */
 export function nomiDaTesto(testo: string): string[] {
   return testo

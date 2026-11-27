@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { suona } from "@gdt/suoni";
 import type { AnteprimaVeloce, AperturaVeloce, ComandoSala, VistaSalaVeloce } from "@gdt/engine";
 
-export { SalaVeloce, formatoTempo, testoErroreVeloce, usaTestiVeloce } from "./SalaVeloce";
+export { SalaVeloce, formatoTempo, linkVeloce, testoErroreVeloce, usaTestiVeloce, veloceDaIndirizzo } from "./SalaVeloce";
 export { AvvisoBetaTesto } from "./AvvisoBeta";
 export { ApriVeloce, type ImpostazioniVeloce } from "./ApriVeloce";
+export { ContoRighe } from "./ContoRighe";
+export { CampoTesto } from "./CampoTesto";
 export type { AnteprimaVeloce, AperturaVeloce, ComandoSala, VistaSalaVeloce };
 
 /** Messaggi verso il server (specchio di apps/server/src/stanze.ts). */

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { CampoTesto, veloceDaIndirizzo } from "@gdt/collegamento";
 import { Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
@@ -17,7 +18,7 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
-  const [veloce, setVeloce] = useState(false);
+  const [veloce, setVeloce] = useState(() => !codiceIniziale && veloceDaIndirizzo());
 
   // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
   useEffect(() => {
@@ -112,7 +113,7 @@ export function BurracoOnline({ codiceIniziale, onLocale }: { codiceIniziale: st
     <>
       {c.nonRaggiungibile && !c.connesso ? <p className="avviso">{t("connessionePersa")}</p> : stato}
       {c.sollecitato && <p className="avviso">{t("toccaATe")}</p>}
-      {err}
+      {v.fase !== "partita" && err}
       <Testata c={c} v={v} />
       <Fase c={c} v={v} />
       {v.host && <ChiudiPartita c={c} />}
@@ -166,10 +167,7 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
       <fieldset className="bu-gruppo bu-senza-bordo">
         <legend>{t("nomiGiocatori")}</legend>
         {usati.map((n, i) => (
-          <label key={i} className="campo">
-            {giocatori === 4 ? t("nomeGiocatoreSquadra", { n: i + 1, s: (i % 2) + 1 }) : t("nomeGiocatore", { n: i + 1 })}
-            <input value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => cambia(i, e.target.value)} />
-          </label>
+          <CampoTesto key={i} label={giocatori === 4 ? t("nomeGiocatoreSquadra", { n: i + 1, s: (i % 2) + 1 }) : t("nomeGiocatore", { n: i + 1 })} value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(v) => cambia(i, v)} />
         ))}
         <span className="suggerimento">{t("nomiAiuto")}</span>
       </fieldset>
@@ -323,11 +321,12 @@ function ChiudiPartita({ c }: { c: Collegamento }) {
 }
 
 function Fase({ c, v }: { c: Collegamento; v: Vista }) {
+  const t = usaT(dizionari);
   if (v.fase === "sala") return <Sala c={c} v={v} />;
   return (
     <>
       {v.io === null && <LiberiDaRiprendere c={c} v={v} />}
-      <Tavolo v={v} comandi={{ azione: c.azione, sollecita: () => c.invia({ t: "sollecita" }), conBot: true }} />
+      <Tavolo v={v} comandi={{ azione: c.azione, sollecita: () => c.invia({ t: "sollecita" }), conBot: true, errore: c.errore ? testoMessaggio(t, c.errore) : null }} />
     </>
   );
 }

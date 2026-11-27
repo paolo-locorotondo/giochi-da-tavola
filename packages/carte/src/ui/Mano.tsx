@@ -1,4 +1,5 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { ArrowDownUp } from "lucide-react";
 import { usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { CARTE_PER_RIGA, impaginaMano } from "../impagina";
@@ -41,6 +42,11 @@ export interface PropsMano {
   diTurno?: boolean;
   /** Una riga sotto la mano (es. mazzo, prese, scope). Testo già scritto dal gioco. */
   riepilogo?: ReactNode;
+  /**
+   * Dimensione delle carte del ventaglio (base: `piccola`, 44 px). `grande`: 72 px sul telefono e 80 px dai 480 px
+   * di larghezza, con almeno 32 px visibili per carta (stessa misura di Ultima!).
+   */
+  dimensione?: "piccola" | "grande";
 }
 
 /**
@@ -63,6 +69,7 @@ export function Mano({
   cartePerRiga = CARTE_PER_RIGA,
   diTurno = false,
   riepilogo,
+  dimensione = "piccola",
 }: PropsMano) {
   const t = usaT(dizionari);
   const titoloMano = t(diTurno ? "manoTitoloTurno" : "manoTitolo", { n: carte.length });
@@ -88,10 +95,13 @@ export function Mano({
     [ventaglio, carte, ordine, cartePerRiga],
   );
 
+  /** Un solo pulsante: alterna «per seme» e «per valore». */
+  const prossimo: OrdineMano = ordine === "seme" ? "valore" : "seme";
   const scegli = (o: OrdineMano) => {
     setOrdine(o);
     onOrdine?.(o);
   };
+  const nomeOrdine = (o: OrdineMano) => t(o === "seme" ? "manoOrdineSeme" : "manoOrdineValore");
 
   const tocca = (carta: Carta) => {
     if (selezione.includes(carta.id)) onSeleziona(selezione.filter((i) => i !== carta.id));
@@ -115,7 +125,7 @@ export function Mano({
   const carta = (c: Carta) => (
     <CartaGrafica
       carta={c}
-      dimensione="piccola"
+      dimensione={dimensione}
       selezionata={selezione.includes(c.id)}
       evidenziata={nuove.includes(c.id)}
       disabilitata={disabilitata?.(c) ?? false}
@@ -128,17 +138,17 @@ export function Mano({
       <div className="cg-mano-testa">
         {titolo && <h3 className="cg-mano-titolo">{titoloMano}</h3>}
         {riordino && carte.length > 1 && (
-          <div className="cg-ordina" role="group" aria-label={t("manoOrdina")}>
-            <span className="cg-ordina-etichetta" aria-hidden="true">
-              {t("manoOrdina")}
-            </span>
-            <button type="button" className="cg-ordina-btn" aria-pressed={ordine === "seme"} onClick={() => scegli("seme")}>
-              {t("manoPerSeme")}
-            </button>
-            <button type="button" className="cg-ordina-btn" aria-pressed={ordine === "valore"} onClick={() => scegli("valore")}>
-              {t("manoPerValore")}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="cg-ordina-btn"
+            aria-label={
+              ordine ? t("manoOrdineAria", { ordine: nomeOrdine(ordine), altro: nomeOrdine(prossimo) }) : t("manoOrdineAria", { ordine: t("manoOrdina"), altro: nomeOrdine(prossimo) })
+            }
+            onClick={() => scegli(prossimo)}
+          >
+            <ArrowDownUp size={18} aria-hidden="true" />
+            <span aria-hidden="true">{ordine ? nomeOrdine(ordine) : t("manoOrdina")}</span>
+          </button>
         )}
       </div>
       {mostrate.length === 0 ? (
@@ -149,6 +159,7 @@ export function Mano({
           chiaveCarta={(c) => c.id}
           carta={(c) => carta(c)}
           onKeyDown={tasti}
+          className={dimensione === "grande" ? "cg-ventaglio-grande" : undefined}
         />
       ) : (
         <ul className="cg-griglia" onKeyDown={tasti}>

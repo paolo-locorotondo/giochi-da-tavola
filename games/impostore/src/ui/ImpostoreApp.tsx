@@ -1,14 +1,15 @@
 import { useEffect, useReducer, useState, type FormEvent } from "react";
+import { CampoTesto, ContoRighe } from "@gdt/collegamento";
 import { suonoFine } from "../suoni";
 import { usaLingua, usaT } from "@gdt/i18n";
 import { dizionari } from "../locales";
 import { testoProblema } from "../errori-ui";
 import { g, Ricco } from "./Ricco";
-import { MAX_CARATTERI_NOME, limitaRighe, type Giocatore } from "@gdt/engine";
+import { MAX_CARATTERI_NOME, contaRighe, limitaRighe, superaRighe, type Giocatore } from "@gdt/engine";
 import { carta, impostoriConsigliati, impostoriMassimi, type Partita } from "../logic/partita";
 import { fasiImpostore, nuovaMacchinaImpostore, type EventoImpostore, type FaseImpostore } from "../logic/fasi";
 import { esitoSessione, riduci, sessioneIniziale, type Sessione } from "../logic/sessione";
-import { validaConfigurazione } from "../logic/validazione";
+import { MAX_GIOCATORI, validaConfigurazione } from "../logic/validazione";
 import { MAX_CARATTERI_PAROLA, categorie, nomeCategoria, paroleDi, type Categoria } from "../parole";
 import { chiaveRecenti, leggiRecenti, ricordaParola } from "./recenti";
 import "./impostore.css";
@@ -168,6 +169,7 @@ function Configurazione({
   const consigliati = impostoriConsigliati(nomi.length);
   const massimi = impostoriMassimi(nomi.length);
   const numImpostori = scelta !== null && scelta <= massimi ? scelta : consigliati;
+  const pieno = contaRighe(testoNomi) >= MAX_GIOCATORI;
 
   function invia(e: FormEvent) {
     e.preventDefault();
@@ -183,14 +185,18 @@ function Configurazione({
   return (
     <form className="schermata allineata" onSubmit={invia}>
       <label className="campo">
-        {t("giocatoriLabel")}
+        {t("giocatoriLabel", { max: MAX_GIOCATORI })}
         <textarea
           rows={6}
           value={testoNomi}
-          onChange={(e) => setTestoNomi(limitaRighe(e.target.value, MAX_CARATTERI_NOME))}
+          onChange={(e) => setTestoNomi((prima) => (superaRighe(e.target.value, MAX_GIOCATORI) ? prima : limitaRighe(e.target.value, MAX_CARATTERI_NOME)))}
           placeholder={t("segnapostoNomi")}
+          aria-invalid={pieno || undefined}
+          aria-describedby="im-nomi-conto"
+          className={pieno ? "campo-pieno" : undefined}
         />
       </label>
+      <ContoRighe id="im-nomi-conto" n={nomi.length} massimo={MAX_GIOCATORI} pieno={pieno} testo={t("massimoGiocatori", { max: MAX_GIOCATORI })} />
 
       <label className="campo">
         {t("numImpostori")}
@@ -330,17 +336,15 @@ function Tentativo({
     <form className="schermata allineata" onSubmit={invia}>
       <h2>{t("scopertoTitolo", { nome: nomeScoperto })}</h2>
       <p>{t("scopertoTesto")}</p>
-      <label className="campo">
-        {t("parolaLabel")}
-        <input
-          autoFocus
-          autoComplete="off"
-          maxLength={MAX_CARATTERI_PAROLA}
-          autoCapitalize="none"
-          value={testo}
-          onChange={(e) => setTesto(e.target.value)}
-        />
-      </label>
+      <CampoTesto
+        label={t("parolaLabel")}
+        autoFocus
+        autoComplete="off"
+        maxLength={MAX_CARATTERI_PAROLA}
+        autoCapitalize="none"
+        value={testo}
+        onChange={setTesto}
+      />
       <button className="btn primario" type="submit">
         {t("conferma")}
       </button>

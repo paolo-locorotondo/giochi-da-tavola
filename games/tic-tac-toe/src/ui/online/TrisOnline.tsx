@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { CampoTesto, veloceDaIndirizzo } from "@gdt/collegamento";
 import { Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
@@ -13,7 +14,7 @@ export function TrisOnline({ codiceIniziale, onLocale }: { codiceIniziale: strin
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
-  const [veloce, setVeloce] = useState(false);
+  const [veloce, setVeloce] = useState(() => !codiceIniziale && veloceDaIndirizzo());
 
   // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
   useEffect(() => {
@@ -132,15 +133,8 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
         {t("hoUnCodice")}
       </button>
       <p className="muted">{t("oppureCrea")}</p>
-      <label className="campo">
-        {t("nomeX")}
-        <input value={a} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setA(e.target.value)} />
-      </label>
-      <label className="campo">
-        {t("nomeO")}
-        <input value={b} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => setB(e.target.value)} />
-        <span className="suggerimento">{t("ognunoSceglieNome")}</span>
-      </label>
+      <CampoTesto label={t("nomeX")} value={a} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={setA} />
+      <CampoTesto label={t("nomeO")} value={b} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={setB} aiuto={t("ognunoSceglieNome")} />
       {c.errore && <p className="errore">{testoMessaggio(t, c.errore)}</p>}
       <button className="btn primario" type="submit" disabled={!c.connesso || !validi}>
         {t("creaPartita")}

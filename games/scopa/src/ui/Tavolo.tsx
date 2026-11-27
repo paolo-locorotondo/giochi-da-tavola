@@ -134,11 +134,12 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
   }
   if (inRound && v.host && c.conBot && turnoGiocatore) {
     if (c.sollecita)
-      azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, onTocca: c.sollecita });
+      azioni.push({ id: "sollecita", etichetta: t("sollecita", { nome: turnoGiocatore.nome }), icona: <Bell size={18} />, piena: true, onTocca: c.sollecita });
     azioni.push({
       id: "bot",
       etichetta: t("botMossa", { nome: turnoGiocatore.nome }),
       icona: <Bot size={18} />,
+      piena: true,
       descrittaDa: "sc-bot-aiuto",
       onTocca: () => c.azione({ tipo: "mossaBot", posto: turnoGiocatore.posto }),
     });
@@ -177,6 +178,8 @@ export function Tavolo({ v, comandi }: { v: Vista; comandi: Comandi }) {
 
       {v.io !== null && inRound && (
         <Mano
+          ventaglio
+          dimensione="grande"
           carte={v.mano}
           selezione={scelta ? [scelta.id] : []}
           onSeleziona={scegli}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { CampoTesto } from "@gdt/collegamento";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
 import { suona } from "@gdt/suoni";
 import { suonoIndovinata, suonoPassa, suonoVietata } from "../suoni";
@@ -369,14 +370,8 @@ function Configurazione({
         onAvvia(nomiSquadre(a, b, predefiniti), turni, secondi);
       }}
     >
-      <label className="campo">
-        {t("primaSquadra")}
-        <input maxLength={MAX_CARATTERI_NOME} value={a} onChange={(e) => setA(e.target.value)} />
-      </label>
-      <label className="campo">
-        {t("secondaSquadra")}
-        <input maxLength={MAX_CARATTERI_NOME} value={b} onChange={(e) => setB(e.target.value)} />
-      </label>
+      <CampoTesto label={t("primaSquadra")} maxLength={MAX_CARATTERI_NOME} value={a} onChange={setA} />
+      <CampoTesto label={t("secondaSquadra")} maxLength={MAX_CARATTERI_NOME} value={b} onChange={setB} />
       <Selettore etichetta={t("turniPerSquadra")} valore={turni} min={1} max={20} passo={1} onCambia={setTurni} />
       <Selettore etichetta={t("secondiPerTurno")} valore={secondi} min={10} max={180} passo={5} onCambia={setSecondi} />
       <button className="btn primario" type="submit">

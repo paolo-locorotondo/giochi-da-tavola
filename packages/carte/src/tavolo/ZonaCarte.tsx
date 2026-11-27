@@ -39,6 +39,19 @@ export interface PropsZonaCarte {
   vuota?: string;
   /** Dimensione delle carte (base: `mini` per le colonne, `piccola` per il resto). */
   dimensione?: Dimensione;
+  /**
+   * Solo `colonne`: ogni colonna diventa un pulsante (almeno 44 px di larghezza) che riceve l'indice del gruppo
+   * (es. per aprire il dettaglio di una combinazione). Le carte dentro non sono toccabili una a una.
+   */
+  onToccaGruppo?: (indice: number) => void;
+  /** Nome parlato della colonna-pulsante («Scala di picche, 4 carte»). */
+  etichettaGruppo?: (indice: number) => string;
+  /** Indici delle colonne evidenziate (es. quelle a cui si possono attaccare le carte scelte). */
+  gruppiEvidenziati?: readonly number[];
+  /** Solo `pila`: tutta la pila (carta e numero) diventa un pulsante, es. per pescare o prendere gli scarti. */
+  onToccaPila?: () => void;
+  /** Nome parlato della pila-pulsante («Mazzo, 39 carte: tocca per pescare»). */
+  etichettaPila?: string;
 }
 
 /**
@@ -68,6 +81,11 @@ export function ZonaCarte({
   multipla = true,
   vuota,
   dimensione,
+  onToccaGruppo,
+  etichettaGruppo,
+  gruppiEvidenziati = [],
+  onToccaPila,
+  etichettaPila,
 }: PropsZonaCarte) {
   const t = usaT(dizionari);
   const misura: Dimensione = dimensione ?? (disposizione === "colonne" ? "mini" : "piccola");
@@ -116,13 +134,22 @@ export function ZonaCarte({
   } else if (disposizione === "colonne") {
     corpo = (
       <div className="cg-zona-colonne">
-        {gruppi.map((g, i) => (
-          <div key={i} className={`cg-zona-colonna cg-passo-${misura}`}>
-            {g.map((c) => (
-              <Fragment key={c.id}>{carta(c)}</Fragment>
-            ))}
-          </div>
-        ))}
+        {gruppi.map((g, i) => {
+          const classi = `cg-zona-colonna cg-passo-${misura}${gruppiEvidenziati.includes(i) ? " cg-colonna-evid" : ""}`;
+          return onToccaGruppo ? (
+            <button key={i} type="button" className={`${classi} cg-colonna-btn`} aria-label={etichettaGruppo?.(i)} onClick={() => onToccaGruppo(i)}>
+              {g.map((c) => (
+                <CartaGrafica key={c.id} carta={c} dimensione={misura} />
+              ))}
+            </button>
+          ) : (
+            <div key={i} className={classi}>
+              {g.map((c) => (
+                <Fragment key={c.id}>{carta(c)}</Fragment>
+              ))}
+            </div>
+          );
+        })}
       </div>
     );
   } else {
@@ -132,6 +159,14 @@ export function ZonaCarte({
           <Fragment key={c.id}>{carta(c)}</Fragment>
         ))}
       </div>
+    );
+  }
+
+  if (disposizione === "pila" && onToccaPila && !vuotaDavvero) {
+    corpo = (
+      <button type="button" className="cg-pila-btn" aria-label={etichettaPila} onClick={onToccaPila}>
+        {corpo}
+      </button>
     );
   }
 

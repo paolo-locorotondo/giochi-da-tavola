@@ -1,4 +1,5 @@
 import { Info } from "lucide-react";
+import { CampoTesto } from "@gdt/collegamento";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usaLingua, usaT } from "@gdt/i18n";
 import { generaCasuale } from "../casuale";
@@ -125,19 +126,14 @@ export function DadiApp() {
       ) : null}
 
       {personalizzato ? (
-        <label className="campo">
-          {t("infoPersonalizzata")}
-          <textarea
-            rows={6}
-            value={testoInfo}
-            maxLength={MAX_CARATTERI_INFO}
-            aria-describedby="dadi-info-aiuto"
-            onChange={(e) => setTestoInfo(limitaInfo(e.target.value))}
-          />
-          <span id="dadi-info-aiuto" className="suggerimento">
-            {t("infoAiuto", { n: Array.from(testoInfo).length, max: MAX_CARATTERI_INFO })}
-          </span>
-        </label>
+        <CampoTesto
+          label={t("infoPersonalizzata")}
+          righe={6}
+          value={testoInfo}
+          maxLength={MAX_CARATTERI_INFO}
+          aiuto={t("infoAiuto")}
+          onChange={(v) => setTestoInfo(limitaInfo(v))}
+        />
       ) : null}
 
       <div className="dado-riga">

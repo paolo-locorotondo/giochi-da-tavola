@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { CampoTesto, veloceDaIndirizzo } from "@gdt/collegamento";
 import { Copy, Minus, Plus } from "lucide-react";
 import QRCode from "qrcode";
 import { MAX_CARATTERI_NOME } from "@gdt/engine";
@@ -17,7 +18,7 @@ export function UltimaOnline({ codiceIniziale, onLocale }: { codiceIniziale: str
   const c = useCollegamento(codiceIniziale);
   const t = usaT(dizionari);
   const [inserisci, setInserisci] = useState(false);
-  const [veloce, setVeloce] = useState(false);
+  const [veloce, setVeloce] = useState(() => !codiceIniziale && veloceDaIndirizzo());
 
   // Uscito dalla sala (scaduta, chiusa, «Esci»): si torna alla schermata della partita veloce.
   useEffect(() => {
@@ -159,10 +160,7 @@ function Crea({ c, onEntra, onVeloce }: { c: Collegamento; onEntra: () => void; 
         <legend>{t("nomiGiocatori")}</legend>
         {nomi.map((n, i) => (
           <div key={i} className="ul-riga-nome">
-            <label className="campo">
-              {t("nomeGiocatore", { n: i + 1 })}
-              <input value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(e) => cambia(i, e.target.value)} />
-            </label>
+            <CampoTesto label={t("nomeGiocatore", { n: i + 1 })} value={n} maxLength={MAX_CARATTERI_NOME} autoComplete="off" spellCheck={false} onChange={(v) => cambia(i, v)} />
             {nomi.length > MIN_GIOCATORI && (
               <button type="button" className="btn" aria-label={t("togliGiocatore", { n: i + 1 })} onClick={() => setNomi(nomi.filter((_, k) => k !== i))}>
                 <Minus size={18} aria-hidden="true" />

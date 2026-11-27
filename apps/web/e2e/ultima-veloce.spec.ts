@@ -42,13 +42,13 @@ test("ultima veloce: Anna apre, Bruno e Carla entrano, Anna apre con 3 su 4", as
   try {
     await allaPartitaVeloce(anna, "Anna");
     // Nessuna stanza aperta: impostazioni per aprirne una.
-    await expect(anna.getByRole("button", { name: "Apri una stanza veloce" })).toBeVisible();
+    await expect(anna.getByRole("button", { name: "Apri una partita veloce" })).toBeVisible();
     await schermata(anna, "veloce-apertura");
     await scegliPosti(anna, 4);
     await anna.getByRole("radio", { name: /Partita a punti/ }).check();
     await anna.getByLabel("Punti per vincere").fill("200");
     await anna.getByRole("radio", { name: "1 min" }).check();
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByRole("heading", { name: "Sala d'attesa" })).toBeVisible();
     await expect(anna.getByText("Aspetto altri 3 giocatori")).toBeVisible();
     await expect(anna).toHaveURL(/\/ultima\/[A-Z0-9]{5}$/);
@@ -84,7 +84,7 @@ test("ultima veloce: la partita parte da sola quando la stanza è piena", async 
   try {
     await allaPartitaVeloce(anna, "Anna");
     await scegliPosti(anna, 3);
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByText("Aspetto altri 2 giocatori")).toBeVisible();
     for (const [p, nome] of [[bruno, "Bruno"], [carla, "Carla"]] as const) {
       await allaPartitaVeloce(p, nome);
@@ -102,7 +102,7 @@ test("ultima veloce: uscire con la freccia libera il posto subito, e rientrare n
   try {
     await allaPartitaVeloce(anna, "Anna");
     await scegliPosti(anna, 3);
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await expect(anna.getByText("Aspetto altri 2 giocatori")).toBeVisible();
 
     await allaPartitaVeloce(pippo, "Pippo");
@@ -130,7 +130,7 @@ test("ultima veloce: dopo un refresh il posto si riprende dal salvataggio, senza
   try {
     await allaPartitaVeloce(anna, "Anna");
     await scegliPosti(anna, 3);
-    await anna.getByRole("button", { name: "Apri una stanza veloce" }).click();
+    await anna.getByRole("button", { name: "Apri una partita veloce" }).click();
     await allaPartitaVeloce(pippo, "Pippo");
     await pippo.getByRole("button", { name: "Entra nella stanza" }).click();
     await expect(anna.getByText("Aspetto un altro giocatore")).toBeVisible();
